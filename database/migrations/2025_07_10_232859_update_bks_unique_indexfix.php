@@ -13,11 +13,11 @@ class UpdateBksUniqueIndexfix extends Migration
      */
     public function up()
     {
-        Schema::table('bks', function (Blueprint $table) {
-          
-            $table->unique(['id_prodi', 'kurikulum_id', 'kode']);
-        });
-        
+        if (Schema::hasColumn('bks', 'id_prodi') && Schema::hasColumn('bks', 'kurikulum_id') && Schema::hasColumn('bks', 'kode')) {
+            Schema::table('bks', function (Blueprint $table) {
+                $table->unique(['id_prodi', 'kurikulum_id', 'kode']);
+            });
+        }
     }
 
     /**
