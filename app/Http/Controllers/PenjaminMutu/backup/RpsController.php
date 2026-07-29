@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\PenjaminMutu;
+namespace App\Http\Controllers\PenjaminMutu\backup;
 
 use App\Http\Controllers\Controller;
 use App\Models\RPS;

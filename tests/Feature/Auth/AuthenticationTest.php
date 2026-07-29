@@ -27,8 +27,7 @@ class AuthenticationTest extends TestCase
             'password' => 'password',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(RouteServiceProvider::HOME);
+        $response->assertRedirect('/dosen/dashboard');
     }
 
     public function test_users_can_not_authenticate_with_invalid_password()

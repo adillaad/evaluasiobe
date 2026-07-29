@@ -11,7 +11,7 @@ use App\Models\MK;
 use App\Models\RPS;
 use App\Models\Komponen;
 
-class Komponencontroller extends Controller
+class KomponenController extends Controller
 {
     public function Add()
     {

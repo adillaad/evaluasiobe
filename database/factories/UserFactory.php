@@ -30,4 +30,15 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
         ];
     }
+
+    public function configure()
+    {
+        return $this->afterCreating(function (User $user) {
+            \App\Models\UserOtoritas::create([
+                'user_id' => $user->id,
+                'otoritas' => 'Dosen',
+                'active' => 1,
+            ]);
+        });
+    }
 }

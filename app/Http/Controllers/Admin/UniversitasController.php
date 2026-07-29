@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-class Universitascontroller extends Controller
+class UniversitasController extends Controller
 {
     public function Add()
     {

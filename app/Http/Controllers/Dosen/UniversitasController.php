@@ -9,7 +9,7 @@ use App\Models\MK;
 use App\Models\RPS;
 use App\Models\Universitas;
 
-class Universitascontroller extends Controller
+class UniversitasController extends Controller
 {
     public function Add()
     {

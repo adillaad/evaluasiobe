@@ -11,6 +11,19 @@ const mix = require('laravel-mix');
  |
  */
 
+mix.webpackConfig({
+    resolve: {
+        fallback: {
+            http: false,
+            https: false,
+            stream: false,
+            zlib: false,
+            url: false,
+            assert: false
+        }
+    }
+});
+
 mix.js('resources/js/app.js', 'public/js').postCss('resources/css/app.css', 'public/css', [
     require('tailwindcss'),
     require('autoprefixer'),

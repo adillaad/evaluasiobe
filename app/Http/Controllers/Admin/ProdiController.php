@@ -10,7 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Traits\UniversityFilterTrait;
 use Illuminate\Support\Facades\Validator;
 
-class Prodicontroller extends Controller
+class ProdiController extends Controller
 {
     use UniversityFilterTrait;
 

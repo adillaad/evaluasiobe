@@ -13,10 +13,11 @@ class AddRememberTokenToUsersTable extends Migration
      */
     public function up()
     {
-        Schema::table('users', function (Blueprint $table) {
-            // Menambahkan kolom 'remember_token' setelah kolom 'password'
-            $table->rememberToken()->after('password');
-        });
+        if (!Schema::hasColumn('users', 'remember_token')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->rememberToken()->after('password');
+            });
+        }
     }
 
     /**
