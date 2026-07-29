@@ -1,0 +1,6 @@
+.form-control option {
+    max-width: 200px; /* Sesuaikan dengan panjang maksimum yang Anda inginkan */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}

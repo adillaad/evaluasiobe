@@ -1,0 +1,958 @@
+/* ============================================
+   TRANSKRIP KOMPETENSI - COMPACT STYLESHEET
+   ============================================ */
+
+:root {
+    --primary-color: #3498db;
+    --primary-dark: #2980b9;
+    --secondary-color: #9b59b6;
+    --success-color: #2ecc71;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --border-radius: 8px;
+    --transition: all 0.2s ease;
+}
+
+/* ============================================
+   GLOBAL STYLES - COMPACT
+   ============================================ */
+
+.transcript-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0.75rem;
+}
+
+.card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* ============================================
+   HEADER SECTION - COMPACT
+   ============================================ */
+
+.header {
+    text-align: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.header h2 {
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.header .text-muted {
+    color: #7f8c8d !important;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* ============================================
+   INFO GRID - COMPACT
+   ============================================ */
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+    font-size: 0.85rem;
+}
+
+.info-item {
+    text-align: center;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.info-item .label {
+    font-weight: 600;
+    color: #7f8c8d;
+    font-size: 0.75rem;
+    display: block;
+    margin-bottom: 0.15rem;
+}
+
+.info-item .value {
+    color: var(--primary-color);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+/* ============================================
+   SUMMARY BOX - COMPACT
+   ============================================ */
+
+.summary-box {
+    background: linear-gradient(135deg, #e3e4e5);
+    color: rgb(0, 0, 0);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    text-align: center;
+    margin: 1rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.summary-box h4 {
+    margin: 0 0 0.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.summary-box .value {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0.25rem 0;
+}
+
+.summary-box .badge {
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    margin-bottom: 0.5rem;
+    display: inline-block;
+}
+
+/* ============================================
+   PROGRESS BAR - COMPACT
+   ============================================ */
+
+.progress-container {
+    height: 16px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.3s ease;
+}
+
+.progress-bar.sb { background: linear-gradient(90deg, #2ecc71, #27ae60); }
+.progress-bar.b { background: linear-gradient(90deg, #f39c12, #f1c40f); }
+.progress-bar.c { background: linear-gradient(90deg, #e67e22, #d35400); }
+.progress-bar.k { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+
+/* ============================================
+   SECTION TITLE - COMPACT
+   ============================================ */
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 1rem 0 0.75rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* ============================================
+   TABLE STYLES - COMPACT
+   ============================================ */
+
+.table-responsive {
+    margin: 0.75rem 0;
+    border-radius: var(--border-radius);
+    overflow-x: auto;  /* ← bisa scroll horizontal */
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch; /* ← smooth scroll mobile */
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    font-size: 0.85rem;
+}
+
+.table {
+    margin: 0;
+    width: 100%;
+    min-width: 800px;
+}
+
+.table th {
+    background: #34495e;
+    color: white;
+    font-weight: 600;
+    padding: 0.4rem 0.6rem;
+    vertical-align: middle;
+    font-size: 0.85rem;
+}
+
+.table td {
+    padding: 0.4rem 0.6rem;
+    vertical-align: middle;
+    font-size: 0.85rem;
+    line-height: 1.2;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f8f9fa;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #e3f2fd;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.table-compact th,
+.table-compact td {
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.8rem !important;
+    line-height: 1.1 !important;
+}
+
+/* ============================================
+   COMPETENCY CONTAINER - COMPACT
+   ============================================ */
+
+.competency-container {
+    background: #f9fbfd;
+    border-radius: var(--border-radius);
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    border: 1px solid #e9ecef;
+}
+
+.competency-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.15rem 0;
+    border-bottom: 1px dashed #e9ecef;
+    align-items: flex-start;
+    font-size: 0.8rem;
+    line-height: 1.2;
+}
+
+.competency-row:last-child {
+    border-bottom: none;
+}
+
+.competency-label {
+    flex: 3;
+    font-weight: 500;
+    color: #34495e;
+    font-size: 0.8rem;
+    line-height: 1.2;
+}
+
+.competency-score {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    font-weight: 700;
+    font-size: 0.8rem;
+    min-width: 80px;
+    gap: 0.1rem;
+}
+
+/* ============================================
+   HORIZONTAL CPMK & CPL LAYOUT
+   ============================================ */
+
+/* CPMK Horizontal List */
+.cpmk-horizontal-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+}
+
+.cpmk-item-horizontal {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.5rem;
+    min-width: 250px;
+    max-width: 350px;
+    flex: 1 0 auto;
+    transition: var(--transition);
+    font-size: 0.85rem;
+}
+
+.cpmk-item-horizontal:hover {
+    background: #e3f2fd;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.cpmk-header-horizontal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.cpmk-desc-horizontal {
+    color: #2c3e50;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    margin-bottom: 0.2rem;
+}
+
+.cpmk-meta-horizontal {
+    color: #7f8c8d;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    margin-top: 0.2rem;
+}
+
+.cpmk-meta-horizontal small {
+    font-weight: 500;
+}
+
+/* CPL Horizontal List */
+.cpl-horizontal-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+}
+
+.cpl-item-horizontal {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.5rem;
+    min-width: 200px;
+    max-width: 300px;
+    flex: 1 0 auto;
+    transition: var(--transition);
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.cpl-item-horizontal:hover {
+    background: #e3f2fd;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.cpl-item-horizontal strong {
+    color: var(--primary-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.cpl-desc-horizontal {
+    color: #7f8c8d;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    flex: 1;
+}
+
+/* Course Card Compact */
+.course-card-compact {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    transition: var(--transition);
+}
+
+.course-header-compact {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 0.5rem;
+}
+
+.course-header-compact h5 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 0.95rem;
+    line-height: 1.3;
+}
+
+.course-meta-compact {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.course-content-compact {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.course-section-compact {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 0.4rem;
+    border: 1px solid #e9ecef;
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+}
+
+.course-section-compact:last-child {
+    margin-bottom: 0;
+}
+
+.course-section-compact h6 {
+    margin: 0 0 0.3rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* ============================================
+   BADGE STYLES - COMPACT
+   ============================================ */
+
+.badge {
+    display: inline-block;
+    padding: 0.1rem 0.4rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: white;
+    vertical-align: middle;
+}
+
+.badge-sangat-baik { background: var(--success-color); }
+.badge-baik { background: var(--warning-color); }
+.badge-cukup { background: #e67e22; }
+.badge-kurang { background: var(--danger-color); }
+.badge-lulus { background: var(--success-color); }
+.badge-tidak-lulus { background: var(--danger-color); }
+
+/* ============================================
+   ACTIONS BUTTONS - COMPACT
+   ============================================ */
+
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn-print { background: linear-gradient(90deg, #3498db, #2980b9); }
+.btn-download { background: linear-gradient(90deg, #9b59b6, #8e44ad); }
+
+/* ============================================
+   NO DATA & SPINNER - COMPACT
+   ============================================ */
+
+.no-data {
+    text-align: center;
+    color: #7f8c8d;
+    font-style: italic;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+    margin: 0.5rem 0;
+    font-size: 0.85rem;
+}
+
+.spinner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+    margin: 1rem 0;
+}
+
+.spinner-container .spinner-border {
+    width: 1.8rem;
+    height: 1.8rem;
+    border-width: 0.15rem;
+}
+
+/* ============================================
+   SCROLLBAR STYLING FOR HORIZONTAL LISTS
+   ============================================ */
+
+.cpmk-horizontal-list::-webkit-scrollbar,
+.cpl-horizontal-list::-webkit-scrollbar {
+    height: 6px;
+}
+
+.cpmk-horizontal-list::-webkit-scrollbar-track,
+.cpl-horizontal-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.cpmk-horizontal-list::-webkit-scrollbar-thumb,
+.cpl-horizontal-list::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+.cpmk-horizontal-list::-webkit-scrollbar-thumb:hover,
+.cpl-horizontal-list::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - OPTIMIZED
+   ============================================ */
+
+@media (max-width: 1200px) {
+    .transcript-container {
+        max-width: 100%;
+    }
+    
+    .table {
+        min-width: 700px;
+    }
+}
+
+@media (max-width: 992px) {
+    .course-content-compact {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+    
+    .table {
+        min-width: 600px;
+    }
+    
+    .cpmk-item-horizontal {
+        min-width: 220px;
+    }
+    
+    .cpl-item-horizontal {
+        min-width: 180px;
+    }
+}
+
+@media (max-width: 768px) {
+    .card {
+        padding: 0.75rem;
+    }
+    
+    .header h2 {
+        font-size: 1.2rem;
+    }
+    
+    .info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .info-item {
+        padding: 0.4rem;
+    }
+    
+    .info-item .value {
+        font-size: 0.9rem;
+    }
+    
+    .summary-box {
+        padding: 0.75rem;
+    }
+    
+    .summary-box .value {
+        font-size: 1.75rem;
+    }
+    
+    .course-header-compact h5 {
+        font-size: 0.9rem;
+    }
+    
+    .actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn {
+        width: 100%;
+        max-width: 250px;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .progress-container {
+        height: 14px;
+    }
+    
+    .table {
+        min-width: 550px;
+        font-size: 0.75rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.3rem 0.4rem;
+    }
+    
+    .cpmk-horizontal-list,
+    .cpl-horizontal-list {
+        flex-direction: column;
+    }
+    
+    .cpmk-item-horizontal,
+    .cpl-item-horizontal {
+        min-width: 100%;
+        max-width: 100%;
+    }
+    
+    .course-section-compact {
+        padding: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h2 {
+        font-size: 1.1rem;
+    }
+    
+    .header .text-muted {
+        font-size: 0.85rem;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-box .value {
+        font-size: 1.5rem;
+    }
+    
+    .summary-box h4 {
+        font-size: 1rem;
+    }
+    
+    .course-header-compact {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
+    }
+    
+    .course-meta-compact {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+    }
+    
+    .table {
+        min-width: 450px;
+        font-size: 0.7rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.25rem 0.35rem;
+    }
+    
+    .course-section-compact h6 {
+        font-size: 0.85rem;
+    }
+    
+    .competency-label {
+        font-size: 0.8rem;
+    }
+    
+    .competency-score {
+        font-size: 0.8rem;
+        min-width: 80px;
+    }
+    
+    .cpmk-item-horizontal {
+        padding: 0.4rem;
+        font-size: 0.8rem;
+    }
+    
+    .cpmk-header-horizontal {
+        font-size: 0.85rem;
+    }
+    
+    .cpmk-desc-horizontal,
+    .cpl-desc-horizontal {
+        font-size: 0.75rem;
+    }
+    
+    .cpmk-meta-horizontal {
+        font-size: 0.7rem;
+    }
+    
+    .cpl-item-horizontal {
+        padding: 0.4rem;
+        font-size: 0.8rem;
+    }
+    
+    .cpl-item-horizontal strong {
+        font-size: 0.85rem;
+    }
+}
+
+/* ============================================
+   PRINT STYLES - KHUSUS CETAK
+   ============================================ */
+
+@media print {
+    /* 1. Paksa Orientasi Portrait & Ukuran Kertas */
+    @page {
+        size: A4 portrait;
+        margin: 1.5cm 2cm; /* Margin kertas */
+    }
+
+    /* 2. Reset Dasar Agar Bersih */
+    body {
+        background: white !important;
+        color: black !important;
+        font-size: 11pt; /* Font standar dokumen */
+        -webkit-print-color-adjust: exact; /* Paksa cetak warna background */
+        print-color-adjust: exact;
+    }
+
+    /* 3. Sembunyikan Elemen UI yang Tidak Perlu */
+    .actions,           /* Tombol Cetak/Download */
+    .btn,               /* Semua tombol */
+    .spinner-container, /* Loading */
+    .no-data,           /* Pesan kosong */
+    nav, footer,        /* Navigasi website */
+    .sidebar            /* Sidebar jika ada */
+    {
+        display: none !important;
+    }
+
+    /* 4. Atur Container Utama */
+    .transcript-container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100%;
+    }
+
+    .card {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* 5. KOP SURAT (HEADER CETAK) */
+    .print-header {
+        display: block !important; /* Muncul hanya saat print */
+        text-align: center;
+        border-bottom: 3px double #000;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .print-header img {
+        height: 80px; /* Sesuaikan tinggi logo */
+        margin-bottom: 10px;
+    }
+
+    .print-header h2 {
+        margin: 5px 0;
+        font-size: 16pt;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .print-header p {
+        margin: 2px 0;
+        font-size: 10pt;
+    }
+
+    /* 6. Sembunyikan Header Web Asli saat Print */
+    .header { 
+        display: none !important; 
+    }
+
+    /* 7. Info Mahasiswa (Tampilan Cetak) */
+    .student-info-print {
+        display: block !important;
+        width: 100%;
+        margin-bottom: 20px;
+        border: 1px solid #000;
+        padding: 10px;
+    }
+
+    .student-info-print table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .student-info-print td {
+        padding: 4px 8px;
+        vertical-align: top;
+    }
+
+    .student-info-print td:first-child {
+        font-weight: bold;
+        width: 150px;
+    }
+
+    .student-info-print td:nth-child(2) {
+        width: 10px;
+    }
+
+    /* Sembunyikan Info Grid Web Asli */
+    .info-grid {
+        display: none !important;
+    }
+
+    /* 8. Summary Box (CPL Utama) */
+    .summary-box {
+        background: #f0f0f0 !important; /* Abu-abu agar hemat tinta */
+        color: black !important;
+        border: 2px solid #000;
+        padding: 10px;
+        margin-bottom: 20px;
+        break-inside: avoid; /* Jangan potong di tengah halaman */
+    }
+
+    .summary-box h4 {
+        font-size: 12pt;
+        font-weight: bold;
+        margin: 0 0 10px;
+        text-align: center;
+    }
+
+    .progress-container {
+        border: 1px solid #000;
+        background: white !important;
+    }
+
+    .progress-bar {
+        /* Pastikan warna progress bar tercetak */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* 9. Table Styles for Print */
+    .table {
+        width: 100%;
+        font-size: 10pt;
+        border: 1px solid #000;
+    }
+
+    .table th, .table td {
+        border: 1px solid #000;
+        padding: 4px 6px;
+        color: black !important;
+    }
+
+    .table th {
+        background-color: #e0e0e0 !important;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    /* 10. Competency Section */
+    .section-title {
+        font-size: 12pt;
+        font-weight: bold;
+        border-bottom: 2px solid #000;
+        margin-top: 20px;
+        page-break-after: avoid;
+    }
+
+    .competency-container {
+        border: 1px solid #000;
+        background: white !important;
+        page-break-inside: avoid;
+    }
+
+    .competency-row {
+        border-bottom: 1px solid #ccc;
+        page-break-inside: avoid;
+    }
+
+    .course-card-compact {
+        border: 1px solid #000;
+        margin-bottom: 10px;
+        page-break-inside: avoid; /* Jangan potong card di tengah halaman */
+    }
+
+    .course-section-compact {
+        background: #f9f9f9 !important;
+        border: 1px solid #ddd;
+    }
+
+    /* 11. Page Break Control */
+    .page-break-before {
+        page-break-before: always;
+    }
+
+    .page-break-after {
+        page-break-after: always;
+    }
+
+    .no-break {
+        page-break-inside: avoid;
+    }
+}
+
+/* Default: Sembunyikan elemen print saat tampilan web */
+.print-header,
+.student-info-print {
+    display: none;
+}

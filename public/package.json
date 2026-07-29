@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "boostrap": "^2.0.0",
+    "bootstrap": "^5.2.2",
+    "datatable": "^2.0.2",
+    "datatables": "^1.10.18",
+    "jquery": "^3.6.1"
+  }
+}
