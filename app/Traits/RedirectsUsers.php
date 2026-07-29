@@ -31,6 +31,7 @@ trait RedirectsUsers
             'Wakil Dekan' => 'wakil-dekan.home',
             'Kepala Program Studi' => 'kepala-program-studi.home',
             'Dosen' => 'dosen.home',
+            'Penjamin Mutu' => 'penjamin-mutu.universitas.home',
             'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.home',
             'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.home',
             'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.home',

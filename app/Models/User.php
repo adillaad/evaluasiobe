@@ -54,7 +54,22 @@ class User extends Authenticatable
 
     public function getOtoritasAttribute()
     {
-        return $this->otoritas()->where('active', true)->first();
+        $active = $this->otoritas()->where('active', true)->first();
+        if ($active) {
+            return $active;
+        }
+
+        $rawOtoritas = $this->getRawOriginal('otoritas');
+        if (!empty($rawOtoritas)) {
+            return (object) [
+                'id' => 0,
+                'user_id' => $this->id,
+                'otoritas' => $rawOtoritas,
+                'active' => true,
+            ];
+        }
+
+        return null;
     }
 
     // Helper method untuk cek otoritas
