@@ -1,38 +1,18 @@
-{{-- @php
-    $routePrefix = [
-        'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
-        'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
-    ];
-
-    $userOtoritas = auth()->user()->otoritas->otoritas;
-    $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'admin.';
-@endphp --}}
 @extends($userOtoritas === 'Dosen' ? 'dosen.template' : 'penjamin-mutu.template')
 @section('content')
-@if (session()->has('failed'))
-    <div class="alert alert-danger" role="alert" id="box">
-        <div>{{ session('failed') }}</div>
-    </div>
-@elseif (session()->has('success'))
-    <div class="alert greenAdd" role="alert" id="box">
-        
-    </div>
-@endif
-
-<h3 class="px-4 pb-4 fw-bold text-center">Halaman Add Asesmen</h3>
 
 <div class="container mt-5">
     <div class="card">
         <div class="card-body">
-            <h4 class="card-title">Tambah Asesmen</h4>
+            <h4 class="card-title mb-4">Tambah Asesmen</h4>
 
             <form action="{{ route($currentPrefix . 'asesmen.asesmen-store') }}" method="POST">
                 @csrf
-                <!-- Select mk -->
-                <div class="form-group">
-                    <label for="mk_kode">Pilih Mata Kuliah:</label>
-                    <select class="form-control" id="mk_kode" name="mk_kode" required >
-                        <option value="" selected disabled>Pilih Mata Kuliah</option>
+                <!-- Select MK -->
+                <div class="form-group mb-3">
+                    <label for="mk_kode" class="fw-bold">Pilih Mata Kuliah <span class="text-danger">*</span></label>
+                    <select class="form-control" id="mk_kode" name="mk_kode" required>
+                        <option value="" selected disabled>-- Pilih Mata Kuliah --</option>
                         @foreach ($mks as $mk)
                             <option value="{{ $mk->kode }}">{{ $mk->kode }} - {{ $mk->nama }}</option>  
                         @endforeach
@@ -40,376 +20,359 @@
                 </div>
 
                 <!-- Select CPL -->
-                <div class="form-group">
-                    <label for="cpl_id">Pilih CPL</label>
+                <div class="form-group mb-3">
+                    <label for="cpl_id" class="fw-bold">Pilih CPL <span class="text-danger">*</span></label>
                     <select id="cpl_id" name="cpl_id" class="form-control" required disabled>
                         <option value="">-- Pilih CPL --</option>
                     </select>
-
                 </div>
 
                 <!-- Select CPMK -->
-                <div class="form-group">
-                    <label for="cpmk-select">Pilih CPMK</label>
+                <div class="form-group mb-3">
+                    <label for="cpmk-select" class="fw-bold">Pilih CPMK <span class="text-danger">*</span></label>
                     <select id="cpmk-select" name="cpmk_id" class="form-control" required disabled>
                         <option value="">-- Pilih CPMK --</option>
                     </select>
                 </div>
 
-                <!-- Select tahap penilaian -->
-                <div class="form-group">
-                    <label for="tahap-penilaian-select">Pilih Tahap Penilaian</label>
-                    <div id="tahap_penilaian" class="border ps-5 pt-2 pb-2" style="max-height: 200px; overflow-y: auto;">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="tahap_penilaians[]" value="Akhir Semester" id="tahap_akhir_semester">
-                            <label class="form-check-label" for="tahap_akhir_semester">
-                                Akhir Semester
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="tahap_penilaians[]" value="Tengah Semester" id="tahap_tengah_semester">
-                            <label class="form-check-label" for="tahap_tengah_semester">
-                                Tengah Semester
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="tahap_penilaians[]" value="Perkuliahan" id="tahap_perkuliahan">
-                            <label class="form-check-label" for="tahap_perkuliahan">
-                                Perkuliahan
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Select instrumen -->
-                <div class="form-group">
-                    <label for="instrumen-select">Pilih Instrumen</label>
-                    <select id="instrumen-select" name="instrumen" class="form-control" required >
-                        <option value=""disabled selected>-- Pilih Instrumen --</option>
+                <!-- Select Instrumen -->
+                <div class="form-group mb-3">
+                    <label for="instrumen-select" class="fw-bold">Pilih Instrumen <span class="text-danger">*</span></label>
+                    <select id="instrumen-select" name="instrumen" class="form-control" required>
+                        <option value="" disabled selected>-- Pilih Instrumen --</option>
                         <option value="Rubrik">Rubrik</option>
                         <option value="Panduan Proyek Akhir">Panduan Proyek Akhir</option>
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="kriteria-penilaian">Pilih Kriteria Penilaian</label>
-                    <input type="text" id="search-kriteria" class="form-control" placeholder="Cari Kriteria...">
-                    <div id="kriteria-penilaian" class="border ps-5 pt-1 pb-2" style="max-height: 200px; overflow-y: auto;">
-                        @foreach ($instrumenPenilaians as $instrumenPenilaian)
-                            <div class="form-check d-flex align-items-center mb-2 kriteria-item" >
-                                <input class="form-check-input kriteria-checkbox me-2" type="checkbox" name="kriteria_penilaian[]" value="{{ $instrumenPenilaian->id }}" id="kriteria_{{ $instrumenPenilaian->id }}">
-                                <label class="form-check-label me-3" for="kriteria_{{ $instrumenPenilaian->id }}">{{ $instrumenPenilaian->nama_kriteria }}</label>
-                                <input type="number" step="0.01" class="form-control form-control-sm kriteria-bobot" name="bobot_kriteria[{{ $instrumenPenilaian->id }}]" placeholder="Bobot (%)" disabled style="width: 80px;" min="0">
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="metode-penilaian">Pilih Metode Penilaian</label>
-                    <input type="text" id="search-metode" class="form-control" placeholder="Cari Metode...">
-                    <div id="metode-penilaian" class="border ps-5 pt-2 pb-2" style="max-height: 200px; overflow-y: auto;">
-                        @foreach ($metodepenilaians as $metodepenilaian)
-                        <div class="form-check d-flex align-items-center mb-2 metode-item">
-                            <input class="form-check-input metode-checkbox me-2" type="checkbox" name="metode_penilaian[]" value="{{ $metodepenilaian->id }}" id="metode_{{ $metodepenilaian->id }}">
-                            <label class="form-check-label me-3" for="metode_{{ $metodepenilaian->id }}">{{ $metodepenilaian->nama }}</label>
-                            <input type="number" step="0.01" class="form-control form-control-sm metode-bobot" name="bobot[{{ $metodepenilaian->id }}]" placeholder="Bobot (%)" disabled style="width: 80px;" max="100" min="0">
+                <!-- Dynamic Blocks Container (Metode & Kriteria Paket) -->
+                <div id="dynamic-blocks-container">
+                    {{-- Default Block 0 --}}
+                    <div class="card mb-3 border block-item" data-block-index="0">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 px-3">
+                            <span class="fw-bold text-primary small"><i class="mdi mdi-layers-outline me-1"></i> Metode Penilaian & Kriteria</span>
+                            <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 btn-remove-block" style="display:none;" title="Hapus Paket Ini">
+                                <i class="mdi mdi-trash-can-outline me-1"></i> Hapus Paket
+                            </button>
                         </div>
-                        @endforeach
+                        <div class="card-body p-3">
+                            <!-- Select Single Metode Penilaian -->
+                            <div class="form-group mb-3">
+                                <label class="fw-bold small mb-1">Pilih Metode Penilaian & Isi Bobot Metode <span class="text-danger">*</span></label>
+                                <div class="row align-items-center">
+                                    <div class="col-md-7 col-sm-6 mb-2 mb-sm-0">
+                                        <select class="form-control form-control-sm select-metode-single" name="blocks[0][metode_id]" required>
+                                            <option value="" disabled selected>-- Pilih Metode Penilaian --</option>
+                                            @foreach ($metodepenilaians as $metodepenilaian)
+                                                <option value="{{ $metodepenilaian->id }}">{{ $metodepenilaian->nama }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5 col-sm-6">
+                                        <div class="input-group input-group-sm" style="max-width: 180px;">
+                                            <input type="number" step="0.01" min="0" max="100" class="form-control input-bobot-metode" name="blocks[0][bobot_metode]" placeholder="Bobot Metode" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Select Kriteria Penilaian Terikat -->
+                            <div class="form-group mb-0">
+                                <label class="fw-bold small mb-1">Pilih Kriteria Penilaian<span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm mb-2 search-kriteria-block" placeholder="Cari Kriteria...">
+                                <div class="border rounded p-2 bg-light kriteria-block-list" style="max-height: 220px; overflow-y: auto;">
+                                    @foreach ($instrumenPenilaians as $instrumenPenilaian)
+                                        <div class="row align-items-center mb-2 p-1 border-bottom kriteria-item">
+                                            <div class="col-md-8 col-sm-7 d-flex align-items-center">
+                                                <input class="form-check-input kriteria-checkbox me-2 ms-0 mt-0" 
+                                                       type="checkbox" 
+                                                       name="blocks[0][kriteria][]" 
+                                                       value="{{ $instrumenPenilaian->id }}" 
+                                                       id="kriteria_0_{{ $instrumenPenilaian->id }}">
+                                                <label class="form-check-label text-dark fw-semibold mb-0 small" for="kriteria_0_{{ $instrumenPenilaian->id }}">
+                                                    {{ $instrumenPenilaian->nama_kriteria }}
+                                                </label>
+                                            </div>
+                                            <div class="col-md-4 col-sm-5">
+                                                <input type="number" step="0.01" min="0" max="100" 
+                                                       class="form-control form-control-sm kriteria-bobot" 
+                                                       name="blocks[0][bobot_kriteria][{{ $instrumenPenilaian->id }}]" 
+                                                       placeholder="Bobot" disabled>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Simpan</button>
+                <div class="mb-4">
+                    <button type="button" class="btn btn-outline-primary btn-sm px-3" id="btn-add-block">
+                        <i class="mdi mdi-plus-circle-outline me-1"></i> Tambah Paket Metode & Kriteria Lainnya
+                    </button>
+                </div>
+
+                <button type="submit" class="btn btn-primary px-4 py-2"><i class="mdi mdi-content-save me-1"></i> Simpan Asesmen</button>
             </form>
         </div>
     </div>
 </div>
 
+{{-- Template Tersembunyi untuk Pasangan Metode & Kriteria Baru --}}
+<template id="block-template">
+    <div class="card mb-3 border block-item" data-block-index="__INDEX__">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 px-3">
+            <span class="fw-bold text-primary small"><i class="mdi mdi-layers-outline me-1"></i> Metode Penilaian & Kriteria</span>
+            <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 btn-remove-block" title="Hapus Paket Ini">
+                <i class="mdi mdi-trash-can-outline me-1"></i> Hapus Paket
+            </button>
+        </div>
+        <div class="card-body p-3">
+            <!-- Select Single Metode Penilaian -->
+            <div class="form-group mb-3">
+                <label class="fw-bold small mb-1">Pilih Metode Penilaian & Isi Bobot Metode <span class="text-danger">*</span></label>
+                <div class="row align-items-center">
+                    <div class="col-md-7 col-sm-6 mb-2 mb-sm-0">
+                        <select class="form-control form-control-sm select-metode-single" name="blocks[__INDEX__][metode_id]" required>
+                            <option value="" disabled selected>-- Pilih Metode Penilaian --</option>
+                            @foreach ($metodepenilaians as $metodepenilaian)
+                                <option value="{{ $metodepenilaian->id }}">{{ $metodepenilaian->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-5 col-sm-6">
+                        <div class="input-group input-group-sm" style="max-width: 180px;">
+                            <input type="number" step="0.01" min="0" max="100" class="form-control input-bobot-metode" name="blocks[__INDEX__][bobot_metode]" placeholder="Bobot Metode" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Select Kriteria Penilaian Terikat -->
+            <div class="form-group mb-0">
+                <label class="fw-bold small mb-1">Pilih Kriteria Penilaian  <span class="text-muted fw-normal">*</span></label>
+                <input type="text" class="form-control form-control-sm mb-2 search-kriteria-block" placeholder="Cari Kriteria...">
+                <div class="border rounded p-2 bg-light kriteria-block-list" style="max-height: 220px; overflow-y: auto;">
+                    @foreach ($instrumenPenilaians as $instrumenPenilaian)
+                        <div class="row align-items-center mb-2 p-1 border-bottom kriteria-item">
+                            <div class="col-md-8 col-sm-7 d-flex align-items-center">
+                                <input class="form-check-input kriteria-checkbox me-2 ms-0 mt-0" 
+                                       type="checkbox" 
+                                       name="blocks[__INDEX__][kriteria][]" 
+                                       value="{{ $instrumenPenilaian->id }}" 
+                                       id="kriteria___INDEX___{{ $instrumenPenilaian->id }}">
+                                <label class="form-check-label text-dark fw-semibold mb-0 small" for="kriteria___INDEX___{{ $instrumenPenilaian->id }}">
+                                    {{ $instrumenPenilaian->nama_kriteria }}
+                                </label>
+                            </div>
+                            <div class="col-md-4 col-sm-5">
+                                <input type="number" step="0.01" min="0" max="100" 
+                                       class="form-control form-control-sm kriteria-bobot" 
+                                       name="blocks[__INDEX__][bobot_kriteria][{{ $instrumenPenilaian->id }}]" 
+                                       placeholder="Bobot" disabled>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script type="text/javascript">
-    document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function() {
+    const userOtoritas = "{{ $userOtoritas }}";
+    let blockCount = 1;
+
     function getSelectedCPLValue() {
         var mkKode = document.getElementById("mk_kode").value;
         var cplSelect = document.getElementById('cpl_id'); 
-        // console.log(mkKode);
-        const otoritas = "{{ $userOtoritas }}";
-        if(otoritas === "Kepala Program Studi"){
+        let urlget = '';
+        if(userOtoritas === "Kepala Program Studi"){
             urlget = `/kepala-program-studi/asesmen/get-cpl-by-mk/${mkKode}`;
-        } else if (otoritas === 'Penjamin Mutu Program Studi'){
+        } else if (userOtoritas === 'Penjamin Mutu Program Studi'){
+            urlget = `/penjamin-mutu/program-studi/asesmen/get-cpl-by-mk/${mkKode}`;
+        } else {
             urlget = `/penjamin-mutu/program-studi/asesmen/get-cpl-by-mk/${mkKode}`;
         }
-        if(mkKode){
-            cplSelect.innerHTML = '<option value="">Loading...</option>';
-            cplSelect.disabled = true ;
+
+        if (mkKode) {
             $.ajax({
                 url: urlget,
-                method: 'GET',
+                type: 'GET',
+                dataType: 'json',
                 success: function(data) {
-                    console.log(data);
-                    if (data.cpls.length > 0) {
-                        cplSelect.innerHTML = '<option value="">-- Pilih CPL --</option>';
-                        data.cpls.forEach(cpl => {
-                            const option = document.createElement('option');
+                    cplSelect.innerHTML = '<option value="">-- Pilih CPL --</option>';
+                    let cplsList = (data && data.cpls) ? data.cpls : (Array.isArray(data) ? data : []);
+                    if (cplsList && cplsList.length > 0) {
+                        cplsList.forEach(function(cpl) {
+                            var option = document.createElement('option');
                             option.value = cpl.id;
-                            option.textContent = `${cpl.kode} - ${cpl.judul}`;
+                            option.text = cpl.kode + (cpl.judul ? ' - ' + cpl.judul : (cpl.deskripsi ? ' - ' + cpl.deskripsi : ''));
                             cplSelect.appendChild(option);
                         });
                         cplSelect.disabled = false;
                     } else {
-                        cplSelect.innerHTML = '<option value="">-- Tidak ada data CPL untuk MK yang dipilih --</option>';
+                        cplSelect.innerHTML = '<option value="">-- Tidak ada data CPL --</option>';
+                        cplSelect.disabled = true;
                     }
                 },
-                error: function(xhr, status, error) {
-                    let errorMessage = 'Gagal memuat data CPL.';
-    
-                    // Jika server mengembalikan pesan error, tampilkan pesannya
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage += `\nDetail: ${xhr.responseJSON.message}`;
-                    } else if (xhr.responseText) {
-                        errorMessage += `\nDetail: ${xhr.responseText}`;
-                    } else {
-                        errorMessage += `\nStatus: ${status}, Error: ${error}`;
-                    }
-
-                    // Tampilkan pesan error dalam alert
-                    alert(errorMessage);
-                                }
+                error: function() {
+                    alert('Gagal memuat data CPL.');
+                    cplSelect.innerHTML = '<option value="">-- Pilih CPL --</option>';
+                    cplSelect.disabled = true;
+                }
             });
-        }else {
+        } else {
             cplSelect.innerHTML = '<option value="">-- Pilih CPL --</option>';
             cplSelect.disabled = true;
         }
-
     }
 
     function getSelectedCpmkValue() {
-        var cplId = document.getElementById("cpl_id").value;
         var mkKode = document.getElementById("mk_kode").value;
-        var cpmkSelect = document.getElementById('cpmk-select');  
-        // console.log(cplId);
-        const otoritas = "{{ $userOtoritas }}";
-        if(otoritas === "Kepala Program Studi"){
+        var cplId = document.getElementById("cpl_id").value;
+        var cpmkSelect = document.getElementById('cpmk-select'); 
+
+        let urlget = '';
+        if(userOtoritas === "Kepala Program Studi"){
             urlget = `/kepala-program-studi/asesmen/get-cpmk-by-cpl/${cplId}?mk_kode=${mkKode}`;
-        } else if (otoritas === 'Penjamin Mutu Program Studi'){
+        } else if (userOtoritas === 'Penjamin Mutu Program Studi'){
+            urlget = `/penjamin-mutu/program-studi/asesmen/get-cpmk-by-cpl/${cplId}?mk_kode=${mkKode}`;
+        } else {
             urlget = `/penjamin-mutu/program-studi/asesmen/get-cpmk-by-cpl/${cplId}?mk_kode=${mkKode}`;
         }
-        if(cplId){
-            cpmkSelect.innerHTML = '<option value="">Loading...</option>';
-            cpmkSelect.disabled = true ;
+
+        if (mkKode && cplId) {
             $.ajax({
                 url: urlget,
-                method: 'GET',
+                type: 'GET',
+                dataType: 'json',
                 success: function(data) {
-                    if (data.cpmks.length > 0) {
-                        cpmkSelect.innerHTML = '<option value="">-- Pilih CPMK --</option>';
-                    data.cpmks.forEach(cpmk => {
-                        const option = document.createElement('option');
-                        option.value = cpmk.id;
-                        option.textContent = `${cpmk.kode} - ${cpmk.judul}`;
-                        cpmkSelect.appendChild(option);
-                    });
+                    cpmkSelect.innerHTML = '<option value="">-- Pilih CPMK --</option>';
+                    let cpmksList = (data && data.cpmks) ? data.cpmks : (Array.isArray(data) ? data : []);
+                    if (cpmksList && cpmksList.length > 0) {
+                        cpmksList.forEach(function(cpmk) {
+                            var option = document.createElement('option');
+                            option.value = cpmk.id;
+                            option.text = cpmk.kode + (cpmk.judul ? ' - ' + cpmk.judul : (cpmk.deskripsi ? ' - ' + cpmk.deskripsi : ''));
+                            cpmkSelect.appendChild(option);
+                        });
                         cpmkSelect.disabled = false;
                     } else {
-                        cpmkSelect.innerHTML = '<option value="">-- Tidak ada data CPMK untuk MK yang dipilih --</option>';
+                        cpmkSelect.innerHTML = '<option value="">-- Tidak ada data CPMK --</option>';
+                        cpmkSelect.disabled = true;
                     }
                 },
-                error: function(xhr, status, error) {
-                    let errorMessage = 'Gagal memuat data CPMK.';
-    
-                    // Jika server mengembalikan pesan error, tampilkan pesannya
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage += `\nDetail: ${xhr.responseJSON.message}`;
-                    } else if (xhr.responseText) {
-                        errorMessage += `\nDetail: ${xhr.responseText}`;
-                    } else {
-                        errorMessage += `\nStatus: ${status}, Error: ${error}`;
-                    }
-
-                    // Tampilkan pesan error dalam alert
-                    alert(errorMessage);
-                                }
+                error: function() {
+                    alert('Gagal memuat data CPMK.');
+                    cpmkSelect.innerHTML = '<option value="">-- Pilih CPMK --</option>';
+                    cpmkSelect.disabled = true;
+                }
             });
-        }else {
-            cpmkSelect.innerHTML = '<option value="">-- Pilih MK --</option>';
+        } else {
+            cpmkSelect.innerHTML = '<option value="">-- Pilih CPMK --</option>';
             cpmkSelect.disabled = true;
         }
-
     }
 
-    //_____________________kode untuk cek max total bobot kriteria yang dapat diinput______________
-   
-    var maxKriteriaBobotMK = 0;
-    // Fungsi untuk mengambil maxKriteriaBobot dari server
-
-    function getMaxKriteriaBobotMK(){
-         var mkKode = document.getElementById("mk_kode").value;
-
-        if(!mkKode) return;
-        const otoritas = "{{ $userOtoritas }}";
-        if(otoritas === "Kepala Program Studi"){
-            urlget = `/kepala-program-studi/asesmen/getMaxBobotMK/${mkKode}`;
-        } else if (otoritas === 'Penjamin Mutu Program Studi'){
-            urlget = `/penjamin-mutu/program-studi/asesmen/getMaxBobotMK/${mkKode}`;
-        }
-        $.ajax({
-            url: urlget,
-            method: 'GET',
-            success: function(data){
-                if(data.maxKriteriaBobotMK !== undefined){
-                    maxKriteriaBobotMK = data.maxKriteriaBobotMK;
-                    console.log(maxKriteriaBobotMK);
-                    updateMaxBobotInput()
-                }
-            },
-            error: function(){
-                alert("Terjadi kesalahan saat mengambil data bobot.")
-            }
-        })
-    }
-
-    // Fungsi untuk memperbarui max input berdasarkan total yang sudah diisi
-    function updateMaxBobotInput(){
-        let totalTerpakai = getTotalBobot();
-
-        $(".kriteria-bobot").each(function(){
-            let sisaBobot = maxKriteriaBobotMK - (totalTerpakai - (parseFloat($(this).val()) || 0));
-            $(this).attr("max", sisaBobot > 0 ? sisaBobot : 0);
-        });
-    }
-
-  
-    // Fungsi untuk menghitung total bobot yang sudah diisi
-    function getTotalBobot(){
-        let total  = 0;
-        $(".kriteria-bobot:enabled").each(function(){
-            let value = parseFloat($(this).val()) ||0;
-            total += value;
-        });
-        return total;
-    }
-
-    //event listener ketika nilai bobot berubah
-    $(document).on("input", ".kriteria-bobot", function() {
-        let totalTerpakai = getTotalBobot();
-
-        if (totalTerpakai > maxKriteriaBobotMK) {
-            alert("Total bobot melebihi batas yang diperbolehkan!");
-            $(this).val(""); // Reset input yang terakhir dimasukkan
-        }
-
-        updateMaxBobotInput();
-    }); 
-    //_____________________kode untuk cek max total bobot kriteria yang dapat diinput______________
-
-    var mkElement = document.getElementById("mk_kode");
-    if (mkElement) {
-        mkElement.addEventListener("change", function(){
-            getSelectedCPLValue();
-            getMaxKriteriaBobotMK();
-        });        
-    }
-
-    var cplElement = document.getElementById("cpl_id");
-    if (cplElement) {
-        cplElement.addEventListener("change", function(){
-            getSelectedCpmkValue();
-        });
-    }
-
-    $('.metode-checkbox').change(function() {
-        const isChecked = $(this).is(':checked');
-        $(this).closest('.form-check').find('.metode-bobot').prop('disabled', !isChecked).val('');
+    // Event Listeners Filter CPL / CPMK
+    $('#mk_kode').change(function() {
+        getSelectedCPLValue();
     });
 
-    $(".kriteria-checkbox").change(function() {
-        let bobotInput = $(this).closest('.form-check').find('.kriteria-bobot');
+    if ($('#mk_kode').val()) {
+        getSelectedCPLValue();
+    }
 
-        if ($(this).is(':checked')) {
-            bobotInput.prop("disabled", false);
+    $('#cpl_id').change(function() {
+        getSelectedCpmkValue();
+    });
+
+    // Toggle Input Bobot Kriteria per Block
+    $(document).on('change', '.kriteria-checkbox', function() {
+        let isChecked = $(this).is(':checked');
+        let $row = $(this).closest('.kriteria-item');
+        let $bobotInput = $row.find('.kriteria-bobot');
+        $bobotInput.prop('disabled', !isChecked);
+        if (!isChecked) {
+            $bobotInput.val('');
+        }
+    });
+
+    // Search Kriteria di dalam blok
+    $(document).on('input', '.search-kriteria-block', function() {
+        let val = $(this).val().toLowerCase();
+        let $block = $(this).closest('.block-item');
+        $block.find('.kriteria-item').each(function() {
+            let text = $(this).text().toLowerCase();
+            $(this).toggle(text.includes(val));
+        });
+    });
+
+    // Tambah Paket Metode & Kriteria Baru (Dynamic Block)
+    $('#btn-add-block').click(function() {
+        blockCount++;
+        let templateHtml = $('#block-template').html();
+        templateHtml = templateHtml.replace(/__INDEX__/g, blockCount - 1)
+                                   .replace(/__NUMBER__/g, blockCount);
+
+        $('#dynamic-blocks-container').append(templateHtml);
+        updateRemoveButtonsVisibility();
+    });
+
+    // Hapus Paket Metode & Kriteria
+    $(document).on('click', '.btn-remove-block', function() {
+        if ($('.block-item').length > 1) {
+            $(this).closest('.block-item').remove();
+            reindexBlocks();
+            updateRemoveButtonsVisibility();
+        }
+    });
+
+    function updateRemoveButtonsVisibility() {
+        let count = $('.block-item').length;
+        if (count > 1) {
+            $('.btn-remove-block').show();
         } else {
-            bobotInput.prop("disabled", true).val(""); // Reset nilai jika uncheck
+            $('.btn-remove-block').hide();
         }
+    }
 
-        updateMaxBobotInput();
-    });
+    function reindexBlocks() {
+        $('.block-item').each(function(idx) {
+            let num = idx + 1;
+            $(this).attr('data-block-index', idx);
+            $(this).find('.card-header span').html('<i class="mdi mdi-layers-outline me-1"></i> Paket Metode Penilaian & Kriteria #' + num);
+        });
+    }
 
-    $('form').submit(function(event) {
-        let isValidMetode = true;
-        let isValidKriteria = true;
+    // Submit Validation
+    $('form').submit(function(e) {
+        let isValid = true;
+        $('.block-item').each(function(idx) {
+            let metodeVal = $(this).find('.select-metode-single').val();
+            let bobotVal = parseFloat($(this).find('.input-bobot-metode').val()) || 0;
 
-        // Periksa setiap metode penilaian yang dipilih
-        $('.metode-checkbox:checked').each(function() {
-            const bobotInput = $(this).closest('.form-check').find('.metode-bobot');
-            if (!bobotInput.val()) {
-                isValidMetode = false;
-                alert('Harap isi bobot untuk metode penilaian yang dipilih.');
-                bobotInput.focus();
-                return false; // Hentikan iterasi
+            if (!metodeVal) {
+                alert('Harap pilih metode penilaian pada Paket #' + (idx + 1));
+                isValid = false;
+                return false;
+            }
+            if (bobotVal <= 0) {
+                alert('Bobot metode pada Paket #' + (idx + 1) + ' harus diisi dan lebih besar dari 0.');
+                isValid = false;
+                return false;
             }
         });
 
-        // Periksa setiap kriteria yang dipilih
-        $('.kriteria-checkbox:checked').each(function() {
-            const bobotInput = $(this).closest('.form-check').find('.kriteria-bobot');
-            if (!bobotInput.val()) {
-                isValidKriteria = false;
-                alert('Harap isi bobot untuk kriteria penilaian yang dipilih.');
-                bobotInput.focus();
-                return false; // Hentikan iterasi
-            }
-        });
-
-        // Jika tidak valid, hentikan pengiriman form
-        if (!isValidKriteria) {
-            event.preventDefault();
-        }
-
-        // Jika tidak valid, hentikan pengiriman form
-        if (!isValidMetode) {
-            event.preventDefault();
+        if (!isValid) {
+            e.preventDefault();
+            return false;
         }
     });
-
-    document.getElementById('search-kriteria').addEventListener('input', function() {
-    let searchValue = this.value.toLowerCase();
-    let container = document.getElementById('kriteria-penilaian');
-    let items = document.querySelectorAll('.kriteria-item');
-
-        items.forEach(item => { 
-            let label = item.querySelector('label').innerText.toLowerCase();
-            
-            if (label.includes(searchValue)) {
-                item.style.visibility = "visible"; // Tampilkan item yang cocok
-                item.style.order - "-1";
-                container.prepend(item);
-            } else {
-                item.style.visibility = "hidden"; // Sembunyikan item yang tidak cocok
-            }
-        });
-    });
-
-    document.getElementById('search-metode').addEventListener('input', function() {
-    let searchValue = this.value.toLowerCase();
-    let container = document.getElementById('metode-penilaian');
-    let items = document.querySelectorAll('.metode-item');
-
-        items.forEach(item => { 
-            let label = item.querySelector('label').innerText.toLowerCase();
-            
-            if (label.includes(searchValue)) {
-                item.style.visibility = "visible"; // Tampilkan item yang cocok
-                item.style.order - "-1";
-                container.prepend(item);
-            } else {
-                item.style.visibility = "hidden"; // Sembunyikan item yang tidak cocok
-            }
-        });
-    });
-    
 });
-  
 </script>
-
 @endsection

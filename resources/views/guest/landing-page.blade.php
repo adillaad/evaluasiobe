@@ -10,7 +10,7 @@
         padding: 7.5rem 0 4.5rem;
         background:
             linear-gradient(105deg, rgba(7, 20, 40, 0.78) 0%, rgba(7, 20, 40, 0.55) 42%, rgba(7, 20, 40, 0.28) 100%),
-            url('{{ asset('assets/img/rektorat-unila.png') }}') center / cover no-repeat;
+            url('{{ asset('assets/img/rektorat-unila-baru.jpg') }}') center / cover no-repeat;
         color: #fff;
         overflow: hidden;
         text-align: left;

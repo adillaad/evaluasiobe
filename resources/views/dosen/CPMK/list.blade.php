@@ -108,14 +108,14 @@
 
                                     @if ($userOtoritas == 'Dosen')
                                         <td rowspan="{{ $cpmkRowspan }}" class="text-center align-middle">
-                                            <form action="{{ route('dosen.cpmk-delete', $cpmk->id) }}" method="post">
+                                            <form action="{{ route('dosen.cpmk-delete', $cpmk->id) }}" method="post" class="d-inline m-0 p-0">
                                                 @csrf
                                                 @method('delete')
                                                 <button type="submit"
-                                                    class="btn btn-danger btn-icon-text p-2"
+                                                    class="btn btn-danger btn-icons"
+                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
                                                     onclick="return confirm('PERHATIAN: Menghapus CPMK {{ $cpmk->kode }} akan menghapus SEMUA Sub-CPMK di dalamnya. Lanjutkan?')">
-                                                    Delete
-                                                    <i class="ti-trash btn-icon-append"></i>
+                                                    <i class="ti-trash"></i>
                                                 </button>
                                             </form>
                                         </td>

@@ -10,15 +10,19 @@
             <div>{{ session('success') }}</div>
         </div>
     @endif
-
-    <h3 class="px-4 pb-4 fw-bold text-center">Halaman List Profesi</h3>
     <div class="container-fluid">
         <div class="card">
             <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <h4 class="card-title mb-0 me-auto">List Profesi</h4>
+                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                        <button type="button" class="btn btn-success btn-icon-text" onclick="createProfesi()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>Tambah Profesi</span>
+                        </button>
+                    @endif
+                </div>
                 <x-filter-form :universities="$universities" :faculties="$faculties" :programs="$programs" :kurikulums="$kurikulums" :showKurikulum="true" />
-                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                    <button type="button" class="btn btn-success" onclick="createProfesi()">Tambah Profesi</button>
-                @endif
                 <div id="notif-area" class="mt-3"></div>
                 <div id="read" class="mt-3"></div>
             </div>

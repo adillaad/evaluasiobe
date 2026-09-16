@@ -1,7 +1,7 @@
 @extends('penjamin-mutu.template')
 
 @section('content')
-<div class="col-lg-12 grid-margin stretch-card">
+<div class="container-fluid">
     <div class="card">
         <div class="card-body">
             <h4 class="card-title">Daftar RPS</h4>
@@ -64,8 +64,9 @@
 
                             <td class="text-center">
                                 <a href="/admin/print-rps/{{ encrypt($rps->id) }}" target="_blank"
-                                   class="btn btn-info btn-icon-text p-2" title="Lihat & Cetak RPS">
-                                    <i class="ti-printer btn-icon"></i>
+                                   class="btn btn-icons btn-info" 
+                                   data-bs-toggle="tooltip" title="Lihat & Cetak RPS">
+                                    <i class="ti-printer"></i>
                                 </a>
                             </td>
                         </tr>

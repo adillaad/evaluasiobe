@@ -18,13 +18,16 @@ class ProfileController extends Controller
 {
     public function profile()
     {
+        $user = Auth::user();
+        $primaryProdiId = $user->primary_prodi_id ?? $user->id_prodiUser;
+        $isSecondaryProdi = $primaryProdiId && (int)$user->id_prodiUser !== (int)$primaryProdiId;
+
         // Ambil semua otoritas user
         $profiles = UserOtoritas::where('user_id', Auth::id())
             ->orderByRaw("FIELD(otoritas, 'Admin', 'Admin Universitas', 'Wakil Rektor', 'Wakil Dekan', 'Kepala Program Studi' ,'Dosen', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi')")
-            ->get();
-
-        // Ambil user
-        $user = Auth::user();
+            ->get()
+            ->unique('otoritas') // Pastikan tidak ada duplikat otoritas yang sama
+            ->values();
 
         // BARU: Ambil semua prodi milik user
         $userProdis = $user->prodis()->withPivot('active')->get();
@@ -44,20 +47,50 @@ class ProfileController extends Controller
 
         // Pilih view berdasarkan otoritas aktif
         $activeOtoritas = $profiles->where('active', true)->first();
-        $layout = $layoutPaths[$activeOtoritas->otoritas] ?? 'penjamin-mutu.template';
+        $layout = $layoutPaths[$activeOtoritas->otoritas ?? 'Dosen'] ?? 'penjamin-mutu.template';
 
-        return view('components.profile', compact('user', 'profiles', 'userProdis', 'layout'));
+        return view('components.profile', compact('user', 'profiles', 'userProdis', 'layout', 'isSecondaryProdi'));
     }
 
     public function switchOtoritas(Request $request)
     {
+        $user = Auth::user();
+        $primaryProdiId = $user->primary_prodi_id ?? $user->id_prodiUser;
+        $isSecondaryProdi = $primaryProdiId && (int)$user->id_prodiUser !== (int)$primaryProdiId;
+
+        if ($isSecondaryProdi) {
+            return redirect()->back()->with('error', 'Saat berada di prodi pengampu, Anda hanya memiliki otoritas sebagai Dosen.');
+        }
+
         // Non-aktifkan semua otoritas user
         UserOtoritas::where('user_id', Auth::id())->update(['active' => false]);
 
         // Aktifkan otoritas yang dipilih
-        UserOtoritas::findOrFail($request->otoritas_id)->update(['active' => true]);
+        $targetOtoritas = UserOtoritas::where('user_id', Auth::id())->findOrFail($request->otoritas_id);
+        $targetOtoritas->update(['active' => true]);
 
-        return redirect()->back()->with('success', 'Otoritas berhasil diubah');
+        // Simpan role terakhir yang dipilih ke session
+        session(['last_primary_otoritas_id_' . Auth::id() => $targetOtoritas->id]);
+
+        $routes = [
+            'Admin' => 'admin.home',
+            'Admin Universitas' => 'admin-universitas.home',
+            'Wakil Rektor' => 'wakil-rektor.home',
+            'Wakil Dekan' => 'wakil-dekan.home',
+            'Kepala Program Studi' => 'kepala-program-studi.home',
+            'Dosen' => 'dosen.home',
+            'Penjamin Mutu' => 'penjamin-mutu.universitas.home',
+            'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.home',
+            'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.home',
+            'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.home',
+            'Mahasiswa' => 'mahasiswa.home',
+        ];
+
+        if (isset($routes[$targetOtoritas->otoritas]) && \Illuminate\Support\Facades\Route::has($routes[$targetOtoritas->otoritas])) {
+            return redirect()->route($routes[$targetOtoritas->otoritas])->with('success', 'Berhasil beralih ke peran ' . $targetOtoritas->otoritas);
+        }
+
+        return redirect()->back()->with('success', 'Berhasil beralih ke peran ' . $targetOtoritas->otoritas);
     }
 
     public function switchProdi(Request $request, UserContextService $contextService)
@@ -66,6 +99,29 @@ class ProfileController extends Controller
 
         try {
             $contextService->switchActiveProdi(auth()->user(), $request->prodi_id);
+            if ($request->has('redirect_to')) {
+                return redirect($request->redirect_to)->with('success', 'Prodi aktif berhasil diperbarui!');
+            }
+            
+            $userOtoritas = optional(auth()->user()->otoritas)->otoritas;
+            $routes = [
+                'Admin' => 'admin.home',
+                'Admin Universitas' => 'admin-universitas.home',
+                'Wakil Rektor' => 'wakil-rektor.home',
+                'Wakil Dekan' => 'wakil-dekan.home',
+                'Kepala Program Studi' => 'kepala-program-studi.home',
+                'Dosen' => 'dosen.home',
+                'Penjamin Mutu' => 'penjamin-mutu.universitas.home',
+                'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.home',
+                'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.home',
+                'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.home',
+                'Mahasiswa' => 'mahasiswa.home',
+            ];
+
+            if (isset($routes[$userOtoritas])) {
+                return redirect()->route($routes[$userOtoritas])->with('success', 'Prodi aktif berhasil diperbarui!');
+            }
+
             return redirect()->back()->with('success', 'Prodi aktif berhasil diperbarui!');
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Gagal: ' . $e->getMessage());

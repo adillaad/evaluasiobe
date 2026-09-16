@@ -51,43 +51,48 @@ class ProfilController extends Controller
         ));
     }
 
-    public function indexPemetaanCPMKProf()
+    public function indexPemetaanCPMKProf(Request $request)
     {
-        $cpmks = CPMK::forUser(auth()->user())->get();
-        return view('penjamin-mutu.profil.listProfesiCpmk', compact('cpmks'));
+        $user = auth()->user();
+        $query = CPMK::forUser($user);
+        if ($request->filled('kurikulum_id')) {
+            $query->where('id_kurikulum', $request->kurikulum_id);
+        }
+        $cpmks = $query->get();
+        $kurikulums = $this->kurikulumsForUser();
+
+        return view('penjamin-mutu.profil.listProfesiCpmk', compact('cpmks', 'kurikulums'));
     }
 
     public function indexProfilMK(Request $request)
     {
-        $grouped   = ProfilLulusan::queryProfilMK(auth()->user(), $request)
+        $raw = ProfilLulusan::queryProfilMK(auth()->user(), $request)
+            ->orderBy('kurikulums.tahun', 'desc')
             ->orderBy('profil_lulusan.kode')
-            ->get()
-            ->groupBy('profil_kode');
+            ->get();
 
-        $perPage   = 10;
-        $current   = Paginator::resolveCurrentPage();
-        $paginated = new LengthAwarePaginator(
-            collect($grouped->values())->forPage($current, $perPage)->values(),
-            $grouped->count(),
-            $perPage,
-            $current,
-            ['path' => Paginator::resolveCurrentPath(), 'query' => $request->query()]
-        );
+        $groupedByKurikulum = $raw->groupBy(function ($item) {
+            return $item->kurikulum_tahun ? 'Kurikulum ' . $item->kurikulum_tahun : 'Tanpa Kurikulum';
+        })->map(function ($itemsInKurikulum) {
+            return $itemsInKurikulum->groupBy('profil_kode');
+        });
 
         return view('penjamin-mutu.profil.profil-MK', array_merge(
             $this->getFilterData($request),
-            ['groupedPaginated' => $paginated]
+            ['groupedByKurikulum' => $groupedByKurikulum]
         ));
     }
     public function readListProfil(Request $request)
     {
+        $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
         $listProfil = ProfilLulusan::filterOtoritas(auth()->user(), $request->kurikulum_id)->get();
-        return view('penjamin-mutu.profil.readListProfil', compact('listProfil'));
+        return view('penjamin-mutu.profil.readListProfil', compact('listProfil', 'userOtoritas'));
     }
 
     public function readListProfilProf(Request $request)
     {
-        $user       = auth()->user();
+        $user        = auth()->user();
+        $userOtoritas = $user->otoritas->otoritas ?? '';
         $kurikulums = Kurikulum::where('id_prodi', $user->id_prodiUser)->get();
 
         $query = ProfilLulusan::query()
@@ -110,23 +115,26 @@ class ProfilController extends Controller
         }
 
         $listProfil  = $query->get();
-        $listProfesi = Profesi::forUser($user)->get();
+        $listProfesi = Profesi::forUser($user)
+            ->when($request->filled('kurikulum_id'), fn($q) => $q->where('profesi.kurikulum_id', $request->kurikulum_id))
+            ->get();
 
         $view = $user->prodi->is_aptikom
             ? 'penjamin-mutu.profil.readListProfilProfAptikom'
             : 'penjamin-mutu.profil.readListProfilProf';
 
-        return view($view, compact('listProfil', 'listProfesi', 'kurikulums'));
+        return view($view, compact('listProfil', 'listProfesi', 'kurikulums', 'userOtoritas'));
     }
 
     public function readListProfesi(Request $request)
     {
+        $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
         $profesi = Profesi::with('kurikulum')
             ->forUser(auth()->user())
             ->when($request->kurikulum_id, fn($q) => $q->where('kurikulum_id', $request->kurikulum_id))
             ->get();
 
-        return view('penjamin-mutu.profil.readListProfesi', compact('profesi'));
+        return view('penjamin-mutu.profil.readListProfesi', compact('profesi', 'userOtoritas'));
     }
     public function createListProfil()
     {

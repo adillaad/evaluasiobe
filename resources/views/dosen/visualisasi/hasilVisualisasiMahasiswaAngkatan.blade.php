@@ -12,8 +12,6 @@
     </div>
 @endif
 
-<h3 class="px-4 pb-4 fw-bold text-center">Hasil Visualisasi Mahasiswa Angkatan {{$angkatan}}</h3>
-
 <div class="form-group stretch-card" id="tugas">
     <div class="card">
         <div class="card-body">

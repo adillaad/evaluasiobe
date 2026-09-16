@@ -18,27 +18,25 @@ class ProfilCplController extends Controller
     public function readListProfilCpl()
     {
         try {
-            // $query = DB::table('profil_cpl')
-            //     ->join('profil_lulusan', 'profil_cpl.idProfil', '=', 'profil_lulusan.id')
-            //     ->join('cpls', 'profil_cpl.idCpl', '=', 'cpls.id')
-            //     ->select('profil_lulusan.namaProfil', 'cpls.kode', 'cpls.judul', 'profil_cpl.bobot', 'profil_cpl.id');
+            $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
             $query = ProfilCpl::query()
+                ->select('profil_cpl.*')
                 ->join('prodi', 'profil_cpl.id_prodi', '=', 'prodi.id')
                 ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
                 ->join('profil_lulusan', 'profil_cpl.idProfil', '=', 'profil_lulusan.id')
                 ->join('cpls', 'profil_cpl.idCpl', '=', 'cpls.id');
 
-            if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Universitas','Wakil Rektor'])) {
+            if (in_array($userOtoritas, ['Penjamin Mutu Universitas','Wakil Rektor'])) {
                 $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-            } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
+            } else if (in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
                 $query->where('fakultas.id', auth()->user()->id_fakultasUser);
-            } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+            } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
                 $query->where('prodi.id', auth()->user()->id_prodiUser);
             }
 
             $profilCpls = $query->get();
 
-            return view('penjamin-mutu.profil.readListProfilCpl', compact('profilCpls'));
+            return view('penjamin-mutu.profil.readListProfilCpl', compact('profilCpls', 'userOtoritas'));
         } catch (\Exception $e) {
             return ($e->getMessage());
         }
@@ -176,5 +174,6 @@ class ProfilCplController extends Controller
     {
         $profil = ProfilCpl::findOrFail($id);
         $profil->delete();
+        return response()->json(['message' => 'Data berhasil dihapus']);
     }
 }

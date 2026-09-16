@@ -28,7 +28,21 @@
 @extends('penjamin-mutu.template')
 
 @section('content')
-<div class="col-lg-12 grid-margin stretch-card">
+<div class="container-fluid">
+    @if(in_array($userOtoritas, ['Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
+        <div class="card mb-3">
+            <div class="card-body pb-0">
+                <x-filter-form
+                    :universities="$universities ?? collect()"
+                    :faculties="$faculties ?? collect()"
+                    :programs="$programs ?? collect()"
+                    :showUniversitas="$showUniversitas"
+                    :showFakultas="$showFakultas"
+                    :showProdi="$showProdi"
+                />
+            </div>
+        </div>
+    @endif
     <div class="card">
         <div class="card-body">
 
@@ -37,19 +51,6 @@
                     <h4 class="card-title mb-1">Daftar Rubrik</h4> 
                 </div>
             </div>
-
-            @if(in_array($userOtoritas, ['Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
-                <div class="mb-4">
-                    <x-filter-form
-                        :universities="$universities ?? collect()"
-                        :faculties="$faculties ?? collect()"
-                        :programs="$programs ?? collect()"
-                        :showUniversitas="$showUniversitas"
-                        :showFakultas="$showFakultas"
-                        :showProdi="$showProdi"
-                    />
-                </div>
-            @endif
 
             <div class="table-responsive">
                 <table class="table table-hover dataTable">
@@ -95,9 +96,9 @@
 
                                 <td class="text-center">
                                     <a href="{{ route($currentPrefix . 'rubrik-download', $rubrik->id) }}"
-                                       class="btn btn-success btn-icon-text p-2"
-                                       title="Unduh Rubrik">
-                                        <i class="ti-download btn-icon"></i>
+                                       class="btn btn-icons btn-success"
+                                       data-bs-toggle="tooltip" title="Unduh Rubrik">
+                                        <i class="ti-download"></i>
                                     </a>
                                 </td>
                             </tr>

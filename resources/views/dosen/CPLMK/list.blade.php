@@ -78,20 +78,19 @@
                                     @if (in_array(auth()->user()->otoritas->otoritas, ['Wakil Rektor']))
                                         <td>{{ $nama_fakultas }}</td>
                                     @endif
-                                    @if (auth()->user()->otoritas->otoritas == 'Dosen')
-                                        <td class="py-4 d-flex">
-                                            <!-- <form action="/dosen/delete-cplmk/{{ $cplmk->id }}" method="post"> -->
-                                                <form action="{{ route('dosen.cplmk-delete', $cplmk->id) }}" method="post">
-                                                @csrf
-                                                @method('delete')
-                                                <button type="submit" class="btn btn-danger btn-icon-text p-2 me-2"
-                                                    onclick="return confirm('Are you sure to delete CPL {{ $kode_cpl }} from CPLMK {{ $kode_mk }} ?')">
-                                                    Delete
-                                                    <i class="ti-trash btn-icon-append"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    @endif
+                                     @if (auth()->user()->otoritas->otoritas == 'Dosen')
+                                         <td>
+                                             <form action="{{ route('dosen.cplmk-delete', $cplmk->id) }}" method="post" class="d-inline m-0 p-0">
+                                                 @csrf
+                                                 @method('delete')
+                                                 <button type="submit" class="btn btn-danger btn-icons"
+                                                     data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
+                                                     onclick="return confirm('Are you sure to delete CPL {{ $kode_cpl }} from CPLMK {{ $kode_mk }} ?')">
+                                                     <i class="ti-trash"></i>
+                                                 </button>
+                                             </form>
+                                         </td>
+                                     @endif
                                 </tr>
                             @endforeach
                         </tbody>

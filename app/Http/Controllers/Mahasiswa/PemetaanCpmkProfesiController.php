@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Barryvdh\Snappy\Facades\SnappyPdf as Pdf;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PemetaanCpmkProfesiController extends Controller
 {
@@ -69,7 +69,7 @@ class PemetaanCpmkProfesiController extends Controller
             'prodi'
         ))->setPaper('a4', 'portrait');
 
-        return $pdf->inline('Pemetaan-CPMK-Profesi-' . ($npm ?? 'mahasiswa') . '.pdf');
+        return $pdf->stream('Pemetaan-CPMK-Profesi-' . ($npm ?? 'mahasiswa') . '.pdf');
     }
 
     private function guardMahasiswa(\App\Models\User $user): Mahasiswa

@@ -3,113 +3,226 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Visualisasi CPMK {{ $course }} Angkatan {{ $angkatan }}</title>
     <style>
-        body {
-            font-family: "Times New Roman", Times, serif;
-            font-size: 15pt;
-            text-align: justify;
-        }
-        .container {
-            width: 100%;
+        @page {
+            margin: 15mm 12mm 15mm 12mm;
         }
 
-        h2,
-        h3 {
+        body {
+            font-family: "DejaVu Sans", "Helvetica Neue", Arial, sans-serif;
+            font-size: 8.5pt;
+            line-height: 1.4;
+            color: #222;
+        }
+
+        .header {
             text-align: center;
-            margin-bottom: 10px;
+            border-bottom: 2px solid #1F3BB3;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+
+        .header h2 {
+            margin: 0 0 4px;
+            font-size: 13pt;
+            color: #1F3BB3;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header h3 {
+            margin: 0;
+            font-size: 9.5pt;
+            font-weight: normal;
+            color: #555;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        .info-table td {
+            padding: 5px 10px;
+            font-size: 8.5pt;
+            vertical-align: middle;
+        }
+
+        .info-label {
+            width: 20%;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .info-value {
+            width: 30%;
+            color: #212529;
+        }
+
+        .section-box {
+            margin-bottom: 16px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 9.5pt;
+            font-weight: bold;
+            color: #1F3BB3;
+            background-color: #eef2ff;
+            padding: 5px 8px;
+            border-left: 4px solid #1F3BB3;
+            margin-bottom: 8px;
+            text-transform: uppercase;
         }
 
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-bottom: 8px;
+            font-size: 8pt;
         }
 
         .data-table th,
         .data-table td {
-            border: 1px solid black;
-            padding: 10px;
+            border: 1px solid #cbd5e1;
+            padding: 5px 8px;
             text-align: left;
         }
 
-        .chart {
+        .data-table th {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            font-weight: bold;
             text-align: center;
-            margin-top: 30px;
         }
 
-        .chart img {
-            width: 100%;
-            max-width: 500px;
+        .data-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .chart-container {
+            text-align: center;
+            margin: 10px 0;
+            page-break-inside: avoid;
+        }
+
+        .chart-container img {
+            max-width: 80%;
+            max-height: 280px;
+            height: auto;
+            border: 1px solid #e0e0e0;
+            padding: 4px;
+            background: #fff;
+        }
+
+        ol, ul {
+            margin: 4px 0 8px 18px;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 3px;
+            font-size: 8pt;
+            color: #333;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: right;
+            font-size: 7.5pt;
+            color: #777;
+            border-top: 1px solid #eee;
+            padding-top: 4px;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h2>Laporan Visualisasi CPMK {{ $course }} Angkatan {{ $angkatan }}</h2>
-        <table class="data-table">
-            <tr>
-                <th>Angkatan</th>
-                <td>{{ $angkatan }}</td>
-            </tr>
-            <tr>
-                <th>Program Studi</th>
-                <td>{{ $prodi }}</td>
-            </tr>
-            <tr>
-                <th>Universitas</th>
-                <td>{{ $universitas }}</td>
-            </tr>
-        </table>
+    <div class="header">
+        <h2>Laporan Visualisasi Capaian CPMK Angkatan</h2>
+        <h3>Mata Kuliah: {{ $course }} &mdash; Angkatan {{ $angkatan }}</h3>
+    </div>
 
-        <div class="chart">
-            <h4>CPMK Batch</h4>
-            <img src="{{ $radarChartAngkatanImg }}">
+    <table class="info-table">
+        <tr>
+            <td class="info-label">Mata Kuliah</td>
+            <td class="info-value" style="width: 80%;" colspan="3">{{ $course }}</td>
+        </tr>
+        <tr>
+            <td class="info-label">Angkatan</td>
+            <td class="info-value">{{ $angkatan }}</td>
+            <td class="info-label">Program Studi</td>
+            <td class="info-value">{{ $prodi }}</td>
+        </tr>
+        <tr>
+            <td class="info-label">Universitas</td>
+            <td class="info-value" colspan="3">{{ $universitas }}</td>
+        </tr>
+    </table>
+
+    @if (!empty($radarChartAngkatanImg))
+        <div class="section-box">
+            <div class="section-title">Diagram Radar Capaian CPMK Angkatan</div>
+            <div class="chart-container">
+                <img src="{{ $radarChartAngkatanImg }}" alt="Radar Chart Capaian CPMK Angkatan">
+            </div>
         </div>
+    @endif
 
-        <div>
-            <h3>Summary</h3>
-            <p>{!! $summary !!}</p>
-        </div>
-
-        @if (!empty($descriptions) && is_array($descriptions))
-            <h3>Descriptions</h3>
+    @if (!empty($descriptions) && is_array($descriptions) && count($descriptions) > 0)
+        <div class="section-box">
+            <div class="section-title">Deskripsi Capaian Pembelajaran Mata Kuliah (CPMK)</div>
             <ol>
                 @foreach ($descriptions as $desc)
                     <li>{{ $desc }}</li>
                 @endforeach
             </ol>
-        @endif
+        </div>
+    @endif
 
-        <h3>Questions with the Lowest CPMK</h3>
-        <table border="1" width="100%" cellspacing="0" cellpadding="5">
+    <div class="section-box">
+        <div class="section-title">Questions with Lowest CPMK (Soal dengan Capaian CPMK Terendah)</div>
+        <table class="data-table">
             <thead>
                 <tr>
-                    <th>No</th>
-                    <th>Types of Assessment</th>
-                    <th>Questions</th>
+                    <th style="width: 35px;">No</th>
+                    <th style="width: 130px;">Jenis Asesmen</th>
+                    <th>Pertanyaan / Soal</th>
                 </tr>
             </thead>
             <tbody>
-                @if (!empty($soalTerendah))
+                @if (!empty($soalTerendah) && count($soalTerendah) > 0)
                     @foreach ($soalTerendah as $row)
+                        @php
+                            $noVal = is_array($row) ? ($row['no'] ?? $loop->iteration) : ($row->no ?? $loop->iteration);
+                            $jenisVal = is_array($row) ? ($row['types_of_assessment'] ?? ($row['Jenis'] ?? '-')) : ($row->types_of_assessment ?? ($row->Jenis ?? '-'));
+                            $soalVal = is_array($row) ? ($row['question'] ?? ($row['soal'] ?? '-')) : ($row->question ?? ($row->soal ?? '-'));
+                        @endphp
                         <tr>
-                            <td>{{ $row['no'] }}</td>
-                            <td>{{ $row['types_of_assessment'] }}</td>
-                            <td>{{ $row['question'] }}</td>
+                            <td style="text-align: center;">{{ $noVal }}</td>
+                            <td>{{ $jenisVal }}</td>
+                            <td>{{ $soalVal }}</td>
                         </tr>
                     @endforeach
                 @else
                     <tr>
-                        <td colspan="3">Tidak ada data tersedia</td>
+                        <td colspan="3" style="text-align: center; color: #888; padding: 10px;">
+                            Tidak ada data soal dengan nilai rendah pada CPMK ini.
+                        </td>
                     </tr>
                 @endif
             </tbody>
         </table>
     </div>
 
+    <div class="footer">
+        Dicetak pada: {{ date('d-m-Y H:i:s') }} | Sistem Evaluasi OBE
+    </div>
 </body>
 
 </html>

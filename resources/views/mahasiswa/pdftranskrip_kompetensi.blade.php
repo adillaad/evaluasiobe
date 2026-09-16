@@ -345,9 +345,9 @@
             <td class="info-label">Tanggal Cetak</td>
             <td class="info-sep">:</td>
             <td>{{ date('d F Y') }}</td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td class="info-label">Periode</td>
+            <td class="info-sep">:</td>
+            <td><strong>{{ $transkripData['activePeriodLabel'] ?? 'Kumulatif (Semua Semester)' }}</strong></td>
         </tr>
     </table>
 
@@ -364,7 +364,7 @@
                     <tr>
                         <td class="td-kode">{{ $cpl['kode'] ?? '-' }}</td>
                         <td class="td-desc">{{ $cpl['deskripsi'] ?? '-' }}</td>
-                        <td class="td-nilai">{{ number_format($cpl['nilai'] ?? 0, 2) }}%</td>
+                        <td class="td-nilai">{{ number_format($cpl['nilai'] ?? 0, 2) }}</td>
                         <td class="td-status">
                             <span class="badge bg-{{ $cpl['badge_class'] ?? 'cukup' }}">
                                 {{ $cpl['status'] ?? '-' }}
@@ -407,7 +407,7 @@
                         <tr>
                             <td class="td-kode">{{ $cpmk['kode'] ?? '-' }}</td>
                             <td class="td-desc">{{ $cpmk['deskripsi'] ?? '-' }}</td>
-                            <td class="td-nilai">{{ number_format($cpmk['nilai'] ?? 0, 2) }}%</td>
+                            <td class="td-nilai">{{ number_format($cpmk['nilai'] ?? 0, 2) }}</td>
                             <td class="td-status">
                                 <span class="badge bg-{{ $cpmk['badge_class'] ?? 'cukup' }}">
                                     {{ $cpmk['status'] ?? '-' }}
@@ -433,12 +433,53 @@
                     <td class="ipk-value">{{ $transkripData['total_sks'] ?? 0 }}</td>
                 </tr>
                 <tr>
-                    <td class="ipk-label"><strong>IPK Sementara</strong></td>
+                    <td class="ipk-label"><strong>{{ ($transkripData['isSingleSemester'] ?? false) ? 'IPS (Indeks Prestasi Semester)' : 'IPK Sementara' }}</strong></td>
                     <td class="ipk-value"><strong>{{ number_format($transkripData['ipk'] ?? 0, 2) }}</strong></td>
                 </tr>
             </table>
         </div>
     @endif
+
+    {{-- PETUNJUK PENILAIAN --}}
+    @php
+        $jenjang = strtoupper(trim($prodi->jenjang ?? ''));
+        $isPascasarjana = in_array($jenjang, ['S2', 'S3', 'SPESIALIS', 'MAGISTER', 'DOKTOR', 'SUB SPESIALIS', 'SP-1', 'SP-2', 'S2 TERAPAN', 'S3 TERAPAN']);
+    @endphp
+    <div class="section-title">Keterangan & Indikator Penilaian</div>
+    <div class="box" style="font-size: 8pt; margin-bottom: 10px;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; padding-right: 8px;">
+                    <strong>Predikat Kompetensi OBE (CPL & CPMK):</strong>
+                    <ul style="margin: 3px 0 0 15px; padding: 0; line-height: 1.3;">
+                        <li><strong>Sangat Baik:</strong> &ge; 85.00</li>
+                        <li><strong>Baik:</strong> 70.00 - &lt; 85.00</li>
+                        <li><strong>Cukup:</strong> 60.00 - &lt; 70.00</li>
+                        <li><strong>Kurang:</strong> &lt; 60.00</li>
+                    </ul>
+                </td>
+                <td style="width: 50%; vertical-align: top; padding-left: 8px; border-left: 1px solid #ccc;">
+                    <strong>Konversi Nilai Mutu Mata Kuliah ({{ $isPascasarjana ? 'Pascasarjana' : 'Diploma/Sarjana' }}):</strong>
+                    @if ($isPascasarjana)
+                        <ul style="margin: 3px 0 0 15px; padding: 0; line-height: 1.3;">
+                            <li><strong>A (4.00):</strong> &ge; 81.00 (Lulus)</li>
+                            <li><strong>B+ (3.50):</strong> 75.00 - &lt; 81.00 (Lulus)</li>
+                            <li><strong>B (3.00):</strong> 70.00 - &lt; 75.00 (Lulus)</li>
+                            <li><strong>C+ (2.50):</strong> 65.00 - &lt; 70.00 (Lulus Min.)</li>
+                            <li><strong>E (0.00):</strong> &lt; 65.00 (Tidak Lulus)</li>
+                        </ul>
+                    @else
+                        <ul style="margin: 3px 0 0 15px; padding: 0; line-height: 1.3;">
+                            <li><strong>A (4.00):</strong> &ge; 76.00 &middot; <strong>B+ (3.50):</strong> 71.00 - &lt; 76.00 (Lulus)</li>
+                            <li><strong>B (3.00):</strong> 66.00 - &lt; 71.00 &middot; <strong>C+ (2.50):</strong> 61.00 - &lt; 66.00 (Lulus)</li>
+                            <li><strong>C (2.00):</strong> 56.00 - &lt; 61.00 &middot; <strong>D (1.00):</strong> 50.00 - &lt; 56.00 (Lulus Min.)</li>
+                            <li><strong>E (0.00):</strong> &lt; 50.00 (Tidak Lulus)</li>
+                        </ul>
+                    @endif
+                </td>
+            </tr>
+        </table>
+    </div>
 
     {{-- FOOTER --}}
     <div class="footer">

@@ -22,7 +22,7 @@
 <!-- Template JS -->
 <script src="{{ asset('/assets/template/js/off-canvas.js') }}"></script>
 <script src="{{ asset('/assets/template/js/hoverable-collapse.js') }}"></script>
-<script src="{{ asset('/assets/template/js/template.js') }}"></script>
+<script src="{{ asset('/assets/template/js/template.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('/assets/template/js/settings.js') }}"></script>
 <script src="{{ asset('/assets/template/js/todolist.js') }}"></script>
 
@@ -34,9 +34,34 @@
 
 <script>
     $(document).ready(function() {
-        $('.dataTable').DataTable({
-            "aaSorting": []
-        });
+        if (typeof $.fn.DataTable !== 'undefined') {
+            $.fn.dataTable.ext.errMode = 'none';
+
+            function setupDataTableLayout() {
+                $('.dataTable').each(function() {
+                    var $table = $(this);
+                    
+                    var $parentResponsive = $table.parent('.table-responsive');
+                    if ($parentResponsive.length > 0 && !$table.parent().hasClass('dataTables_wrapper')) {
+                        $table.unwrap();
+                    }
+
+                    if (!$.fn.DataTable.isDataTable(this)) {
+                        $table.DataTable({
+                            "aaSorting": [],
+                            "retrieve": true
+                        });
+                    }
+
+                    if ($table.parent('.table-responsive').length === 0) {
+                        $table.wrap('<div class="table-responsive" style="width:100%; overflow-x:auto; margin-bottom:1rem; clear:both;"></div>');
+                    }
+                });
+            }
+
+            setupDataTableLayout();
+            setTimeout(setupDataTableLayout, 200);
+        }
     });
 </script>
 

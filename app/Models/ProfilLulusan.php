@@ -71,6 +71,7 @@ class ProfilLulusan extends Model
             ->join('universitas', 'fakultas.id_universitas', '=', 'universitas.id')
             ->leftJoin('kurikulums', 'profil_lulusan.kurikulum_id', '=', 'kurikulums.id')
             ->select(
+                'profil_lulusan.id as profil_id',
                 'profil_lulusan.kode as profil_kode',
                 'profil_lulusan.deskripsi as profil_nama',
                 'profil_lulusan.kurikulum_id',
@@ -79,7 +80,11 @@ class ProfilLulusan extends Model
                 'fakultas.nama as fakultas_nama',
                 'prodi.nama as prodi_nama',
                 'mk_cpl.mk_kode',
-                'mks.nama as mk_nama'
+                'mks.nama as mk_nama',
+                'mks.semester as mk_semester',
+                'mks.bobot_teori',
+                'mks.bobot_praktikum',
+                'mks.rumpun'
             );
 
         // --- filter otoritas ---

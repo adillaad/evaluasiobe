@@ -20,6 +20,9 @@
     <link rel="stylesheet" href="{{ asset('/assets/template/css/vertical-layout-light/style.css') }}">
     {{-- endinject --}}
     <link rel="shortcut icon" href="{{ asset('/assets/img/eval-obe-logo.png') }}" />
+    <style>
+        .icon-badge::before, .icon-badge:before { content: none !important; display: none !important; }
+    </style>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     {{-- <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/sunburst.js"></script>

@@ -112,8 +112,23 @@ class SoalController extends Controller
             ->select('cpmks.id', 'cpmks.kode', 'cpmks.judul')
             ->get();
 
-        $detailMetodes = $metodes->map(function ($metode) use ($kode_mk, $cpmkMk) {
+        $detailMetodes = $metodes->map(function ($metode) use ($kode_mk) {
             $totalBobotMetode = (float) $metode->total_bobot_metode;
+
+            // CPMK yang memang dikonfigurasi untuk metode penilaian ini di Asesmen
+            $cpmkMkMetode = DB::table('cpl_mk_cpmk_penilaian as cmcp')
+                ->join('penilaian_metode as pm', 'pm.cpl_mk_cpmk_penilaian_id', '=', 'cmcp.id')
+                ->join('cpmks', 'cmcp.cpmk_id', '=', 'cpmks.id')
+                ->where('cmcp.mk_kode', $kode_mk)
+                ->where('pm.metode_id', $metode->metode_id)
+                ->select(
+                    'cpmks.id',
+                    'cpmks.kode',
+                    'cpmks.judul',
+                    DB::raw('SUM(pm.bobot) as bobot_cpmk_metode')
+                )
+                ->groupBy('cpmks.id', 'cpmks.kode', 'cpmks.judul')
+                ->get();
 
             $soals = DB::table('soals')
                 ->leftJoin('cpls', 'soals.cpl', '=', 'cpls.id')
@@ -141,7 +156,6 @@ class SoalController extends Controller
                 ->leftJoin('cpmks', 'tanpa_soal.cpmk_id', '=', 'cpmks.id')
                 ->where('tanpa_soal.kode_mk', $kode_mk)
                 ->where('tanpa_soal.metode_id', $metode->metode_id)
-                ->whereIn('tanpa_soal.status', ['Menunggu Validasi', 'Valid', 'Ditolak'])
                 ->select(
                     'tanpa_soal.id',
                     'tanpa_soal.nama_instrumen',
@@ -156,6 +170,52 @@ class SoalController extends Controller
                 ->orderBy('tanpa_soal.cpmk_id')
                 ->get();
 
+            // Hitung ulang bobotSoal jika di database bernilai 0 / null
+            $totalSoalPerCpmk = $soals->groupBy('cpmk_id');
+            $totalTanpaPerCpmk = $tanpaSoals->groupBy('cpmk_id');
+
+            // Sematkan bobot_cpmk dari cpmkMkMetode ke masing-masing item soal / tanpa_soal
+            $soals->transform(function ($soal) use ($cpmkMkMetode, $totalSoalPerCpmk, $totalTanpaPerCpmk) {
+                $cpmkBobot = (float)($cpmkMkMetode->where('id', $soal->cpmk_id)->first()->bobot_cpmk_metode ?? 0);
+                $soal->bobot_cpmk = $cpmkBobot;
+
+                if ((float)$soal->bobotSoal == 0) {
+                    if ((float)$soal->persentase_cpmk > 0) {
+                        $soal->bobotSoal = round(($soal->persentase_cpmk / 100) * $cpmkBobot, 2);
+                    } else {
+                        // Jika persentase_cpmk belum diisi, bagi rata bobot CPMK ke jumlah soal di CPMK tsb
+                        $countSoal = isset($totalSoalPerCpmk[$soal->cpmk_id]) ? $totalSoalPerCpmk[$soal->cpmk_id]->count() : 0;
+                        $countTanpa = isset($totalTanpaPerCpmk[$soal->cpmk_id]) ? $totalTanpaPerCpmk[$soal->cpmk_id]->count() : 0;
+                        $totalItem = $countSoal + $countTanpa;
+                        if ($totalItem > 0 && $cpmkBobot > 0) {
+                            $soal->bobotSoal = round($cpmkBobot / $totalItem, 2);
+                            $soal->persentase_cpmk = round(100 / $totalItem, 1);
+                        }
+                    }
+                }
+                return $soal;
+            });
+
+            $tanpaSoals->transform(function ($ts) use ($cpmkMkMetode, $totalSoalPerCpmk, $totalTanpaPerCpmk) {
+                $cpmkBobot = (float)($cpmkMkMetode->where('id', $ts->cpmk_id)->first()->bobot_cpmk_metode ?? 0);
+                $ts->bobot_cpmk = $cpmkBobot;
+
+                if ((float)$ts->bobotSoal == 0) {
+                    if ((float)$ts->persentase_cpmk > 0) {
+                        $ts->bobotSoal = round(($ts->persentase_cpmk / 100) * $cpmkBobot, 2);
+                    } else {
+                        $countSoal = isset($totalSoalPerCpmk[$ts->cpmk_id]) ? $totalSoalPerCpmk[$ts->cpmk_id]->count() : 0;
+                        $countTanpa = isset($totalTanpaPerCpmk[$ts->cpmk_id]) ? $totalTanpaPerCpmk[$ts->cpmk_id]->count() : 0;
+                        $totalItem = $countSoal + $countTanpa;
+                        if ($totalItem > 0 && $cpmkBobot > 0) {
+                            $ts->bobotSoal = round($cpmkBobot / $totalItem, 2);
+                            $ts->persentase_cpmk = round(100 / $totalItem, 1);
+                        }
+                    }
+                }
+                return $ts;
+            });
+
             $totalBobotSoal    = $soals->sum('bobotSoal');
             $totalBobotTanpa   = $tanpaSoals->sum('bobotSoal');
             $totalBobotTerisi  = $totalBobotSoal + $totalBobotTanpa;
@@ -167,18 +227,29 @@ class SoalController extends Controller
                 ->merge($tanpaSoals->pluck('cpmk_id'))
                 ->filter()->unique()->values();
 
-            $cpmkBelum = $cpmkMk->filter(fn($c) => !$cpmkTerpetakan->contains($c->id))->values();
+            $cpmkBelum = $cpmkMkMetode->filter(fn($c) => !$cpmkTerpetakan->contains($c->id))->values();
 
-            $cpmkKelengkapan = $cpmkMk->map(function ($cpmk) use ($soals, $tanpaSoals) {
+            $cpmkKelengkapan = $cpmkMkMetode->map(function ($cpmk) use ($soals, $tanpaSoals) {
                 $pctSoal  = $soals->where('cpmk_id', $cpmk->id)->sum('persentase_cpmk');
                 $pctTanpa = $tanpaSoals->where('cpmk_id', $cpmk->id)->sum('persentase_cpmk');
                 $total    = $pctSoal + $pctTanpa;
+
+                // Jika persentase_cpmk belum terisi/0 tetapi bobotSoal sudah terisi
+                if ($total == 0 && (float)$cpmk->bobot_cpmk_metode > 0) {
+                    $bobotSoal  = $soals->where('cpmk_id', $cpmk->id)->sum('bobotSoal');
+                    $bobotTanpa = $tanpaSoals->where('cpmk_id', $cpmk->id)->sum('bobotSoal');
+                    $totalBobot = $bobotSoal + $bobotTanpa;
+                    if ($totalBobot > 0) {
+                        $total = round(($totalBobot / $cpmk->bobot_cpmk_metode) * 100, 1);
+                    }
+                }
+
                 return [
-                    'id'       => $cpmk->id,
-                    'kode'     => $cpmk->kode,
-                    'judul'    => $cpmk->judul,
+                    'id'        => $cpmk->id,
+                    'kode'      => $cpmk->kode,
+                    'judul'     => $cpmk->judul,
                     'total_pct' => $total,
-                    'lengkap'  => $total >= 100,
+                    'lengkap'   => $total >= 100,
                 ];
             });
 
@@ -348,9 +419,16 @@ class SoalController extends Controller
             ->groupBy('status')
             ->pluck('jumlah', 'status');
 
-        $adaSoalValid    = $statusSoal->get('Valid', 0) > 0;
-        $adaSoalMenunggu = $statusSoal->get('Menunggu', 0) > 0;
-        $adaSoalTolak    = $statusSoal->get('Tolak', 0) > 0;
+        $statusTanpa = DB::table('tanpa_soal')
+            ->where('kode_mk', $kode_mk)
+            ->whereIn('status', ['Menunggu Validasi', 'Valid', 'Ditolak'])
+            ->select('status', DB::raw('COUNT(*) as jumlah'))
+            ->groupBy('status')
+            ->pluck('jumlah', 'status');
+
+        $adaSoalValid    = ($statusSoal->get('Valid', 0) + $statusTanpa->get('Valid', 0)) > 0;
+        $adaSoalMenunggu = ($statusSoal->get('Menunggu', 0) + $statusTanpa->get('Menunggu Validasi', 0)) > 0;
+        $adaSoalTolak    = ($statusSoal->get('Tolak', 0) + $statusTanpa->get('Ditolak', 0)) > 0;
 
         $bobotLengkap = $metodes->every(function ($metode) use ($kode_mk) {
             $bobotSoal  = DB::table('soals')
@@ -367,9 +445,9 @@ class SoalController extends Controller
 
         if ($adaSoalValid && !$adaSoalMenunggu && !$adaSoalTolak) {
             $statusLabel = 'valid';
-        } elseif ($adaSoalTolak) {
+        } elseif ($adaSoalTolak && !$adaSoalMenunggu) {
             $statusLabel = 'ditolak';
-        } elseif ($semuaLengkap) {
+        } elseif ($adaSoalMenunggu || $semuaLengkap) {
             $statusLabel = 'siap';
         } else {
             $statusLabel = 'belum';
@@ -398,63 +476,136 @@ class SoalController extends Controller
         return view('penjamin-mutu.soal.cetakSoal', compact('soals'));
     }
 
-    public function import()
+    public function import(Request $request)
     {
-        $mutus = $this->mutuPenilaianQuery()->paginate(10);
+        $filterData = $this->getFilterData($request);
+        $mutus = $this->getPaginatedGroupedMutus($request, 'soal');
 
-        return view('penjamin-mutu.soal.importMutu', compact('mutus'));
+        return view('penjamin-mutu.soal.importMutu', array_merge(compact('mutus'), $filterData));
     }
 
-    public function import1()
+    public function import1(Request $request)
     {
-        $query = $this->mutuPenilaianQuery()
+        $filterData = $this->getFilterData($request);
+        $mutus = $this->getPaginatedGroupedMutus($request, 'konversi');
+
+        return view('penjamin-mutu.soal.importTanpaSoal', array_merge(compact('mutus'), $filterData));
+    }
+
+    public function filter(Request $request)
+    {
+        $filterData = $this->getFilterData($request);
+        $type = $request->get('type') === 'tanpa-soal' ? 'konversi' : 'soal';
+        $mutus = $this->getPaginatedGroupedMutus($request, $type);
+
+        $view = $request->get('type') === 'tanpa-soal'
+            ? 'penjamin-mutu.soal.importTanpaSoal'
+            : 'penjamin-mutu.soal.importMutu';
+
+        return view($view, array_merge(compact('mutus'), $filterData));
+    }
+
+    private function getPaginatedGroupedMutus(Request $request, string $type = 'soal', int $perPage = 10)
+    {
+        $allRecords = $this->mutuPenilaianQuery($request, $type)->get();
+
+        // Grouping records per Mahasiswa + Course + Jenis + Tahun Ajaran
+        $grouped = $allRecords->groupBy(function ($item) {
+            $npmKey = trim((string)($item->npm ?? $item->NPM ?? 'unknown'));
+            $courseKey = trim((string)($item->Course ?? $item->nama_mk ?? 'unknown'));
+            $jenisKey = strtolower(trim((string)($item->Jenis ?? 'umum')));
+            $taKey = (string)($item->tahun_ajaran_id ?? $item->tahun ?? 'ta_default');
+            return $npmKey . '_' . $courseKey . '_' . $jenisKey . '_' . $taKey;
+        });
+
+        $currentPage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+        $currentItems = $grouped->slice(($currentPage - 1) * $perPage, $perPage);
+
+        $paginatedGrouped = new \Illuminate\Pagination\LengthAwarePaginator(
+            $currentItems,
+            $grouped->count(),
+            $perPage,
+            $currentPage,
+            ['path' => \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
+
+        return $paginatedGrouped;
+    }
+
+    private function mutuPenilaianQuery(?Request $request = null, string $type = 'soal')
+    {
+        $query = Mutu::query()
+            ->with(['mahasiswa', 'tahunAjaran', 'cpl', 'cpmk'])
+            ->join('prodi', 'mutus.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->join('mks', 'mutus.Course', '=', 'mks.kode')
+            ->leftJoin('tahun_ajaran', 'mutus.tahun_ajaran_id', '=', 'tahun_ajaran.id')
             ->leftJoin('cpls', 'mutus.Cpl', '=', 'cpls.id')
             ->leftJoin('cpmks', 'mutus.Cpmk', '=', 'cpmks.id')
-            ->addSelect(
+            ->select(
+                'mutus.*',
+                'prodi.nama as nama_prodi',
+                'fakultas.nama as nama_fakultas',
+                'mks.nama as nama_mk',
+                'tahun_ajaran.tahun as ta_tahun',
+                'tahun_ajaran.jenis_semester as ta_semester',
                 'cpls.kode as cpl_kode',
                 'cpls.judul as cpl_judul',
                 'cpmks.kode as cpmk_kode',
                 'cpmks.judul as cpmk_judul'
             );
 
-        $mutus = $query->paginate(10);
-
-        return view('penjamin-mutu.soal.importTanpaSoal', compact('mutus'));
-    }
-
-    public function filter(Request $request)
-    {
-        $mutus = $this->mutuPenilaianQuery($request)->paginate(10);
-
-        $view = $request->get('type') === 'tanpa-soal'
-            ? 'penjamin-mutu.soal.importTanpaSoal'
-            : 'penjamin-mutu.soal.importMutu';
-
-        return view($view, compact('mutus'));
-    }
-
-    private function mutuPenilaianQuery(?Request $request = null)
-    {
-        $query = Mutu::query()
-            ->with('mahasiswa')
-            ->join('prodi', 'mutus.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->join('mks', 'mutus.Course', '=', 'mks.kode')
-            ->select('mutus.*', 'prodi.nama as nama_prodi', 'mks.nama as nama_mk');
-
-        if ($request && $request->filled('course')) {
-            $keyword = $request->course;
-            $query->where(function ($q) use ($keyword) {
-                $q->where('mutus.nama_mhs', 'like', '%' . $keyword . '%')
-                    ->orWhere('mutus.Nama_mhs', 'like', '%' . $keyword . '%')
-                    ->orWhereHas('mahasiswa', function ($sub) use ($keyword) {
-                        $sub->where('Nama', 'like', '%' . $keyword . '%');
-                    })
-                    ->orWhereRaw(
-                        'EXISTS (SELECT 1 FROM mahasiswa WHERE mahasiswa.NPM = COALESCE(NULLIF(mutus.npm, 0), mutus.NPM) AND mahasiswa.Nama LIKE ?)',
-                        ['%' . $keyword . '%']
-                    );
+        if ($type === 'konversi') {
+            $query->where('mutus.sumber', 'konversi');
+        } else {
+            $query->where(function ($q) {
+                $q->whereNull('mutus.sumber')
+                  ->orWhere('mutus.sumber', '!=', 'konversi');
             });
+        }
+
+        if ($request) {
+            if ($request->filled('course')) {
+                $keyword = $request->course;
+                $query->where(function ($q) use ($keyword) {
+                    $q->where('mutus.nama_mhs', 'like', '%' . $keyword . '%')
+                        ->orWhere('mutus.Nama_mhs', 'like', '%' . $keyword . '%')
+                        ->orWhereHas('mahasiswa', function ($sub) use ($keyword) {
+                            $sub->where('Nama', 'like', '%' . $keyword . '%');
+                        })
+                        ->orWhereRaw(
+                            'EXISTS (SELECT 1 FROM mahasiswa WHERE mahasiswa.NPM = COALESCE(NULLIF(mutus.npm, 0), mutus.NPM) AND mahasiswa.Nama LIKE ?)',
+                            ['%' . $keyword . '%']
+                        );
+                });
+            }
+
+            if ($request->filled('mk_kode')) {
+                $query->where('mutus.Course', $request->mk_kode);
+            }
+
+            if ($request->filled('fakultas_id')) {
+                $query->where('fakultas.id', $request->fakultas_id);
+            }
+
+            if ($request->filled('prodi_id')) {
+                $query->where('prodi.id', $request->prodi_id);
+            }
+
+            if ($request->filled('kurikulum_id')) {
+                $query->where('mks.id_kurikulum', $request->kurikulum_id);
+            }
+
+            if ($request->filled('tahun_ajaran_id')) {
+                $query->where('mutus.tahun_ajaran_id', $request->tahun_ajaran_id);
+            }
+
+            if ($request->filled('metode_id')) {
+                $metodeObj = \App\Models\MetodePenilaian::find($request->metode_id);
+                if ($metodeObj) {
+                    $query->where('mutus.Jenis', $metodeObj->nama);
+                }
+            }
         }
 
         $otoritas = auth()->user()->otoritas->otoritas;

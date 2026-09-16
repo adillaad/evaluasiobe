@@ -12,6 +12,7 @@ use App\Models\ProfilLulusan;
 use App\Traits\UniversityFilterTrait;
 use Crypt;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 
@@ -63,23 +64,71 @@ class CPLController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'id_kurikulum' => 'required|array',
             'id_kurikulum.*' => 'required|integer',
+            'aspek' => 'required|array',
             'aspek.*' => 'required|in:Sikap,Keterampilan Umum,Keterampilan Khusus,Pengetahuan,Pengetahuan & Keterampilan,Pengetahuan Interdisipliner,Keterampilan Umum & Khusus,Lainnya',
+            'kode' => 'required|array',
             'kode.*' => 'required|string|max:255',
+            'judul' => 'required|array',
             'judul.*' => 'required|string',
         ]);
 
         $id_prodi_user = auth()->user()->id_prodiUser;
 
         try {
-            foreach ($request->kode as $key => $value) {
-                // Keamanan: Paksa id_prodi dari user yang login, bukan dari inputan.
+            $kodes = $request->input('kode', []);
+            $aspeks = $request->input('aspek', []);
+            $idKurikulums = $request->input('id_kurikulum', []);
+            $juduls = $request->input('judul', []);
+
+            // 1. Cek duplikat di dalam inputan form itu sendiri
+            $seenCombinations = [];
+            foreach ($kodes as $key => $value) {
+                $trimmedValue = trim($value);
+                $kurikulumVal = $idKurikulums[$key] ?? null;
+                $combinationKey = $kurikulumVal . '-' . strtolower($trimmedValue);
+
+                if (in_array($combinationKey, $seenCombinations)) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->with('error', 'Terdapat nomor CPL yang sama (' . $trimmedValue . ') di dalam form input untuk kurikulum yang sama.');
+                }
+                $seenCombinations[] = $combinationKey;
+            }
+
+            // 2. Simpan setiap CPL
+            foreach ($kodes as $key => $value) {
+                $aspekVal = $aspeks[$key] ?? null;
+                $kurikulumVal = $idKurikulums[$key] ?? null;
+                $judulVal = $juduls[$key] ?? null;
+                $trimmedValue = trim($value);
+
+                if (!$aspekVal || !$kurikulumVal || !$judulVal || $trimmedValue === '') {
+                    continue;
+                }
+
+                // Cek apakah kode/nomor CPL ini sudah ada di database untuk Kurikulum + Prodi ini
+                $formattedKode = 'CPL' . $trimmedValue;
+                $existsInDb = CPL::where('id_prodi', $id_prodi_user)
+                    ->where('id_kurikulum', $kurikulumVal)
+                    ->where(function($q) use ($formattedKode, $trimmedValue) {
+                        $q->where('kode', $formattedKode)
+                          ->orWhere('nomor', $trimmedValue);
+                    })->exists();
+
+                if ($existsInDb) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->with('error', 'Nomor CPL "' . $trimmedValue . '" sudah terdaftar sebelumnya di database untuk Kurikulum dan Prodi ini.');
+                }
+
                 CPL::create([
-                    'aspek' => $request->aspek[$key],
-                    'id_kurikulum' => $request->id_kurikulum[$key],
-                    'kode' => 'CPL' . $value,
-                    'nomor' => $value,
-                    'judul' => $request->judul[$key],
+                    'aspek' => $aspekVal,
+                    'id_kurikulum' => $kurikulumVal,
+                    'kode' => $formattedKode,
+                    'nomor' => $trimmedValue,
+                    'judul' => $judulVal,
                     'id_prodi' => $id_prodi_user,
                 ]);
             }
@@ -87,7 +136,7 @@ class CPLController extends Controller
             return redirect()->route($this->getRouteByAuthority())->with('success', 'CPL berhasil ditambahkan!');
 
         } catch (QueryException $e) {
-            if ($e->getCode() === '23000') {
+            if ($e->getCode() === '23000' || str_contains($e->getMessage(), '1062')) {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'Nomor CPL yang diinputkan ada yang duplikat untuk Prodi dan Kurikulum ini.');
@@ -176,18 +225,39 @@ class CPLController extends Controller
         return $routes[auth()->user()->otoritas->otoritas] ?? 'default.route';
     }
 
-    public function indexCPLPL()
+    private function getKurikulumsForUser()
+    {
+        $user = auth()->user();
+        $query = Kurikulum::query()
+            ->join('prodi', 'kurikulums.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('kurikulums.*', 'prodi.nama as nama_prodi')
+            ->orderBy('kurikulums.tahun', 'desc');
+
+        if ($user->otoritas->otoritas === 'Penjamin Mutu Universitas') {
+            $query->where('fakultas.id_universitas', $user->id_universitasUser);
+        } else if ($user->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
+            $query->where('fakultas.id', $user->id_fakultasUser);
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+            $query->where('prodi.id', $user->id_prodiUser);
+        }
+
+        return $query->get();
+    }
+
+    public function indexCPLPL(Request $request)
     {
         $queryCpl = CPL::query()
             ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->select('cpls.id', 'cpls.kode', 'cpls.judul')
-            ->with('profilLulusan');
+            ->select('cpls.id', 'cpls.kode', 'cpls.judul', 'cpls.id_kurikulum')
+            ->with(['profilLulusan', 'kurikulum']);
 
         $queryProfilLulusans = ProfilLulusan::query()
             ->join('prodi', 'profil_lulusan.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->select('profil_lulusan.*');
+            ->select('profil_lulusan.*')
+            ->with('kurikulum');
 
         if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
             $queryCpl->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
@@ -200,23 +270,30 @@ class CPLController extends Controller
             $queryProfilLulusans->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
+        if ($request->filled('kurikulum_id')) {
+            $queryCpl->where('cpls.id_kurikulum', $request->kurikulum_id);
+            $queryProfilLulusans->where('profil_lulusan.kurikulum_id', $request->kurikulum_id);
+        }
+
         $cpls = $queryCpl->get();
         $profilLulusans = $queryProfilLulusans->get();
+        $kurikulums = $this->getKurikulumsForUser();
 
-        return view('penjamin-mutu.cpl.pemetaan_cpl_pl', compact('cpls', 'profilLulusans'));
+        return view('penjamin-mutu.cpl.pemetaan_cpl_pl', compact('cpls', 'profilLulusans', 'kurikulums'));
     }
 
-    public function indexCPLBK()
+    public function indexCPLBK(Request $request)
     {
         $queryCpl = CPL::query()
             ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->select('cpls.id', 'cpls.kode', 'cpls.judul');
+            ->select('cpls.id', 'cpls.kode', 'cpls.judul', 'cpls.id_kurikulum')
+            ->with('kurikulum');
 
         $queryBks = BK::query()
             ->join('prodi', 'bks.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->with('cpl')->select('bks.*');
+            ->with(['cpl', 'kurikulum'])->select('bks.*');
 
         if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
             $queryCpl->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
@@ -229,22 +306,29 @@ class CPLController extends Controller
             $queryBks->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
+        if ($request->filled('kurikulum_id')) {
+            $queryCpl->where('cpls.id_kurikulum', $request->kurikulum_id);
+            $queryBks->where('bks.kurikulum_id', $request->kurikulum_id);
+        }
+
         $cpls = $queryCpl->get();
         $bks = $queryBks->get();
+        $kurikulums = $this->getKurikulumsForUser();
 
-        return view('penjamin-mutu.cpl.pemetaan_cpl_bk', compact('cpls', 'bks'));
+        return view('penjamin-mutu.cpl.pemetaan_cpl_bk', compact('cpls', 'bks', 'kurikulums'));
     }
 
-    public function indexCPLMK()
+    public function indexCPLMK(Request $request)
     {
         $queryCpl = CPL::query()
             ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->select('cpls.id', 'cpls.kode', 'cpls.judul');
+            ->select('cpls.id', 'cpls.kode', 'cpls.judul', 'cpls.id_kurikulum')
+            ->with('kurikulum');
 
         $queryMks = MK::query()
             ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')->with('cpl')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')->with(['cpl', 'kurikulum'])
             ->select('mks.*');
 
         if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
@@ -258,44 +342,67 @@ class CPLController extends Controller
             $queryMks->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
+        if ($request->filled('kurikulum_id')) {
+            $queryCpl->where('cpls.id_kurikulum', $request->kurikulum_id);
+            $queryMks->where('mks.id_kurikulum', $request->kurikulum_id);
+        }
+
         $cpls = $queryCpl->get();
         $mks = $queryMks->get();
+        $kurikulums = $this->getKurikulumsForUser();
 
-
-        return view('penjamin-mutu.cpl.pemetaan_cpl_mk', compact('cpls', 'mks'));
+        return view('penjamin-mutu.cpl.pemetaan_cpl_mk', compact('cpls', 'mks', 'kurikulums'));
     }
 
-    public function indexCPLBKMK()
+    public function indexCPLBKMK(Request $request)
     {
         $queryCpl = CPL::query()
             ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->select('cpls.id', 'cpls.kode', 'cpls.judul');
+            ->select('cpls.id', 'cpls.kode', 'cpls.judul', 'cpls.id_kurikulum')
+            ->with('kurikulum');
 
         // Query BK dengan relasi ke MK dan CPL
         $queryBk = BK::query()
             ->join('prodi', 'bks.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
             ->select('bks.*')
-            ->with(['mk.cpl', 'cpl']);
+            ->with(['mk.cpl', 'cpl', 'kurikulum']);
+
+        $queryMk = MK::query()
+            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('mks.*')
+            ->with(['cpl', 'kurikulum']);
 
         // Filter berdasarkan otoritas pengguna
         if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
             $queryCpl->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
             $queryBk->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
+            $queryMk->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
             $queryCpl->where('fakultas.id', auth()->user()->id_fakultasUser);
             $queryBk->where('prodi.id_fakultas', auth()->user()->id_fakultasUser);
+            $queryMk->where('prodi.id_fakultas', auth()->user()->id_fakultasUser);
         } elseif (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
             $queryCpl->where('prodi.id', auth()->user()->id_prodiUser);
             $queryBk->where('prodi.id', auth()->user()->id_prodiUser);
+            $queryMk->where('prodi.id', auth()->user()->id_prodiUser);
+        }
+
+        if ($request->filled('kurikulum_id')) {
+            $queryCpl->where('cpls.id_kurikulum', $request->kurikulum_id);
+            $queryBk->where('bks.kurikulum_id', $request->kurikulum_id);
+            $queryMk->where('mks.id_kurikulum', $request->kurikulum_id);
         }
 
         // Eksekusi query
         $cpls = $queryCpl->get();
         $bks = $queryBk->get();
+        $mks = $queryMk->get();
+        $kurikulums = $this->getKurikulumsForUser();
 
-        return view('penjamin-mutu.cpl.pemetaan_cpl_bk_mk', compact('cpls', 'bks'));
+        return view('penjamin-mutu.cpl.pemetaan_cpl_bk_mk', compact('cpls', 'bks', 'mks', 'kurikulums'));
     }
 
 
@@ -415,18 +522,65 @@ class CPLController extends Controller
 
     public function addCPLMK()
     {
-        $mks = MK::query()
-        ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-        ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-        ->where('prodi.id', auth()->user()->id_prodiUser)
-        ->select('mks.*')->get();
-        $cpls = CPL::query()
-        ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
-        ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-        ->where('prodi.id', auth()->user()->id_prodiUser)
-        ->select('cpls.*')->get();
+        $idProdi = auth()->user()->id_prodiUser;
+
+        $mksQuery = MK::query();
+        $cplsQuery = CPL::query();
+
+        if ($idProdi) {
+            $mksQuery->where('id_prodi', $idProdi);
+            $cplsQuery->where('id_prodi', $idProdi);
+        }
+
+        $mks = $mksQuery->get();
+        if ($mks->isEmpty()) {
+            $mks = MK::all();
+        }
+
+        $cpls = $cplsQuery->get();
+        if ($cpls->isEmpty()) {
+            $cpls = CPL::all();
+        }
 
         return view('penjamin-mutu.cpl.add_cpl_mk', compact('mks', 'cpls'));
+    }
+
+    public function getCplsByKurikulum($kurikulumId)
+    {
+        $user = auth()->user();
+        $kurikulum = Kurikulum::find($kurikulumId);
+        $idProdi = $kurikulum ? $kurikulum->id_prodi : ($user ? $user->id_prodiUser : null);
+
+        // Fetch CPLs
+        $cplQuery = CPL::where('id_kurikulum', $kurikulumId);
+        if ($idProdi) {
+            $cpls = (clone $cplQuery)->where('id_prodi', $idProdi)->select('id', 'kode', 'judul')->get();
+            if ($cpls->isEmpty()) {
+                $cpls = $cplQuery->select('id', 'kode', 'judul')->get();
+            }
+        } else {
+            $cpls = $cplQuery->select('id', 'kode', 'judul')->get();
+        }
+
+        // Fetch MKs - check both id_kurikulum and kurikulum columns, select kode & nama
+        $mkQuery = MK::where(function($q) use ($kurikulumId) {
+            $q->where('id_kurikulum', $kurikulumId)
+              ->orWhere('kurikulum', $kurikulumId);
+        });
+
+        if ($idProdi) {
+            $mks = (clone $mkQuery)->where('id_prodi', $idProdi)->select('kode', 'nama')->get();
+            if ($mks->isEmpty()) {
+                $mks = $mkQuery->select('kode', 'nama')->get();
+            }
+        } else {
+            $mks = $mkQuery->select('kode', 'nama')->get();
+        }
+
+        return response()->json([
+            'cpls' => $cpls,
+            'mks' => $mks,
+        ]);
     }
 
     private function currentPrefix(): string
@@ -476,5 +630,242 @@ class CPLController extends Controller
         return redirect()
             ->route($this->currentPrefix() . 'cpl.cpl-mk')
             ->with('success', count($newKodes) . ' pemetaan CPL-MK baru berhasil disimpan.');
+    }
+
+    public function updateMatrixCPLMK(Request $request)
+    {
+        $user = auth()->user();
+        $otoritas = $user->otoritas->otoritas;
+
+        $queryMks = MK::query()
+            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('mks.*');
+
+        if ($otoritas === 'Penjamin Mutu Universitas') {
+            $queryMks->where('fakultas.id_universitas', $user->id_universitasUser);
+        } else if ($otoritas === 'Penjamin Mutu Fakultas') {
+            $queryMks->where('fakultas.id', $user->id_fakultasUser);
+        } else if (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $queryMks->where('prodi.id', $user->id_prodiUser);
+        }
+
+        if ($request->filled('kurikulum_id')) {
+            $queryMks->where('mks.id_kurikulum', $request->kurikulum_id);
+        }
+
+        $mks = $queryMks->get();
+        $matrix = $request->input('matrix', []);
+
+        DB::transaction(function () use ($mks, $matrix) {
+            foreach ($mks as $mk) {
+                $selectedCplIds = isset($matrix[$mk->kode]) ? array_map('intval', (array)$matrix[$mk->kode]) : [];
+                
+                $syncData = [];
+                foreach ($selectedCplIds as $cplId) {
+                    $syncData[$cplId] = ['id_prodi' => $mk->id_prodi];
+                }
+                $mk->cpl()->sync($syncData);
+            }
+        });
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Matriks Pemetaan CPL - MK berhasil diperbarui!'
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Matriks Pemetaan CPL - MK berhasil diperbarui!');
+    }
+
+    public function updateMatrixCPLPL(Request $request)
+    {
+        $user = auth()->user();
+        $otoritas = $user->otoritas->otoritas;
+
+        $queryCpl = CPL::query()
+            ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('cpls.*');
+
+        if ($otoritas === 'Penjamin Mutu Universitas') {
+            $queryCpl->where('fakultas.id_universitas', $user->id_universitasUser);
+        } else if ($otoritas === 'Penjamin Mutu Fakultas') {
+            $queryCpl->where('fakultas.id', $user->id_fakultasUser);
+        } else if (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $queryCpl->where('prodi.id', $user->id_prodiUser);
+        }
+
+        if ($request->filled('kurikulum_id')) {
+            $queryCpl->where('cpls.id_kurikulum', $request->kurikulum_id);
+        }
+
+        $cpls = $queryCpl->get();
+        $matrix = $request->input('matrix', []);
+
+        DB::transaction(function () use ($cpls, $matrix) {
+            foreach ($cpls as $cpl) {
+                $selectedProfilIds = isset($matrix[$cpl->id]) ? array_map('intval', (array)$matrix[$cpl->id]) : [];
+
+                $existingBobotMap = ProfilCpl::where('idCpl', $cpl->id)->pluck('bobot', 'idProfil')->toArray();
+
+                $syncData = [];
+                foreach ($selectedProfilIds as $profilId) {
+                    $syncData[$profilId] = [
+                        'id_prodi' => $cpl->id_prodi,
+                        'bobot' => $existingBobotMap[$profilId] ?? 1.0,
+                    ];
+                }
+
+                $cpl->profilLulusan()->sync($syncData);
+            }
+        });
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Matriks Pemetaan CPL - PL berhasil diperbarui!'
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Matriks Pemetaan CPL - PL berhasil diperbarui!');
+    }
+
+    public function updateMatrixCPLBK(Request $request)
+    {
+        $user = auth()->user();
+        $otoritas = $user->otoritas->otoritas;
+
+        $queryBks = BK::query()
+            ->join('prodi', 'bks.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('bks.*');
+
+        if ($otoritas === 'Penjamin Mutu Universitas') {
+            $queryBks->where('fakultas.id_universitas', $user->id_universitasUser);
+        } else if ($otoritas === 'Penjamin Mutu Fakultas') {
+            $queryBks->where('fakultas.id', $user->id_fakultasUser);
+        } else if (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $queryBks->where('prodi.id', $user->id_prodiUser);
+        }
+
+        if ($request->filled('kurikulum_id')) {
+            $queryBks->where('bks.kurikulum_id', $request->kurikulum_id);
+        }
+
+        $bks = $queryBks->get();
+        $matrix = $request->input('matrix', []);
+
+        DB::transaction(function () use ($bks, $matrix) {
+            foreach ($bks as $bk) {
+                $selectedCplIds = isset($matrix[$bk->id]) ? array_map('intval', (array)$matrix[$bk->id]) : [];
+                $bk->cpl()->sync($selectedCplIds);
+            }
+        });
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Matriks Pemetaan CPL - BK berhasil diperbarui!'
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Matriks Pemetaan CPL - BK berhasil diperbarui!');
+    }
+
+    public function updateMatrixCPLBKMK(Request $request)
+    {
+        $user = auth()->user();
+        $otoritas = $user->otoritas->otoritas;
+
+        $queryBk = BK::query()
+            ->join('prodi', 'bks.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('bks.*');
+
+        $queryCpl = CPL::query()
+            ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('cpls.id', 'cpls.kode', 'cpls.judul');
+
+        $queryMk = MK::query()
+            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('mks.*');
+
+        if ($otoritas === 'Penjamin Mutu Universitas') {
+            $queryBk->where('fakultas.id_universitas', $user->id_universitasUser);
+            $queryCpl->where('fakultas.id_universitas', $user->id_universitasUser);
+            $queryMk->where('fakultas.id_universitas', $user->id_universitasUser);
+        } else if ($otoritas === 'Penjamin Mutu Fakultas') {
+            $queryBk->where('prodi.id_fakultas', $user->id_fakultasUser);
+            $queryCpl->where('fakultas.id', $user->id_fakultasUser);
+            $queryMk->where('prodi.id_fakultas', $user->id_fakultasUser);
+        } else if (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $queryBk->where('prodi.id', $user->id_prodiUser);
+            $queryCpl->where('prodi.id', $user->id_prodiUser);
+            $queryMk->where('prodi.id', $user->id_prodiUser);
+        }
+
+        if ($request->filled('kurikulum_id')) {
+            $queryBk->where('bks.kurikulum_id', $request->kurikulum_id);
+            $queryCpl->where('cpls.id_kurikulum', $request->kurikulum_id);
+            $queryMk->where('mks.id_kurikulum', $request->kurikulum_id);
+        }
+
+        $bks = $queryBk->get();
+        $cpls = $queryCpl->get();
+        $mks = $queryMk->get();
+        $matrix = $request->input('matrix', []);
+
+        DB::transaction(function () use ($bks, $cpls, $mks, $matrix) {
+            foreach ($bks as $bk) {
+                $selectedCplIds = [];
+                $selectedMkKodes = [];
+
+                foreach ($cpls as $cpl) {
+                    $mksInCell = isset($matrix[$bk->id][$cpl->id]) ? (array)$matrix[$bk->id][$cpl->id] : [];
+                    if (!empty($mksInCell)) {
+                        $selectedCplIds[] = $cpl->id;
+                        foreach ($mksInCell as $mkKode) {
+                            $selectedMkKodes[] = $mkKode;
+                        }
+                    }
+                }
+
+                $bk->cpl()->sync(array_unique($selectedCplIds));
+                $bk->mk()->sync(array_unique($selectedMkKodes));
+            }
+
+            foreach ($mks as $mk) {
+                $selectedCplIdsForMk = [];
+
+                foreach ($bks as $bk) {
+                    foreach ($cpls as $cpl) {
+                        $mksInCell = isset($matrix[$bk->id][$cpl->id]) ? (array)$matrix[$bk->id][$cpl->id] : [];
+                        if (in_array($mk->kode, $mksInCell)) {
+                            $selectedCplIdsForMk[] = $cpl->id;
+                        }
+                    }
+                }
+
+                $selectedCplIdsForMk = array_unique($selectedCplIdsForMk);
+                $syncData = [];
+                foreach ($selectedCplIdsForMk as $cplId) {
+                    $syncData[$cplId] = ['id_prodi' => $mk->id_prodi];
+                }
+                $mk->cpl()->sync($syncData);
+            }
+        });
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Matriks Pemetaan CPL - BK - MK berhasil diperbarui!'
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Matriks Pemetaan CPL - BK - MK berhasil diperbarui!');
     }
 }

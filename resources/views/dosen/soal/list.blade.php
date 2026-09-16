@@ -25,8 +25,48 @@
                     <span class="badge bg-danger">Tolak</span> = ditolak, perlu diperbaiki
                 </div>
 
-                {{-- Filter --}}
-                <x-filter-form :universities="$universities" :faculties="$faculties" :programs="$programs" />
+                {{-- Filter Bar (Mata Kuliah & Metode Penilaian) --}}
+                <form method="GET" action="{{ route('dosen.soal-list') }}" class="card bg-light border-0 rounded-3 p-3 mb-4">
+                    <div class="row g-2 align-items-end">
+                        {{-- Filter Mata Kuliah --}}
+                        <div class="col-md-5">
+                            <label for="kode_mk" class="form-label font-13 fw-semibold text-dark mb-1">Mata Kuliah</label>
+                            <select name="kode_mk" id="kode_mk" class="form-select form-select-sm border-slate rounded-2" style="height: 38px; font-size: 13.5px;">
+                                <option value="">-- Semua Mata Kuliah --</option>
+                                @foreach ($mksFilter ?? [] as $mk)
+                                    <option value="{{ $mk->kode }}" {{ request('kode_mk') == $mk->kode ? 'selected' : '' }}>
+                                        {{ $mk->kode }} - {{ $mk->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Filter Metode Penilaian --}}
+                        <div class="col-md-4">
+                            <label for="jenis" class="form-label font-13 fw-semibold text-dark mb-1">Metode Penilaian</label>
+                            <select name="jenis" id="jenis" class="form-select form-select-sm border-slate rounded-2" style="height: 38px; font-size: 13.5px;">
+                                <option value="">-- Semua Metode Penilaian --</option>
+                                @foreach ($metodeFilter ?? [] as $metode)
+                                    <option value="{{ $metode->id }}" {{ request('jenis') == $metode->id ? 'selected' : '' }}>
+                                        {{ $metode->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Action Buttons --}}
+                        <div class="col-md-3">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold d-inline-flex align-items-center justify-content-center gap-1" style="height: 38px;">
+                                    <i class="ti-filter"></i> Filter
+                                </button>
+                                <a href="{{ route('dosen.soal-list') }}" class="btn btn-outline-secondary btn-sm w-100 fw-semibold d-inline-flex align-items-center justify-content-center gap-1" style="height: 38px;">
+                                    <i class="ti-reload"></i> Reset
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
 
                 {{-- Baris kontrol: per-page (kiri) + info total (kanan) --}}
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -39,7 +79,7 @@
                         @endforeach
 
                         <label class="text-muted small mb-0 text-nowrap">Tampilkan</label>
-                        <select name="per_page" class="form-select form-select-sm" style="width: auto;"
+                        <select name="per_page" class="form-select form-select-sm" style="width: auto; padding-right: 1.8rem; height: 31px;"
                             onchange="this.form.submit()">
                             @foreach ([10, 25, 50, 100] as $option)
                                 <option value="{{ $option }}"

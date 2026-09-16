@@ -10,8 +10,6 @@
         </div>
     @endif
 
-    <h3 class="px-4 pb-4 fw-bold text-center">Halaman List Profil Kompetensi</h3>
-
     <div class="container-fluid">
         <div class="card">
             <div class="card-body">
@@ -76,6 +74,16 @@
         function read() {
             $.get(`/${getBaseUrl()}/readListProfilCpl`, {}, function(data, status) {
                 $('#read').html(data);
+                if (typeof $.fn.DataTable !== 'undefined') {
+                    if ($.fn.DataTable.isDataTable('#read table')) {
+                        $('#read table').DataTable().destroy();
+                    }
+                    $('#read table.dataTable').DataTable({
+                        "aaSorting": [],
+                        "retrieve": true,
+                        "pageLength": 10
+                    });
+                }
             });
         }
 

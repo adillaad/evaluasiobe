@@ -7,24 +7,28 @@ use App\Models\BK;
 use App\Models\Kurikulum;
 use App\Models\MK;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class BKController extends Controller
 {
     public function index(Request $request)
     {
-        $kurikulums = Kurikulum::where('id_prodi',auth()->user()->id_prodiUser)->get();
+        $idProdi = auth()->user()->id_prodiUser;
+        $kurikulums = Kurikulum::where('id_prodi', $idProdi)->get();
+
         $query = BK::query()
             ->join('prodi', 'bks.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->select('bks.*');
+            ->select('bks.*')
+            ->with('kurikulum');
 
         if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
             $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
             $query->where('fakultas.id', auth()->user()->id_fakultasUser);
         } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $query->where('prodi.id', auth()->user()->id_prodiUser);
+            $query->where('prodi.id', $idProdi);
         }
 
         if ($request->filled('kurikulum_id')) {
@@ -33,47 +37,107 @@ class BKController extends Controller
 
         $bks = $query->get()->groupBy('rumpun');
 
-        return view('penjamin-mutu.bk.index', compact('bks','kurikulums'));
+        $existingRumpuns = BK::where('id_prodi', $idProdi)
+            ->whereNotNull('rumpun')
+            ->where('rumpun', '!=', '')
+            ->distinct()
+            ->pluck('rumpun');
+
+        return view('penjamin-mutu.bk.index', compact('bks', 'kurikulums', 'existingRumpuns'));
     }
     
     public function addBK()
     {
-        $kurikulums = Kurikulum::where('id_prodi',auth()->user()->id_prodiUser)->get();
+        $kurikulums = Kurikulum::where('id_prodi', auth()->user()->id_prodiUser)->get();
 
         return view('penjamin-mutu.bk.addBK', compact('kurikulums'));
     }
 
     public function storeBK(Request $request)
     {
-        // Validasi
+        $rumpunValue = $request->input('rumpun_select') === '__NEW__'
+            ? trim($request->input('rumpun_new'))
+            : trim($request->input('rumpun_select') ?: $request->input('rumpun'));
+
+        $request->merge(['rumpun' => $rumpunValue]);
+
         $validator = Validator::make($request->all(), [
             'kurikulum_id' => 'required',
             'nama' => 'required|string',
-            'rumpun' => 'required|string'
+            'rumpun' => 'required|string',
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()->with('failed', 'Data tidak dapat dai simpan.'.$validator->errors());
+            return redirect()->back()->withInput()->with('failed', 'Gagal menyimpan: ' . $validator->errors()->first());
         }
         try {
-           // Tambahkan id_prodiUser ke dalam data yang akan disimpan
-            $data = $request->all();
-            $data['id_prodi'] = auth()->user()->id_prodiUser;
+            $idProdi = auth()->user()->id_prodiUser;
+            $jumlahBk = BK::where('id_prodi', $idProdi)->where('kurikulum_id', $request->kurikulum_id)->count();
+            $kodeBKforInput = 'BK0' . ($jumlahBk + 1);
 
-            //mendapatkan kode pl, dengan menghitung banyak nya PL yang sudah ada dalam sebuah prodi
-            $jumlahBk = BK::where('id_prodi',auth()->user()->id_prodiUser)->where('kurikulum_id',$request->kurikulum_id)->count();
-            $kodeBKforInput = 'BK0'.$jumlahBk+1;
-
-            $data['kode'] = $kodeBKforInput;
-
-            BK::create($data);
-            return redirect()->back()->with('success', 'Data berhasil disimpan.');
+            BK::create([
+                'id_prodi' => $idProdi,
+                'kurikulum_id' => $request->kurikulum_id,
+                'nama' => $request->nama,
+                'rumpun' => $rumpunValue,
+                'kode' => $kodeBKforInput,
+            ]);
+            return redirect()->back()->with('success', 'Data Bahan Kajian berhasil disimpan.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('failed', 'Data tidak dapat di simpan.');
+            return redirect()->back()->withInput()->with('failed', 'Gagal menyimpan data Bahan Kajian.');
         }
     }
 
-    public function indexBKMK()
+    public function updateBK(Request $request, $id)
+    {
+        $rumpunValue = $request->input('rumpun_select') === '__NEW__'
+            ? trim($request->input('rumpun_new'))
+            : trim($request->input('rumpun_select') ?: $request->input('rumpun'));
+
+        if ($rumpunValue) {
+            $request->merge(['rumpun' => $rumpunValue]);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'kurikulum_id' => 'required',
+            'nama' => 'required|string',
+            'rumpun' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->with('failed', 'Gagal memperbarui: ' . $validator->errors()->first());
+        }
+
+        try {
+            $idProdi = auth()->user()->id_prodiUser;
+            $bk = BK::where('id_prodi', $idProdi)->findOrFail($id);
+
+            $bk->update([
+                'nama' => $request->nama,
+                'kurikulum_id' => $request->kurikulum_id,
+                'rumpun' => $rumpunValue ?: $bk->rumpun,
+            ]);
+
+            return redirect()->back()->with('success', 'Bahan Kajian berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('failed', 'Gagal memperbarui Bahan Kajian.');
+        }
+    }
+
+    public function destroyBK($id)
+    {
+        try {
+            $idProdi = auth()->user()->id_prodiUser;
+            $bk = BK::where('id_prodi', $idProdi)->findOrFail($id);
+            $bk->delete();
+
+            return redirect()->back()->with('success', 'Bahan Kajian berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('failed', 'Gagal menghapus Bahan Kajian.');
+        }
+    }
+
+    public function indexBKMK(Request $request)
     {
         $queryBks = BK::query()
             ->join('prodi', 'bks.id_prodi', '=', 'prodi.id')
@@ -96,10 +160,55 @@ class BKController extends Controller
             $queryMks->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
-        $bks = $queryBks->get();
-        $mks =$queryMks->with('bk')->get();
+        if ($request->filled('kurikulum_id')) {
+            $queryBks->where('bks.kurikulum_id', $request->kurikulum_id);
+            $queryMks->where('mks.id_kurikulum', $request->kurikulum_id);
+        }
 
-        return view('penjamin-mutu.bk.pemetaan_bk_mk', compact('bks', 'mks'));
+        $bks = $queryBks->with('kurikulum')->get();
+        $mks = $queryMks->with(['bk', 'kurikulum'])->get();
+
+        $user = auth()->user();
+        $queryKur = Kurikulum::query()
+            ->join('prodi', 'kurikulums.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('kurikulums.*', 'prodi.nama as nama_prodi')
+            ->orderBy('kurikulums.tahun', 'desc');
+
+        if ($user->otoritas->otoritas === 'Penjamin Mutu Universitas') {
+            $queryKur->where('fakultas.id_universitas', $user->id_universitasUser);
+        } else if ($user->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
+            $queryKur->where('fakultas.id', $user->id_fakultasUser);
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+            $queryKur->where('prodi.id', $user->id_prodiUser);
+        }
+        $kurikulums = $queryKur->get();
+
+        return view('penjamin-mutu.bk.pemetaan_bk_mk', compact('bks', 'mks', 'kurikulums'));
+    }
+
+    public function updateMatrixBKMK(Request $request)
+    {
+        $matrix = $request->input('matrix', []); // Key: mk_kode, Value: array of bk_ids
+        $kurikulumId = $request->input('kurikulum_id');
+
+        $queryMks = MK::query();
+        if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $queryMks->where('id_prodi', auth()->user()->id_prodiUser);
+        }
+        if ($kurikulumId) {
+            $queryMks->where('id_kurikulum', $kurikulumId);
+        }
+        $allMks = $queryMks->get();
+
+        DB::transaction(function () use ($allMks, $matrix) {
+            foreach ($allMks as $mk) {
+                $selectedBkIds = isset($matrix[$mk->kode]) ? (array) $matrix[$mk->kode] : [];
+                $mk->bk()->sync($selectedBkIds);
+            }
+        });
+
+        return redirect()->back()->with('success', 'Matriks pemetaan BK - MK berhasil diperbarui.');
     }
 
     public function addBKMK()

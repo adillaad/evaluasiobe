@@ -18,22 +18,21 @@
                                     </span>
                                 </div>
                                 <h5 class="card-title">{{ Str::limit($berita->judul, 30, '...') }}</h5>
-                                <div class="d-flex">
-                                    <a type="button" href="{{ route('admin.berita.edit', ['berita' => encrypt($berita->id)]) }}"
-                                        class="btn btn-inverse-dark btn-icon-text p-2 flex-fill me-2">
-                                        Edit
-                                        <i class="ti-pencil btn-icon-append"></i>
-                                    </a>
-                                    <form action="{{ route('admin.berita.destroy', $berita) }}" method="post" class="flex-fill">
-                                        @csrf
-                                        @method('delete')
-                                        <button type="submit" class="btn btn-danger btn-icon-text p-2 w-100"
-                                            onclick="return confirm('Are you sure to delete {{ $berita->judul }}?')">
-                                            Delete
-                                            <i class="ti-trash btn-icon-append"></i>
-                                        </button>
-                                    </form>
-                                </div>
+                                 <div class="d-flex align-items-center justify-content-center gap-2">
+                                     <a href="{{ route('admin.berita.edit', ['berita' => encrypt($berita->id)]) }}"
+                                         class="btn btn-warning btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                         <i class="ti-pencil"></i>
+                                     </a>
+                                     <form action="{{ route('admin.berita.destroy', $berita) }}" method="post" class="d-inline m-0 p-0">
+                                         @csrf
+                                         @method('delete')
+                                         <button type="submit" class="btn btn-danger btn-icons"
+                                             data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
+                                             onclick="return confirm('Are you sure to delete {{ $berita->judul }}?')">
+                                             <i class="ti-trash"></i>
+                                         </button>
+                                     </form>
+                                 </div>
                             </div>
                         </div>
                     </div>

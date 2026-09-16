@@ -12,8 +12,19 @@
                     <span class="menu-title">Dashboard</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route($currentPrefix . 'daftar-akun-prodi') }}">
+                    <i class="mdi mdi-school menu-icon"></i>
+                    <span class="menu-title">Daftar Akun Prodi</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route($currentPrefix . 'tahun-ajaran.index') }}">
+                    <i class="mdi mdi-calendar-clock menu-icon"></i>
+                    <span class="menu-title">Tahun Ajaran</span>
+                </a>
+            </li>
             @if ($userOtoritas === 'Admin')
-                <li class="nav-item nav-category">berita</li>
                 <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="collapse" href="#berita" aria-expanded="false"
                         aria-controls="berita">
@@ -34,26 +45,13 @@
                     </div>
                 </li>
             @endif
-            <li class="nav-item nav-category">user</li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#user" aria-expanded="false" aria-controls="user">
+                <a class="nav-link" href="{{ route($currentPrefix . 'list-user') }}">
                     <i class="menu-icon mdi mdi-account-circle-outline"></i>
                     <span class="menu-title">User</span>
-                    <i class="menu-arrow"></i>
                 </a>
-                <div class="collapse" id="user">
-                    <ul class="nav flex-column sub-menu">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route($currentPrefix . 'add-user') }}">Tambah User</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route($currentPrefix . 'list-user') }}">Daftar User</a>
-                        </li>
-                    </ul>
-                </div>
             </li>
             @if ($userOtoritas === 'Admin')
-                <li class="nav-item nav-category">Registrasi Universitas</li>
                 <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="collapse" href="#registrasi-universitas" aria-expanded="false"
                         aria-controls="registrasi-universitas" onclick="document.getElementById('registrasi').click()">
@@ -71,7 +69,6 @@
                     </div>
                 </li>
             @endif
-            <li class="nav-item nav-category">Kurikulum</li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="collapse" href="#kurikulum" aria-expanded="false"
                     aria-controls="kurikulum" onclick="document.getElementById('kur').click()">
@@ -85,8 +82,6 @@
                         </li>
                     </ul>
                 </div>
-            </li>
-            <li class="nav-item nav-category">CPL</li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="collapse" href="#cpl" aria-expanded="false" aria-controls="cpl">
                     <i class="menu-icon mdi mdi-format-list-bulleted-type"></i>
@@ -105,8 +100,6 @@
                         </li>
                     </ul>
                 </div>
-            </li>
-            <li class="nav-item nav-category">MK</li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="collapse" href="#mk" aria-expanded="false"
                     aria-controls="mk">
@@ -146,8 +139,6 @@
                         </li>
                     </ul>
                 </div>
-            </li>
-            <li class="nav-item nav-category">RPS</li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="collapse" href="#rps" aria-expanded="false"
                     aria-controls="rps">
@@ -187,14 +178,6 @@
                         </li>
                     </ul>
                 </div>
-            </li>
-            <li class="nav-item nav-category">
-                @if ($userOtoritas == 'Admin')
-                    Univ, Fakultas dan Prodi
-                @elseif ($userOtoritas == 'Admin Universitas')
-                    Fakultas dan Prodi
-                @endif
-            </li>
             @if ($userOtoritas == 'Admin')
                 <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="collapse" href="#univ" aria-expanded="false"
@@ -255,8 +238,6 @@
                         </li>
                     </ul>
                 </div>
-            </li>
-            <li class="nav-item nav-category">Soal</li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="collapse" href="#soal" aria-expanded="false"
                     aria-controls="soal">

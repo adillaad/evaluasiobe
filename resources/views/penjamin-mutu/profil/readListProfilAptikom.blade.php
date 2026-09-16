@@ -45,15 +45,17 @@
 
                         @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
                             <td class="text-center">
-                                <button type="button" class="btn btn-warning btn-sm"
-                                    onclick="showProfil({{ $profil->id }})" title="Edit data">
-                                    <i class="bi bi-pencil"></i> Edit
-                                </button>
+                                <div class="d-flex align-items-center justify-content-center gap-1">
+                                    <button type="button" class="btn btn-warning btn-icons"
+                                        onclick="showProfil({{ $profil->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                        <i class="ti-pencil"></i>
+                                    </button>
 
-                                <button type="button" class="btn btn-danger btn-sm ms-1"
-                                    onclick="deleteProfil({{ $profil->id }})" title="Hapus data">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
+                                    <button type="button" class="btn btn-danger btn-icons"
+                                        onclick="deleteProfil({{ $profil->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus">
+                                        <i class="ti-trash"></i>
+                                    </button>
+                                </div>
                             </td>
                         @endif
                     </tr>

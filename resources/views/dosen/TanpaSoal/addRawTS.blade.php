@@ -12,23 +12,38 @@
 
         .tooltiptext {
             visibility: hidden;
-            width: 160px;
-            background-color: rgba(0, 0, 0, 0.8);
+            width: 180px;
+            background-color: rgba(0, 0, 0, 0.85);
             color: white;
             text-align: center;
             border-radius: 8px;
-            padding: 8px;
+            padding: 8px 12px;
             position: absolute;
-            z-index: 1;
-            bottom: 0%;
-            left: 90%;
-            transform: translateX(-50%);
-            transition: visibility 0.3s ease-in-out;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1050;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            font-size: 0.8rem;
+            pointer-events: none;
         }
 
         .tooltipa:hover .tooltiptext {
             visibility: visible;
+        }
+
+        .form-floating > .form-control,
+        .form-floating > .form-select {
+            height: calc(3.5rem + 2px);
+            line-height: 1.25;
+            padding-top: 1.625rem;
+            padding-bottom: 0.625rem;
+        }
+
+        .form-floating > label {
+            padding: 1rem 0.75rem;
+            pointer-events: none;
         }
     </style>
 
@@ -78,9 +93,10 @@
                     <div id="templateTanpaSoal">
 
                         <!-- Kurikulum -->
-                        <div class="form-floating tooltipa">
-                            <select id="kurikulum" name="kurikulum" class="form-select form-control-lg" required>
-                                <option selected="true" value="" disabled>-</option>
+                        <div class="form-group mb-3 tooltipa">
+                            <label for="kurikulum" class="form-label fw-semibold">Pilih Kurikulum <span class="text-danger">*</span></label>
+                            <select id="kurikulum" name="kurikulum" class="form-select" required>
+                                <option value="" disabled selected>-- Pilih Kurikulum --</option>
                                 @foreach ($kurikulum as $kur)
                                     <option value="{{ $kur->id }}"
                                         {{ old('kurikulum') == $kur->id ? 'selected' : '' }}>
@@ -89,30 +105,26 @@
                                 @endforeach
                             </select>
                             <span class="tooltiptext">Pilih sesuai dengan kurikulum</span>
-                            <label for="kurikulum"> Pilih Kurikulum <span class="text-danger"> *</span></label>
-                            <div class="form-text mb-3"></div>
                         </div>
 
                         <!-- Prodi -->
-                        <div class="form-floating tooltipa">
-                            <select id="prodi" name="prodi" class="form-select form-control-lg"
-                                aria-label="select Prodi" required>
-                                <option selected="true" value="" selected>-</option>
+                        <div class="form-group mb-3 tooltipa">
+                            <label for="prodi" class="form-label fw-semibold">Pilih Prodi <span class="text-danger">*</span></label>
+                            <select id="prodi" name="prodi" class="form-select" required>
+                                <option value="" disabled selected>-- Pilih Prodi --</option>
                                 @foreach ($prodi as $p)
                                     <option value="{{ $p->id }}" {{ old('prodi') == $p->id ? 'selected' : '' }}>
                                         {{ $p->nama }}
                                     </option>
                                 @endforeach
                             </select>
-                            <label for="prodi"> Pilih Prodi <span class="text-danger"> *</span></label>
-                            <div class="form-text mb-3"></div>
                         </div>
 
                         <!-- Mata Kuliah -->
-                        <div class="form-floating tooltipa">
-                            <select id="kode_mk" name="kode_mk" class="form-select form-control-lg"
-                                aria-label="select Mata Kuliah" required>
-                                <option selected="true" value="" selected>-</option>
+                        <div class="form-group mb-3 tooltipa">
+                            <label for="kode_mk" class="form-label fw-semibold">Pilih Mata Kuliah <span class="text-danger">*</span></label>
+                            <select id="kode_mk" name="kode_mk" class="form-select" required>
+                                <option value="" disabled selected>-- Pilih Mata Kuliah --</option>
                                 @foreach ($rpss as $rps)
                                     <option value="{{ $rps->kode_mk }}"
                                         {{ old('kode_mk') == $rps->kode_mk ? 'selected' : '' }}>
@@ -120,51 +132,45 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <label for="mataKuliah"> Pilih Mata Kuliah <span class="text-danger"> *</span></label>
-                            <div class="form-text mb-3"></div>
                         </div>
 
                         <!-- CPL (AJAX) -->
-                        <div class="form-floating tooltipa mb-3">
-                            <span class="tooltiptext">Pilih CPL yang sesuai</span>
-                            <select class="form-control form-control-lg" name="cpl[]" id="cpls" required disabled>
-                                <option value="">-- Pilih MK dulu --</option>
+                        <div class="form-group mb-3 tooltipa">
+                            <label for="cpls" class="form-label fw-semibold">Pilih CPL <span class="text-danger">*</span></label>
+                            <select class="form-select" name="cpl[]" id="cpls" required disabled>
+                                <option value="" disabled selected>-- Pilih MK dulu --</option>
                             </select>
-                            <label>Pilih CPL <span class="text-danger">*</span></label>
+                            <span class="tooltiptext">Pilih CPL yang sesuai</span>
                         </div>
 
                         <!-- CPMK (AJAX) -->
-                        <div class="form-floating tooltipa">
-                            <span class="tooltiptext">Pilih CPMK yang sesuai</span>
-                            <select name="cpmk[]" id="cpmks" class="form-select form-control-lg" required disabled>
-                                <option value="">-- Pilih CPL dulu --</option>
+                        <div class="form-group mb-3 tooltipa">
+                            <label for="cpmks" class="form-label fw-semibold">Pilih CPMK <span class="text-danger">*</span></label>
+                            <select name="cpmk[]" id="cpmks" class="form-select" required disabled>
+                                <option value="" disabled selected>-- Pilih CPL dulu --</option>
                             </select>
-                            <label for="cpmks"> Pilih CPMK <span class="text-danger"> *</span></label>
-                            <div class="form-text mb-3"></div>
+                            <span class="tooltiptext">Pilih CPMK yang sesuai</span>
                         </div>
 
                         <!-- JENIS / METODE PENILAIAN -->
-                        <div class="form-floating tooltipa">
-                            <select id="jenis" name="jenis" class="form-select form-control-lg"
-                                aria-label="select jenis" required disabled>
-                                <option selected="true" value="" selected>-</option>
+                        <div class="form-group mb-3 tooltipa">
+                            <label for="jenis" class="form-label fw-semibold">Pilih Jenis / Metode Penilaian <span class="text-danger">*</span></label>
+                            <select id="jenis" name="jenis" class="form-select" required disabled>
+                                <option value="" disabled selected>-- Pilih Jenis --</option>
                             </select>
                             <span class="tooltiptext">Pilih jenis penilaian (Kuis, UTS, UAS, dll)</span>
-                            <label for="jenis"> Pilih Jenis <span class="text-danger"> *</span></label>
-                            <div class="form-text mb-3"></div>
                         </div>
 
                         <!-- Bobot (readonly, informatif saja) -->
-                        <div class="form-floating tooltipa">
+                        <div class="form-group mb-3 tooltipa">
+                            <label for="bobot" class="form-label fw-semibold">Bobot Metode pada CPMK (%)</label>
                             <input name="bobot_info" id="bobot" type="number" min="0" max="100"
-                                class="form-control" placeholder="Bobot" readonly>
+                                class="form-control bg-light text-muted" placeholder="0" readonly>
                             <span class="tooltiptext">Bobot metode untuk CPMK ini (otomatis dari mapping)</span>
-                            <label>Bobot Metode pada CPMK (%)</label>
-                            <small class="text-muted">
+                            <small class="text-muted d-block mt-1">
                                 Otomatis dari mapping. Pembagian bobot per instrumen dihitung saat download template di
                                 halaman Download Template Penilaian.
                             </small>
-                            <div class="form-text mb-3"></div>
                         </div>
 
                     </div>

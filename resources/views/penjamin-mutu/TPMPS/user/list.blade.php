@@ -34,28 +34,32 @@
                             <td>{{$user->email}}</td>
                             <td>{{$user->otoritas}}</td>
                             <td>
-                                <form action="{{ route('TPMPS.reset-user', encrypt($user->id)) }}" method="post">
+                                <form action="{{ route('TPMPS.reset-user', encrypt($user->id)) }}" method="post" class="d-inline m-0 p-0">
                                     @csrf
                                     @method('put')
-                                    <button type="submit" class="btn btn-warning btn-icon-text p-2" onclick="return confirm('Are you sure to reset password {{$user->name}}?')">
-                                        <i class="ti-reload btn-icon-prepend"></i>
-                                        Reset
+                                    <button type="submit" class="btn btn-info btn-icons"
+                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Reset Password"
+                                        onclick="return confirm('Are you sure to reset password {{$user->name}}?')">
+                                        <i class="ti-reload"></i>
                                     </button>
                                 </form>
                             </td>
-                            <td class="d-flex py-4">
-                                <a type="button" href="{{ route('TPMPS.edit-user', encrypt($user->id)) }}" class="btn btn-inverse-dark btn-icon-text p-2" style="margin-right:7px">
-                                    Edit
-                                    <i class="ti-pencil btn-icon-append"></i>
-                                </a>
-                                <form action="delete-user/{{encrypt($user->id)}}" method="post">
-                                    @csrf
-                                    @method('delete')
-                                    <button type="submit" class="btn btn-danger btn-icon-text p-2" onclick="return confirm('Are you sure to delete {{$user->name}}?')">
-                                        Delete
-                                        <i class="ti-trash btn-icon-append"></i>
-                                    </button>
-                                </form>
+                            <td>
+                                <div class="d-flex align-items-center gap-1">
+                                    <a href="{{ route('TPMPS.edit-user', encrypt($user->id)) }}"
+                                        class="btn btn-warning btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                        <i class="ti-pencil"></i>
+                                    </a>
+                                    <form action="delete-user/{{encrypt($user->id)}}" method="post" class="d-inline m-0 p-0">
+                                        @csrf
+                                        @method('delete')
+                                        <button type="submit" class="btn btn-danger btn-icons"
+                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
+                                            onclick="return confirm('Are you sure to delete {{$user->name}}?')">
+                                            <i class="ti-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         @endforeach

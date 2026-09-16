@@ -17,16 +17,17 @@
         <thead class="table-light">
             <tr>
                 <th width="5%" class="text-center">No</th>
+                <th width="25%">Profil Karir</th>
                 <th>Graduate Profile</th>
                 @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                    <th width="20%" class="text-center">Action</th>
+                    <th width="15%" class="text-center">Action</th>
                 @endif
             </tr>
         </thead>
         <tbody>
             @if ($listProfil->isEmpty())
                 <tr>
-                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 3 : 2 }}"
+                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 4 : 3 }}"
                         class="text-center text-muted py-4">
                         Tidak ada data
                     </td>
@@ -35,18 +36,23 @@
                 @foreach ($listProfil as $key => $profil)
                     <tr>
                         <td class="text-center">{{ $key + 1 }}</td>
+                        <td>
+                            <span class="fw-bold text-dark">{{ $profil->namaProfil ?? '-' }}</span>
+                        </td>
                         <td class="wrap-content">{{ ucfirst($profil->deskripsi) }}</td>
 
                         @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
                             <td class="text-center">
-                                <button type="button" class="btn btn-warning btn-sm"
-                                    onclick="showProfil({{ $profil->id }})" title="Edit data">
-                                    <i class="mdi mdi-pencil"></i> Edit
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteProfil({{ $profil->id }})"
-                                    title="Hapus data">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
+                                <div class="d-flex align-items-center justify-content-center gap-1">
+                                    <button type="button" class="btn btn-warning btn-icons"
+                                        onclick="showProfil({{ $profil->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                        <i class="ti-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-icons" onclick="deleteProfil({{ $profil->id }})"
+                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus">
+                                        <i class="ti-trash"></i>
+                                    </button>
+                                </div>
                             </td>
                         @endif
                     </tr>

@@ -24,8 +24,6 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                     <span class="menu-title">Dashboard</span>
                 </a>
             </li>
-            {{-- Menu Kurikulum --}}
-            <li class="nav-item nav-category">Kurikulum</li>
             @if ($userOtoritas == 'Kepala Program Studi')
                 <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="collapse" href="#kurikulum" aria-expanded="false"
@@ -46,19 +44,10 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
 
             {{-- User Management --}}
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#user" aria-expanded="false" aria-controls="user">
+                <a class="nav-link" href="{{ route($currentPrefix . 'list-user') }}">
                     <i class="menu-icon mdi mdi-account-circle-outline"></i>
                     <span class="menu-title">User</span>
-                    <i class="menu-arrow"></i>
                 </a>
-                <div class="collapse" id="user">
-                    <ul class="nav flex-column sub-menu">
-                        <li class="nav-item"><a class="nav-link" href="{{ route($currentPrefix . 'add-user') }}">Tambah
-                                User</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ route($currentPrefix . 'list-user') }}">Daftar
-                                User</a></li>
-                    </ul>
-                </div>
             </li>
 
             {{-- Soal Pages --}}
@@ -213,12 +202,9 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                 </a>
                 <div class="collapse" id="cpl_cpmk">
                     <ul class="nav flex-column sub-menu">
-                        @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
-                            <li class="nav-item"><a class="nav-link"
-                                    href="{{ route($currentPrefix . 'cpl-cpmk.cpl-cpmk-mk-add') }}">Tambah
-                                    CPL-CPMK-MK</a>
-                            </li>
-                        @endif
+                        <li class="nav-item"><a class="nav-link"
+                                href="{{ route($currentPrefix . 'cpl-cpmk.pemetaan-mk-cpmk') }}">Pemetaan MK-CPMK</a>
+                        </li>
                         <li class="nav-item"><a class="nav-link"
                                 href="{{ route($currentPrefix . 'cpl-cpmk.cpl-cpmk-mk') }}">Pemetaan CPL-CPMK-MK</a>
                         </li>
@@ -236,7 +222,6 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
             </li>
 
             {{-- Asesmen --}}
-            <li class="nav-item nav-category">Asesmen</li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="collapse" href="#asesmen" aria-expanded="false"
                     aria-controls="asesmen">
@@ -252,14 +237,17 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                             </li>
                         @endif
                         <li class="nav-item"><a class="nav-link"
-                                href="{{ route($currentPrefix . 'asesmen.metode-penilaian') }}">Metode Penilaian</a>
+                                href="{{ route($currentPrefix . 'daftar-asesmen-mk') }}">Daftar Asesmen</a>
                         </li>
                         <li class="nav-item"><a class="nav-link"
+                                href="{{ route($currentPrefix . 'asesmen.kelola-metode') }}">Metode Penilaian</a>
+                        </li>
+                        <li class="nav-item"><a class="nav-link"
+                                href="{{ route($currentPrefix . 'asesmen.kelola-kriteria') }}">Kriteria Penilaian</a>
+                        </li>
+                        <!-- <li class="nav-item"><a class="nav-link"
                                 href="{{ route($currentPrefix . 'asesmen.tahap-penilaian') }}">Tahap Penilaian</a>
-                        </li>
-                        <li class="nav-item"><a class="nav-link"
-                                href="{{ route($currentPrefix . 'asesmen.bobot-penilaian') }}">Bobot Penilaian</a>
-                        </li>
+                        </li> -->
                         <li class="nav-item"><a class="nav-link"
                                 href="{{ route($currentPrefix . 'asesmen.NA-MK') }}">Nilai Akhir MK</a></li>
                         <li class="nav-item"><a class="nav-link"
@@ -269,7 +257,6 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
             </li>
 
             {{-- RPS Management --}}
-            <li class="nav-item nav-category">RPS</li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="collapse" href="#rps" aria-expanded="false"
                     aria-controls="rps">
@@ -301,7 +288,6 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
             </li>
 
             {{-- Penilaian --}}
-            <li class="nav-item nav-category">Penilaian</li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="collapse" href="#penilaian" aria-expanded="false"
                     aria-controls="penilaian">
@@ -313,35 +299,23 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                     <ul class="nav flex-column sub-menu">
                         <li class="nav-item"><a class="nav-link"
                                 href="{{ route($currentPrefix . 'penilaian.penilaian-dengan-soal') }}">Data
-                                Penilaian</a>
+                                Nilai Soal</a>
+                        </li>
+                        <li class="nav-item"><a class="nav-link"
+                                href="{{ route($currentPrefix . 'penilaian.penilaian-tanpa-soal') }}">Data
+                                Nilai Konversi</a>
                         </li>
                     </ul>
                 </div>
             </li>
             {{-- Mahasiswa --}}
-            <li class="nav-item nav-category">Mahasiswa</li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#mahasiswa" aria-expanded="false"
-                    aria-controls="mahasiswa">
+                <a class="nav-link" href="{{ route($currentPrefix . 'mahasiswa.index') }}">
                     <i class="menu-icon mdi mdi-account-group"></i>
                     <span class="menu-title">Mahasiswa</span>
-                    <i class="menu-arrow"></i>
                 </a>
-                <div class="collapse" id="mahasiswa">
-                    <ul class="nav flex-column sub-menu">
-                        @if (in_array($userOtoritas, ['Dosen', 'Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                            <li class="nav-item"><a class="nav-link"
-                                    href="{{ route($currentPrefix . 'mahasiswa.create') }}">Tambah
-                                    Mahasiswa</a></li>
-                        @endif
-                        <li class="nav-item"><a class="nav-link"
-                                href="{{ route($currentPrefix . 'mahasiswa.index') }}">Daftar Mahasiswa</a>
-                        </li>
-                    </ul>
-                </div>
             </li>
             {{-- Visualisasi --}}
-            <li class="nav-item nav-category">Visualisasi</li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="collapse" href="#visualisasi" aria-expanded="false"
                     aria-controls="visualisasi">
@@ -362,6 +336,17 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                 href="{{ route($currentPrefix . 'visualisasi.visual-mahasiswaMataKuliah') }}">Per Mata
                                 Kuliah</a>
                         </li>
+                        @if (in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan']))
+                            <li class="nav-item"><a class="nav-link"
+                                    href="{{ route($currentPrefix . 'visualisasi.visual-program-studi') }}">Per Program
+                                    Studi</a>
+                            </li>
+                        @endif
+                        @if (in_array($userOtoritas, ['Penjamin Mutu Universitas', 'Wakil Rektor', 'Admin Universitas']))
+                            <li class="nav-item"><a class="nav-link"
+                                    href="{{ route($currentPrefix . 'visualisasi.visual-fakultas') }}">Per Fakultas</a>
+                            </li>
+                        @endif
                     </ul>
                 </div>
             </li>

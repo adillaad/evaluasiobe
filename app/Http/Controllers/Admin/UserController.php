@@ -8,6 +8,8 @@ use App\Models\Prodi;
 use App\Models\Fakultas;
 use App\Models\Universitas;
 use App\Imports\UsersImport;
+use App\Imports\DosenImport;
+use App\Exports\DosenTemplateExport;
 use App\Models\UserOtoritas;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules;
@@ -168,7 +170,7 @@ class UserController extends Controller
 
         event(new Registered($user));
 
-        return redirect()->route($this->getRouteByAuthority())->with('success', 'User successfully added!!');
+        return redirect()->back()->with('success', 'User berhasil ditambahkan!');
     }
 
     public function list(Request $request)
@@ -395,5 +397,34 @@ class UserController extends Controller
             ->select('id', 'nama')
             ->get();
         return response()->json($prodi);
+    }
+
+    public function importDosen(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ], [
+            'excel_file.required' => 'File Excel wajib diunggah.',
+            'excel_file.mimes' => 'Format file harus berupa .xlsx, .xls, atau .csv.',
+            'excel_file.max' => 'Ukuran file maksimal 10 MB.',
+        ]);
+
+        try {
+            $user = auth()->user();
+            $prodiId = $user->id_prodiUser;
+            if (!$prodiId && $user->prodis()->exists()) {
+                $prodiId = $user->prodis()->first()->id;
+            }
+
+            Excel::import(new DosenImport($prodiId), $request->file('excel_file'));
+            return redirect()->back()->with('success', 'Data Dosen berhasil diimport dari Excel dengan password default Unilajaya!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengimport data Dosen: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplateDosen()
+    {
+        return Excel::download(new DosenTemplateExport, 'template_import_dosen.xlsx');
     }
 }

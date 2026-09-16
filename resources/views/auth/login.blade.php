@@ -6,6 +6,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Login - Evaluasi OBE</title>
+    <link rel="shortcut icon" href="{{ asset('/assets/img/eval-obe-logo.png') }}" />
     {{-- plugins:css --}}
     <link rel="stylesheet" href="{{ asset('/assets/template/vendors/feather/feather.css') }}">
     <link rel="stylesheet" href="{{ asset('/assets/template/vendors/mdi/css/materialdesignicons.min.css') }}">
@@ -16,9 +17,23 @@
     {{-- endinject --}}
     {{-- Plugin css for this page --}}
     {{-- End plugin css for this page --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
     {{-- inject:css --}}
-    <link rel="stylesheet" href="{{ asset('/assets/template/css/vertical-layout-light/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('/assets/template/css/vertical-layout-light/style.css') }}?v={{ time() }}">
     {{-- endinject --}}
+    <style>
+        body, html, input, button, select, textarea, p, h1, h2, h3, h4, h5, h6, a, span, table, td, th, div, label, li, ul, ol {
+            font-family: 'Poppins', sans-serif !important;
+        }
+        span[class*="mdi-"], i[class*="mdi"], .mdi { font-family: "Material Design Icons" !important; }
+        span[class*="feather-"], i[class*="feather"], .feather { font-family: "feather" !important; }
+        span[class*="ti-"], i[class*="ti"], .ti { font-family: "themify" !important; }
+        span[class*="icon-"], i[class*="icon"] { font-family: "Simple-Line-Icons" !important; }
+        span[class*="bi-"], i[class*="bi"], .bi { font-family: "bootstrap-icons" !important; }
+        span[class*="fa-"], i[class*="fa"], .fa { font-family: FontAwesome !important; }
+    </style>
 </head>
 
 <body>

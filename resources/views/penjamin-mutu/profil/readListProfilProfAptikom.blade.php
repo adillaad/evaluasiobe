@@ -13,6 +13,7 @@
                 <th>Kode PL</th>
                 <th>Profil Lulusan</th>
                 <th>Status</th>
+                <th class="text-center">Kurikulum</th>
                 <th>Profesi</th>
                 <th>Acuan</th>
                 @if (in_array($userOtoritas, [
@@ -27,7 +28,7 @@
         <tbody>
             @if ($listProfil->isEmpty())
                 <tr>
-                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi']) ? 4 : 3 }}"
+                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 9 : 8 }}"
                         style="text-align: center;">Tidak ada data</td>
                 </tr>
             @else
@@ -38,15 +39,25 @@
                         <td>{{ ucfirst($profil->kode) }}</td>
                         <td class="wrap-content">{{ ucfirst($profil->deskripsi) }}</td>
                         <td>{{ ucfirst($profil->status) }}</td>
-                        @if ($key === 0)
-                            <td rowspan="{{ count($listProfil) }}" style="vertical-align: top">
-                                <ul>
-                                    @foreach ($listProfesi as $profesi)
+                        <td class="text-center align-middle">
+                            <span class="badge bg-light text-dark border px-2 py-1 fw-semibold">
+                                {{ $profil->kurikulum->tahun ?? '-' }}
+                            </span>
+                        </td>
+                        <td style="vertical-align: top;">
+                            @php
+                                $profesisForProfil = $listProfesi->where('kurikulum_id', $profil->kurikulum_id);
+                            @endphp
+                            @if ($profesisForProfil->isNotEmpty())
+                                <ul class="ps-3 mb-0">
+                                    @foreach ($profesisForProfil as $profesi)
                                         <li>{{ $profesi->nama }}</li>
                                     @endforeach
                                 </ul>
-                            </td>
-                        @endif
+                            @else
+                                <span class="text-muted fst-italic">- Belum ada profesi -</span>
+                            @endif
+                        </td>
                         <td>{{ ucfirst($profil->acuan) }}</td>
                         @if (in_array($userOtoritas, [
                         
@@ -54,12 +65,16 @@
                                 'Kepala Program Studi',
                             ]))
                             <td>
-                                <button type="submit" class="btn btn-sm btn-warning"
-                                    onclick="showProfil({{ $profil->id }})"><i
-                                        class="mdi mdi-pencil me-1"></i>Edit</button>
-                                <button type="submit" class="btn btn-sm btn-danger"
-                                    onclick="deleteProfil({{ $profil->id }})"><i
-                                        class="mdi mdi-delete me-1"></i>Delete</button>
+                                <div class="d-flex align-items-center gap-1">
+                                    <button type="button" class="btn btn-warning btn-icons"
+                                        onclick="showProfil({{ $profil->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                        <i class="ti-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-icons"
+                                        onclick="deleteProfil({{ $profil->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus">
+                                        <i class="ti-trash"></i>
+                                    </button>
+                                </div>
                             </td>
                         @endif
                     </tr>

@@ -28,6 +28,8 @@
                     </p>
                 </div>
 
+                <x-filter-form :universities="$universities" :faculties="$faculties" :programs="$programs" />
+
                 {{-- Stats Cards --}}
                 <div class="row g-3 mb-4">
                     <div class="col-6 col-md-3">
@@ -76,8 +78,6 @@
                     </div>
                 </div>
 
-                {{-- Filter --}}
-                <x-filter-form :universities="$universities" :faculties="$faculties" :programs="$programs" />
 
                 {{-- Search --}}
                 <form method="GET" action="{{ route($rolePrefix . 'list-soal') }}" class="mb-3">
@@ -159,36 +159,40 @@
 
                                     {{-- Aksi: tiga tombol icon --}}
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center gap-1">
+                                        <div class="d-flex justify-content-center align-items-center gap-1">
 
                                             {{-- Periksa --}}
                                             <a href="{{ route($rolePrefix . 'soal-detail', $mk->kode) }}"
-                                                class="btn btn-sm btn-outline-primary p-0 d-flex align-items-center justify-content-center"
-                                                style="width:32px;height:32px;" data-bs-toggle="tooltip"
+                                                class="btn btn-info btn-icons" data-bs-toggle="tooltip" data-bs-placement="top"
                                                 title="Periksa detail soal">
-                                                <i class="ti-search" style="font-size:14px;"></i>
+                                                <i class="ti-eye"></i>
                                             </a>
 
                                             {{-- Setujui --}}
+                                            @php
+                                                $canAction = ($mk->status_label === 'siap');
+                                            @endphp
                                             <form action="{{ route($rolePrefix . 'soal-validasi-mk', $mk->kode) }}"
-                                                method="POST" class="d-inline">
+                                                method="POST" class="d-inline m-0 p-0">
                                                 @csrf
                                                 <button type="submit"
-                                                    class="btn btn-sm btn-outline-success p-0 d-flex align-items-center justify-content-center"
-                                                    style="width:32px;height:32px;" data-bs-toggle="tooltip"
-                                                    title="Setujui semua soal MK ini"
+                                                    class="btn btn-success btn-icons {{ !$canAction ? 'disabled' : '' }}" 
+                                                    {{ !$canAction ? 'disabled' : '' }}
+                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                    title="{{ $mk->status_label === 'valid' ? 'Semua soal MK ini sudah divalidasi' : ($mk->status_label === 'ditolak' ? 'Soal MK ini ditolak, menunggu dosen mengajukan soal baru' : ($canAction ? 'Setujui semua soal MK ini' : 'Belum ada soal diajukan')) }}"
                                                     onclick="return confirm('Validasi semua soal MK {{ $mk->kode }}?')">
-                                                    <i class="ti-check" style="font-size:14px;"></i>
+                                                    <i class="ti-check"></i>
                                                 </button>
                                             </form>
 
                                             {{-- Tolak — buka modal --}}
                                             <button type="button"
-                                                class="btn btn-sm btn-outline-danger p-0 d-flex align-items-center justify-content-center"
-                                                style="width:32px;height:32px;" data-bs-toggle="tooltip"
-                                                title="Tolak soal MK ini"
+                                                class="btn btn-danger btn-icons {{ !$canAction ? 'disabled' : '' }}" 
+                                                {{ !$canAction ? 'disabled' : '' }}
+                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                title="{{ $mk->status_label === 'valid' ? 'Semua soal MK ini sudah divalidasi' : ($mk->status_label === 'ditolak' ? 'Soal MK ini ditolak, menunggu dosen mengajukan soal baru' : ($canAction ? 'Tolak soal MK ini' : 'Belum ada soal diajukan')) }}"
                                                 onclick="openTolakModal('{{ $mk->kode }}')">
-                                                <i class="ti-close" style="font-size:14px;"></i>
+                                                <i class="ti-close"></i>
                                             </button>
 
                                         </div>

@@ -35,7 +35,7 @@ class CPMK extends Model
     }
 
     public function mks(){
-        return $this->belongsToMany(MK::class,'cpmk_mk','cpmk_id','mk_kode');
+        return $this->belongsToMany(MK::class,'cpmk_mk','cpmk_id','mk_kode')->withPivot('bobot');
     }
 
     public function subCpmks(){

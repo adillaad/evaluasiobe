@@ -7,57 +7,58 @@
     var footer = $('.footer');
     var sidebar = $('.sidebar');
 
-    //Add active class to nav-link based on url dynamically
-    //Active class can be hard coded directly in html file also as required
+    // Add active class to nav-link based on url dynamically
+    function updateSidebarActiveState() {
+      if (!sidebar.length) return;
 
-    function addActiveClass(element) {
-      if (current === "") {
-        //for root url
-        if (element.attr('href').indexOf("index.html") !== -1) {
-          element.parents('.nav-item').last().addClass('active');
-          if (element.parents('.sub-menu').length) {
-            element.closest('.collapse').addClass('show');
-            element.addClass('active');
+      var currentPath = window.location.pathname.replace(/\/+$/, '');
+
+      // Reset all active states in sidebar
+      $('.nav-item', sidebar).removeClass('active');
+      $('.nav-link', sidebar).removeClass('active');
+
+      var bestMatch = null;
+      var maxMatchLen = -1;
+
+      // Find the single best exact/prefix match
+      $('.nav li a', sidebar).each(function () {
+        var $this = $(this);
+        var href = $this.attr('href');
+        if (!href || href === '#' || href.startsWith('javascript:')) return;
+
+        var hrefPath = href.replace(/^https?:\/\/[^\/]+/, '').split('?')[0].split('#')[0].replace(/\/+$/, '');
+
+        if (hrefPath && (currentPath === hrefPath || currentPath.startsWith(hrefPath + '/'))) {
+          if (hrefPath.length > maxMatchLen) {
+            maxMatchLen = hrefPath.length;
+            bestMatch = $this;
           }
         }
-      } else {
-        //for other url
-        if (element.attr('href').indexOf(current) !== -1) {
-          element.parents('.nav-item').last().addClass('active');
-          if (element.parents('.sub-menu').length) {
-            element.closest('.collapse').addClass('show');
-            element.addClass('active');
-          }
-          if (element.parents('.submenu-item').length) {
-            element.addClass('active');
-          }
+      });
+
+      // Highlight ONLY the best matching element and its parent chain
+      if (bestMatch) {
+        bestMatch.addClass('active');
+        if (bestMatch.parents('.sub-menu').length) {
+          bestMatch.closest('.collapse').addClass('show');
         }
+        bestMatch.closest('.nav-item').addClass('active');
+        bestMatch.parents('.nav-item').last().addClass('active');
       }
     }
 
-    var current = location.pathname.split("/").slice(-1)[0].replace(/^\/|\/$/g, '');
-    $('.nav li a', sidebar).each(function () {
-      var $this = $(this);
-      addActiveClass($this);
-    })
+    updateSidebarActiveState();
 
-    $('.horizontal-menu .nav li a').each(function () {
-      var $this = $(this);
-      addActiveClass($this);
-    })
-
-    //Close other submenu in sidebar on opening any
-
+    // Close other submenu in sidebar on opening any
     sidebar.on('show.bs.collapse', '.collapse', function () {
       sidebar.find('.collapse.show').collapse('hide');
     });
 
-
-    //Change sidebar and content-wrapper height
+    // Change sidebar and content-wrapper height
     applyStyles();
 
     function applyStyles() {
-      //Applying perfect scrollbar
+      // Applying perfect scrollbar
       if (!body.hasClass("rtl")) {
         if ($('.settings-panel .tab-content .tab-pane.scroll-wrapper').length) {
           const settingsPanelScroll = new PerfectScrollbar('.settings-panel .tab-content .tab-pane.scroll-wrapper');
@@ -81,10 +82,10 @@
       }
     });
 
-    //checkbox and radios
+    // checkbox and radios
     $(".form-check label,.form-radio label").append('<i class="input-helper"></i>');
 
-    //Horizontal menu in mobile
+    // Horizontal menu in mobile
     $('[data-toggle="horizontal-menu-toggle"]').on("click", function () {
       $(".horizontal-menu .bottom-navbar").toggleClass("header-toggled");
     });
@@ -124,7 +125,6 @@
       document.querySelector('.page-body-wrapper').classList.add('pt-0');
       document.querySelector('.navbar').classList.add('pt-5');
       document.querySelector('.navbar').classList.add('mt-3');
-
     }
     document.querySelector('.navbar').classList.remove('pt-5');
     document.querySelector('.navbar').classList.add('fixed-top');

@@ -13,6 +13,7 @@ class PenilaianInstrumen extends Model
 
     protected $fillable = [
         'cpl_mk_cpmk_penilaian_id',
+        'penilaian_metode_id',
         'kriteria_id',
         'bobot_metode'
     ];
@@ -23,6 +24,15 @@ class PenilaianInstrumen extends Model
         return $this->belongsTo(
             CplMkCpmkPenilaian::class,
             'cpl_mk_cpmk_penilaian_id'
+        );
+    }
+
+    // FK -> penilaian_metode.id
+    public function penilaianMetode()
+    {
+        return $this->belongsTo(
+            PenilaianMetode::class,
+            'penilaian_metode_id'
         );
     }
 

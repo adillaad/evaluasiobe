@@ -12,8 +12,6 @@
     </div>
 @endif
 
-<h3 class="px-4 pb-4 fw-bold text-center">Hasil Visualisasi Mahasiswa</h3>
-
 {{-- Ini div yang mau dihilangkan jika belum ada data --}}
 <div class="form-group stretch-card" id="tugas">
     <div class="card">

@@ -10,17 +10,6 @@
 
 @extends($userOtoritas === 'Dosen' ? 'dosen.template' : 'penjamin-mutu.template')
 @section('content')
-@if (session()->has('failed'))
-    <div class="alert alert-danger" role="alert" id="box">
-        <div>{{ session('failed') }}</div>
-    </div>
-@elseif (session()->has('success'))
-    <div class="alert greenAdd" role="alert" id="box">
-        <div>{{ session('success') }}</div>
-    </div>
-@endif
-
-<h3 class="px-4 pb-4 fw-bold text-center">Halaman Tahap Penilaian</h3>
 
 <div class="container-fluid">
     <div class="card">
@@ -36,7 +25,7 @@
                             <th>CPL</th>
                             <th>MK</th>
                             <th>CPMK</th>
-                            <th>Tahap Penilaian</th>
+                            <!-- <th>Tahap Penilaian</th> -->
                             <th>Metode Penilaian</th>
                             <th>Instrumen</th>
                             <th>Kriteria</th>
@@ -54,7 +43,7 @@
                                 <td rowspan="{{ $rowspan }}">{{ $row->cpl_kode }}</td>
                                 <td rowspan="{{ $rowspan }}">{{ $row->mk_kode }}</td>
                                 <td rowspan="{{ $rowspan }}">{{ $row->cpmk_kode }}</td>
-                                <td rowspan="{{ $rowspan }}">{{ ucfirst($row->tahap_penilaian) }}</td>
+                                <!-- <td rowspan="{{ $rowspan }}">{{ ucfirst($row->tahap_penilaian) }}</td> -->
                                 <td rowspan="{{ $rowspan }}">
                                     @php
                                         $metode = $metodes->where('id', $row->id)->pluck('metode')->implode(', ');

@@ -15,7 +15,5 @@
                 @yield('content')
             </div>
         </div>
-    </div>
-</div>
-@include('penjamin-mutu.layout.footer')
+        @include('penjamin-mutu.layout.footer')
 @stack('scripts')

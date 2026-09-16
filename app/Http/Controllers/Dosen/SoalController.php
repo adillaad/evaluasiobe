@@ -18,6 +18,7 @@ use App\Models\Komponen;
 use App\Models\Universitas;
 use App\Models\Prodi;
 use App\Models\MetodePenilaian;
+use App\Models\Mahasiswa;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -28,6 +29,7 @@ use App\Imports\MutuImport;
 use App\Imports\ImportTanpaSoal;
 use App\Models\CplMkCpmkPenilaian;
 use App\Models\TanpaSoal;
+use App\Models\TahunAjaran;
 use App\Models\InstrumenPenilaian;
 use App\Models\PenilaianInstrumen;
 use App\Traits\UniversityFilterTrait;
@@ -199,8 +201,9 @@ class SoalController extends Controller
             $mks->push($mk);
         }
         $cpls = CPL::orderBy('aspek', 'desc')->get();
+        $tahunAjarans = TahunAjaran::orderBy('tahun', 'desc')->get();
 
-        return view('dosen.mutu.addMutu', compact('soals', 'rpss', 'cpls', 'mks', 'course', 'universitas', 'prodi'));
+        return view('dosen.mutu.addMutu', compact('soals', 'rpss', 'cpls', 'mks', 'course', 'universitas', 'prodi', 'tahunAjarans'));
     }
 
     public function getMetodeByMapping(Request $request)
@@ -807,26 +810,33 @@ class SoalController extends Controller
         return Excel::download(new MutuExport, 'mutu.xlsx');
     }
 
-    public function import()
+    public function import(Request $request)
     {
+        $user = auth()->user();
+        $mks = MK::where('id_prodi', $user->id_prodiUser)->orderBy('nama', 'asc')->get();
+
         $query = Mutu::query()
             ->with('mahasiswa')
             ->join('prodi', 'mutus.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
             ->join('mks', 'mutus.Course', '=', 'mks.kode')
-            ->select('mutus.*', 'prodi.nama as nama_prodi', 'mks.nama as nama_mk');
+            ->select('mutus.*', 'prodi.nama as nama_prodi', 'mks.nama as nama_mk')
+            ->where(function ($q) {
+                $q->whereNull('mutus.sumber')
+                  ->orWhere('mutus.sumber', '!=', 'konversi');
+            });
 
-        if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Universitas', 'Wakil Rektor'])) {
-            $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } elseif (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
-            $query->where('prodi.id_fakultas', auth()->user()->id_fakultasUser);
+        if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Universitas', 'Wakil Rektor'])) {
+            $query->where('fakultas.id_universitas', $user->id_universitasUser);
+        } elseif (in_array($user->otoritas->otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
+            $query->where('prodi.id_fakultas', $user->id_fakultasUser);
         } else {
-            $query->where('mutus.id_prodi', auth()->user()->id_prodiUser);
+            $query->where('mutus.id_prodi', $user->id_prodiUser);
         }
 
         $mutus = $query->paginate(10);
 
-        return view('dosen.mutu.importMutu', compact('mutus'));
+        return view('dosen.mutu.importMutu', compact('mutus', 'mks'));
     }
 
     public function import1()
@@ -865,27 +875,50 @@ class SoalController extends Controller
 
     public function filter(Request $request)
     {
-        $mutus = Mutu::query()
-            ->with('mahasiswa')
-            ->when($request->course, function ($query) use ($request) {
-                $keyword = $request->course;
-                return $query->where(function ($q) use ($keyword) {
-                    $q->where('nama_mhs', 'like', '%' . $keyword . '%')
-                        ->orWhere('Nama_mhs', 'like', '%' . $keyword . '%')
-                        ->orWhereHas('mahasiswa', function ($sub) use ($keyword) {
-                            $sub->where('Nama', 'like', '%' . $keyword . '%');
-                        })
-                        ->orWhereRaw(
-                            'EXISTS (SELECT 1 FROM mahasiswa WHERE mahasiswa.NPM = COALESCE(NULLIF(mutus.npm, 0), mutus.NPM) AND mahasiswa.Nama LIKE ?)',
-                            ['%' . $keyword . '%']
-                        );
-                });
-            })
-            ->join('prodi', 'mutus.id_prodi', '=', 'prodi.id')
-            ->join('mks', 'mutus.Course', '=', 'mks.kode')
-            ->select('mutus.*', 'prodi.nama as nama_prodi', 'mks.nama as nama_mk');
+        $user = auth()->user();
+        $mks = MK::where('id_prodi', $user->id_prodiUser)->orderBy('nama', 'asc')->get();
 
-        return view('dosen.mutu.importMutu', ['mutus' => $mutus->paginate(10)]);
+        $query = Mutu::query()
+            ->with('mahasiswa')
+            ->join('prodi', 'mutus.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->join('mks', 'mutus.Course', '=', 'mks.kode')
+            ->select('mutus.*', 'prodi.nama as nama_prodi', 'mks.nama as nama_mk')
+            ->where(function ($q) {
+                $q->whereNull('mutus.sumber')
+                  ->orWhere('mutus.sumber', '!=', 'konversi');
+            });
+
+        if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Universitas', 'Wakil Rektor'])) {
+            $query->where('fakultas.id_universitas', $user->id_universitasUser);
+        } elseif (in_array($user->otoritas->otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
+            $query->where('prodi.id_fakultas', $user->id_fakultasUser);
+        } else {
+            $query->where('mutus.id_prodi', $user->id_prodiUser);
+        }
+
+        if ($request->filled('mk_kode')) {
+            $query->where('mutus.Course', $request->mk_kode);
+        }
+
+        $query->when($request->course, function ($q) use ($request) {
+            $keyword = $request->course;
+            return $q->where(function ($sub) use ($keyword) {
+                $sub->where('nama_mhs', 'like', '%' . $keyword . '%')
+                    ->orWhere('Nama_mhs', 'like', '%' . $keyword . '%')
+                    ->orWhereHas('mahasiswa', function ($mhsQuery) use ($keyword) {
+                        $mhsQuery->where('Nama', 'like', '%' . $keyword . '%');
+                    })
+                    ->orWhereRaw(
+                        'EXISTS (SELECT 1 FROM mahasiswa WHERE mahasiswa.NPM = COALESCE(NULLIF(mutus.npm, 0), mutus.NPM) AND mahasiswa.Nama LIKE ?)',
+                        ['%' . $keyword . '%']
+                    );
+            });
+        });
+
+        $mutus = $query->paginate(10);
+
+        return view('dosen.mutu.importMutu', compact('mutus', 'mks'));
     }
 
     public function filterSoal(Request $request)
@@ -899,43 +932,412 @@ class SoalController extends Controller
 
     public function mutuimport(Request $request)
     {
-        $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls|max:2048',
-        ]);
+        $actionOption = $request->input('action_option');
+        $parsedRowsData = $request->input('parsed_rows_data') ?: session('temp_parsed_rows');
+        $user = auth()->user();
 
+        $parsedRows = [];
+        $headers = $request->input('headers_data') ?: session('temp_headers');
+        if ($headers && is_string($headers)) {
+            $headers = json_decode($headers, true) ?: [];
+        }
+        $unregisteredMhs = [];
+
+        // Skenario A: Submit konfirmasi dari Modal (tanpa re-read file Excel dari storage)
+        if (!empty($actionOption) && !empty($parsedRowsData)) {
+            $parsedRows = is_array($parsedRowsData) ? $parsedRowsData : (json_decode($parsedRowsData, true) ?: []);
+        } 
+        // Skenario B: Upload file Excel pertama kali
+        else if ($request->hasFile('file')) {
+            $uploadedFile = $request->file('file');
+            if (!$uploadedFile || !$uploadedFile->isValid()) {
+                return redirect()->back()->with('error', 'File Excel tidak valid.');
+            }
+
+            $filePath = $uploadedFile->getRealPath() ?: $uploadedFile->getPathname();
+
+            try {
+                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+                $worksheet = $spreadsheet->getActiveSheet();
+                $dataRows = $worksheet->toArray();
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
+            }
+
+            if (count($dataRows) <= 1) {
+                return redirect()->back()->with('error', 'File Excel kosong atau hanya berisi data header.');
+            }
+
+            $headers = array_map(fn($h) => trim((string)$h), $dataRows[0]);
+            unset($dataRows[0]); // Sisakan baris data
+
+            // Analisis mahasiswa belum terdaftar
+            $rowLine = 1;
+
+            foreach ($dataRows as $row) {
+                $rowLine++;
+                if (empty($row[3])) continue;
+
+                $npm = preg_replace('/[^0-9]/', '', (string) $row[3]);
+                if (empty($npm)) continue;
+
+                $nama = isset($row[4]) ? trim((string)$row[4]) : 'Tanpa Nama';
+                $angkatan = isset($row[2]) ? trim((string)$row[2]) : '';
+
+                $mhs = Mahasiswa::where('NPM', $npm)->first();
+
+                if (!$mhs) {
+                    $unregisteredMhs[$npm] = [
+                        'line' => $rowLine,
+                        'npm' => $npm,
+                        'nama' => $nama,
+                        'angkatan' => $angkatan,
+                    ];
+                }
+
+                $parsedRows[] = [
+                    'line' => $rowLine,
+                    'npm' => $npm,
+                    'nama' => $nama,
+                    'angkatan' => $angkatan,
+                    'mhs_id' => $mhs ? $mhs->id : null,
+                    'row_data' => array_values($row),
+                ];
+            }
+
+            // Jika ada NPM belum terdaftar & dosen belum menentukan action_option
+            if (!empty($unregisteredMhs)) {
+                session()->flash('unregistered_mhs', $unregisteredMhs);
+                session()->flash('temp_parsed_rows', $parsedRows);
+                session()->flash('temp_headers', $headers);
+                return redirect()->back()->with('warning_unregistered', true);
+            }
+        } else {
+            return redirect()->back()->with('error', 'Silakan pilih file Excel (.xlsx / .xls) yang akan di-import.');
+        }
+
+        // Jalankan import data ke database
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
+            $prodiDefault = $user->id_prodiUser;
 
-            Excel::import(new MutuImport, $request->file('file'));
+            // Validasi Konflik Jalur Import (1 Kombinasi MK & Tahun Ajaran hanya boleh 1 Jalur)
+            if (!empty($parsedRows)) {
+                $sampleRow = $parsedRows[0]['row_data'];
+                $sampleCourse = $sampleRow[6] ?? null;
+                $sampleTahun = $sampleRow[1] ?? null;
+
+                if ($sampleCourse && $sampleTahun) {
+                    $hasKonversiImport = Mutu::where('Course', $sampleCourse)
+                        ->where(function ($q) use ($sampleTahun) {
+                            $q->where('tahun', $sampleTahun)
+                              ->orWhereHas('tahunAjaran', function ($sub) use ($sampleTahun) {
+                                  $sub->where('tahun', $sampleTahun);
+                              });
+                        })
+                        ->where('sumber', 'konversi')
+                        ->exists();
+
+                    if ($hasKonversiImport) {
+                        DB::rollBack();
+                        return redirect()->back()->with('error', "Gagal mengimpor file Excel! Mata Kuliah '{$sampleCourse}' pada Tahun/Tahun Ajaran '{$sampleTahun}' sudah pernah di-import menggunakan jalur Konversi. Satu kombinasi MK dan Tahun Ajaran hanya boleh memilih SATU jalur import.");
+                    }
+                }
+            }
+
+            foreach ($parsedRows as $item) {
+                $row = $item['row_data'];
+                $npm = $item['npm'];
+                $nama = $item['nama'];
+                $angkatan = $item['angkatan'];
+                $mhsId = $item['mhs_id'];
+
+                if (!$mhsId) {
+                    if ($actionOption === 'register') {
+                        $prodiNama = trim((string)($row[5] ?? ''));
+                        $prodiObj = Prodi::where('nama', $prodiNama)->first();
+                        $prodiId = $prodiObj ? $prodiObj->id : $prodiDefault;
+
+                        $newMhs = Mahasiswa::create([
+                            'NPM' => $npm,
+                            'Nama' => $nama,
+                            'angkatan' => $angkatan ?: null,
+                            'id_prodi' => $prodiId,
+                        ]);
+                        $mhsId = $newMhs->id;
+                    } else {
+                        // Skip baris jika pilih skip
+                        continue;
+                    }
+                }
+
+                if ($mhsId && !empty($angkatan)) {
+                    Mahasiswa::where('id', $mhsId)->whereNull('angkatan')->update(['angkatan' => $angkatan]);
+                }
+
+                // Simpan item mutu
+                for ($i = 11; $i < count($headers); $i++) {
+                    $header = trim((string) ($headers[$i] ?? ''));
+                    if ($header === '') continue;
+
+                    $idSoal = null;
+                    if (str_contains($header, '|')) {
+                        $parts = explode('|', $header);
+                        if (count($parts) < 5) continue;
+
+                        $tipe   = strtoupper(trim($parts[0]));
+                        $idSoal = trim($parts[1]);
+                        $bobot  = trim($parts[2]);
+                        $cpl    = trim($parts[3]);
+                        $cpmk   = trim($parts[4]);
+
+                        if ($tipe === 'SOAL') {
+                            $namaSoal = 'Soal #' . $idSoal;
+                        } elseif ($tipe === 'TS') {
+                            $namaSoal = 'Instrumen #' . $idSoal;
+                            $idSoal   = null;
+                        } else {
+                            continue;
+                        }
+                    } elseif (str_contains($header, '/')) {
+                        $parts = explode('/', $header);
+                        if (count($parts) < 5) continue;
+
+                        $namaSoal = trim($parts[0]);
+                        $idSoal   = trim($parts[1]);
+                        $bobot    = trim($parts[2]);
+                        $cpl      = trim($parts[3]);
+                        $cpmk     = trim($parts[4]);
+                    } else {
+                        continue;
+                    }
+
+                    $nilai = $row[$i] ?? null;
+                    if ($nilai === null || $nilai === '') continue;
+
+                    Mutu::create([
+                        'id_mahasiswa'   => $mhsId,
+                        'universitas_id' => Universitas::where('nama', $row[0])->value('id'),
+                        'tahun'          => $row[1],
+                        'angkatan'       => $row[2],
+                        'npm'            => $npm,
+                        'nama_mhs'       => $nama,
+                        'id_prodi'       => Prodi::where('nama', $row[5])->value('id'),
+                        'Course'         => $row[6],
+                        'Jenis'          => $row[8],
+                        'examWeight'     => $row[9],
+                        'Nilai'          => $row[10],
+                        'soal'           => $namaSoal,
+                        'idSoal'         => $idSoal,
+                        'BobotSoal'      => $bobot,
+                        'Cpl'            => $cpl,
+                        'Cpmk'           => $cpmk,
+                        'nilaiSoal'      => $nilai,
+                    ]);
+                }
+            }
 
             DB::commit();
+
+            // Auto-sync seluruh evaluasi OBE ke database snapshot secara otomatis
+            try {
+                (new \App\Services\EvaluasiSyncService())->syncAll();
+            } catch (\Throwable $syncErr) {
+                Log::warning('Auto-sync evaluasi OBE setelah import: ' . $syncErr->getMessage());
+            }
+
+            // Hapus file temporary setelah sukses
+            if (!empty($tempRelativePath) && Storage::exists($tempRelativePath)) {
+                Storage::delete($tempRelativePath);
+            }
 
             return redirect()->back()->with('success', 'Data nilai berhasil diimport dan disimpan ke database.');
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Gagal import mutu: ' . $e->getMessage());
-
             return redirect()->back()->with('error', 'Gagal mengimport data: ' . $e->getMessage());
         }
     }
 
     public function importTanpaSoal(Request $request)
     {
-        try {
-            // dd($request->all());
+        $actionOption = $request->input('action_option');
+        $user = auth()->user();
+
+        // 1. Dapatkan path absolut file yang valid
+        $filePath = null;
+        $tempRelativePath = $request->input('file_path_temp');
+
+        if (!empty($tempRelativePath)) {
+            $candidatePath = storage_path('app/' . $tempRelativePath);
+            if (file_exists($candidatePath)) {
+                $filePath = $candidatePath;
+            } elseif (Storage::exists($tempRelativePath)) {
+                $filePath = Storage::path($tempRelativePath);
+            }
+        }
+
+        if (!$filePath && $request->hasFile('file')) {
             $validator = Validator::make($request->all(), [
-                'file' => 'required|file|mimes:xlsx',
+                'file' => 'required|file|mimes:xlsx,xls|max:10240',
             ]);
 
             if ($validator->fails()) {
-                return redirect()->back()->with('error', "File harus format 'xslx'");
+                return redirect()->back()->with('error', "File harus berformat '.xlsx' atau '.xls'");
             }
 
-            Excel::import(new ImportTanpaSoal, $request->file('file'));
+            $uploadedFile = $request->file('file');
+            if ($uploadedFile && $uploadedFile->isValid()) {
+                $filePath = $uploadedFile->getRealPath() ?: $uploadedFile->getPathname();
+
+                try {
+                    $storedName = time() . '_' . Str::random(8) . '.' . ($uploadedFile->getClientOriginalExtension() ?: 'xlsx');
+                    $tempRelativePath = $uploadedFile->storeAs('temp_imports', $storedName);
+                } catch (\Throwable $e) {
+                    Log::warning('Gagal menyimpan temp_imports copy: ' . $e->getMessage());
+                }
+            }
+        }
+
+        if (empty($filePath) || !file_exists($filePath)) {
+            return redirect()->back()->with('error', 'File Excel gagal diproses. Silakan pilih kembali file Excel (.xlsx / .xls) Anda.');
+        }
+
+        try {
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+            $worksheet = $spreadsheet->getActiveSheet();
+            $dataRows = $worksheet->toArray();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
+        }
+
+        if (count($dataRows) <= 1) {
+            return redirect()->back()->with('error', 'File Excel kosong atau hanya berisi data header.');
+        }
+
+        $headers = array_map(fn($h) => trim((string)$h), $dataRows[0]);
+        unset($dataRows[0]); // Skip header
+
+        $unregisteredMhs = [];
+        $parsedRows = [];
+        $rowLine = 1;
+
+        foreach ($dataRows as $row) {
+            $rowLine++;
+            if (empty($row[3]) || $row[3] === 'NPM') continue;
+
+            $npm = preg_replace('/[^0-9]/', '', (string) $row[3]);
+            if (empty($npm)) continue;
+
+            $nama = isset($row[4]) ? trim((string)$row[4]) : 'Tanpa Nama';
+            $angkatan = isset($row[2]) ? trim((string)$row[2]) : '';
+
+            $mhs = Mahasiswa::where('NPM', $npm)->first();
+
+            if (!$mhs) {
+                $unregisteredMhs[$npm] = [
+                    'line' => $rowLine,
+                    'npm' => $npm,
+                    'nama' => $nama,
+                    'angkatan' => $angkatan,
+                ];
+            }
+
+            $parsedRows[] = [
+                'line' => $rowLine,
+                'npm' => $npm,
+                'nama' => $nama,
+                'angkatan' => $angkatan,
+                'mhs_id' => $mhs ? $mhs->id : null,
+                'row_data' => $row,
+            ];
+        }
+
+        if (!empty($unregisteredMhs) && !$actionOption) {
+            session()->flash('unregistered_mhs', $unregisteredMhs);
+            session()->flash('file_path_temp', $tempRelativePath);
+            return redirect()->back()->with('warning_unregistered', true);
+        }
+
+        DB::beginTransaction();
+        try {
+            $prodiDefault = $user->id_prodiUser;
+
+            foreach ($parsedRows as $item) {
+                $row = $item['row_data'];
+                $npm = $item['npm'];
+                $nama = $item['nama'];
+                $angkatan = $item['angkatan'];
+                $mhsId = $item['mhs_id'];
+
+                if (!$mhsId) {
+                    if ($actionOption === 'register') {
+                        $prodiNama = trim((string)($row[5] ?? ''));
+                        $prodiObj = Prodi::where('nama', $prodiNama)->first();
+                        $prodiId = $prodiObj ? $prodiObj->id : $prodiDefault;
+
+                        $newMhs = Mahasiswa::create([
+                            'NPM' => $npm,
+                            'Nama' => $nama,
+                            'angkatan' => $angkatan ?: null,
+                            'id_prodi' => $prodiId,
+                        ]);
+                        $mhsId = $newMhs->id;
+                    } else {
+                        continue;
+                    }
+                }
+
+                if ($mhsId && !empty($angkatan)) {
+                    Mahasiswa::where('id', $mhsId)->whereNull('angkatan')->update(['angkatan' => $angkatan]);
+                }
+
+                $prodiId = Prodi::where('nama', $row[5])->value('id') ?: $prodiDefault;
+                $univId = Universitas::where('nama', $row[0])->value('id');
+
+                $columnCount = count($headers);
+                for ($i = 11; $i < $columnCount; $i++) {
+                    $substring = explode('/', $headers[$i]);
+                    $nilai = $row[$i] ?? null;
+                    if ($nilai === null || $nilai === '') continue;
+
+                    Mutu::create([
+                        'id_mahasiswa'   => $mhsId,
+                        'universitas_id' => $univId,
+                        'tahun'          => ucwords($row[1]),
+                        'angkatan'       => $row[2],
+                        'NPM'            => $npm,
+                        'Nama_mhs'       => ucwords($nama),
+                        'id_prodi'       => $prodiId,
+                        'kode_course'    => strtoupper($row[6]),
+                        'Jenis'          => strtolower($row[8]),
+                        'examWeight'     => $row[9],
+                        'Nilai'          => $row[10],
+                        'soal'           => $substring[0] ?? '',
+                        'BobotSoal'      => $substring[1] ?? null,
+                        'nilaiSoal'      => $nilai,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            // Auto-sync seluruh evaluasi OBE ke database snapshot secara otomatis
+            try {
+                (new \App\Services\EvaluasiSyncService())->syncAll();
+            } catch (\Throwable $syncErr) {
+                Log::warning('Auto-sync evaluasi OBE setelah import tanpa soal: ' . $syncErr->getMessage());
+            }
+
+            if (Storage::disk('local')->exists($tempRelativePath)) {
+                Storage::disk('local')->delete($tempRelativePath);
+            }
 
             return redirect()->back()->with('success', "File imported successfully");
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', "Ada kolom yang kosong. Silahkan cek kembali");
+            DB::rollBack();
+            Log::error('Gagal import tanpa soal: ' . $e->getMessage());
+            return redirect()->back()->with('error', "Gagal mengimport data: " . $e->getMessage());
         }
     }
 
@@ -964,6 +1366,14 @@ class SoalController extends Controller
             )
             ->where('soals.dosen', $user->name);
 
+        if ($request->filled('kode_mk')) {
+            $query->where('soals.kode_mk', $request->kode_mk);
+        }
+
+        if ($request->filled('jenis')) {
+            $query->where('soals.jenis', $request->jenis);
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -981,10 +1391,25 @@ class SoalController extends Controller
             ->paginate($perPage)
             ->appends($request->query());
 
+        $prodiId = $user->id_prodiUser;
+        $mksFilter = MK::where('id_prodi', $prodiId)->orderBy('nama', 'asc')->get();
+        if ($mksFilter->isEmpty()) {
+            $mksFilter = MK::orderBy('nama', 'asc')->get();
+        }
+
+        $metodeFilter = MetodePenilaian::where('id_prodi', $prodiId)->orderBy('nama', 'asc')->get();
+        if ($metodeFilter->isEmpty()) {
+            $metodeFilter = MetodePenilaian::orderBy('nama', 'asc')->get();
+        }
+
         $filterData = $this->getFilterData($request);
 
         return view('dosen.soal.list', array_merge(
-            ['soals' => $soals],
+            [
+                'soals' => $soals,
+                'mksFilter' => $mksFilter,
+                'metodeFilter' => $metodeFilter,
+            ],
             $filterData
         ));
     }
@@ -1165,7 +1590,6 @@ class SoalController extends Controller
                 ->leftJoin('cpls',  'soals.cpl',  '=', 'cpls.id')
                 ->where('soals.kode_mk', $kodeMk)
                 ->where('soals.jenis',   $metodeId)
-                ->whereIn('soals.status', ['Valid', 'Menunggu', 'Tolak'])
                 ->select(
                     'soals.id',
                     'soals.pertanyaan',
@@ -1179,12 +1603,14 @@ class SoalController extends Controller
                 ->orderBy('soals.id')
                 ->get()
                 ->map(function ($soal) {
-                    $soal->can_select    = ($soal->status === 'Valid');
-                    $soal->status_label  = match ($soal->status) {
-                        'Valid'    => 'Tervalidasi',
-                        'Menunggu' => 'Menunggu Validasi',
-                        'Tolak'    => 'Ditolak',
-                        default    => $soal->status,
+                    $st = $soal->status ?: 'Draft';
+                    $soal->can_select   = ($st === 'Valid');
+                    $soal->status_label = match ($st) {
+                        'Valid', 'Tervalidasi'          => 'Tervalidasi',
+                        'Menunggu', 'Menunggu Validasi' => 'Menunggu Validasi',
+                        'Tolak', 'Ditolak'              => 'Ditolak',
+                        'Draft', 'Belum Valid'          => 'Draft',
+                        default                         => $st,
                     };
                     return $soal;
                 });
@@ -1192,7 +1618,6 @@ class SoalController extends Controller
             $instrumens = TanpaSoal::with(['cpl', 'cpmk'])
                 ->where('kode_mk',   $kodeMk)
                 ->where('metode_id', $metodeId)
-                ->whereIn('status', ['Valid', 'Menunggu Validasi', 'Ditolak', 'Draft'])
                 ->get();
 
             $cpmks = DB::table('cpl_mk_cpmk_penilaian as cmcp')

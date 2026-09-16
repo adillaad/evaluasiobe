@@ -3,15 +3,27 @@
     $universityLevelRoles = ['Admin Universitas', 'Penjamin Mutu Universitas', 'Wakil Rektor'];
     $facultyLevelRoles = ['Wakil Dekan', 'Penjamin Mutu Fakultas'];
     $prodiLevelRoles = ['Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Dosen'];
+
+    $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
+
+    $canShowUniv = ($showUniversitas ?? true) && !in_array($userOtoritas, $universityLevelRoles) && !in_array($userOtoritas, $facultyLevelRoles) && !in_array($userOtoritas, $prodiLevelRoles);
+    $canShowFakultas = ($showFakultas ?? true) && !in_array($userOtoritas, $facultyLevelRoles) && !in_array($userOtoritas, $prodiLevelRoles);
+    $canShowProdi = ($showProdi ?? true) && !in_array($userOtoritas, $prodiLevelRoles);
+    $canShowKurikulum = ($showKurikulum ?? false);
+    $canShowCpl = ($showCpl ?? false);
+
+    $hasVisibleFilters = $canShowUniv || $canShowFakultas || $canShowProdi || $canShowKurikulum || $canShowCpl;
 @endphp
-<form method="GET" action="{{ route(Request::route()->getName()) }}" class="mb-4">
+
+@if ($hasVisibleFilters)
+<form method="GET" action="{{ url()->current() }}" class="mb-4">
     {{-- 1. Bungkus semuanya dalam SATU .row.
         Gunakan 'g-2' untuk memberi sedikit jarak antar elemen.
         Gunakan 'align-items-end' untuk meratakan semua elemen ke bagian bawah,
         sehingga tombol sejajar dengan dropdown. --}}
     <div class="row g-2 align-items-end">
         {{-- Dropdown Universitas --}}
-        @if ($showUniversitas && !in_array(auth()->user()->otoritas->otoritas, $universityLevelRoles) && !in_array(auth()->user()->otoritas->otoritas, $facultyLevelRoles) && !in_array(auth()->user()->otoritas->otoritas, $prodiLevelRoles))
+        @if ($canShowUniv)
             {{-- 2. Gunakan 'col-md' agar lebar kolom fleksibel dan membagi rata ruang yang ada --}}
             <div class="col-md">
                 <div class="form-group">
@@ -28,7 +40,7 @@
             </div>
         @endif
         {{-- Dropdown Fakultas --}}
-        @if ($showFakultas && !in_array(auth()->user()->otoritas->otoritas, $facultyLevelRoles) && !in_array(auth()->user()->otoritas->otoritas, $prodiLevelRoles))
+        @if ($canShowFakultas)
             <div class="col-md">
                 <div class="form-group">
                     <label for="fakultas_id">Fakultas</label>
@@ -44,7 +56,7 @@
             </div>
         @endif
         {{-- Dropdown Prodi --}}
-        @if ($showProdi && !in_array(auth()->user()->otoritas->otoritas, $prodiLevelRoles))
+        @if ($canShowProdi)
             <div class="col-md">
                 <div class="form-group">
                     <label for="prodi_id">Program Studi</label>
@@ -60,7 +72,7 @@
             </div>
         @endif
         {{-- Dropdown Kurikulum --}}
-        @if ($showKurikulum)
+        @if ($canShowKurikulum)
             <div class="col-md">
                 <div class="form-group">
                     <label for="kurikulum_id">Kurikulum</label>
@@ -75,8 +87,24 @@
                 </div>
             </div>
         @endif
+        {{-- Dropdown CPL --}}
+        @if ($canShowCpl)
+            <div class="col-md">
+                <div class="form-group">
+                    <label for="cpl_id">CPL</label>
+                    <select name="cpl_id" id="cpl_id" class="form-control">
+                        <option value="">Pilih CPL</option>
+                        @foreach ($cplsFilter ?? [] as $cplItem)
+                            <option value="{{ $cplItem->id }}" {{ request('cpl_id') == $cplItem->id ? 'selected' : '' }}>
+                                {{ $cplItem->kode }} - {{ Str::limit($cplItem->judul, 40) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        @endif
         {{-- 3. Pindahkan tombol ke dalam .row yang sama --}}
-        @if (!in_array(auth()->user()->otoritas->otoritas, $prodiLevelRoles) || $showKurikulum)
+        @if (!in_array($userOtoritas, $prodiLevelRoles) || $canShowKurikulum || $canShowCpl)
             {{-- 4. Gunakan 'col-md-auto' agar lebar kolom tombol pas dengan isinya --}}
             <div class="col-md-auto">
                 <div class="form-group">
@@ -90,3 +118,4 @@
         @endif
     </div>
 </form>
+@endif

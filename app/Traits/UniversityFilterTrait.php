@@ -17,27 +17,59 @@ trait UniversityFilterTrait
         $isUserModel = $query->getModel() instanceof \App\Models\User;
 
         // Filter by Universitas
-        $query->when($request->universitas_id, function ($q) use ($request, $isUserModel) {
+        $query->when($request->universitas_id, function ($q) use ($request, $isUserModel, $mainTable) {
             if ($isUserModel) {
                 // Cari user yang terhubung ke prodi di dalam universitas yang dipilih.
                 return $q->whereHas('prodis.fakultas.universitas', function ($subQuery) use ($request) {
                     $subQuery->where('universitas.id', $request->universitas_id);
                 });
             }
-            // Logika untuk model lain (bukan User) yang memiliki relasi langsung atau join
-            return $q->where('universitas.id', $request->universitas_id);
+            
+            $joins = $q->getQuery()->joins ?? [];
+            $joinedTables = array_map(function($j) { return $j->table; }, $joins);
+
+            if (in_array('universitas', $joinedTables)) {
+                return $q->where('universitas.id', $request->universitas_id);
+            }
+            if (in_array('fakultas', $joinedTables)) {
+                return $q->where('fakultas.id_universitas', $request->universitas_id);
+            }
+            if (Schema::hasColumn($mainTable, 'id_universitas')) {
+                return $q->where($mainTable . '.id_universitas', $request->universitas_id);
+            }
+            if (Schema::hasColumn($mainTable, 'universitas_id')) {
+                return $q->where($mainTable . '.universitas_id', $request->universitas_id);
+            }
+
+            return $q;
         });
 
         // Filter by Fakultas
-        $query->when($request->fakultas_id, function ($q) use ($request, $isUserModel) {
+        $query->when($request->fakultas_id, function ($q) use ($request, $isUserModel, $mainTable) {
             if ($isUserModel) {
                 // Cari user yang terhubung ke prodi di dalam fakultas yang dipilih.
                 return $q->whereHas('prodis.fakultas', function ($subQuery) use ($request) {
                     $subQuery->where('fakultas.id', $request->fakultas_id);
                 });
             }
-            // Logika untuk model lain (bukan User)
-            return $q->where('fakultas.id', $request->fakultas_id);
+
+            $joins = $q->getQuery()->joins ?? [];
+            $joinedTables = array_map(function($j) { return $j->table; }, $joins);
+
+            if (in_array('fakultas', $joinedTables)) {
+                return $q->where('fakultas.id', $request->fakultas_id);
+            }
+            if (in_array('prodi', $joinedTables)) {
+                return $q->where('prodi.id_fakultas', $request->fakultas_id);
+            }
+            if (Schema::hasColumn($mainTable, 'id_fakultas')) {
+                return $q->where($mainTable . '.id_fakultas', $request->fakultas_id);
+            }
+            if (Schema::hasColumn($mainTable, 'fakultas_id')) {
+                return $q->where($mainTable . '.fakultas_id', $request->fakultas_id);
+            }
+
+            return $q;
         });
 
         // Filter by Prodi
@@ -48,8 +80,21 @@ trait UniversityFilterTrait
                     $subQuery->where('prodi.id', $request->prodi_id);
                 });
             }
-            // Logika untuk model lain (bukan User)
-            return $q->where($mainTable . '.id_prodi', $request->prodi_id);
+
+            if (Schema::hasColumn($mainTable, 'id_prodi')) {
+                return $q->where($mainTable . '.id_prodi', $request->prodi_id);
+            }
+            if (Schema::hasColumn($mainTable, 'prodi_id')) {
+                return $q->where($mainTable . '.prodi_id', $request->prodi_id);
+            }
+
+            $joins = $q->getQuery()->joins ?? [];
+            $joinedTables = array_map(function($j) { return $j->table; }, $joins);
+            if (in_array('prodi', $joinedTables)) {
+                return $q->where('prodi.id', $request->prodi_id);
+            }
+
+            return $q;
         });
 
         // Filter by Kurikulum
@@ -61,20 +106,42 @@ trait UniversityFilterTrait
                 return $q->where($mainTable . '.id_kurikulum', $request->kurikulum_id);
             }
 
-            $joins = $q->getQuery()->joins;
+            $joins = $q->getQuery()->joins ?? [];
             $hasKurikulumJoin = false;
-            if ($joins) {
-                foreach ($joins as $join) {
-                    if ($join->table === 'kurikulums') {
-                        $hasKurikulumJoin = true;
-                        break;
-                    }
+            foreach ($joins as $join) {
+                if ($join->table === 'kurikulums') {
+                    $hasKurikulumJoin = true;
+                    break;
                 }
             }
             if ($hasKurikulumJoin) {
                 return $q->where('kurikulums.id', $request->kurikulum_id);
             }
             
+            return $q;
+        });
+
+        // Filter by CPL
+        $query->when($request->filled('cpl_id'), function ($q) use ($request, $mainTable) {
+            if (Schema::hasColumn($mainTable, 'cpl_id')) {
+                return $q->where($mainTable . '.cpl_id', $request->cpl_id);
+            }
+            if (Schema::hasColumn($mainTable, 'id_cpl')) {
+                return $q->where($mainTable . '.id_cpl', $request->cpl_id);
+            }
+
+            $joins = $q->getQuery()->joins ?? [];
+            $hasCplJoin = false;
+            foreach ($joins as $join) {
+                if ($join->table === 'cpls') {
+                    $hasCplJoin = true;
+                    break;
+                }
+            }
+            if ($hasCplJoin) {
+                return $q->where('cpls.id', $request->cpl_id);
+            }
+
             return $q;
         });
 
@@ -169,7 +236,60 @@ trait UniversityFilterTrait
 
         $kurikulums = $kurikulumsQuery->distinct()->orderBy('tahun', 'desc')->get();
 
-        return compact('universities', 'faculties', 'programs', 'kurikulums');
+        // --- FILTER CPL ---
+        $cplsQuery = \App\Models\CPL::query()
+            ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->join('universitas', 'fakultas.id_universitas', '=', 'universitas.id')
+            ->select('cpls.id', 'cpls.kode', 'cpls.judul');
+
+        if ($isUniversityLevel) {
+            $cplsQuery->where('universitas.id', $user->id_universitasUser);
+        } elseif ($isFacultyLevel) {
+            $cplsQuery->where('fakultas.id', $user->id_fakultasUser);
+        } elseif ($isProdiLevel) {
+            $cplsQuery->where('prodi.id', $user->id_prodiUser);
+        }
+
+        if ($request->filled('kurikulum_id')) {
+            $cplsQuery->where('cpls.id_kurikulum', $request->kurikulum_id);
+        } elseif ($request->filled('prodi_id')) {
+            $cplsQuery->where('cpls.id_prodi', $request->prodi_id);
+        }
+
+        $cplsFilter = $cplsQuery->distinct()->orderBy('cpls.kode', 'asc')->get();
+
+        $tahunAjarans = \App\Models\TahunAjaran::orderBy('tahun', 'desc')->get();
+
+        $metodeQuery = \App\Models\MetodePenilaian::query();
+        if ($isProdiLevel) {
+            $metodeQuery->where(function ($q) use ($user) {
+                $q->where('id_prodi', $user->id_prodiUser)->orWhereNull('id_prodi');
+            });
+        }
+        $metodePenilaians = $metodeQuery->orderBy('nama', 'asc')->get();
+
+        $mkQuery = \App\Models\MK::query()
+            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->join('universitas', 'fakultas.id_universitas', '=', 'universitas.id')
+            ->select('mks.kode', 'mks.nama');
+
+        if ($isUniversityLevel) {
+            $mkQuery->where('universitas.id', $user->id_universitasUser);
+        } elseif ($isFacultyLevel) {
+            $mkQuery->where('fakultas.id', $user->id_fakultasUser);
+        } elseif ($isProdiLevel) {
+            $mkQuery->where('prodi.id', $user->id_prodiUser);
+        }
+
+        if ($request->filled('prodi_id')) {
+            $mkQuery->where('mks.id_prodi', $request->prodi_id);
+        }
+
+        $mks = $mkQuery->distinct()->orderBy('mks.nama', 'asc')->get();
+
+        return compact('universities', 'faculties', 'programs', 'kurikulums', 'cplsFilter', 'tahunAjarans', 'metodePenilaians', 'mks');
     }
     public function getFaculties($universitasId)
     {

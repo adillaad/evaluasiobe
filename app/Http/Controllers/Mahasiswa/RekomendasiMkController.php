@@ -9,9 +9,64 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class RekomendasiMkController extends Controller
 {
+    public function pdf()
+    {
+        $user      = Auth::user();
+        $mahasiswa = $this->guardMahasiswa($user);
+        $npm       = $mahasiswa->NPM;
+
+        $mahasiswaData = DB::table('mahasiswa')->where('NPM', $npm)->first();
+        $prodi         = DB::table('prodi')->where('id', $user->id_prodiUser)->first();
+
+        $competencyData = $mahasiswa->getCompetencyData();
+        $cpmkMap        = $competencyData['cpmks']->keyBy('id');
+        $takenCourses   = $mahasiswa->getTakenCourses();
+        $sksLulus       = $mahasiswa->calculateSksLulus();
+        $avgCpmkKeseluruhan = round($competencyData['cpmks']->avg('nilai') ?? 0, 2);
+
+        $mkList = DB::table('cpmk_mk')
+            ->join('mks', 'cpmk_mk.mk_kode', '=', 'mks.kode')
+            ->whereIn('cpmk_mk.cpmk_id', $cpmkMap->keys())
+            ->where('mks.id_prodi', $user->id_prodiUser)
+            ->whereNotIn('mks.kode', $takenCourses)
+            ->select(
+                'mks.kode',
+                'mks.nama',
+                'mks.semester',
+                'mks.bobot_teori',
+                'mks.bobot_praktikum',
+                'mks.rumpun',
+                'mks.prasyarat',
+                'mks.deskripsi'
+            )
+            ->distinct()
+            ->get();
+
+        $rekomendasiMk = $mkList
+            ->map(fn($mk) => $this->buildRekomendasiItem($mk, $cpmkMap, $takenCourses))
+            ->sortBy(fn($mk) => [$mk['prasyarat_terpenuhi'] ? 0 : 1, $mk['avg_cpmk']])
+            ->values();
+
+        $stats = [
+            'total_mk_rekomendasi' => $rekomendasiMk->count(),
+            'avg_keseluruhan'      => $avgCpmkKeseluruhan,
+            'mk_prioritas'         => $rekomendasiMk->filter(fn($m) => $m['avg_cpmk'] < 70)->count(),
+        ];
+
+        $pdf = Pdf::loadView('mahasiswa.rekomendasi-mk-pdf', compact(
+            'rekomendasiMk',
+            'stats',
+            'sksLulus',
+            'mahasiswaData',
+            'prodi'
+        ))->setPaper('a4', 'portrait');
+
+        return $pdf->stream('Rekomendasi-MK-' . ($npm ?? 'mahasiswa') . '.pdf');
+    }
     public function index()
     {
         $user      = Auth::user();
@@ -60,24 +115,38 @@ class RekomendasiMkController extends Controller
         \Illuminate\Support\Collection $cpmkMap,
         array $takenCourses
     ): array {
-        $cpmkTerkait = DB::table('cpmk_mk')
+        $hasBobotCol = \Illuminate\Support\Facades\Schema::hasColumn('cpmk_mk', 'bobot');
+
+        $query = DB::table('cpmk_mk')
             ->where('cpmk_mk.mk_kode', $mk->kode)
             ->whereIn('cpmk_mk.cpmk_id', $cpmkMap->keys())
-            ->join('cpmks', 'cpmk_mk.cpmk_id', '=', 'cpmks.id')
-            ->select('cpmks.id', 'cpmks.kode as cpmk_kode', 'cpmks.judul as cpmk_deskripsi')
-            ->get()
-            ->map(function ($item) use ($cpmkMap) {
-                $data = $cpmkMap->get($item->id);
-                return [
-                    'kode'        => $item->cpmk_kode,
-                    'deskripsi'   => Str::limit($item->cpmk_deskripsi, 100),
-                    'persentase'  => $data['nilai']  ?? 0,
-                    'status'      => $data['status'] ?? 'Tidak diketahui',
-                    'badge_class' => Prodi::badgeClassKompetensi($data['status'] ?? 'Kurang'),
-                ];
-            });
+            ->join('cpmks', 'cpmk_mk.cpmk_id', '=', 'cpmks.id');
 
-        $avg = $cpmkTerkait->avg('persentase') ?? 0;
+        if ($hasBobotCol) {
+            $query->select('cpmks.id', 'cpmks.kode as cpmk_kode', 'cpmks.judul as cpmk_deskripsi', 'cpmk_mk.bobot');
+        } else {
+            $query->select('cpmks.id', 'cpmks.kode as cpmk_kode', 'cpmks.judul as cpmk_deskripsi');
+        }
+
+        $cpmkTerkait = $query->get()->map(function ($item) use ($cpmkMap) {
+            $data = $cpmkMap->get($item->id);
+            return [
+                'kode'        => $item->cpmk_kode,
+                'deskripsi'   => Str::limit($item->cpmk_deskripsi, 100),
+                'persentase'  => $data['nilai']  ?? 0,
+                'bobot'       => (float)($item->bobot ?? 0),
+                'status'      => $data['status'] ?? 'Tidak diketahui',
+                'badge_class' => Prodi::badgeClassKompetensi($data['status'] ?? 'Kurang'),
+            ];
+        });
+
+        $sumBobot = $cpmkTerkait->sum('bobot');
+        if ($sumBobot > 0) {
+            $weightedSum = $cpmkTerkait->sum(fn($item) => $item['persentase'] * $item['bobot']);
+            $avg = $weightedSum / $sumBobot;
+        } else {
+            $avg = $cpmkTerkait->avg('persentase') ?? 0;
+        }
 
         $prasyaratTerpenuhi = true;
         if ($mk->prasyarat && $mk->prasyarat !== '-') {

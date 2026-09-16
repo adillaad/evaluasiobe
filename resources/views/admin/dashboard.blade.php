@@ -1,155 +1,276 @@
-{{-- @php
-    $currentPrefix = auth()->user()->otoritas->otoritas
-        ? str_replace(' ', '-', strtolower(auth()->user()->otoritas->otoritas)) . '.'
-        : 'admin.';
-@endphp --}}
 @extends('admin.template')
 @section('content')
+    @php
+        $isAptikom = auth()->check() && auth()->user()->prodi ? (bool) auth()->user()->prodi->is_aptikom : true;
+    @endphp
     <style>
-        .card-sum:hover {
-            background-color: rgba(0, 123, 255, .75) !important;
-            cursor: pointer;
-            transform: scale(.95);
+        .obe-card-box {
+            background: #ffffff !important;
+            border-radius: 16px !important;
+            padding: 1.25rem 1.5rem !important;
+            text-decoration: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            min-height: 130px !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04) !important;
+            position: relative !important;
+            overflow: hidden !important;
         }
 
-        .card-two:hover {
-            cursor: pointer;
-            transform: scale(.95);
+        .obe-card-box:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.09) !important;
+        }
+
+        .obe-card-box .card-label {
+            font-size: 0.8rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.5px !important;
+            text-transform: uppercase !important;
+            color: #475569 !important;
+        }
+
+        .obe-card-box .card-subtext {
+            font-size: 0.75rem !important;
+            color: #64748b !important;
+        }
+
+        .obe-card-box .card-value {
+            font-size: 2.6rem !important;
+            font-weight: 800 !important;
+            line-height: 1 !important;
+            margin-top: 12px !important;
+        }
+
+        .obe-card-box .icon-badge {
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 24px !important;
+            flex-shrink: 0 !important;
+        }
+
+        .icon-badge::before,
+        .icon-badge:before {
+            content: none !important;
+            display: none !important;
+        }
+
+        @if ($isAptikom)
+            /* Aptikom Color Accents (Blue Theme) */
+            .card-accent-1 { border: 1px solid rgba(2, 132, 199, 0.25) !important; border-top: 4px solid #0284c7 !important; }
+            .card-accent-1 .card-value { color: #0284c7 !important; }
+            .card-accent-1 .icon-badge { background: rgba(2, 132, 199, 0.12) !important; color: #0284c7 !important; }
+
+            .card-accent-2 { border: 1px solid rgba(16, 185, 129, 0.25) !important; border-top: 4px solid #10b981 !important; }
+            .card-accent-2 .card-value { color: #059669 !important; }
+            .card-accent-2 .icon-badge { background: rgba(16, 185, 129, 0.12) !important; color: #10b981 !important; }
+
+            .card-accent-3 { border: 1px solid rgba(124, 58, 237, 0.25) !important; border-top: 4px solid #7c3aed !important; }
+            .card-accent-3 .card-value { color: #7c3aed !important; }
+            .card-accent-3 .icon-badge { background: rgba(124, 58, 237, 0.12) !important; color: #7c3aed !important; }
+
+            .card-accent-4 { border: 1px solid rgba(217, 119, 6, 0.25) !important; border-top: 4px solid #d97706 !important; }
+            .card-accent-4 .card-value { color: #d97706 !important; }
+            .card-accent-4 .icon-badge { background: rgba(217, 119, 6, 0.12) !important; color: #d97706 !important; }
+
+            .card-accent-5 { border: 1px solid rgba(79, 70, 229, 0.25) !important; border-top: 4px solid #4f46e5 !important; }
+            .card-accent-5 .card-value { color: #4f46e5 !important; }
+            .card-accent-5 .icon-badge { background: rgba(79, 70, 229, 0.12) !important; color: #4f46e5 !important; }
+
+            .card-accent-6 { border: 1px solid rgba(225, 29, 72, 0.25) !important; border-top: 4px solid #e11d48 !important; }
+            .card-accent-6 .card-value { color: #e11d48 !important; }
+            .card-accent-6 .icon-badge { background: rgba(225, 29, 72, 0.12) !important; color: #e11d48 !important; }
+        @else
+            /* Non-Aptikom Color Accents (Gold/Amber Theme) */
+            .card-accent-1 { border: 1px solid rgba(217, 119, 6, 0.3) !important; border-top: 4px solid #b45309 !important; }
+            .card-accent-1 .card-value { color: #b45309 !important; }
+            .card-accent-1 .icon-badge { background: rgba(217, 119, 6, 0.14) !important; color: #b45309 !important; }
+
+            .card-accent-2 { border: 1px solid rgba(16, 185, 129, 0.3) !important; border-top: 4px solid #047857 !important; }
+            .card-accent-2 .card-value { color: #047857 !important; }
+            .card-accent-2 .icon-badge { background: rgba(16, 185, 129, 0.14) !important; color: #047857 !important; }
+
+            .card-accent-3 { border: 1px solid rgba(234, 88, 12, 0.3) !important; border-top: 4px solid #c2410c !important; }
+            .card-accent-3 .card-value { color: #c2410c !important; }
+            .card-accent-3 .icon-badge { background: rgba(234, 88, 12, 0.14) !important; color: #c2410c !important; }
+
+            .card-accent-4 { border: 1px solid rgba(225, 29, 72, 0.3) !important; border-top: 4px solid #be123c !important; }
+            .card-accent-4 .card-value { color: #be123c !important; }
+            .card-accent-4 .icon-badge { background: rgba(225, 29, 72, 0.14) !important; color: #be123c !important; }
+
+            .card-accent-5 { border: 1px solid rgba(79, 70, 229, 0.3) !important; border-top: 4px solid #4338ca !important; }
+            .card-accent-5 .card-value { color: #4338ca !important; }
+            .card-accent-5 .icon-badge { background: rgba(79, 70, 229, 0.14) !important; color: #4338ca !important; }
+
+            .card-accent-6 { border: 1px solid rgba(13, 148, 136, 0.3) !important; border-top: 4px solid #0f766e !important; }
+            .card-accent-6 .card-value { color: #0f766e !important; }
+            .card-accent-6 .icon-badge { background: rgba(13, 148, 136, 0.14) !important; color: #0f766e !important; }
+        @endif
+
+        .chart-box-card {
+            border-radius: 16px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03) !important;
+            background: #ffffff;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .chart-box-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06) !important;
+        }
+
+        .chart-title-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 3px solid {{ $isAptikom ? '#007bff' : '#d97706' }};
+            padding-bottom: 6px;
+            margin-bottom: 1.25rem;
         }
     </style>
-    <div class="form-group">
-        <div class="d-grid justify-content-between w-100"
-            style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));gap: 1rem;">
-            <a class="card card-two mx-1 w-100 text-decoration-none" style="color:black;"
-                href="{{ route($currentPrefix . 'list-user') }}">
-                <div class="card-body pb-0 row">
-                    <div class="col">
-                        <h4 class="card-title card-title-dash mb-4">Jumlah User</h4>
-                        <p class="status-summary-ight-white mb-1" style="color:black">Dosen & Penjamin Mutu</p>
-                        <h2 class="" style="color:gray">{{ $userCount }}</h2>
+
+    <div class="container-fluid px-3 py-2">
+        <div class="row g-3 mb-4">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <a class="obe-card-box card-accent-1" href="{{ route($currentPrefix . 'list-user') }}">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="card-label">JUMLAH USER</div>
+                            <div class="card-subtext">Dosen & Penjamin Mutu</div>
+                        </div>
+                        <div class="icon-badge">
+                            <i class="mdi mdi-account-multiple"></i>
+                        </div>
                     </div>
-                    <div class="col text-end">
-                        <i class="h1 mdi mdi-account-multiple" style="font-size:100px; opacity:0.4"></i>
+                    <div class="card-value">{{ $userCount }}</div>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a class="obe-card-box card-accent-2" href="{{ route($currentPrefix . 'list-kurikulum') }}">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="card-label">JUMLAH KURIKULUM</div>
+                            <div class="card-subtext">Tahun Kurikulum Aktif</div>
+                        </div>
+                        <div class="icon-badge">
+                            <i class="mdi mdi-folder-multiple"></i>
+                        </div>
                     </div>
-                </div>
-            </a>
-            <a class="card card-two mx-1 w-100 text-decoration-none" style="color: black"
-                href="{{ route($currentPrefix . 'list-kurikulum') }}">
-                <div class="card-body row pb-4">
-                    <div class="col">
-                        <h4 class="card-title card-title-dash mb-4" style="color: black">Jumlah Kurikulum</h4>
-                        <p class="status-summary-ight-white mb-1" style="color: black">Tahun Kurikulum</p>
-                        <h2 class="" style="color:gray">{{ $kurikulums->count() }}</h2>
-                    </div>
-                    <div class="col text-end">
-                        <i class="h1 mdi mdi-folder-multiple" style="font-size:100px; opacity:0.4;"></i>
-                    </div>
-                </div>
-            </a>
+                    <div class="card-value">{{ $kurikulums->count() }}</div>
+                </a>
+            </div>
         </div>
-    </div>
-    <div class="container-fluid">
-        <div class="row justify-content-start">
-            <div class="form-group col-3">
-                <label for="filter" class="form-label">FILTER KURIKULUM</label>
-                <select name="kurikulum" id="filter" class="form-select text-center">
-                    <option value="all">Semua</option>
+
+        <div class="row align-items-center mb-3">
+            <div class="col-md-4 col-lg-3">
+                <label for="filter" class="form-label fw-bold text-secondary text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">Filter Kurikulum</label>
+                <select name="kurikulum" id="filter" class="form-select rounded-3 shadow-sm border-1">
+                    <option value="all">Semua Kurikulum</option>
                     @foreach ($kurikulums as $kur)
-                        <option value="{{ $kur->id }}" data-tahun="{{ $kur->tahun }}">{{ $kur->tahun }} -
-                            {{ $kur->prodi->nama }}</option>
+                        <option value="{{ $kur->id }}" data-tahun="{{ $kur->tahun }}">{{ $kur->tahun }} - {{ $kur->prodi->nama }}</option>
                     @endforeach
                 </select>
             </div>
         </div>
-    </div>
-    <div class="form-group">
-        <div class="d-grid justify-content-between w-100"
-            style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));gap: 1rem;">
-            <a class="card card-sum mx-1 w-100 bg-primary text-white text-decoration-none"
-                href="{{ route($currentPrefix . 'list-cpl') }}">
-                <div class="card-body pb-0">
-                    <h4 class="card-title card-title-dash text-white mb-4">Jumlah CPL</h4>
-                    <div class="row">
-                        <div class="col">
-                            <p id="kur-cpl" class="status-summary-ight-white mb-1">Semua Kurikulum</p>
-                            <h2 class="text-info" id="jumlah-cpl"></h2>
+
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3">
+                <a class="obe-card-box card-accent-3" href="{{ route($currentPrefix . 'list-cpl') }}">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="card-label">JUMLAH CPL</div>
+                            <div id="kur-cpl" class="card-subtext">Semua Kurikulum</div>
                         </div>
-                        <div class="col text-end p-4">
-                            <i class="h1 mdi mdi-view-list"></i>
+                        <div class="icon-badge">
+                            <i class="mdi mdi-view-list"></i>
                         </div>
                     </div>
-                </div>
-            </a>
-            <a class="card card-sum mx-1 w-100 bg-primary text-white text-decoration-none"
-                href="{{ route($currentPrefix . 'list-mk') }}">
-                <div class="card-body pb-0">
-                    <h4 class="card-title card-title-dash text-white mb-4">Jumlah Mata Kuliah</h4>
-                    <div class="row">
-                        <div class="col">
-                            <p id="kur-mk" class="status-summary-ight-white mb-1">Semua Kurikulum</p>
-                            <h2 class="text-info" id="jumlah-mk"></h2>
+                    <div class="card-value" id="jumlah-cpl">-</div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3 mb-3">
+                <a class="obe-card-box card-accent-4" href="{{ route($currentPrefix . 'list-mk') }}">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="card-label">JUMLAH MATA KULIAH</div>
+                            <div id="kur-mk" class="card-subtext">Semua Kurikulum</div>
                         </div>
-                        <div class="col text-end p-4">
-                            <i class="h1 mdi mdi-book-open"></i>
-                        </div>
-                    </div>
-                </div>
-            </a>
-            <a class="card card-sum mx-1 w-100 bg-primary text-white text-decoration-none"
-                href="{{ route($currentPrefix . 'list-rps') }}">
-                <div class="card-body pb-0">
-                    <h4 class="card-title card-title-dash text-white mb-4">Jumlah RPS</h4>
-                    <div class="row">
-                        <div class="col">
-                            <p id="kur-rps" class="status-summary-ight-white mb-1">Semua Kurikulum</p>
-                            <h2 class="text-info" id="jumlah-rps"></h2>
-                        </div>
-                        <div class="col text-end p-4">
-                            <i class="h1 mdi mdi-note-text"></i>
+                        <div class="icon-badge">
+                            <i class="mdi mdi-book-open-page-variant"></i>
                         </div>
                     </div>
-                </div>
-            </a>
-            <a class="card card-sum mx-1 w-100 bg-primary text-white text-decoration-none"
-                href="{{ route($currentPrefix . 'list-soal') }}">
-                <div class="card-body pb-0">
-                    <h4 class="card-title card-title-dash text-white mb-4">Jumlah Soal</h4>
-                    <div class="row">
-                        <div class="col">
-                            <p id="kur-soal" class="status-summary-ight-white mb-1">Semua Kurikulum</p>
-                            <h2 class="text-info" id="jumlah-soal"></h2>
+                    <div class="card-value" id="jumlah-mk">-</div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3 mb-3">
+                <a class="obe-card-box card-accent-5" href="{{ route($currentPrefix . 'list-rps') }}">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="card-label">JUMLAH RPS</div>
+                            <div id="kur-rps" class="card-subtext">Semua Kurikulum</div>
                         </div>
-                        <div class="col text-end p-4">
-                            <i class="h1 mdi mdi-book"></i>
+                        <div class="icon-badge">
+                            <i class="mdi mdi-note-text"></i>
                         </div>
                     </div>
-                </div>
-            </a>
+                    <div class="card-value" id="jumlah-rps">-</div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3 mb-3">
+                <a class="obe-card-box card-accent-6" href="{{ route($currentPrefix . 'list-soal') }}">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="card-label">JUMLAH SOAL</div>
+                            <div id="kur-soal" class="card-subtext">Semua Kurikulum</div>
+                        </div>
+                        <div class="icon-badge">
+                            <i class="mdi mdi-book-multiple"></i>
+                        </div>
+                    </div>
+                    <div class="card-value" id="jumlah-soal">-</div>
+                </a>
+            </div>
         </div>
     </div>
+
     @if ($userOtoritas == 'Admin Universitas')
-        <div class="form-group">
-            <div class="row">
-                <div class="col-lg-12 grid-margin stretch-card">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="card-title">CPL Keterampilan Umum</h4>
+        <div class="container-fluid my-3 px-3">
+            <div class="row g-3">
+                <div class="col-lg-12 mb-3">
+                    <div class="card chart-box-card w-100">
+                        <div class="card-body p-4">
+                            <div class="chart-title-header">
+                                <i class="mdi mdi-chart-line text-primary"></i> CPL Keterampilan Umum
+                            </div>
                             <canvas id="barChartKU"></canvas>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-12 grid-margin stretch-card">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="card-title">CPL Pengetahuan</h4>
+                <div class="col-lg-12 mb-3">
+                    <div class="card chart-box-card w-100">
+                        <div class="card-body p-4">
+                            <div class="chart-title-header">
+                                <i class="mdi mdi-chart-bar text-success"></i> CPL Pengetahuan
+                            </div>
                             <canvas id="barChartP"></canvas>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-12 grid-margin stretch-card">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="card-title">CPL Keterampilan Khusus</h4>
+                <div class="col-lg-12 mb-3">
+                    <div class="card chart-box-card w-100">
+                        <div class="card-body p-4">
+                            <div class="chart-title-header">
+                                <i class="mdi mdi-chart-histogram text-warning"></i> CPL Keterampilan Khusus
+                            </div>
                             <canvas id="barChartKK"></canvas>
                         </div>
                     </div>

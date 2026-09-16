@@ -17,6 +17,7 @@ class TanpaSoal extends Model
         'nama_instrumen',
         'cpl_id',
         'cpmk_id',
+        'sub_cpmk_id',
         'persentase_cpmk',
         'bobot_TS',
         'dosen_id',
@@ -24,6 +25,11 @@ class TanpaSoal extends Model
         'status',
         'komentar_kaprodi'
     ];
+
+    public function subCpmk()
+    {
+        return $this->belongsTo(SubCpmk::class, 'sub_cpmk_id');
+    }
 
     public function cpl()
     {

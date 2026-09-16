@@ -15,7 +15,5 @@
                 @yield('content')
             </div>
         </div>
-    </div>
-</div>
-@include('dosen.layout.footer')
+        @include('dosen.layout.footer')
 @stack('scripts') 

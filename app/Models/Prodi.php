@@ -41,30 +41,46 @@ class Prodi extends Model
     {
         if ($numeric === null) return [null, null];
 
-        $jenjang = strtoupper($this->jenjang ?? '');
+        $jenjang = strtoupper(trim($this->jenjang ?? ''));
 
-        return match (true) {
-            $jenjang === 'S3' => $this->gradeS3($numeric),
-            $jenjang === 'S2' => $this->gradeS2($numeric),
-            default           => $this->gradeS1D3($numeric),   // S1, D3, Profesi
-        };
+        // b. Program Magister / Magister Terapan / Spesialis, Doktor, Doktor Terapan, dan Sub Spesialis
+        if (in_array($jenjang, ['S2', 'S3', 'SPESIALIS', 'MAGISTER', 'DOKTOR', 'SUB SPESIALIS', 'SP-1', 'SP-2', 'S2 TERAPAN', 'S3 TERAPAN'])) {
+            return $this->gradePascasarjana($numeric);
+        }
+
+        // a. Program Diploma / Sarjana / Sarjana Terapan / Profesi (Default)
+        return $this->gradeDiplomaSarjana($numeric);
     }
+
     public function getMinNilaiLulus(): float
     {
-        return match (strtoupper($this->jenjang ?? '')) {
-            'S3'    => 75.0,
-            'S2'    => 65.0,
-            default => 50.0,
-        };
+        $jenjang = strtoupper(trim($this->jenjang ?? ''));
+
+        if (in_array($jenjang, ['S2', 'S3', 'SPESIALIS', 'MAGISTER', 'DOKTOR', 'SUB SPESIALIS', 'SP-1', 'SP-2', 'S2 TERAPAN', 'S3 TERAPAN'])) {
+            return 65.0;
+        }
+
+        return 50.0;
     }
+
     public function isLulus(float $nilai): bool
     {
         return $nilai >= $this->getMinNilaiLulus();
     }
+
     public function getStatusKelulusan(float $nilai): string
     {
         return $this->isLulus($nilai) ? 'Lulus' : 'Tidak Lulus';
     }
+
+    public function getStatusKompetensi(float $nilai): string
+    {
+        if ($nilai >= 85) return 'Sangat Baik';
+        if ($nilai >= 70) return 'Baik';
+        if ($nilai >= 60) return 'Cukup';
+        return 'Kurang';
+    }
+
     public function nilaiToMutu(float $nilai): float
     {
         return $this->convertGrade($nilai)[1] ?? 0.0;
@@ -80,6 +96,7 @@ class Prodi extends Model
             default                     => '',
         };
     }
+
     public static function progressClass(float $score): string
     {
         if ($score >= 85) return 'sb';
@@ -87,6 +104,7 @@ class Prodi extends Model
         if ($score >= 60) return 'c';
         return 'k';
     }
+
     public static function badgeClassKelulusan(string $status): string
     {
         return match ($status) {
@@ -107,34 +125,17 @@ class Prodi extends Model
         };
     }
 
-    // PRIVATE — tabel konversi per jenjang
-    private function gradeS3(float $n): array
-    {
-        return match (true) {
-            $n >= 85 => ['A',  4.0],
-            $n >= 80 => ['B+', 4.0],
-            $n >= 75 => ['B',  4.0],
-            $n >= 70 => ['C+', 4.0],
-            $n >= 65 => ['C',  4.0],
-            $n >= 55 => ['D',  4.0],
-            default  => ['E',  0.0],
-        };
-    }
-
-    private function gradeS2(float $n): array
-    {
-        return match (true) {
-            $n >= 81 => ['A',  4.0],
-            $n >= 75 => ['B+', 4.0],
-            $n >= 70 => ['B',  4.0],
-            $n >= 65 => ['C+', 4.0],
-            $n >= 55 => ['C',  4.0],
-            $n >= 50 => ['D',  4.0],
-            default  => ['E',  0.0],
-        };
-    }
-
-    private function gradeS1D3(float $n): array
+    /**
+     * a. Program Diploma / Sarjana / Sarjana Terapan / Profesi
+     * >= 76        : A  (4.00) - Lulus
+     * >= 71 - < 76 : B+ (3.50) - Lulus
+     * >= 66 - < 71 : B  (3.00) - Lulus
+     * >= 61 - < 66 : C+ (2.50) - Lulus
+     * >= 56 - < 61 : C  (2.00) - Lulus
+     * >= 50 - < 56 : D  (1.00) - Lulus
+     * < 50         : E  (0.00) - Tidak Lulus
+     */
+    private function gradeDiplomaSarjana(float $n): array
     {
         return match (true) {
             $n >= 76 => ['A',  4.00],
@@ -143,6 +144,25 @@ class Prodi extends Model
             $n >= 61 => ['C+', 2.50],
             $n >= 56 => ['C',  2.00],
             $n >= 50 => ['D',  1.00],
+            default  => ['E',  0.00],
+        };
+    }
+
+    /**
+     * b. Program Magister / Magister Terapan / Spesialis, Doktor, Doktor Terapan, dan Sub Spesialis
+     * >= 81        : A  (4.00) - Lulus
+     * >= 75 - < 81 : B+ (3.50) - Lulus
+     * >= 70 - < 75 : B  (3.00) - Lulus
+     * >= 65 - < 70 : C+ (2.50) - Lulus
+     * < 65         : E  (0.00) - Tidak Lulus
+     */
+    private function gradePascasarjana(float $n): array
+    {
+        return match (true) {
+            $n >= 81 => ['A',  4.00],
+            $n >= 75 => ['B+', 3.50],
+            $n >= 70 => ['B',  3.00],
+            $n >= 65 => ['C+', 2.50],
             default  => ['E',  0.00],
         };
     }

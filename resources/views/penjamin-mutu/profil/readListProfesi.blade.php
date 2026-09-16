@@ -19,12 +19,14 @@
                         <td>{{ $item->kurikulum->tahun ?? 'N/A' }}</td>
                         @if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
                             <td>
-                                <button class="btn btn-sm btn-warning" onclick="showProfesi({{ $item->id }})">
-                                    <i class="mdi mdi-pencil me-1"></i>Edit
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteProfesi({{ $item->id }})">
-                                    <i class="mdi mdi-delete me-1"></i>Hapus
-                                </button>
+                                <div class="d-flex align-items-center gap-1">
+                                    <button class="btn btn-warning btn-icons" onclick="showProfesi({{ $item->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                        <i class="ti-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-icons" onclick="deleteProfesi({{ $item->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus">
+                                        <i class="ti-trash"></i>
+                                    </button>
+                                </div>
                             </td>
                         @endif
                     </tr>

@@ -4,6 +4,19 @@
   Project:	Star Admin2 
   Version:	1.2.1
 -------------------------------------------------------------------*/
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+:root {
+  --bs-font-sans-serif: 'Poppins', sans-serif !important;
+  --bs-body-font-family: 'Poppins', sans-serif !important;
+  --lp-font: 'Poppins', sans-serif !important;
+}
+
+body,
+body *:not(i):not([class*="mdi"]):not([class*="feather"]):not([class*="ti-"]):not([class*="typcn"]):not([class*="icon-"]):not([class*="bi"]):not([class*="fa"]) {
+  font-family: 'Poppins', sans-serif !important;
+}
+
 /*-------------------------------------------------------------------
   ===== Table of Contents =====
 
@@ -31303,4 +31316,35 @@ div.tagsinput span.tag a {
   height: 100%;
   background: linear-gradient(to top right, transparent 49%, black 50%, transparent 51%);
   pointer-events: none;
+}
+
+/* Custom Fixed Sidebar - Keeps sidebar fixed when main panel scrolls */
+@media (min-width: 992px) {
+  .sidebar {
+    position: fixed !important;
+    top: 97px !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    height: calc(100vh - 97px) !important;
+    overflow-y: auto !important;
+    z-index: 11 !important;
+  }
+  .sidebar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .sidebar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+  }
+  .main-panel {
+    margin-left: 220px !important;
+    width: calc(100% - 220px) !important;
+  }
+  .sidebar-icon-only .main-panel {
+    margin-left: 70px !important;
+    width: calc(100% - 70px) !important;
+  }
+  .sidebar-icon-only .sidebar {
+    width: 70px !important;
+  }
 }

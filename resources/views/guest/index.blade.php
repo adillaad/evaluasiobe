@@ -146,7 +146,7 @@
                                                     Semester {{ $rps->semester ?? '-' }}
                                                 </span>
                                                 <span>
-                                                    <i class="mdi mdi-book-education-outline me-1"></i>
+                                                    <i class="mdi mdi-book-open-page-variant me-1"></i>
                                                     {{ ($rps->mk->bobot_teori ?? 0) + ($rps->mk->bobot_praktikum ?? 0) }} SKS
                                                 </span>
                                             </div>

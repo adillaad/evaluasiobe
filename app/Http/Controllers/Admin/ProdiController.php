@@ -47,6 +47,64 @@ class ProdiController extends Controller
         ));
     }
 
+    public function daftarAkunProdi(Request $request)
+    {
+        $authUser = auth()->user();
+        $userOtoritas = optional($authUser->otoritas)->otoritas;
+
+        $query = Prodi::query()
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->join('universitas', 'fakultas.id_universitas', '=', 'universitas.id')
+            ->select('prodi.*')
+            ->with(['fakultas', 'fakultas.universitas'])
+            ->withCount('users');
+
+        if ($userOtoritas === 'Admin Universitas') {
+            $query->where('universitas.id', $authUser->id_universitasUser);
+        }
+
+        $prodis = $query->get();
+
+        return view('admin.prodi.daftar_akun', compact('prodis'));
+    }
+
+    public function gateMenu(Request $request)
+    {
+        $authUser = auth()->user();
+        if (!$authUser) {
+            return redirect()->route('login');
+        }
+
+        $userOtoritas = optional($authUser->otoritas)->otoritas;
+
+        // 1. Utamakan prodi yang secara spesifik terdaftar di relasi prodi_user milik user tersebut
+        $prodis = $authUser->prodis()->with(['fakultas', 'fakultas.universitas'])->withCount('users')->get();
+
+        // 2. Jika relasi prodi_user kosong (misal Admin Universitas / Admin), tampilkan prodi berdasarkan universitas user
+        if ($prodis->isEmpty()) {
+            if (in_array($userOtoritas, ['Admin', 'Admin Universitas', 'Penjamin Mutu Universitas', 'Wakil Rektor']) || !$authUser->id_prodiUser) {
+                $query = Prodi::query()
+                    ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                    ->join('universitas', 'fakultas.id_universitas', '=', 'universitas.id')
+                    ->select('prodi.*')
+                    ->with(['fakultas', 'fakultas.universitas'])
+                    ->withCount('users');
+
+                if ($authUser->id_universitasUser) {
+                    $query->where('universitas.id', $authUser->id_universitasUser);
+                }
+
+                $prodis = $query->get();
+            } else if ($authUser->prodi) {
+                $prodis = collect([$authUser->prodi]);
+            }
+        }
+
+        $univName = optional($authUser->universitas)->nama ?? optional(optional(optional($prodis->first())->fakultas)->universitas)->nama ?? 'UNIVERSITAS LAMPUNG';
+
+        return view('auth.gate_menu', compact('prodis', 'univName'));
+    }
+
     public function Store(Request $request)
     {
         $validator = Validator::make($request->all(), [

@@ -56,26 +56,25 @@
                                     @if ($userOtoritas != 'Admin Universitas')
                                         <td>{{ $mk->prodi->fakultas->universitas->nama }}</td>
                                     @endif
-                                    @if ($userOtoritas == 'Admin Universitas')
-                                    <td>
-                                        <div class="d-flex">
-                                            <a type="button" href="edit-mk/{{ $mk->kode }}"
-                                                class="btn btn-warning btn-icon-text p-2" style="margin-right:7px">
-                                                Edit
-                                                <i class="ti-pencil btn-icon-append"></i>
-                                            </a>
-                                            <form action="delete-mk/{{ $mk->kode }}" method="post">
-                                                @csrf
-                                                @method('delete')
-                                                <button type="submit" class="btn btn-danger btn-icon-text p-2"
-                                                    onclick="return confirm('Are you sure to delete {{ $mk->nama }}?')">
-                                                    Delete
-                                                    <i class="ti-trash btn-icon-append"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                    @endif
+                                     @if ($userOtoritas == 'Admin Universitas')
+                                     <td>
+                                         <div class="d-flex align-items-center gap-1">
+                                             <a href="edit-mk/{{ $mk->kode }}"
+                                                 class="btn btn-warning btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                                 <i class="ti-pencil"></i>
+                                             </a>
+                                             <form action="delete-mk/{{ $mk->kode }}" method="post" class="d-inline m-0 p-0">
+                                                 @csrf
+                                                 @method('delete')
+                                                 <button type="submit" class="btn btn-danger btn-icons"
+                                                     data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
+                                                     onclick="return confirm('Are you sure to delete {{ $mk->nama }}?')">
+                                                     <i class="ti-trash"></i>
+                                                 </button>
+                                             </form>
+                                         </div>
+                                     </td>
+                                     @endif
                                 </tr>
                             @endforeach
                         </tbody>

@@ -22,19 +22,18 @@
                                     <td>
                                         <img src="{{ asset($universitas->img) }}" class="img img-responsive" />
                                     </td>
-                                    <td>
-                                        <form
-                                            action="{{ route('admin.delete-universitas', ['id' => $universitas->id]) }}"
-                                            method="post">
-                                            @csrf
-                                            @method('delete')
-                                            <button type="submit" class="btn btn-danger btn-icon-text p-2 me-2"
-                                                onclick="return confirm('Are you sure to delete ?')">
-                                                Delete
-                                                <i class="ti-trash btn-icon-append"></i>
-                                            </button>
-                                        </form>
-                                    </td>
+                                     <td>
+                                         <form action="{{ route('admin.delete-universitas', ['id' => $universitas->id]) }}"
+                                             method="post" class="d-inline m-0 p-0">
+                                             @csrf
+                                             @method('delete')
+                                             <button type="submit" class="btn btn-danger btn-icons"
+                                                 data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
+                                                 onclick="return confirm('Are you sure to delete ?')">
+                                                 <i class="ti-trash"></i>
+                                             </button>
+                                         </form>
+                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>

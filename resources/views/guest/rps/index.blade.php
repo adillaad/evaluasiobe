@@ -79,7 +79,7 @@
                                         {{-- INFO CEPAT --}}
                                         <div class="mt-2 text-muted small d-flex flex-wrap gap-3">
                                             <span><i class="mdi mdi-calendar-month-outline me-1"></i> Semester {{ $rps->semester }}</span>
-                                            <span><i class="mdi mdi-book-education-outline me-1"></i>
+                                            <span><i class="mdi mdi-book-open-page-variant me-1"></i>
                                                 {{ ($rps->mk->bobot_teori ?? 0) + ($rps->mk->bobot_praktikum ?? 0) }} SKS
                                             </span> 
                                         </div>

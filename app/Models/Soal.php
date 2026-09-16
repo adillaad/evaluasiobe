@@ -24,9 +24,15 @@ class Soal extends Model
         'persentase_cpmk',
         'cpl',
         'cpmk',
+        'sub_cpmk_id',
         'kodeSoal',
         'prodiId'
     ];
+
+    public function subCpmk()
+    {
+        return $this->belongsTo(SubCpmk::class, 'sub_cpmk_id');
+    }
 
     public function cpmk()
     {

@@ -17,7 +17,7 @@ class CreatePenilaianInstrumenTable extends Migration
             $table->id();
             $table->unsignedBigInteger('cpl_mk_cpmk_penilaian_id');
             $table->string('kriteria');
-            $table->float('bobot_metode');
+            $table->float('bobot_metode')->nullable();
             $table->timestamps();
 
             $table->foreign('cpl_mk_cpmk_penilaian_id')->references('id')->on('cpl_mk_cpmk_penilaian')->onDelete('cascade');

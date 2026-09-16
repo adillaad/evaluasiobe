@@ -1,205 +1,885 @@
-{{-- @php
-    $currentPrefix = auth()->user()->otoritas->otoritas
-        ? str_replace(' ', '-', strtolower(auth()->user()->otoritas->otoritas)) . '.'
-        : 'admin.';
-@endphp --}}
+@php
+    $currentPrefix = 'dosen.';
+@endphp
 @extends('dosen.template')
+@section('title', 'Visualisasi Per Angkatan')
+@section('page_title', 'Visualisasi Per Angkatan')
 @section('content')
+    <style>
+        /* Modern Clean Styling matching Visualisasi Mata Kuliah */
+        .modern-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .modern-card-header {
+            background: #ffffff;
+            border-bottom: 1px solid #f1f5f9;
+            padding: 14px 20px;
+        }
+
+        .section-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: #1f3bb3;
+        }
+
+        /* Course Profile Hero Header */
+        .course-profile-hero {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .course-label-tag {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #1f3bb3;
+            margin-bottom: 4px;
+        }
+
+        .course-name-text {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .course-meta-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            font-size: 0.85rem;
+        }
+
+        .meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .meta-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .meta-value {
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        .meta-pipe {
+            color: #cbd5e1;
+            font-weight: 300;
+        }
+
+        /* Modern Action Buttons */
+        .modern-btn-primary {
+            height: 36px;
+            padding: 0 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            border: none;
+            background: #1f3bb3;
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(31, 59, 179, 0.2);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modern-btn-primary:hover {
+            background: #172d88;
+            box-shadow: 0 4px 10px rgba(31, 59, 179, 0.3);
+            color: #ffffff;
+        }
+
+        .modern-btn-outline {
+            height: 36px;
+            padding: 0 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modern-btn-outline:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #1e293b;
+        }
+
+        /* Modern Table */
+        .modern-table-container {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .modern-table {
+            width: 100%;
+            margin-bottom: 0;
+            border-collapse: collapse;
+        }
+
+        .modern-table thead th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 10px 14px;
+            border-bottom: 1px solid #e2e8f0;
+            border-top: none;
+        }
+
+        .modern-table tbody td {
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            color: #334155;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .modern-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .modern-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Modern Guide Box */
+        .modern-guide-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+
+        /* Structured CPMK Description Cards */
+        .cpl-desc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 8px;
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 2px;
+        }
+
+        .cpl-desc-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            transition: all 0.15s ease;
+        }
+
+        .cpl-desc-card:hover {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+
+        .cpl-desc-badge {
+            font-size: 0.72rem !important;
+            font-weight: 700;
+            padding: 3px 7px !important;
+            border-radius: 4px !important;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        .cpl-desc-text {
+            font-size: 0.8rem !important;
+            line-height: 1.35;
+            color: #334155;
+            font-weight: 500;
+        }
+
+        .modern-select {
+            height: 38px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            padding: 0 12px;
+            font-size: 0.88rem;
+            color: #1e293b;
+            background-color: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .modern-select:focus {
+            border-color: #1f3bb3;
+            box-shadow: 0 0 0 3px rgba(31, 59, 179, 0.12);
+            outline: none;
+        }
+
+        /* Combobox / Direct Typeable Select Styling */
+        .combobox-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .combobox-wrapper.is-open {
+            z-index: 1050;
+        }
+        .combobox-input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .combobox-input {
+            width: 100%;
+            padding-right: 36px !important;
+            cursor: text;
+            background-color: #ffffff !important;
+        }
+        .combobox-input:focus {
+            border-color: #1F3BB3 !important;
+            box-shadow: 0 0 0 3px rgba(31, 59, 179, 0.12) !important;
+            outline: none !important;
+        }
+        .combobox-toggle-btn {
+            position: absolute;
+            right: 1px;
+            top: 1px;
+            bottom: 1px;
+            width: 36px;
+            background: transparent;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: color 0.15s ease;
+        }
+        .combobox-toggle-btn:hover:not(:disabled) {
+            color: #1F3BB3;
+        }
+        .combobox-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+            z-index: 99999 !important;
+            overflow: hidden !important;
+        }
+        .combobox-options-list {
+            max-height: 240px;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f8fafc;
+            -webkit-overflow-scrolling: touch;
+        }
+        .combobox-option {
+            padding: 9px 14px;
+            cursor: pointer;
+            font-size: 0.86rem;
+            color: #1e293b;
+            transition: background 0.15s ease, color 0.15s ease;
+            white-space: normal !important;
+            word-break: break-word !important;
+        }
+        .combobox-option span.font-monospace {
+            white-space: nowrap !important;
+            display: inline-block !important;
+        }
+        .combobox-option:hover,
+        .combobox-option.is-focused {
+            background-color: #f1f5f9 !important;
+            color: #1F3BB3 !important;
+        }
+        .combobox-option.is-selected {
+            background-color: #eff6ff !important;
+            color: #1F3BB3 !important;
+            font-weight: 700 !important;
+            border-left: 3px solid #1F3BB3 !important;
+        }
+        .combobox-option.is-selected:hover {
+            background-color: #dbeafe !important;
+            color: #1e40af !important;
+        }
+        .combobox-option.is-selected span {
+            color: #1F3BB3 !important;
+        }
+        .combobox-empty-state {
+            padding: 12px 14px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            white-space: normal;
+        }
+    </style>
+
     @if (session()->has('failed'))
-        <div class="alert alert-danger" role="alert" id="box">
-            <div>{{ session('failed') }}</div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div><i class="bi bi-exclamation-octagon me-1"></i> {{ session('failed') }}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @elseif (session()->has('success'))
-        <div class="alert greenAdd" role="alert" id="box">
-            <div>{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div><i class="bi bi-check-circle me-1"></i> {{ session('success') }}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
-    <h3 id="title" data-course="{{ $completeCourseFormat }}" class="px-4 pb-4 fw-bold text-center">Hasil Visualisasi CPMK {{ $completeCourseFormat }} Angkatan {{ $angkatan }}
-    </h3>
-    {{-- {{dd($allAngkatan)}} --}}
-    {{-- card buat ganti ANGKATAN --}}
-    <div class="form-group stretch-card" id="tugas">
-        <div class="card">
-            <div class="card-body">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="tooltip" data-bs-placement="left"
-                    title="Form ini digunakan untuk mengecek angkatan lainnya. silahkan pilih angkatan yang ingin ditampilkan ketercapaian CPMK"
-                    style="float:right;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                        class="bi bi-info-circle-fill" viewBox="0 0 16 16">
-                        <path
-                            d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2" />
-                    </svg>
-                </button>
-                <h6 class="pb-4 ">Cek Angkatan Lainnya :</h6>
-                <form id="visualCpmkAngkatan" method="POST" action="hasilvisualcpmk-angkatan"
-                    enctype="multipart/form-data">
-                    @csrf
-                    <div class="form-group row">
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label>Angkatan <span class="text-danger">*</span></label>
-                                {{-- @dd($allAngkatan) --}}
-                                <select id="angkatan" class="form-control" name="angkatan">
-                                    <option selected="true" value="" disabled selected>Silahkan Pilih Angkatan
-                                    </option>
-                                    @foreach ($allAngkatan as $a)
-                                        <option value="{{ $a->angkatan }}">{{ $a->angkatan }}</option>
-                                    @endforeach
-                                    {{-- <input type="hidden" name="allNpm"  class="visually-hidden"> --}}
-                                    {{-- <input type="hidden" name="allAngkatan" value="{{ json_encode($allAngkatan) }}"> --}}
-                                    <input type="text" name="course" class="visually-hidden" value="{{ $course }}">
-                                    <input type="text" name="prodi" class="visually-hidden" value="{{ $prodi }}">
-                                    <input type="text" name="universitasCPMK" class="visually-hidden" value="{{ $universitas }}">
-                                    <input type="text" name="universitasImg" class="visually-hidden" value="{{ $universitasImg }}">
-                                </select>
-                            </div>
-                            <input type="submit" class="btn btn-primary" value="Submit">
-                            <button id="btnPrintPdf" type="button" class="btn btn-primary" disabled>Print PDF</button>
-                        </div>
-                        <div class="col-6">
-                            <img id="universitas-img" src="{{ asset($universitasImg) }}" class="img img-responsive"
-                                style="max-width: 35%; margin-left: 100px;" />
-                        </div>
+
+    {{-- Hidden data attributes for PDF export --}}
+    <input type="hidden" id="title" data-course="{{ $completeCourseFormat }}">
+
+    {{-- ========================================================================= --}}
+    {{-- 1. HERO COURSE PROFILE CARD --}}
+    {{-- ========================================================================= --}}
+    <div class="course-profile-hero">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <div class="course-label-tag">CAPAIAN CPMK ANGKATAN</div>
+                <h3 class="course-name-text">{{ $completeCourseFormat }}</h3>
+                <div class="course-meta-row">
+                    <div class="meta-item">
+                        <span class="meta-label">Program Studi:</span>
+                        <span class="meta-value">{{ $prodi }}</span>
                     </div>
-                </form>
+                    <span class="meta-pipe">|</span>
+                    <div class="meta-item">
+                        <span class="meta-label">Angkatan:</span>
+                        <span class="meta-value">{{ $angkatan }}</span>
+                    </div>
+                    <span class="meta-pipe">|</span>
+                    <div class="meta-item">
+                        <span class="meta-label">Universitas:</span>
+                        <span class="meta-value">{{ $universitas }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Action Buttons --}}
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <button type="button" class="modern-btn-outline" onclick="window.history.back();" title="Kembali ke halaman sebelumnya">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </button>
+                <button id="btnPrintPdf" type="button" class="modern-btn-primary">
+                    <i class="bi bi-file-earmark-pdf"></i> Unduh PDF
+                </button>
             </div>
         </div>
     </div>
-    <div class="form-group stretch-card" id="tugas">
-        <div class="card">
-            <div class="card-body">
-                <div class="container">
-                    <div class="mt-4">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h5 class="card-title">CPMK Batch</h5>
-                                        <canvas id="radarChartAngkatan"></canvas>
-                                        <h6 class="mt-4" style="text-align:justify">Summary :</h6>
-                                        <p id="summary">Based on the CPMK calculations, the following conclusions can be
-                                            drawn: <br>
-                                            - The highest average CPMK is associated with the code {{ $kodeMaxAvg }} with
-                                            a value of {{ $maxAvg }}. <br>
-                                            - The lowest average CPMK is associated with the code {{ $kodeMinAvg }} with
-                                            a value of {{ $minAvg }}.
-                                        </p>
-                                        <h6 class="keterangan mt-3">Descriptions :</h6>
-                                        <ol id="labelContainer" class= "overflow-auto" style="max-height: 200px; overflow: auto;">
-                                            @foreach ($cpmkResultAll as $index => $itemCpmk)
-                                                <li>{{ $itemCpmk->kode }}: {{ $itemCpmk->judul }}</li>
-                                            @endforeach
-                                        </ol>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="card mt-3">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Questions <span class="text-lowercase">with</span> the Lowest
-                                            CPMK :</h5>
-                                        <div class="table-responsive overflow-auto"
-                                            style="max-height: 300px; overflow: auto;">
-                                            <table class="table table-bordered" id="soalTerendahTable">
-                                                <thead>
-                                                    <tr>
-                                                        <th>No</th>
-                                                        <th>Types of Assessment</th>
-                                                        <th>Questions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach ($soalTerendah as $index => $item)
-                                                        <tr>
-                                                            <td>{{ $index + 1 }}</td>
-                                                            <td>{{ $item['Jenis'] }}</td>
-                                                            <td>
-                                                                @if ($item['idSoal'])
-                                                                    <a href="{{ url('/dosen/soal/cetakSoal/' . $item['idSoal']) }}"
-                                                                        target="_blank">{{ $item['soal'] }}</a>
-                                                                @else
-                                                                    {{ $item['soal'] }}
-                                                                @endif
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="card mt-3">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Data :</h5>
-                                        <ol>
-                                            <li>
-                                                <h6 id="angkatanData" class="card-subtitle mt-2 text-black">Angkatan : {{ $angkatan }}
-                                                </h6>
-                                            </li>
-                                            <li>
-                                                <h6 id="prodi" class="card-subtitle mt-2 text-black">Prodi : {{ $prodi }}</h6>
-                                            </li>
-                                            <li>
-                                                <h6 id="universitas" class="card-subtitle mt-2 text-black">Universitas : {{ $universitas }}
-                                                </h6>
-                                            </li>
-                                        </ol>
-                                    </div>
-                                </div>
+
+    {{-- ========================================================================= --}}
+    {{-- 2. CARD 1: CAPAIAN CPMK ANGKATAN (Radar Chart & Tabel Skor) --}}
+    {{-- ========================================================================= --}}
+    <div class="card modern-card mb-3">
+        <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="section-title mb-0 d-flex align-items-center flex-wrap gap-2">
+                <i class="bi bi-bar-chart-line"></i> Capaian CPMK Angkatan
+            </h5>
+            <button class="btn btn-sm btn-outline-secondary" type="button" id="btnToggleGuideCpmkBatch" style="border-radius: 6px; font-size: 12px; padding: 4px 10px;" title="Petunjuk Membaca Diagram">
+                <i class="bi bi-info-circle me-1"></i> Petunjuk Membaca Diagram
+            </button>
+        </div>
+        <div class="card-body p-4">
+            {{-- Guide Banner (Bisa di Buka Tutup) --}}
+            <div class="mb-3" id="guideCpmkBatch" style="display: none;">
+                <div class="modern-guide-box small">
+                    <h6 class="fw-bold text-primary mb-1"><i class="bi bi-compass me-1"></i> Panduan Membaca Diagram Radar CPMK Angkatan:</h6>
+                    <ul class="mb-0 ps-3 text-muted">
+                        <li><strong>Bentuk Jaring (Radar):</strong> Setiap sudut mewakili satu <strong>CPMK (Capaian Pembelajaran Mata Kuliah)</strong>.</li>
+                        <li><span class="badge" style="background-color: #c06e4b; color:#fff;">Average CPMK</span>: Rata-rata nilai capaian CPMK seluruh mahasiswa di angkatan tersebut (skala 0 - 100).</li>
+                        <li><span class="badge" style="background-color: #21d85f; color:#fff;">Max CPMK</span>: Capaian CPMK tertinggi di angkatan tersebut.</li>
+                        <li><span class="badge" style="background-color: #d82121; color:#fff;">Min CPMK</span>: Capaian CPMK terendah di angkatan tersebut.</li>
+                    </ul>
+                </div>
+            </div>
+
+            {{-- 3 Executive Metric Cards --}}
+            <div class="row g-3 mb-4">
+                <div class="col-md-4 col-sm-12">
+                    <div class="p-3 bg-light rounded-3 border text-center">
+                        <div class="text-muted small fw-semibold">Rata-rata Skor CPMK</div>
+                        <div class="h4 mb-0 fw-bold text-primary mt-1">{{ $rataRataAngkatan }} <span class="small fs-6 text-muted">/ 100</span></div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <div class="p-3 bg-light rounded-3 border text-center">
+                        <div class="text-muted small fw-semibold">CPMK Tertinggi</div>
+                        <div class="h4 mb-0 fw-bold text-success mt-1">
+                            {{ $kodeMaxAvg ?: '-' }}
+                            @if (!empty($kodeMaxAvg))
+                                <span class="small fs-6 text-muted">({{ $maxAvg }})</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <div class="p-3 bg-light rounded-3 border text-center">
+                        <div class="text-muted small fw-semibold">CPMK Terendah</div>
+                        <div class="h4 mb-0 fw-bold text-danger mt-1">
+                            {{ $kodeMinAvg ?: '-' }}
+                            @if (!empty($kodeMinAvg))
+                                <span class="small fs-6 text-muted">({{ $minAvg }})</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Diagram Radar Canvas & Tabel Rincian Capaian CPMK (Bersebelahan 50:50) --}}
+            <div class="row g-4 align-items-center mb-4">
+                <div class="col-lg-6 col-md-12">
+                    <div class="d-flex justify-content-center align-items-center p-2">
+                        <div style="width: 100%; max-width: 540px;">
+                            <canvas id="radarChartAngkatan"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-12">
+                    <div class="d-flex flex-column justify-content-center h-100">
+                        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-table text-primary me-2"></i> Rincian Capaian CPMK:</h6>
+                        <div class="modern-table-container">
+                            <div class="table-responsive" style="max-height: 340px; overflow-y: auto;">
+                                <table class="table modern-table mb-0" id="tableRincianCpmkAngkatan">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center" style="width: 40%;">Kode CPMK</th>
+                                            <th class="text-center" style="width: 60%;">Skor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($cpmkTableList as $row)
+                                            <tr>
+                                                <td class="text-center">
+                                                    <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-1" style="font-size: 0.82rem;">
+                                                        {{ $row['kode'] }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center fw-semibold text-dark" style="font-size: 0.875rem;">
+                                                    {{ $row['avg_angkatan'] }}
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="2" class="text-center text-muted py-3">Data CPMK tidak ditemukan untuk mata kuliah ini.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {{-- Deskripsi CPMK (Bisa di Buka Tutup via Header & Tombol) --}}
+            <div class="mt-4 pt-3 border-top">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 cpmk-desc-header" id="headerToggleCpmkDesc" style="cursor: pointer; user-select: none;">
+                    <h6 class="keterangan fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-card-text text-primary"></i> Descriptions (Deskripsi CPMK)
+                        <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.75rem;">{{ count($cpmkResultAll) }} CPMK</span>
+                    </h6>
+                    <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center" type="button" id="btnToggleCpmkDesc" style="border-radius: 6px; font-size: 13px; width: 32px; height: 30px; padding: 0;" title="Buka / Tutup Deskripsi CPMK">
+                        <i class="bi bi-chevron-down" id="iconCpmkDescCollapse"></i>
+                    </button>
+                </div>
+                <div class="mt-2" id="collapseCpmkDescriptions" style="display: none;">
+                    <div id="labelContainer" class="cpl-desc-grid">
+                        @foreach ($cpmkResultAll as $itemCpmk)
+                            <div class="cpl-desc-card">
+                                <span class="badge bg-primary text-white cpl-desc-badge">{{ $itemCpmk->kode }}</span>
+                                <span class="cpl-desc-text">{{ $itemCpmk->judul }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    {{-- <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script> --}}
-    {{-- Validasi form pilih angkatan lain form --}}
+
+    {{-- ========================================================================= --}}
+    {{-- 3. BOTTOM ROW: QUESTIONS WITH LOWEST SCORE & CEK ANGKATAN LAINNYA (50:50) --}}
+    {{-- ========================================================================= --}}
+    <div class="row g-3 mb-4">
+        {{-- Card: Questions with Lowest CPMK --}}
+        <div class="col-lg-6 col-md-12">
+            <div class="card modern-card h-100 mb-0">
+                <div class="modern-card-header d-flex justify-content-between align-items-center">
+                    <h5 class="section-title mb-0">
+                        <i class="bi bi-patch-question text-primary"></i> Questions with Lowest CPMK
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted small mb-3">
+                        Soal-soal penilaian dengan rata-rata perolehan skor CPMK terendah di angkatan ini:
+                    </p>
+                    <div class="modern-table-container">
+                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                            <table class="table modern-table mb-0" id="soalTerendahTable">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" style="width: 45px;">No</th>
+                                        <th class="text-center" style="width: 120px;">Asesmen</th>
+                                        <th>Soal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($soalTerendah as $index => $item)
+                                        @php
+                                            $soalText = (!empty($item['soal']) && $item['soal'] !== 'null') ? $item['soal'] : '-';
+                                            $jenisText = $item['Jenis'] ?? '-';
+                                        @endphp
+                                        <tr>
+                                            <td class="text-center text-muted fw-semibold">{{ $index + 1 }}</td>
+                                            <td class="text-center">
+                                                <span class="badge" style="background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; font-size:12px; font-weight:500;">
+                                                    {{ $jenisText }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (!empty($item['idSoal']))
+                                                    <a href="{{ route($currentPrefix . 'cetakSoal', ['id' => $item['idSoal']]) }}" target="_blank" class="text-primary text-decoration-none fw-semibold">
+                                                        {{ $soalText }} <i class="bi bi-box-arrow-up-right ms-1 small"></i>
+                                                    </a>
+                                                @else
+                                                    <span class="text-dark fw-medium">{{ $soalText }}</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted py-3">Tidak ada data soal</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Card: Cek Angkatan Lainnya --}}
+        <div class="col-lg-6 col-md-12">
+            <div class="card modern-card h-100 mb-0">
+                <div class="modern-card-header">
+                    <h5 class="section-title mb-0">
+                        <i class="bi bi-calendar3 text-primary"></i> Cek Angkatan Lainnya
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted small mb-3">
+                        Pilih angkatan lain untuk menampilkan evaluasi CPMK pada mata kuliah <strong>{{ $completeCourseFormat }}</strong>:
+                    </p>
+                    <form id="visualCpmkAngkatan" method="POST" action="hasilvisualcpmk-angkatan" enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" name="course" value="{{ $course }}">
+                        <input type="hidden" name="prodi" value="{{ $prodi }}">
+                        <input type="hidden" name="universitasCPMK" value="{{ $universitas }}">
+                        <input type="hidden" name="universitasImg" value="{{ $universitasImg }}">
+                        <input type="hidden" name="allNpm" class="visually-hidden">
+
+                        <div class="mb-3">
+                            <label class="modern-label" for="angkatanDisplayInput">
+                                <i class="bi bi-calendar-event text-primary me-1"></i> Pilih Angkatan <span class="text-danger">*</span>
+                            </label>
+                            <div class="combobox-wrapper" id="angkatanComboboxWrapper">
+                                <div class="combobox-input-group">
+                                    <input type="text" 
+                                           id="angkatanDisplayInput" 
+                                           class="form-control modern-select combobox-input" 
+                                           placeholder="Pilih / Ketik Angkatan..." 
+                                           value="{{ $angkatan ? 'Angkatan ' . $angkatan : '' }}"
+                                           autocomplete="off">
+                                    <input type="hidden" id="angkatan" name="angkatan" value="{{ $angkatan }}">
+                                    <button type="button" class="combobox-toggle-btn" tabindex="-1" id="angkatanToggleBtn" title="Tampilkan daftar angkatan">
+                                        <i class="bi bi-chevron-down"></i>
+                                    </button>
+                                </div>
+                                <div class="combobox-dropdown-menu" id="angkatanDropdownMenu" style="display: none;">
+                                    <div class="combobox-options-list" id="angkatanOptionsList">
+                                        @foreach ($allAngkatan as $a)
+                                            @php
+                                                $angkatanVal = is_object($a) ? ($a->angkatan ?? '') : (is_array($a) ? ($a['angkatan'] ?? '') : $a);
+                                            @endphp
+                                            @if (!empty($angkatanVal))
+                                                <div class="combobox-option {{ (string)$angkatanVal === (string)$angkatan ? 'is-selected' : '' }}" data-value="{{ $angkatanVal }}" data-text="Angkatan {{ $angkatanVal }}">
+                                                    Angkatan {{ $angkatanVal }}
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="modern-btn-primary" style="height: 34px; font-size: 0.82rem; padding: 0 14px;">
+                                <i class="bi bi-search"></i> Tampilkan CPMK Angkatan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Script Libraries --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    {{-- Interaktivitas Guide Banner & Deskripsi CPMK Collapse --}}
     <script>
         $(document).ready(function() {
-            $('#visualCpmkAngkatan').on('submit', function(event) {
+            // Toggle Petunjuk Membaca Diagram
+            $('#btnToggleGuideCpmkBatch').on('click', function() {
+                $('#guideCpmkBatch').slideToggle(200);
+            });
 
-                var angkatan = $('#angkatan').val();
-                if (!angkatan) {
-                    alert('Mohon pilih/isi field yang kosong!');
+            // Toggle Deskripsi CPMK via Seluruh Header Row
+            $('#headerToggleCpmkDesc').on('click', function() {
+                var $target = $('#collapseCpmkDescriptions');
+                var $icon = $('#iconCpmkDescCollapse');
+                if ($target.is(':visible')) {
+                    $target.slideUp(200);
+                    $icon.removeClass('bi-chevron-up').addClass('bi-chevron-down');
+                } else {
+                    $target.slideDown(200);
+                    $icon.removeClass('bi-chevron-down').addClass('bi-chevron-up');
+                }
+            });
+
+            // Prevent button click from double firing header click
+            $('#btnToggleCpmkDesc').on('click', function(e) {
+                e.stopPropagation();
+                $('#headerToggleCpmkDesc').trigger('click');
+            });
+
+            // Validasi Form Pilih Angkatan Lainnya
+            $('#visualCpmkAngkatan').on('submit', function(event) {
+                var angkatanVal = $('#angkatan').val();
+                if (!angkatanVal) {
+                    alert('Mohon pilih angkatan terlebih dahulu!');
                     event.preventDefault();
+                }
+            });
+
+            // Fetch NPM saat angkatan berganti
+            function handleAngkatanChange(angkatanVal) {
+                var prodiVal = $('input[name=prodi]').val();
+                if (!angkatanVal) return;
+                $.ajax({
+                    url: "{{ route($currentPrefix . 'getAllNpmByAngkatan') }}",
+                    method: 'GET',
+                    data: {
+                        angkatan: angkatanVal,
+                        prodi: prodiVal
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response && response.result && response.result.allNpm) {
+                            var allNpmString = JSON.stringify(response.result.allNpm);
+                            $('input[name=allNpm]').val(allNpmString);
+                        }
+                    }
+                });
+            }
+
+            // Angkatan Combobox Logic for Cek Angkatan Lainnya
+            var angkatanOptionsData = [];
+            var activeAngkatanIndex = -1;
+
+            $('#angkatanOptionsList .combobox-option').each(function() {
+                var val = $(this).data('value');
+                var txt = $(this).data('text') || $(this).text().trim();
+                if (val) {
+                    angkatanOptionsData.push({ value: String(val).trim(), text: txt });
+                }
+            });
+
+            function renderAngkatanOptions(filterText) {
+                var $list = $('#angkatanOptionsList');
+                $list.empty();
+                activeAngkatanIndex = -1;
+
+                if (!angkatanOptionsData || angkatanOptionsData.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak ada data angkatan</div>');
+                    return;
+                }
+
+                var query = (filterText || '').toLowerCase().trim();
+                var filtered = angkatanOptionsData.filter(function(item) {
+                    if (!query) return true;
+                    return (item.text && item.text.toLowerCase().indexOf(query) !== -1) ||
+                           (item.value && item.value.toLowerCase().indexOf(query) !== -1);
+                });
+
+                if (filtered.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak ada angkatan yang cocok dengan "' + filterText + '"</div>');
+                    return;
+                }
+
+                var currentVal = $('#angkatan').val();
+
+                filtered.forEach(function(item, idx) {
+                    var isSelected = (String(item.value).trim() === String(currentVal).trim());
+                    var $opt = $('<div>')
+                        .addClass('combobox-option' + (isSelected ? ' is-selected' : ''))
+                        .attr('data-value', item.value)
+                        .attr('data-index', idx)
+                        .text(item.text);
+
+                    $opt.on('mousedown', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectAngkatanOption(item.value, item.text);
+                    });
+
+                    $list.append($opt);
+                });
+            }
+
+            function selectAngkatanOption(val, text) {
+                $('#angkatan').val(val);
+                $('#angkatanDisplayInput').val(text);
+                $('#angkatanDropdownMenu').hide();
+                $('#angkatanComboboxWrapper').removeClass('is-open');
+                activeAngkatanIndex = -1;
+                handleAngkatanChange(val);
+            }
+
+            function openAngkatanCombobox() {
+                var currentQuery = $('#angkatanDisplayInput').val().trim();
+                var currentVal = $('#angkatan').val();
+                var currentSelectedObj = angkatanOptionsData.find(function(s) { return s.value === currentVal; });
+
+                if (currentSelectedObj && currentSelectedObj.text === currentQuery) {
+                    renderAngkatanOptions('');
+                } else {
+                    renderAngkatanOptions(currentQuery);
+                }
+
+                $('#angkatanComboboxWrapper').addClass('is-open');
+                $('#angkatanDropdownMenu').show();
+            }
+
+            function closeAngkatanCombobox() {
+                $('#angkatanDropdownMenu').hide();
+                $('#angkatanComboboxWrapper').removeClass('is-open');
+                activeAngkatanIndex = -1;
+
+                var currentVal = $('#angkatan').val();
+                var currentText = $('#angkatanDisplayInput').val().trim();
+
+                if (currentVal) {
+                    var found = angkatanOptionsData.find(function(s) { return s.value === currentVal; });
+                    if (found) {
+                        $('#angkatanDisplayInput').val(found.text);
+                        return;
+                    }
+                }
+
+                if (currentText && angkatanOptionsData.length > 0) {
+                    var lowerText = currentText.toLowerCase();
+                    var exact = angkatanOptionsData.find(function(s) { return s.text.toLowerCase() === lowerText || s.value.toLowerCase() === lowerText; });
+                    if (exact) {
+                        selectAngkatanOption(exact.value, exact.text);
+                        return;
+                    }
+                }
+            }
+
+            $('#angkatanDisplayInput').on('focus', function() {
+                $(this).select();
+                openAngkatanCombobox();
+            });
+
+            $('#angkatanDisplayInput').on('click', function(e) {
+                openAngkatanCombobox();
+            });
+
+            $('#angkatanDisplayInput').on('input', function() {
+                var query = $(this).val().trim();
+                var lowerQuery = query.toLowerCase();
+
+                var exactMatch = angkatanOptionsData.find(function(s) {
+                    return s.value.toLowerCase() === lowerQuery || s.text.toLowerCase() === lowerQuery;
+                });
+
+                if (exactMatch) {
+                    $('#angkatan').val(exactMatch.value);
+                    handleAngkatanChange(exactMatch.value);
+                }
+
+                renderAngkatanOptions(query);
+                $('#angkatanComboboxWrapper').addClass('is-open');
+                $('#angkatanDropdownMenu').show();
+            });
+
+            $('#angkatanToggleBtn').on('click', function(e) {
+                e.preventDefault();
+                if ($('#angkatanDropdownMenu').is(':visible')) {
+                    closeAngkatanCombobox();
+                } else {
+                    $('#angkatanDisplayInput').focus();
+                    openAngkatanCombobox();
+                }
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#angkatanComboboxWrapper').length) {
+                    if ($('#angkatanDropdownMenu').is(':visible')) {
+                        closeAngkatanCombobox();
+                    }
                 }
             });
         });
     </script>
-    {{-- Pilih angkatan lain --}}
+
+    {{-- Radar Chart Initialization & PDF Export Handler --}}
     <script>
-        $(document).ready(function() {
-            $('#angkatan').on('change', function() {
-                var angkatan = $(this).val();
-                var prodi = $('input[name=prodi]').val();
-                // console.log("Berhasil: " + angkatan + "prodi: " + prodi);
-                $.ajax({
-                    url: "{{ route($currentPrefix . 'getAllNpmByAngkatan') }}", // route untuk kirim ke kontroler
-                    method: 'GET',
-                    data: {
-                        angkatan: angkatan,
-                        prodi: prodi
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        // console.log("SUKSES AJAX INI");
-                        var allNpm = response.result.allNpm;
-                        var allNpmString = JSON.stringify(allNpm);
+        var cpmk = @json($cpmkTmp ?? []);
 
-                        $('input[name=allNpm]').val(allNpmString);
-                    }
-                });
-            });
-        });
-    </script>
-
-    <script>
-        var cpmk = @json($cpmkTmp);
-
-        // var dataCapaianCpmk = Object.values(cpmk).map(item => Number(parseFloat(item[0]).toFixed(2)));
         var dataCapaianCpmkAvg = Object.values(cpmk).map(item => Number(parseFloat(item[0]).toFixed(2)));
         var dataCapaianCpmkMin = Object.values(cpmk).map(item => Number(parseFloat(item[1]).toFixed(2)));
         var dataCapaianCpmkMax = Object.values(cpmk).map(item => Number(parseFloat(item[2]).toFixed(2)));
@@ -211,116 +891,177 @@
             type: 'radar',
             data: {
                 labels: labelsCapaianCpmk,
-                datasets: [{
-                        label: 'CPMK Avg (Batch)',
+                datasets: [
+                    {
+                        label: 'Average CPMK',
                         data: dataCapaianCpmkAvg,
-                        backgroundColor: 'rgba(192, 110, 75, 0)',
-                        borderColor: 'rgba(192, 110, 75, 0.3)',
-                        borderWidth: 3,
-                        pointBackgroundColor: 'rgba(192, 110, 75, 0.4)'
+                        backgroundColor: 'rgba(31, 59, 179, 0.15)',
+                        borderColor: '#1f3bb3',
+                        borderWidth: 2.5,
+                        pointBackgroundColor: '#1f3bb3',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#1f3bb3',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     },
                     {
-                        label: 'CPMK Min (Batch)',
+                        label: 'Min CPMK',
                         data: dataCapaianCpmkMin,
-                        backgroundColor: 'rgba(126, 0, 0, 0.2)',
-                        borderColor: 'rgba(216, 33, 33, 0.27)',
-                        borderWidth: 3,
-                        pointBackgroundColor: 'rgba(126, 0, 0, 0.4)'
+                        backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                        borderColor: '#ef4444',
+                        borderWidth: 1.5,
+                        borderDash: [4, 4],
+                        pointBackgroundColor: '#ef4444',
+                        pointRadius: 3,
+                        pointHoverRadius: 5
                     },
                     {
-                        label: 'CPMK Max (Batch)',
+                        label: 'Max CPMK',
                         data: dataCapaianCpmkMax,
-                        backgroundColor: 'rgba(177, 255, 184, 0)',
-                        borderColor: 'rgba(33, 216, 95, 0.39)',
-                        borderWidth: 3,
-                        pointBackgroundColor: 'rgba(0, 0, 0, 1)'
+                        backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                        borderColor: '#10b981',
+                        borderWidth: 1.5,
+                        borderDash: [4, 4],
+                        pointBackgroundColor: '#10b981',
+                        pointRadius: 3,
+                        pointHoverRadius: 5
                     },
                 ]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: true,
                 scales: {
                     r: {
-                        suggestedMin: 0,
-                        suggestedMax: 100,
+                        angleLines: {
+                            color: '#e2e8f0'
+                        },
+                        grid: {
+                            color: '#e2e8f0'
+                        },
+                        pointLabels: {
+                            font: {
+                                size: 12,
+                                weight: '600'
+                            },
+                            color: '#1e293b'
+                        },
+                        min: 0,
+                        max: 100,
                         ticks: {
-                            beginAtZero: true,
-                            // stepSize: 1 // Optional: Control the step size between ticks
+                            stepSize: 20,
+                            backdropColor: 'transparent',
+                            font: {
+                                size: 10
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 16,
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.formattedValue;
+                            }
                         }
                     }
                 }
             }
         });
 
-        // Mengaktifkan tombol print setelah visualisasi tampil
-        $('#btnPrintPdf').prop('disabled', false);
-
+        // PDF Generation Event Handler
         document.getElementById('btnPrintPdf').addEventListener('click', function() {
             let course = document.getElementById('title').getAttribute('data-course');
-
             let radarChartAngkatan = document.getElementById('radarChartAngkatan');
             let radarChartAngkatanImg = radarChartAngkatan ? radarChartAngkatan.toDataURL() : null;
 
-            let summary = document.getElementById('summary').innerHTML.trim();
             let descriptions = [];
-            document.querySelectorAll("#labelContainer li").forEach(
-                li => {
-                    descriptions.push(li.textContent.trim());
+            document.querySelectorAll("#labelContainer .cpl-desc-card").forEach(card => {
+                let badge = card.querySelector('.cpl-desc-badge') ? card.querySelector('.cpl-desc-badge').textContent.trim() : '';
+                let text = card.querySelector('.cpl-desc-text') ? card.querySelector('.cpl-desc-text').textContent.trim() : '';
+                if (badge && text) {
+                    descriptions.push(badge + ': ' + text);
+                } else if (text) {
+                    descriptions.push(text);
                 }
-            );
+            });
 
             let soalTerendah = [];
-            document.querySelectorAll("#soalTerendahTable tbody tr")
-                .forEach(row => {
-                    let cols = row.querySelectorAll("td");
+            document.querySelectorAll("#soalTerendahTable tbody tr").forEach(row => {
+                let cols = row.querySelectorAll("td");
+                if (cols.length >= 3 && !row.querySelector("td[colspan]")) {
                     soalTerendah.push({
                         no: cols[0].textContent.trim(),
                         types_of_assessment: cols[1].textContent.trim(),
                         question: cols[2].textContent.trim(),
                     });
-                });
+                }
+            });
 
-            let angkatan = document.getElementById("angkatanData").textContent.trim().replace(/^Angkatan[:\s]*/, "");
-            let prodi = document.getElementById("prodi").textContent.trim().replace(/^Prodi[:\s]*/, "");
-            let universitas = document.getElementById("universitas").textContent.trim().replace(/^Universitas[:\s]*/, "");
+            let angkatan = "{{ $angkatan }}";
+            let prodi = "{{ $prodi }}";
+            let universitas = "{{ $universitas }}";
+
+            let originalBtnHtml = this.innerHTML;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Mengunduh...';
+            this.disabled = true;
 
             fetch("{{ route($currentPrefix . 'generate-pdfVisualCPMKAngkatan') }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                    },
-                    body: JSON.stringify({
-                        course,
-                        radarChartAngkatanImg,
-                        summary,
-                        descriptions,
-                        soalTerendah,
-                        angkatan,
-                        prodi,
-                        universitas,
-                    }),
-                }).then(response => {
-                    if (!response.ok) {
-                        return response.text().then(text => {
-                            throw new Error(
-                                `HTTP ${response.status}: ${text}`
-                            );
-                        });
-                    }
-                    return response.blob();
-                })
-                .then(blob => {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download =
-                        `Laporan Visualisasi CPMK ${course} Angkatan - ${angkatan}.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                })
-                .catch(error => console.error("Error:", error.message));
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                },
+                body: JSON.stringify({
+                    course,
+                    radarChartAngkatanImg,
+                    summary: '',
+                    descriptions,
+                    soalTerendah,
+                    angkatan,
+                    prodi,
+                    universitas,
+                }),
+            }).then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`HTTP ${response.status}: ${text}`);
+                    });
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                let cleanCourse = (course || 'MK').replace(/[/\\?%*:|"<>]/g, '-');
+                let cleanAngkatan = (angkatan || '').replace(/[/\\?%*:|"<>]/g, '-');
+                a.download = `Laporan Visualisasi CPMK ${cleanCourse} Angkatan - ${cleanAngkatan}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error("Error:", error.message);
+                alert("Gagal mengunduh laporan PDF: " + error.message);
+            })
+            .finally(() => {
+                this.innerHTML = originalBtnHtml;
+                this.disabled = false;
+            });
         });
     </script>
 @endsection

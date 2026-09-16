@@ -11,12 +11,17 @@ class RPS extends Model
     protected $table = 'rpss';
 
     protected $fillable = [
-        'kode_mk', 'nomor', 'dosen','versi','status', 'submitted_at','dosen_anggota1','dosen_anggota2', 'pengembang', 'koordinator', 'kaprodi', 'id_kurikulum', 'semester', 'materi_mk', 'batas_kelulusan_mhs', 'batas_kelulusan_mk','tipe', 'waktu', 'syarat_ujian', 'syarat_studi', 'media_software','media_hardware', 'kontrak', 'id_prodi',
+        'kode_mk', 'nomor', 'dosen','versi','status', 'submitted_at','dosen_anggota1','dosen_anggota2', 'pengembang', 'koordinator', 'kaprodi', 'id_kurikulum', 'tahun_ajaran_id', 'semester', 'materi_mk', 'batas_kelulusan_mhs', 'batas_kelulusan_mk','tipe', 'waktu', 'syarat_ujian', 'syarat_studi', 'media_software','media_hardware', 'kontrak', 'id_prodi',
     ];
 
     protected $casts = [
         'submitted_at' => 'datetime',
     ];
+
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(TahunAjaran::class, 'tahun_ajaran_id');
+    }
 
 
     public function pustakas()

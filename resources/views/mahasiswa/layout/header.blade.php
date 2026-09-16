@@ -5,6 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Evaluasi OBE - Mahasiswa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
 
     <!-- CSS -->
     <link rel="stylesheet" href="{{ asset('assets/template/vendors/feather/feather.css') }}">
@@ -19,7 +22,234 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/template/css/vertical-layout-light/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/template/css/vertical-layout-light/style.css') }}?v={{ time() }}">
+    <style>
+        body, html, input, button, select, textarea, p, h1, h2, h3, h4, h5, h6, a, span, table, td, th, div, label, li, ul, ol {
+            font-family: 'Poppins', sans-serif !important;
+        }
+        span[class*="mdi-"], i[class*="mdi-"], span[class*="mdi"], i[class*="mdi"], .mdi { font-family: "Material Design Icons" !important; }
+        span[class*="feather-"], i[class*="feather-"], span[class*="feather"], i[class*="feather"], .feather { font-family: "feather" !important; }
+        span[class*="ti-"], i[class*="ti-"], span[class*="ti"], i[class*="ti"], .ti { font-family: "themify" !important; }
+        i[class*="ti-trash"], span[class*="ti-trash"], .ti-trash, .btn-icons i.ti-trash, .btn i.ti-trash, .btn-danger i { font-family: "Material Design Icons" !important; }
+        i[class*="ti-trash"]:before, span[class*="ti-trash"]:before, .ti-trash:before, .btn-icons i.ti-trash:before, .btn i.ti-trash:before, .btn-danger i:before { content: "\F1C0" !important; font-family: "Material Design Icons" !important; }
+        span[class*="icon-"], i[class*="icon-"] { font-family: "Simple-Line-Icons" !important; }
+        span[class*="bi-"], i[class*="bi-"], span[class*="bi"], i[class*="bi"], .bi { font-family: "bootstrap-icons" !important; }
+        span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { font-family: FontAwesome !important; }
+
+        /* UNIFIED GLOBAL BUTTON SYSTEM */
+        .btn {
+            font-family: 'Poppins', sans-serif !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+
+        /* Regular Buttons (e.g., Primary Add, Submit, Filter) */
+        .btn:not(.btn-sm):not(.btn-xs):not(.btn-icons) {
+            height: 38px !important;
+            padding: 8px 16px !important;
+            font-size: 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            line-height: 1 !important;
+        }
+
+        /* Small Buttons (.btn-sm) */
+        .btn-sm {
+            height: 32px !important;
+            padding: 6px 12px !important;
+            font-size: 13px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 5px !important;
+            line-height: 1 !important;
+        }
+
+        /* Square Table Action Icon Buttons (.btn-icons) */
+        .btn-icons {
+            width: 35px !important;
+            height: 35px !important;
+            min-width: 35px !important;
+            min-height: 35px !important;
+            padding: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 6px !important;
+        }
+        .btn-icons i, .btn-icons svg {
+            font-size: 15px !important;
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+            margin: 0 !important;
+            line-height: 1 !important;
+        }
+
+        /* Icon Text Buttons (.btn-icon-text) */
+        .btn-icon-text {
+            height: 38px !important;
+            padding: 8px 16px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            border-radius: 8px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            line-height: 1 !important;
+        }
+        .btn-icon-text i, .btn-icon-text .btn-icon-prepend {
+            font-size: 15px !important;
+            margin-right: 2px !important;
+            line-height: 1 !important;
+        }
+        .btn-icon-text svg {
+            stroke: #ffffff !important;
+        }
+        /* UNIFIED GLOBAL FORM INPUT SYSTEM */
+        .form-control,
+        .form-select,
+        select.form-control,
+        input[type="text"].form-control,
+        input[type="email"].form-control,
+        input[type="password"].form-control,
+        input[type="number"].form-control,
+        input[type="date"].form-control,
+        input[type="url"].form-control,
+        input[type="search"].form-control,
+        .select2-container--default .select2-selection--single,
+        .select2-container--bootstrap .select2-selection--single {
+            height: 40px !important;
+            min-height: 40px !important;
+            padding: 8px 14px !important;
+            font-size: 14px !important;
+            font-family: 'Poppins', sans-serif !important;
+            color: #1e293b !important;
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            box-shadow: none !important;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+            line-height: 1.4 !important;
+        }
+
+        /* Select2 Single Alignment Fixes */
+        .select2-container--default .select2-selection--single .select2-selection__rendered,
+        .select2-container--bootstrap .select2-selection--single .select2-selection__rendered {
+            line-height: 22px !important;
+            padding-left: 0 !important;
+            color: #1e293b !important;
+            font-size: 14px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow,
+        .select2-container--bootstrap .select2-selection--single .select2-selection__arrow {
+            height: 38px !important;
+            top: 0 !important;
+            right: 8px !important;
+        }
+
+        /* Select2 Multiple Alignment Fixes */
+        .select2-container--default .select2-selection--multiple,
+        .select2-container--bootstrap .select2-selection--multiple {
+            min-height: 40px !important;
+            height: auto !important;
+            padding: 4px 8px !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            font-size: 14px !important;
+            background-color: #ffffff !important;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #e2e8f0 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 4px !important;
+            padding: 2px 8px !important;
+            font-size: 13px !important;
+            color: #1e293b !important;
+            margin-top: 3px !important;
+        }
+
+        /* Focus State for all inputs & Select2 */
+        .form-control:focus,
+        .form-select:focus,
+        .select2-container--default.select2-container--focus .select2-selection--single,
+        .select2-container--default.select2-container--focus .select2-selection--multiple,
+        .select2-container--open .select2-selection--single,
+        .select2-container--open .select2-selection--multiple {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+            outline: 0 !important;
+        }
+
+        /* Form Labels Uniformity */
+        .form-label, label {
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            color: #334155 !important;
+            margin-bottom: 6px !important;
+        }
+
+        /* Textarea Uniformity */
+        textarea.form-control {
+            height: auto !important;
+            min-height: 90px !important;
+            padding: 10px 14px !important;
+            line-height: 1.5 !important;
+        }
+
+        /* Small Form Inputs (.form-control-sm, .form-select-sm) */
+        .form-control-sm,
+        .form-select-sm {
+            height: 34px !important;
+            min-height: 34px !important;
+            padding: 4px 10px !important;
+            font-size: 13px !important;
+            border-radius: 6px !important;
+        }
+
+        /* Fix Navbar Date Picker Layout */
+        .navbar-date-picker {
+            display: inline-flex !important;
+            align-items: center !important;
+            background-color: #ffffff !important;
+            border-radius: 8px !important;
+            padding: 0 12px !important;
+            height: 38px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+            overflow: hidden !important;
+        }
+        .navbar-date-picker .input-group-addon,
+        .navbar-date-picker .input-group-prepend,
+        .navbar-date-picker .input-group-text,
+        .navbar-date-picker .calendar-icon {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin-right: 8px !important;
+            color: #3b82f6 !important;
+            font-size: 15px !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        .navbar-date-picker input.form-control,
+        .navbar-date-picker input {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            height: 100% !important;
+            min-height: unset !important;
+            font-size: 13.5px !important;
+            font-weight: 500 !important;
+            color: #1e293b !important;
+            box-shadow: none !important;
+            width: 95px !important;
+            cursor: default !important;
+        }
+    </style>
     @stack('styles')
 
     <link rel="shortcut icon" href="{{ asset('assets/img/eval-obe-logo.png') }}" />

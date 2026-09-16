@@ -44,21 +44,29 @@
                             <td>
                                 <span class="badge badge-warning">Pending</span>
                             </td>
-                            <td class="d-flex align-items-center">
-                                <a href="/admin/print-rps/{{ encrypt($rps->id) }}" target="_blank" type="button" class="btn btn-info btn-icon-text p-2" style="margin-right:7px;" title="Lihat & Cetak RPS">
-                                    <i class="ti-printer btn-icon"></i>
-                                </a>
-                                
-                                <form action="{{ route($currentPrefix . 'rps.validation.approve', $rps->id) }}" method="post" class="me-2">
-                                    @csrf
-                                    <button type="submit" class="btn btn-success btn-icon-text p-2" title="Setujui RPS" onclick="return confirm('Apakah Anda yakin ingin MENYETUJUI RPS ini?')">
-                                        <i class="ti-check btn-icon"></i>
-                                    </button>
-                                </form>
+                            <td>
+                                <div class="d-flex justify-content-center align-items-center" style="gap: 4px;">
+                                    <a href="/admin/print-rps/{{ encrypt($rps->id) }}" target="_blank" 
+                                       class="btn btn-icons btn-info" 
+                                       data-bs-toggle="tooltip" title="Lihat & Cetak RPS">
+                                        <i class="ti-printer"></i>
+                                    </a>
+                                    
+                                    <form action="{{ route($currentPrefix . 'rps.validation.approve', $rps->id) }}" method="post" class="d-inline m-0 p-0">
+                                        @csrf
+                                        <button type="submit" class="btn btn-icons btn-success" 
+                                            data-bs-toggle="tooltip" title="Setujui RPS" 
+                                            onclick="return confirm('Apakah Anda yakin ingin MENYETUJUI RPS ini?')">
+                                            <i class="ti-check"></i>
+                                        </button>
+                                    </form>
 
-                                <button type="button" class="btn btn-danger btn-icon-text p-2" data-bs-toggle="modal" data-bs-target="#rejectRpsModal{{ $rps->id }}" title="Tolak RPS">
-                                    <i class="ti-close btn-icon"></i>
-                                </button>
+                                    <button type="button" class="btn btn-icons btn-danger" 
+                                        data-bs-toggle="modal" data-bs-target="#rejectRpsModal{{ $rps->id }}" 
+                                        data-bs-toggle="tooltip" title="Tolak RPS">
+                                        <i class="ti-close"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         @empty

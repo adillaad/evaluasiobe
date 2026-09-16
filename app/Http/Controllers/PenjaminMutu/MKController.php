@@ -171,15 +171,16 @@ class MKController extends Controller
     
     public function susunanMK(Request $request)
     {
-        $query = MK::query()
+        $query = MK::with('kurikulum')
             ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->join('kurikulums', 'mks.id_kurikulum', '=', 'kurikulums.id')
+            ->leftJoin('universitas', 'fakultas.id_universitas', '=', 'universitas.id')
+            ->leftJoin('kurikulums', 'mks.id_kurikulum', '=', 'kurikulums.id')
             ->orderBy('mks.semester', 'asc')
             ->select('mks.*');
 
         if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
-            $query->where('fakultas.id_universitas', operator: auth()->user()->id_universitasUser);
+            $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
             $query->where('fakultas.id', auth()->user()->id_fakultasUser);
         } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
@@ -187,17 +188,17 @@ class MKController extends Controller
         }
         $query = $this->getFilteredQuery($query, $request);
         $mks = $query->get();
-        $maxSemester = MK::max('semester');
+        $maxSemester = (int)(MK::max('semester') ?: 8);
 
         $filterData = $this->getFilterData($request);
+        unset($filterData['mks']);
 
-        // return view('penjamin-mutu.mk.susunan_mk', compact('mks', 'maxSemester'));
         return view('penjamin-mutu.mk.susunan_mk', array_merge(
+            $filterData,
             [
                 'mks' => $mks,
                 'maxSemester' => $maxSemester
-            ],
-            $filterData
+            ]
         ));
     }
 
@@ -250,25 +251,97 @@ class MKController extends Controller
         return view('penjamin-mutu.mk.organisasi_mk', compact('semesters', 'totals', 'mks'));
     }
 
-    public function pemenuhanCPL()
+    public function pemenuhanCPL(Request $request)
     {
-        $query = CPL::with(['mk' => function ($query) {
-            $query->orderBy('semester');
+        $user = auth()->user();
+        $userOtoritas = $user->otoritas->otoritas ?? '';
+
+        $query = CPL::with(['mk' => function ($q) {
+            $q->orderBy('semester');
         }])->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id');
 
-        // Filter berdasarkan otoritas pengguna
-        if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
-            $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
-            $query->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $query->where('prodi.id', auth()->user()->id_prodiUser);
+        $queryMks = MK::query()
+            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('mks.*');
+
+        if ($userOtoritas === 'Penjamin Mutu Universitas') {
+            $query->where('fakultas.id_universitas', $user->id_universitasUser);
+            $queryMks->where('fakultas.id_universitas', $user->id_universitasUser);
+        } else if ($userOtoritas === 'Penjamin Mutu Fakultas') {
+            $query->where('fakultas.id', $user->id_fakultasUser);
+            $queryMks->where('fakultas.id', $user->id_fakultasUser);
+        } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $query->where('prodi.id', $user->id_prodiUser);
+            $queryMks->where('prodi.id', $user->id_prodiUser);
         }
 
-        $cpls = $query->select('cpls.*')->get();
-        $maxSemester = MK::max('semester');
+        if ($request->filled('kurikulum_id')) {
+            $query->where('cpls.id_kurikulum', $request->kurikulum_id);
+            $queryMks->where('mks.id_kurikulum', $request->kurikulum_id);
+        }
 
-        return view('penjamin-mutu.mk.pemenuhan_cpl', compact('cpls', 'maxSemester'));
+        $cpls = $query->select('cpls.*')->with('kurikulum')->get();
+        $allMks = $queryMks->with('kurikulum')->orderBy('semester')->orderBy('kode')->get();
+
+        $maxSemester = max((int) $allMks->max('semester'), (int) MK::max('semester'), 8);
+        $mksBySemester = $allMks->groupBy('semester');
+
+        $queryKur = Kurikulum::query()
+            ->join('prodi', 'kurikulums.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('kurikulums.*', 'prodi.nama as nama_prodi')
+            ->orderBy('kurikulums.tahun', 'desc');
+
+        if ($userOtoritas === 'Penjamin Mutu Universitas') {
+            $queryKur->where('fakultas.id_universitas', $user->id_universitasUser);
+        } else if ($userOtoritas === 'Penjamin Mutu Fakultas') {
+            $queryKur->where('fakultas.id', $user->id_fakultasUser);
+        } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+            $queryKur->where('prodi.id', $user->id_prodiUser);
+        }
+        $kurikulums = $queryKur->get();
+
+        return view('penjamin-mutu.mk.pemenuhan_cpl', compact('cpls', 'maxSemester', 'allMks', 'mksBySemester', 'kurikulums'));
+    }
+
+    public function updateMatrixPemenuhanCPL(Request $request)
+    {
+        $user = auth()->user();
+        $userOtoritas = $user->otoritas->otoritas ?? '';
+
+        $queryCpl = CPL::query()
+            ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('cpls.*');
+
+        if ($userOtoritas === 'Penjamin Mutu Universitas') {
+            $queryCpl->where('fakultas.id_universitas', $user->id_universitasUser);
+        } else if ($userOtoritas === 'Penjamin Mutu Fakultas') {
+            $queryCpl->where('fakultas.id', $user->id_fakultasUser);
+        } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $queryCpl->where('prodi.id', $user->id_prodiUser);
+        }
+
+        if ($request->filled('kurikulum_id')) {
+            $queryCpl->where('cpls.id_kurikulum', $request->kurikulum_id);
+        }
+
+        $cpls = $queryCpl->get();
+        $matrix = $request->input('matrix', []); // Key: cpl_id, Value: array of mk_kodes
+
+        DB::transaction(function () use ($cpls, $matrix) {
+            foreach ($cpls as $cpl) {
+                $selectedMkKodes = isset($matrix[$cpl->id]) ? (array) $matrix[$cpl->id] : [];
+                $syncData = [];
+                foreach ($selectedMkKodes as $mkKode) {
+                    $syncData[$mkKode] = ['id_prodi' => $cpl->id_prodi];
+                }
+                $cpl->mk()->sync($syncData);
+            }
+        });
+
+        return redirect()->back()->with('success', 'Pemenuhan CPL berhasil diperbarui.');
     }
 }

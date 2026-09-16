@@ -6,19 +6,6 @@
 @extends('dosen.template')
 @section('content')
 
-    @if (session()->has('failed') || session()->has('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('failed') ?? session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-    @if (session()->has('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     <h3 class="fw-bold text-center mb-4">Import Nilai Penilaian</h3>
 
     {{-- ── SATU CARD IMPORT GABUNGAN ─────────────────────────── --}}
@@ -71,21 +58,37 @@
         </div>
         <div class="card-body p-4">
 
-            <form action="{{ route($currentPrefix . 'filter') }}" method="GET" class="mb-3">
+            <form id="dosenFilterForm" action="{{ route('dosen.filter') }}" method="GET" class="mb-3">
                 @csrf
-                <div class="row g-2 align-items-end">
-                    <div class="col-sm-4 col-md-3">
-                        <label class="form-label fw-semibold small mb-1">Cari Nama</label>
-                        <input name="course" type="text" class="form-control form-control-sm"
-                            value="{{ request('course') }}" placeholder="Nama mahasiswa...">
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-primary btn-sm px-3">
-                            <i class="ti ti-search me-1"></i> Cari
-                        </button>
-                        @if (request('course'))
-                            <a href="{{ url()->current() }}" class="btn btn-secondary btn-sm px-3">Reset</a>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-items-end flex-wrap gap-2">
+                        @if (isset($mks) && $mks->isNotEmpty())
+                            <div style="max-width: 380px; width: 100%;">
+                                <label class="form-label fw-semibold small mb-1">Mata Kuliah</label>
+                                <select name="mk_kode" class="form-select form-select-sm filter-auto-submit" style="height: 38px;">
+                                    <option value="">-- Semua Mata Kuliah --</option>
+                                    @foreach ($mks as $mk)
+                                        <option value="{{ $mk->kode }}" {{ request('mk_kode') == $mk->kode ? 'selected' : '' }}>
+                                            {{ $mk->nama }} ({{ $mk->kode }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         @endif
+                        @if (request('course') || request('mk_kode'))
+                            <div>
+                                <a href="{{ route('dosen.import-mutu') }}" class="btn btn-secondary btn-sm px-4 fw-semibold d-flex align-items-center justify-content-center" style="height: 38px;">
+                                    <i class="ti ti-refresh me-1"></i> Reset
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="d-flex align-items-end gap-2">
+                        <div style="max-width: 350px; width: 100%;">
+                            <label class="form-label fw-semibold small mb-1">Cari Mahasiswa</label>
+                            <input name="course" type="text" class="form-control form-control-sm instant-search" style="height: 38px;"
+                                value="{{ request('course') }}" placeholder="Ketik nama atau NPM..." autocomplete="off">
+                        </div>
                     </div>
                 </div>
             </form>
@@ -94,7 +97,6 @@
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>Prodi</th>
                             <th>Angkatan</th>
                             <th>Nama</th>
                             <th>NPM</th>
@@ -107,14 +109,13 @@
                     <tbody>
                         @if ($mutus->isEmpty())
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
+                                <td colspan="7" class="text-center py-5 text-muted">
                                     <i class="ti ti-folder me-2"></i>Belum ada data nilai yang diimport.
                                 </td>
                             </tr>
                         @else
                             @foreach ($mutus as $item)
                                 <tr>
-                                    <td class="small">{{ $item->nama_prodi }}</td>
                                     <td class="small">{{ $item->angkatan }}</td>
                                     <td class="small fw-semibold">{{ $item->nama_mhs }}</td>
                                     <td class="small">{{ $item->npm }}</td>
@@ -146,4 +147,100 @@
         </div>
     </div>
 
+    {{-- Modal Konfirmasi NPM Unregistered --}}
+    @if (session('warning_unregistered'))
+        @php
+            $unregisteredList = session('unregistered_mhs', []);
+            $tempParsedRows = session('temp_parsed_rows', []);
+            $tempHeaders = session('temp_headers', []);
+        @endphp
+        <div class="modal fade show" id="unregisteredModal" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);" aria-modal="true" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 580px;">
+                <div class="modal-content border-0 shadow">
+                    <form action="{{ route('dosen.importmutu') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="parsed_rows_data" value="{{ json_encode($tempParsedRows) }}">
+                        <input type="hidden" name="headers_data" value="{{ json_encode($tempHeaders) }}">
+                        <div class="modal-header py-2 px-3 bg-warning text-dark">
+                            <h5 class="modal-title fs-6 fw-bold">
+                                <i class="ti ti-alert-circle me-1"></i> Perhatian: {{ count($unregisteredList) }} NPM Belum Terdaftar
+                            </h5>
+                        </div>
+                        <div class="modal-body p-3" style="max-height: 50vh; overflow-y: auto;">
+                            <p class="small mb-2">Terdapat beberapa NPM dalam file Excel yang belum terdaftar di basis data mahasiswa:</p>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Baris</th>
+                                            <th>Angkatan</th>
+                                            <th>NPM</th>
+                                            <th>Nama</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($unregisteredList as $unreg)
+                                            <tr>
+                                                <td>Baris {{ $unreg['line'] }}</td>
+                                                <td>{{ $unreg['angkatan'] ?: '-' }}</td>
+                                                <td><code>{{ $unreg['npm'] }}</code></td>
+                                                <td>{{ $unreg['nama'] }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="alert alert-info py-2 mt-2 mb-0 small">
+                                Silakan pilih tindakan yang akan diambil untuk data mahasiswa di atas:
+                            </div>
+                        </div>
+                        <div class="modal-footer py-2 px-3 bg-light justify-content-between">
+                            <button type="submit" name="action_option" value="skip" class="btn btn-outline-secondary btn-sm">
+                                <i class="ti ti-player-skip-forward me-1"></i> Lanjutkan & Skip Baris Ini
+                            </button>
+                            <button type="submit" name="action_option" value="register" class="btn btn-primary btn-sm">
+                                <i class="ti ti-user-plus me-1"></i> Tambahkan Data Mahasiswa Otomatis
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.getElementById('dosenFilterForm');
+                if (!form) return;
+
+                // Auto submit on dropdown select change
+                const dropdowns = form.querySelectorAll('.filter-auto-submit');
+                dropdowns.forEach(select => {
+                    select.addEventListener('change', function() {
+                        form.submit();
+                    });
+                });
+
+                // Instant typing search (debounce 400ms)
+                const searchInput = form.querySelector('.instant-search');
+                if (searchInput) {
+                    let timer = null;
+                    searchInput.addEventListener('input', function() {
+                        clearTimeout(timer);
+                        timer = setTimeout(function() {
+                            form.submit();
+                        }, 400);
+                    });
+
+                    // Keep cursor at end of input
+                    const val = searchInput.value;
+                    if (val) {
+                        searchInput.focus();
+                        searchInput.setSelectionRange(val.length, val.length);
+                    }
+                }
+            });
+        </script>
+    @endpush
 @endsection

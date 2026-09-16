@@ -47,6 +47,15 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    protected static function booted()
+    {
+        static::saved(function ($user) {
+            if ($user->id_prodiUser && !$user->prodis()->where('prodi_id', $user->id_prodiUser)->exists()) {
+                $user->prodis()->attach($user->id_prodiUser, ['active' => true]);
+            }
+        });
+    }
+
     public function otoritas()
     {
         return $this->hasMany(UserOtoritas::class, 'user_id');
@@ -57,6 +66,11 @@ class User extends Authenticatable
         $active = $this->otoritas()->where('active', true)->first();
         if ($active) {
             return $active;
+        }
+
+        $first = $this->otoritas()->first();
+        if ($first) {
+            return $first;
         }
 
         $rawOtoritas = $this->getRawOriginal('otoritas');
@@ -76,6 +90,35 @@ class User extends Authenticatable
     public function hasOtoritas($otoritas)
     {
         return $this->otoritas()->where('otoritas', $otoritas)->where('active', true)->exists();
+    }
+
+    /**
+     * Tampilkan string otoritas user berdasarkan konteks prodi yang sedang dilihat.
+     * Jika prodi konteks bukan prodi utama user (user ditambahkan sebagai Dosen Pengampu),
+     * maka otoritas yang ditampilkan HANYA 'Dosen'.
+     * Jika di prodi utama, tampilkan seluruh otoritas lengkapnya.
+     *
+     * @param int|null $currentProdiId
+     * @return string
+     */
+    public function getOtoritasDisplayForProdi(?int $currentProdiId = null): string
+    {
+        $primaryProdiId = $this->primary_prodi_id ?? $this->id_prodiUser;
+
+        // Jika prodi konteks berbeda dari prodi utama user -> bertindak sebagai Dosen Pengampu
+        if ($currentProdiId && $primaryProdiId && (int)$currentProdiId !== (int)$primaryProdiId) {
+            return 'Dosen';
+        }
+
+        // Tampilkan seluruh otoritas di prodi utama
+        $allOtoritas = $this->otoritas()->pluck('otoritas')->unique()->values();
+
+        if ($allOtoritas->isEmpty()) {
+            $raw = $this->getRawOriginal('otoritas');
+            return $raw ?: 'Dosen';
+        }
+
+        return $allOtoritas->implode(', ');
     }
 
     public function prodis()

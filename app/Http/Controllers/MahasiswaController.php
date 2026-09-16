@@ -7,6 +7,9 @@ use App\Models\Mahasiswa;
 use App\Traits\UniversityFilterTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use App\Imports\MahasiswaImport;
+use App\Exports\MahasiswaTemplateExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MahasiswaController extends Controller
 {
@@ -69,8 +72,7 @@ class MahasiswaController extends Controller
      */
     public function create()
     {
-        $data = $this->getTemplate();
-        return view('mahasiswa.create', $data);
+        return redirect()->back();
     }
 
     /**
@@ -83,8 +85,6 @@ class MahasiswaController extends Controller
     {
         $messages = [
             'npm.required' => 'NPM wajib diisi',
-            'npm.numeric' => 'NPM harus berupa angka',
-            'npm.min' => 'NPM minimal 9 karakter',
             'npm.unique' => 'NPM sudah terdaftar',
 
             'nama.required' => 'Nama lengkap wajib diisi',
@@ -92,27 +92,33 @@ class MahasiswaController extends Controller
             'nama.max' => 'Nama lengkap maksimal 255 karakter',
 
             'angkatan.required' => 'Angkatan wajib diisi',
-            'angkatan.numeric' => 'Angkatan harus berupa angka',
-            'angkatan.min' => 'Angkatan minimal 4 karakter',
         ];
-        // dd($request->all());
 
         $request->validate([
-            'npm' => ['required', 'numeric', 'min:9'],
+            'npm' => ['required', 'unique:mahasiswa,NPM'],
             'nama' => ['required', 'string', 'max:255'],
-            'angkatan' => ['required', 'numeric', 'min:4'],
+            'angkatan' => ['required'],
         ], $messages);
 
         try {
+            $user = auth()->user();
+            $idProdi = $user->id_prodiUser;
+            if (!$idProdi && $user->prodis()->exists()) {
+                $idProdi = $user->prodis()->first()->id;
+            }
+            if (!$idProdi) {
+                $idProdi = Prodi::first()?->id;
+            }
+
             Mahasiswa::create([
                 'NPM' => $request->npm,
                 'Nama' => $request->nama,
                 'angkatan' => $request->angkatan,
-                'id_prodi' => auth()->user()->id_prodiUser,
+                'id_prodi' => $idProdi,
             ]);
-            return redirect($this->getRedirectRoute())->with('success', 'Mahasiswa berhasil ditambahkan');
+            return redirect()->back()->with('success', 'Mahasiswa berhasil ditambahkan');
         } catch (\Exception $e) {
-            return redirect()->back()->route('dosen.mahasiswa.create')->with('error', 'Mahasiswa gagal ditambahkan');
+            return redirect()->back()->with('error', 'Mahasiswa gagal ditambahkan: ' . $e->getMessage());
         }
     }
 
@@ -163,9 +169,9 @@ class MahasiswaController extends Controller
         ];
 
         $request->validate([
-            'npm' => ['required', 'numeric', 'min:9'],
+            'npm' => ['required'],
             'nama' => ['required', 'string', 'max:255'],
-            'angkatan' => ['required', 'numeric'],
+            'angkatan' => ['required'],
         ], $messages);
 
         try {
@@ -175,7 +181,7 @@ class MahasiswaController extends Controller
                 'Nama' => $request->nama,
                 'angkatan' => $request->angkatan,
             ]);
-            return redirect($this->getRedirectRoute())->with('success', 'Data mahasiswa berhasil diperbarui');
+            return redirect()->back()->with('success', 'Data mahasiswa berhasil diperbarui');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memperbarui data mahasiswa: ' . $e->getMessage());
         }
@@ -192,7 +198,7 @@ class MahasiswaController extends Controller
         try {
             $mahasiswa = Mahasiswa::findOrFail($id);
             $mahasiswa->delete();
-            return redirect($this->getRedirectRoute())->with('success', 'Mahasiswa berhasil dihapus');
+            return redirect()->back()->with('success', 'Mahasiswa berhasil dihapus');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menghapus mahasiswa: ' . $e->getMessage());
         }
@@ -200,14 +206,7 @@ class MahasiswaController extends Controller
 
     private function getRedirectRoute()
     {
-        $userOtoritas = auth()->user()->otoritas->otoritas;
-
-        $routes = [
-            'Dosen' => 'dosen.mahasiswa.index',
-            'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.mahasiswa.index',
-        ];
-
-        return route($routes[$userOtoritas] ?? 'mahasiswa.index');
+        return redirect()->back()->getTargetUrl();
     }
 
     private function getTemplate()
@@ -231,5 +230,34 @@ class MahasiswaController extends Controller
             'template' => $templates[$userOtoritas] ?? 'mahasiswa.index',
             'otoritas' => array_keys($templates),
         ];
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ], [
+            'excel_file.required' => 'File Excel wajib diunggah.',
+            'excel_file.mimes' => 'Format file harus berupa .xlsx, .xls, atau .csv.',
+            'excel_file.max' => 'Ukuran file maksimal 10 MB.',
+        ]);
+
+        try {
+            $user = auth()->user();
+            $prodiId = $user->id_prodiUser;
+            if (!$prodiId && $user->prodis()->exists()) {
+                $prodiId = $user->prodis()->first()->id;
+            }
+
+            Excel::import(new MahasiswaImport($prodiId), $request->file('excel_file'));
+            return redirect()->back()->with('success', 'Data Mahasiswa berhasil diimport dari Excel!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengimport data: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new MahasiswaTemplateExport, 'template_import_mahasiswa.xlsx');
     }
 }

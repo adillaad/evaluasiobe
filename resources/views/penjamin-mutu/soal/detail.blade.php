@@ -67,24 +67,8 @@
                 <div class="card-header bg-light d-flex align-items-center justify-content-between flex-wrap gap-2"
                     style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="ti-layers-alt text-primary"></i>
-                        <strong>{{ $metode['nama_metode'] }}</strong>
-                        @if ($metode['semua_lengkap'])
-                            <span class="badge bg-success ms-1"><i class="ti-check me-1"></i>Lengkap</span>
-                        @else
-                            <span class="badge bg-warning text-dark ms-1"><i class="ti-alert me-1"></i>Belum Lengkap</span>
-                        @endif
-                    </div>
-                    <div style="min-width:200px">
-                        <div class="d-flex justify-content-between small fw-semibold mb-1">
-                            <span>Bobot Terisi</span>
-                            <span>{{ $metode['total_bobot_terisi'] }} / {{ $metode['total_bobot_metode'] }}
-                                ({{ $pct }}%)
-                            </span>
-                        </div>
-                        <div class="progress" style="height:8px">
-                            <div class="progress-bar {{ $barClass }}" style="width:{{ min($pct, 100) }}%"></div>
-                        </div>
+                        <i class="ti-layers-alt text-primary fs-5"></i>
+                        <strong class="fs-6">{{ $metode['nama_metode'] }}</strong>
                     </div>
                     <i class="ti-angle-down text-muted"></i>
                 </div>
@@ -97,15 +81,9 @@
                             <div class="d-flex align-items-center flex-wrap gap-2">
                                 <span class="small fw-bold text-muted text-uppercase">Status CPMK:</span>
                                 @foreach ($metode['cpmk_kelengkapan'] as $ck)
-                                    @if ($ck['lengkap'])
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success">
-                                            <i class="ti-check me-1"></i>{{ $ck['kode'] }} ({{ $ck['total_pct'] }}%)
-                                        </span>
-                                    @else
-                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning">
-                                            <i class="ti-alert me-1"></i>{{ $ck['kode'] }} ({{ $ck['total_pct'] }}%)
-                                        </span>
-                                    @endif
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">
+                                        <i class="ti-bookmark me-1"></i>{{ $ck['kode'] }}
+                                    </span>
                                 @endforeach
                                 @if ($metode['cpmk_belum']->count() > 0)
                                     <span class="small text-danger fw-semibold ms-2">
@@ -132,8 +110,7 @@
                                                 <th>Soal</th>
                                                 <th>CPL</th>
                                                 <th>CPMK</th>
-                                                <th class="text-center">Bobot</th>
-                                                <th class="text-center">% CPMK</th>
+                                                <th class="text-center">Bobot CPMK</th>
                                                 <th class="text-center">Status</th>
                                             </tr>
                                         </thead>
@@ -170,9 +147,9 @@
                                                             {{ $soal->kode_cpmk ?? '-' }}
                                                         </span>
                                                     </td>
-                                                    <td class="text-center fw-bold text-primary">{{ $soal->bobotSoal }}
+                                                    <td class="text-center fw-semibold text-dark">
+                                                        {{ $soal->bobot_cpmk ?? 0 }}%
                                                     </td>
-                                                    <td class="text-center">{{ $soal->persentase_cpmk }}%</td>
                                                     <td class="text-center">
                                                         @php
                                                             $bc = match ($soal->status) {
@@ -187,16 +164,6 @@
                                                 </tr>
                                             @endforeach
                                         </tbody>
-                                        <tfoot class="table-light">
-                                            <tr>
-                                                <td colspan="4" class="text-end fw-bold text-muted small">Total Bobot
-                                                    Soal:</td>
-                                                <td class="text-center fw-bold text-primary">
-                                                    {{ $metode['soals']->sum('bobotSoal') }}
-                                                </td>
-                                                <td colspan="2"></td>
-                                            </tr>
-                                        </tfoot>
                                     </table>
                                 </div>
 
@@ -223,14 +190,6 @@
                                                         </span>
                                                         <span class="badge bg-primary bg-opacity-10 text-primary">
                                                             CPMK: {{ $soal->kode_cpmk ?? '-' }}
-                                                        </span>
-                                                        <span
-                                                            class="badge bg-info bg-opacity-10 text-info border border-info">
-                                                            Bobot: {{ $soal->bobotSoal }}
-                                                        </span>
-                                                        <span
-                                                            class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary">
-                                                            % CPMK: {{ $soal->persentase_cpmk }}%
                                                         </span>
                                                         @php
                                                             $bc = match ($soal->status) {
@@ -291,8 +250,7 @@
                                                 <th>Instrumen</th>
                                                 <th>CPL</th>
                                                 <th>CPMK</th>
-                                                <th class="text-center">Bobot TS</th>
-                                                <th class="text-center">% CPMK</th>
+                                                <th class="text-center">Bobot CPMK</th>
                                                 <th class="text-center">Status</th>
                                             </tr>
                                         </thead>
@@ -322,8 +280,9 @@
                                                             {{ $ts->kode_cpmk ?? '-' }}
                                                         </span>
                                                     </td>
-                                                    <td class="text-center fw-bold text-primary">{{ $ts->bobotSoal }}</td>
-                                                    <td class="text-center">{{ $ts->persentase_cpmk }}%</td>
+                                                    <td class="text-center fw-semibold text-dark">
+                                                        {{ $ts->bobot_cpmk ?? 0 }}%
+                                                    </td>
                                                     <td class="text-center">
                                                         @php
                                                             $bc = match ($ts->status) {
@@ -339,16 +298,6 @@
                                                 </tr>
                                             @endforeach
                                         </tbody>
-                                        <tfoot class="table-light">
-                                            <tr>
-                                                <td colspan="4" class="text-end fw-bold text-muted small">Total Bobot
-                                                    TS:</td>
-                                                <td class="text-center fw-bold text-primary">
-                                                    {{ $metode['tanpa_soals']->sum('bobotSoal') }}
-                                                </td>
-                                                <td colspan="2"></td>
-                                            </tr>
-                                        </tfoot>
                                     </table>
                                 </div>
 
@@ -414,29 +363,6 @@
 
                             </div>
                         @endif
-
-                        {{-- Ringkasan bobot --}}
-                        <div class="px-3 py-3">
-                            <div class="d-flex gap-4 flex-wrap p-3 rounded border bg-light small">
-                                <span>
-                                    <strong>Total Bobot Metode:</strong>
-                                    <span class="text-primary fw-bold ms-1">{{ $metode['total_bobot_metode'] }}</span>
-                                </span>
-                                <span>
-                                    <strong>Terisi:</strong>
-                                    <span
-                                        class="fw-bold ms-1 {{ $metode['bobot_lengkap'] ? 'text-success' : 'text-warning' }}">
-                                        {{ $metode['total_bobot_terisi'] }} ({{ $metode['persen_kelengkapan'] }}%)
-                                    </span>
-                                </span>
-                                <span>
-                                    <strong>Sisa:</strong>
-                                    <span class="text-danger fw-bold ms-1">
-                                        {{ round($metode['total_bobot_metode'] - $metode['total_bobot_terisi'], 2) }}
-                                    </span>
-                                </span>
-                            </div>
-                        </div>
 
                     </div>
                 </div>

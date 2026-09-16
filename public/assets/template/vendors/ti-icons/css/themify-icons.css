@@ -38,8 +38,12 @@
 .ti-unlink:before {
 	content: "\e604";
 }
-.ti-trash:before {
-	content: "\e605";
+.ti-trash, i.ti-trash, span.ti-trash, [class*="ti-trash"] {
+	font-family: 'Material Design Icons' !important;
+}
+.ti-trash:before, i.ti-trash:before, span.ti-trash:before, [class*="ti-trash"]:before {
+	font-family: 'Material Design Icons' !important;
+	content: "\f1c0" !important;
 }
 .ti-thought:before {
 	content: "\e606";

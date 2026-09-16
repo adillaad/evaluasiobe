@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class Mutu extends Model
 {
@@ -31,11 +32,57 @@ class Mutu extends Model
         'BobotSoal',
         'Cpl',
         'Cpmk',
+        'sub_cpmk_id',
+        'sumber',
+        'tahun_ajaran_id',
+        'konversi_metode_id',
         'Nilai',
         'nilaiSoal',
     ];
 
     protected $guarded = ['id'];
+
+    protected static function booted()
+    {
+        static::saved(function ($mutu) {
+            static::autoSyncVisualisasi($mutu);
+        });
+
+        static::deleted(function ($mutu) {
+            static::autoSyncVisualisasi($mutu);
+        });
+    }
+
+    public static function autoSyncVisualisasi($mutu)
+    {
+        try {
+            $npm = $mutu->npm ?? $mutu->NPM ?? null;
+            $prodiId = $mutu->id_prodi ?? null;
+            $angkatan = $mutu->angkatan ?? null;
+            $course = $mutu->Course ?? null;
+
+            $syncService = app(\App\Services\EvaluasiSyncService::class);
+
+            if (!empty($npm)) {
+                $syncService->syncMahasiswa($npm);
+            }
+            if (!empty($prodiId) && !empty($angkatan)) {
+                $syncService->syncAngkatan($prodiId, $angkatan);
+            }
+            if (!empty($course) && !empty($angkatan) && !empty($prodiId)) {
+                $syncService->syncMataKuliah($course, $angkatan, $prodiId);
+            }
+            if (!empty($prodiId)) {
+                $syncService->syncProdi($prodiId);
+                $prodiObj = Prodi::find($prodiId);
+                if ($prodiObj && !empty($prodiObj->id_fakultas)) {
+                    $syncService->syncFakultas($prodiObj->id_fakultas);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Auto sync visualisasi error: ' . $e->getMessage());
+        }
+    }
 
     public function prodi()
     {
@@ -55,6 +102,21 @@ class Mutu extends Model
     public function cpmk()
     {
         return $this->belongsTo(CPMK::class, 'Cpmk', 'id');
+    }
+
+    public function subCpmk()
+    {
+        return $this->belongsTo(SubCpmk::class, 'sub_cpmk_id');
+    }
+
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(TahunAjaran::class, 'tahun_ajaran_id');
+    }
+
+    public function konversiMetode()
+    {
+        return $this->belongsTo(KonversiMetode::class, 'konversi_metode_id');
     }
 
     protected function resolvedMahasiswa(): ?Mahasiswa

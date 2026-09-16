@@ -169,7 +169,7 @@ class UserController extends Controller
 
         event(new Registered($user));
 
-        return redirect()->route($this->getRouteByAuthority())->with('success', 'User successfully added!!');
+        return redirect()->back()->with('success', 'User berhasil ditambahkan!');
     }
 
     public function list(Request $request)
@@ -190,6 +190,8 @@ class UserController extends Controller
             ->whereNotNull(['name', 'email', 'id_universitasUser'])
             ->where('users.id', '!=', auth()->id())
             ->distinct();
+
+        $availableDosen = collect();
 
         // Untuk Admin Universitas
         if (auth()->user()->otoritas->otoritas == 'Penjamin Mutu Universitas') {
@@ -215,13 +217,35 @@ class UserController extends Controller
             })
                 ->where('id_fakultasUser', auth()->user()->id_fakultasUser);
         } elseif (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $kaprodiProdiId = auth()->user()->id_prodiUser;
+
             $query->whereHas('otoritas', function ($q) {
                 $q->whereIn('otoritas', [
                     'Kepala Program Studi',
                     'Dosen'
                 ]);
             })
-                ->where('id_prodiUser', auth()->user()->id_prodiUser);
+                ->where(function ($q) use ($kaprodiProdiId) {
+                    $q->where('id_prodiUser', $kaprodiProdiId)
+                      ->orWhereHas('prodis', function ($p) use ($kaprodiProdiId) {
+                          $p->where('prodi.id', $kaprodiProdiId);
+                      });
+                });
+
+            // Ambil daftar seluruh dosen yang ada di universitas tetapi belum masuk ke prodi Kaprodi
+            $availableDosen = User::whereHas('otoritas', function ($q) {
+                    $q->whereIn('otoritas', ['Dosen', 'Kepala Program Studi']);
+                })
+                ->where('id_universitasUser', auth()->user()->id_universitasUser)
+                ->whereDoesntHave('prodis', function ($p) use ($kaprodiProdiId) {
+                    $p->where('prodi.id', $kaprodiProdiId);
+                })
+                ->where(function($q) use ($kaprodiProdiId) {
+                    $q->where('id_prodiUser', '!=', $kaprodiProdiId)
+                      ->orWhereNull('id_prodiUser');
+                })
+                ->orderBy('name', 'asc')
+                ->get();
         }
 
 
@@ -233,9 +257,61 @@ class UserController extends Controller
         $filterData = $this->getFilterData($request);
 
         return view('penjamin-mutu.user.list', array_merge(
-            ['users' => $users],
+            ['users' => $users, 'availableDosen' => $availableDosen],
             $filterData
         ));
+    }
+
+    public function assignDosen(Request $request)
+    {
+        $user = auth()->user();
+        $userOtoritas = $user->otoritas->otoritas;
+
+        if (!in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Admin', 'Admin Universitas'])) {
+            return redirect()->back()->with('error', 'Akses ditolak.');
+        }
+
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $kaprodiProdiId = $user->id_prodiUser;
+        if (!$kaprodiProdiId) {
+            return redirect()->back()->with('error', 'Prodi pengampu tidak terdefinisi.');
+        }
+
+        $targetUser = User::findOrFail($request->user_id);
+
+        // Ensure primary_prodi_id is preserved for targetUser
+        if (!$targetUser->primary_prodi_id && $targetUser->id_prodiUser) {
+            $targetUser->update(['primary_prodi_id' => $targetUser->id_prodiUser]);
+        }
+
+        // Pastikan target user memiliki rekaman otoritas 'Dosen'
+        if (!$targetUser->otoritas()->where('otoritas', 'Dosen')->exists()) {
+            UserOtoritas::create([
+                'user_id' => $targetUser->id,
+                'otoritas' => 'Dosen',
+                'nama_otoritas' => 'Dosen',
+                'active' => false, // Otoritas Dosen akan aktif saat mengakses prodi pengampu
+            ]);
+        }
+
+        // Simpan relasi dosen-prodi (tanpa duplikasi)
+        if (!$targetUser->prodis()->where('prodi_id', $kaprodiProdiId)->exists()) {
+            $isFirst = ($targetUser->prodis()->count() === 0);
+            $targetUser->prodis()->attach($kaprodiProdiId, ['active' => $isFirst]);
+
+            if ($isFirst || !$targetUser->id_prodiUser) {
+                $prodi = Prodi::find($kaprodiProdiId);
+                $targetUser->update([
+                    'id_prodiUser' => $kaprodiProdiId,
+                    'id_fakultasUser' => $prodi ? $prodi->id_fakultas : $targetUser->id_fakultasUser,
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Dosen ' . $targetUser->name . ' berhasil ditambahkan ke prodi pengampu!');
     }
 
     public function reset($id)
@@ -251,7 +327,36 @@ class UserController extends Controller
     public function delete($id)
     {
         $ids = Crypt::decrypt($id);
-        User::where('id', $ids)->delete();
+        $user = User::findOrFail($ids);
+        $userOtoritas = auth()->user()->otoritas->otoritas;
+
+        if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
+            $kaprodiProdiId = auth()->user()->id_prodiUser;
+
+            // Lepas relasi prodi_user untuk prodi Kaprodi ini
+            $user->prodis()->detach($kaprodiProdiId);
+
+            // Jika id_prodiUser aktif milik user adalah prodi ini, alihkan ke prodi lain atau null
+            if ($user->id_prodiUser == $kaprodiProdiId) {
+                $nextProdi = $user->prodis()->first();
+                if ($nextProdi) {
+                    $user->update([
+                        'id_prodiUser' => $nextProdi->id,
+                        'id_fakultasUser' => $nextProdi->id_fakultas,
+                    ]);
+                    DB::table('prodi_user')
+                        ->where('user_id', $user->id)
+                        ->where('prodi_id', $nextProdi->id)
+                        ->update(['active' => true]);
+                } else {
+                    $user->update(['id_prodiUser' => null]);
+                }
+            }
+
+            return redirect()->route($this->getRouteByAuthority())->with('success', 'Dosen ' . $user->name . ' berhasil dihapus dari daftar dosen pengampu prodi ini!');
+        }
+
+        $user->delete();
 
         return redirect()->route($this->getRouteByAuthority())->with('success', 'User successfully deleted!');
     }
@@ -402,5 +507,34 @@ class UserController extends Controller
             ->select('id', 'nama')
             ->get();
         return response()->json($prodi);
+    }
+
+    public function importDosen(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ], [
+            'excel_file.required' => 'File Excel wajib diunggah.',
+            'excel_file.mimes' => 'Format file harus berupa .xlsx, .xls, atau .csv.',
+            'excel_file.max' => 'Ukuran file maksimal 10 MB.',
+        ]);
+
+        try {
+            $user = auth()->user();
+            $prodiId = $user->id_prodiUser;
+            if (!$prodiId && $user->prodis()->exists()) {
+                $prodiId = $user->prodis()->first()->id;
+            }
+
+            Excel::import(new \App\Imports\DosenImport($prodiId), $request->file('excel_file'));
+            return redirect()->back()->with('success', 'Data Dosen berhasil diimport dari Excel dengan password default Unilajaya!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengimport data Dosen: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplateDosen()
+    {
+        return Excel::download(new \App\Exports\DosenTemplateExport, 'template_import_dosen.xlsx');
     }
 }

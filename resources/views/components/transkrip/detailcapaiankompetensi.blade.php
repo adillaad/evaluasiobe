@@ -1,16 +1,8 @@
 <div id="competencySection" style="display:none;">
-    <h3 class="section-title">Detail Capaian Kompetensi</h3>
-    <div class="competency-container">
-        <div id="cplContainer">
-            <div class="spinner-container">
-                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="coursesContainer" style="margin-top: 1rem;">
-        <div class="spinner-container">
+    <div id="coursesContainer" class="d-flex flex-column gap-3">
+        <div class="text-center py-4 text-muted">
             <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            <span class="ms-2">Memuat rincian kompetensi per mata kuliah...</span>
         </div>
     </div>
 </div>

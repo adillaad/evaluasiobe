@@ -156,16 +156,19 @@
                                                     <td>{{ $kurikulum->prodi->nama }}</td>
                                                     <td>{{ $kurikulum->prodi->fakultas->nama }}</td>
                                                 @endif
-
                                                 @if ($userOtoritas != 'Admin Universitas')
                                                     <td>{{ $kurikulum->prodi->fakultas->universitas->nama }}</td>
                                                 @endif
                                                 <td>
-                                                    <button type="submit" class="btn btn-success btn-icon-text p-2" style="margin-right:7px">
-                                                        Confirm
-                                                    </button>
-                                                    <a href="{{ route($currentPrefix . 'cancel-edit') }}"
-                                                        class="btn btn-secondary btn-icon-text p-2">Cancel</a>
+                                                    <div class="d-flex align-items-center gap-1">
+                                                        <button type="submit" class="btn btn-success btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Simpan">
+                                                            <i class="ti-check"></i>
+                                                        </button>
+                                                        <a href="{{ route($currentPrefix . 'cancel-edit') }}"
+                                                            class="btn btn-secondary btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Batal">
+                                                            <i class="ti-close"></i>
+                                                        </a>
+                                                    </div>
                                                 </td>
                                             </form>
                                         @else
@@ -177,25 +180,21 @@
                                             @endif
                                             @if ($userOtoritas != 'Admin')
                                                 <td>
-                                                    <div class="d-flex">
-                                                        {{-- DIUBAH: Kirim ID yang dienkripsi --}}
+                                                    <div class="d-flex align-items-center gap-1">
                                                         <a href="{{ route($currentPrefix . 'enter-edit-mode', $kurikulum->id) }}"
-                                                            class="btn btn-warning btn-icon-text p-2" style="margin-right:7px"
-                                                            {{ $editMode ? 'disabled' : '' }}>
-                                                            Edit
-                                                            <i class="ti-pencil btn-icon-append"></i>
+                                                            class="btn btn-warning btn-icons {{ $editMode ? 'disabled' : '' }}"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                                            <i class="ti-pencil"></i>
                                                         </a>
-                                                        <form
-                                                            {{-- DIUBAH: Kirim ID yang dienkripsi --}}
-                                                            action="{{ route($currentPrefix . 'delete-kurikulum', $kurikulum->id) }}"
-                                                            method="POST">
+                                                        <form action="{{ route($currentPrefix . 'delete-kurikulum', $kurikulum->id) }}"
+                                                            method="POST" class="d-inline m-0 p-0">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="btn btn-danger btn-icon-text p-2"
+                                                            <button type="submit" class="btn btn-danger btn-icons"
                                                                 {{ $editMode ? 'disabled' : '' }}
+                                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
                                                                 onclick="return confirm('Anda yakin ingin menghapus kurikulum tahun {{ $kurikulum->tahun }}?')">
-                                                                Delete
-                                                                <i class="ti-trash btn-icon-append"></i>
+                                                                <i class="ti-trash"></i>
                                                             </button>
                                                         </form>
                                                     </div>

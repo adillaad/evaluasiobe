@@ -8,14 +8,16 @@
         <title>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap">
 
         <!-- Styles -->
         <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 
         <!-- Scripts -->
         <script src="{{ asset('js/app.js') }}" defer></script>
-        <link rel="icon" type="image/png" href="{{ asset('assets/img/logo_unila.png') }}?v={{ time() }}">
+        <link rel="icon" type="image/png" href="{{ asset('assets/img/eval-obe-logo.png') }}?v={{ time() }}">
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">

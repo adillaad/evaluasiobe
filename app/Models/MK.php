@@ -28,7 +28,7 @@ class MK extends Model
 
     public function cpmk()
     {
-        return $this->belongsToMany(CPMK::class, 'cpmk_mk', 'mk_kode', 'cpmk_id');
+        return $this->belongsToMany(CPMK::class, 'cpmk_mk', 'mk_kode', 'cpmk_id')->withPivot('bobot');
     }
 
     public function prodi()
@@ -53,7 +53,7 @@ class MK extends Model
     }
 
     public function cpmks(){
-        return $this->belongsToMany(CPMK::class,'cpmk_mk','mk_kode','cpmk_id');
+        return $this->belongsToMany(CPMK::class,'cpmk_mk','mk_kode','cpmk_id')->withPivot('bobot');
     }
 
     public function sub_cpmk(){

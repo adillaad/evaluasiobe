@@ -26,11 +26,13 @@
                 <!--    :programs="$programs"-->
                 <!--/>-->
                 @if ($userOtoritas == 'Dosen') 
+                    <div class="mb-3">
                         <button type="button" class="btn btn-primary btn-icon-text" data-bs-toggle="modal" data-bs-target="#addRpsModal">
-                            <i class="ti-plus btn-icon-prepend"></i>
-                            Tambah RPS
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>Tambah RPS</span>
                         </button>
-                    @endif
+                    </div>
+                @endif
                 <div class="table-responsive">
                     <table class="table table-hover dataTable">
                         <thead class="bg-light">
@@ -87,49 +89,55 @@
                                     @if(in_array($userOtoritas, ['Wakil Rektor']))
                                         <td>{{ $rps->prodi?->fakultas?->nama ?? '-' }}</td>
                                     @endif
-                                    <td class="py-3">
-                                        <div class="d-flex justify-content-center" style="gap: 5px;">
-                                        {{-- Tombol Cetak --}}
-                                        <a href="{{ route($currentPrefix . 'rps-print', encrypt($rps->id)) }}" 
-                                        class="btn btn-info btn-icon-text p-2" 
-                                        title="Cetak RPS">
-                                            <i class="ti-printer btn-icon"></i>
-                                        </a>
+                                    <td class="py-2">
+                                        <div class="d-flex justify-content-center align-items-center" style="gap: 4px;">
+                                            {{-- Tombol Cetak --}}
+                                            <a href="{{ route($currentPrefix . 'rps-print', encrypt($rps->id)) }}" 
+                                                class="btn btn-icons btn-info" 
+                                                data-bs-toggle="tooltip" data-bs-placement="top" 
+                                                title="Cetak RPS">
+                                                <i class="ti-printer"></i>
+                                            </a>
 
-                                        @if ($userOtoritas == 'Dosen')
-                                            @if($rps->status == 'draft' || $rps->status == 'rejected')
-                                                    <form action="{{ route('dosen.rps-submit-validation', $rps->id) }}" method="post" onsubmit="return confirm('Ajukan RPS ini untuk divalidasi?')">
+                                            @if ($userOtoritas == 'Dosen')
+                                                @if($rps->status == 'draft' || $rps->status == 'rejected')
+                                                    <form action="{{ route('dosen.rps-submit-validation', $rps->id) }}" method="post" class="d-inline m-0 p-0" onsubmit="return confirm('Ajukan RPS ini untuk divalidasi?')">
                                                         @csrf
-                                                        <button type="submit" class="btn btn-primary btn-icon-text p-2" title="Ajukan Validasi">
-                                                            <i class="ti-upload btn-icon"></i>
+                                                        <button type="submit" class="btn btn-icons btn-primary" 
+                                                            data-bs-toggle="tooltip" data-bs-placement="top" 
+                                                            title="Ajukan Validasi">
+                                                            <i class="ti-upload"></i>
                                                         </button>
                                                     </form>
                                                     <a href="{{ route($currentPrefix . 'rps-detail', $rps->id) }}" 
-                                                        class="btn btn-success btn-icon-text p-2" 
+                                                        class="btn btn-icons btn-success" 
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" 
                                                         title="Lihat Detail RPS">
-                                                        <i class="ti-eye btn-icon"></i>
+                                                        <i class="ti-eye"></i>
                                                     </a>
                                                     {{-- Tombol Edit --}}
-                                                    <a href="#" role="button" class="btn btn-warning btn-icon-text p-2" 
+                                                    <a href="#" role="button" class="btn btn-icons btn-warning" 
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#editRpsModal{{ $rps->id }}" 
+                                                        data-bs-placement="top" 
                                                         title="Edit RPS">
-                                                        <i class="ti-pencil btn-icon"></i>
+                                                        <i class="ti-pencil"></i>
                                                     </a>
 
                                                     {{-- Tombol Hapus --}}
-                                                    <form action="/dosen/rps/delete-rps/{{ $rps->id }}" method="post" onsubmit="return confirm('Yakin ingin menghapus RPS no. {{ $rps->nomor }}?')">
+                                                    <form action="/dosen/rps/delete-rps/{{ $rps->id }}" method="post" class="d-inline m-0 p-0" onsubmit="return confirm('Yakin ingin menghapus RPS no. {{ $rps->nomor }}?')">
                                                         @csrf
                                                         @method('delete')
-                                                        <button type="submit" class="btn btn-danger btn-icon-text p-2" title="Hapus RPS">
-                                                            <i class="ti-trash btn-icon"></i>
+                                                        <button type="submit" class="btn btn-icons btn-danger" 
+                                                            data-bs-toggle="tooltip" data-bs-placement="top" 
+                                                            title="Hapus RPS">
+                                                            <i class="ti-trash"></i>
                                                         </button>
                                                     </form>
-                                             @endif
-                                        @endif
-
-                                    </div>
-                                </td>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

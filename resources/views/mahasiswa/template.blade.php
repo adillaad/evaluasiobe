@@ -12,8 +12,5 @@
                 @yield('content')
             </div>
         </div>
-    </div>
-</div>
-
-@include('mahasiswa.layout.footer')
+        @include('mahasiswa.layout.footer')
 @stack('scripts')

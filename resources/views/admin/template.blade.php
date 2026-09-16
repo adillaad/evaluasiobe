@@ -15,7 +15,5 @@
                 @yield('content')
             </div>
         </div>
-    </div>
-</div>
-@include('admin.layout.footer')
+        @include('admin.layout.footer')
 @stack('scripts')

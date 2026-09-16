@@ -26,7 +26,7 @@
 {{-- inject:js --}}
 <script src="{{ asset('/assets/template/js/off-canvas.js') }}"></script>
 <script src="{{ asset('/assets/template/js/hoverable-collapse.js') }}"></script>
-<script src="{{ asset('/assets/template/js/template.js') }}"></script>
+<script src="{{ asset('/assets/template/js/template.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('/assets/template/js/settings.js') }}"></script>
 <script src="{{ asset('/assets/template/js/todolist.js') }}"></script>
 {{-- endinject --}}
@@ -35,10 +35,47 @@
 <script src="{{ asset('/assets/template/js/dashboard.js') }}"></script>
 <script src="{{ asset('/assets/template/js/Chart.roundedBarCharts.js') }}"></script>
 <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+{{-- SweetAlert2 --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {{-- tinymce --}}
 <script src="https://cdn.tiny.cloud/1/kwzqw4jpycdrl77quqeorhz4zb0cugsn3aelc28261lsg2d3/tinymce/6/tinymce.min.js"referrerpolicy="origin"></script>
 <script>
-    $(document).ready(function() {$('.dataTable').DataTable({"aaSorting": []});});
+    $(document).ready(function() {
+        if (typeof $.fn.DataTable !== 'undefined') {
+            $.fn.dataTable.ext.errMode = 'none';
+
+            function setupDataTableLayout() {
+                $('.dataTable').each(function() {
+                    var $table = $(this);
+                    
+                    var $parentResponsive = $table.parent('.table-responsive');
+                    if ($parentResponsive.length > 0 && !$table.parent().hasClass('dataTables_wrapper')) {
+                        $table.unwrap();
+                    }
+
+                    if (!$.fn.DataTable.isDataTable(this)) {
+                        $table.DataTable({
+                            "aaSorting": [],
+                            "retrieve": true
+                        });
+                    }
+
+                    if ($table.parent('.table-responsive').length === 0) {
+                        $table.wrap('<div class="table-responsive" style="width:100%; overflow-x:auto; margin-bottom:1rem; clear:both;"></div>');
+                    }
+                });
+            }
+
+            setupDataTableLayout();
+            setTimeout(setupDataTableLayout, 200);
+        }
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+    });
 </script>
 <script>
     tinymce.init({

@@ -32,4 +32,10 @@ class PenilaianMetode extends Model
             'metode_id','id'
         );
     }
+
+    // Relasi ke kriteria/instrumen penilaian dalam metode ini
+    public function instrumens()
+    {
+        return $this->hasMany(PenilaianInstrumen::class, 'penilaian_metode_id', 'id');
+    }
 }

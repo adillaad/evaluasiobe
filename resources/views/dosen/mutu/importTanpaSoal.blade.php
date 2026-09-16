@@ -82,7 +82,6 @@
                     <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th>Prodi</th>
                                 <th>Angkatan</th>
                                 <th>Nama</th>
                                 <th>NPM</th>
@@ -98,12 +97,11 @@
                         <tbody>
                             @if ($mutus->isEmpty())
                                 <tr>
-                                    <td colspan="11" class="text-center">Belum ada data nilai yang diimport.</td>
+                                    <td colspan="10" class="text-center">Belum ada data nilai yang diimport.</td>
                                 </tr>
                             @else
                                 @foreach ($mutus as $item)
                                     <tr>
-                                        <td>{{ $item->nama_prodi ?? '-' }}</td>
                                         <td>{{ $item->angkatan }}</td>
                                         <td>{{ $item->nama_mhs }}</td>
                                         <td>{{ $item->npm }}</td>
@@ -156,4 +154,63 @@
             return new bootstrap.Tooltip(tooltipTriggerEl)
         })
     </script>
+
+    {{-- Modal Konfirmasi NPM Unregistered --}}
+    @if (session('warning_unregistered'))
+        @php
+            $unregisteredList = session('unregistered_mhs', []);
+            $filePathTemp = session('file_path_temp', '');
+        @endphp
+        <div class="modal fade show" id="unregisteredModal" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);" aria-modal="true" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 580px;">
+                <div class="modal-content border-0 shadow">
+                    <form action="{{ route($currentPrefix . 'importTanpaSoal') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="file_path_temp" value="{{ $filePathTemp }}">
+                        <div class="modal-header py-2 px-3 bg-warning text-dark">
+                            <h5 class="modal-title fs-6 fw-bold">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> Perhatian: {{ count($unregisteredList) }} NPM Belum Terdaftar
+                            </h5>
+                        </div>
+                        <div class="modal-body p-3" style="max-height: 50vh; overflow-y: auto;">
+                            <p class="small mb-2">Terdapat beberapa NPM dalam file Excel yang belum terdaftar di basis data mahasiswa:</p>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Baris</th>
+                                            <th>Angkatan</th>
+                                            <th>NPM</th>
+                                            <th>Nama</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($unregisteredList as $unreg)
+                                            <tr>
+                                                <td>Baris {{ $unreg['line'] }}</td>
+                                                <td>{{ $unreg['angkatan'] ?: '-' }}</td>
+                                                <td><code>{{ $unreg['npm'] }}</code></td>
+                                                <td>{{ $unreg['nama'] }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="alert alert-info py-2 mt-2 mb-0 small">
+                                Silakan pilih tindakan yang akan diambil untuk data mahasiswa di atas:
+                            </div>
+                        </div>
+                        <div class="modal-footer py-2 px-3 bg-light justify-content-between">
+                            <button type="submit" name="action_option" value="skip" class="btn btn-outline-secondary btn-sm">
+                                Lanjutkan & Skip Baris Ini
+                            </button>
+                            <button type="submit" name="action_option" value="register" class="btn btn-primary btn-sm">
+                                Tambahkan Data Mahasiswa Otomatis
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection

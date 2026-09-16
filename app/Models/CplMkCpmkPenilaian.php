@@ -37,10 +37,16 @@ class CplMkCpmkPenilaian extends Model
         return $this->belongsTo(CPMK::class, 'cpmk_id');
     }
 
-    // Jika ada tabel detail penilaian_metode dengan FK cpl_mk_cpmk_penilaian_id
+    // Relasi ke penilaian_metode
     public function penilaianMetode()
     {
-        return $this->hasMany(PenilaianMetode::class, 'cpl_mk_cpmk_penilaian_id','id');
+        return $this->hasMany(PenilaianMetode::class, 'cpl_mk_cpmk_penilaian_id', 'id');
+    }
+
+    // Relasi ke penilaian_instrumen
+    public function penilaianInstrumen()
+    {
+        return $this->hasMany(PenilaianInstrumen::class, 'cpl_mk_cpmk_penilaian_id', 'id');
     }
 
 }

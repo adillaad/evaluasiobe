@@ -57,16 +57,34 @@ class ProfilPdfController extends Controller
     public function generatePDFProfilMK(Request $request)
     {
         try {
-            $grouped = ProfilLulusan::queryProfilMK(auth()->user(), $request)
+            $raw = ProfilLulusan::queryProfilMK(auth()->user(), $request)
+                ->orderBy('kurikulums.tahun', 'desc')
                 ->orderBy('profil_lulusan.kode')
-                ->get()
-                ->groupBy('profil_kode');
+                ->get();
+
+            $filteredKurikulum = $request->query('kurikulum_tahun') ?? $request->query('kurikulum');
+
+            if ($filteredKurikulum && $filteredKurikulum !== 'all' && $filteredKurikulum !== 'gabungan') {
+                $raw = $raw->filter(function ($item) use ($filteredKurikulum) {
+                    return (string)$item->kurikulum_tahun === (string)$filteredKurikulum
+                        || (string)$item->kurikulum_id === (string)$filteredKurikulum;
+                });
+            }
+
+            $groupedByKurikulum = $raw->groupBy(function ($item) {
+                return $item->kurikulum_tahun ? 'Kurikulum ' . $item->kurikulum_tahun : 'Tanpa Kurikulum';
+            })->map(function ($itemsInKurikulum) {
+                return $itemsInKurikulum->groupBy('profil_kode');
+            });
 
             $meta = $this->resolveEntityNames(auth()->user(), $request);
+            if ($filteredKurikulum && $filteredKurikulum !== 'all' && $filteredKurikulum !== 'gabungan') {
+                $meta['namaKurikulum'] = 'Kurikulum ' . $filteredKurikulum;
+            }
 
             $pdf = SnappyPdf::loadView('pdf.pdf-profil-mk', array_merge($meta, [
-                'grouped'      => $grouped,
-                'generated_at' => now()->format('d F Y H:i:s'),
+                'groupedByKurikulum' => $groupedByKurikulum,
+                'generated_at'       => now()->format('d F Y H:i:s'),
             ]));
 
             $pdf->setOption('footer-right', '[page]')
@@ -75,7 +93,7 @@ class ProfilPdfController extends Controller
                 ->setOption('orientation', 'Portrait')
                 ->setOption('page-size', 'A4');
 
-            return $pdf->download('Profil-Lulusan-MK-' . now()->format('YmdHis') . '.pdf');
+            return $pdf->download('Profil-Lulusan-MK-' . ($filteredKurikulum ? 'Kurikulum-' . $filteredKurikulum . '-' : '') . now()->format('YmdHis') . '.pdf');
         } catch (\Exception $e) {
             Log::error('Snappy PDF Error generatePDFProfilMK: ' . $e->getMessage());
             return redirect()->back()->with('failed', 'Gagal generate PDF: ' . $e->getMessage());
@@ -84,14 +102,34 @@ class ProfilPdfController extends Controller
 
     public function printProfilMK(Request $request)
     {
-        $grouped = ProfilLulusan::queryProfilMK(auth()->user(), $request)
+        $raw = ProfilLulusan::queryProfilMK(auth()->user(), $request)
+            ->orderBy('kurikulums.tahun', 'desc')
             ->orderBy('profil_lulusan.kode')
-            ->get()
-            ->groupBy('profil_kode');
+            ->get();
+
+        $filteredKurikulum = $request->query('kurikulum_tahun') ?? $request->query('kurikulum');
+
+        if ($filteredKurikulum && $filteredKurikulum !== 'all' && $filteredKurikulum !== 'gabungan') {
+            $raw = $raw->filter(function ($item) use ($filteredKurikulum) {
+                return (string)$item->kurikulum_tahun === (string)$filteredKurikulum
+                    || (string)$item->kurikulum_id === (string)$filteredKurikulum;
+            });
+        }
+
+        $groupedByKurikulum = $raw->groupBy(function ($item) {
+            return $item->kurikulum_tahun ? 'Kurikulum ' . $item->kurikulum_tahun : 'Tanpa Kurikulum';
+        })->map(function ($itemsInKurikulum) {
+            return $itemsInKurikulum->groupBy('profil_kode');
+        });
+
+        $meta = $this->resolveEntityNames(auth()->user(), $request);
+        if ($filteredKurikulum && $filteredKurikulum !== 'all' && $filteredKurikulum !== 'gabungan') {
+            $meta['namaKurikulum'] = 'Kurikulum ' . $filteredKurikulum;
+        }
 
         return view('pdf.print-profil-mk', array_merge(
-            $this->resolveEntityNames(auth()->user(), $request),
-            ['grouped' => $grouped]
+            $meta,
+            ['groupedByKurikulum' => $groupedByKurikulum]
         ));
     }
 

@@ -39,9 +39,12 @@
                     <h4 class="card-title mb-0">Daftar Rubrik</h4>
 
                     @if($userOtoritas === 'Dosen')
-                        <a href="{{ route($currentPrefix . 'rubrik-add') }}" class="btn btn-primary btn-icon-text">
-                            <i class="ti-plus btn-icon-prepend"></i> Tambah Rubrik
-                        </a>
+                        <div class="mb-3">
+                            <a href="{{ route($currentPrefix . 'rubrik-add') }}" class="btn btn-primary btn-icon-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>Tambah Rubrik</span>
+                            </a>
+                        </div>
                     @endif
                 </div>
 
@@ -93,24 +96,25 @@
                                     @endif
                                     <td>{{ $r->updated_at ? $r->updated_at->format('d-m-Y') : '-' }}</td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center gap-2 action-buttons">
+                                        <div class="d-flex justify-content-center align-items-center" style="gap: 4px;">
                                             <a href="{{ route($currentPrefix.'rubrik-download', $r->id) }}"
-                                               class="btn btn-success btn-icon-text p-2"
-                                               title="Download Rubrik">
-                                                <i class="ti-download btn-icon"></i>
+                                               class="btn btn-icons btn-success"
+                                               data-bs-toggle="tooltip" title="Download Rubrik">
+                                                <i class="ti-download"></i>
                                             </a>
                 
                                             @if($userOtoritas === 'Dosen')
                                                 <form action="{{ route($currentPrefix.'rubrik-delete', $r->id) }}"
                                                       method="post"
+                                                      class="d-inline m-0 p-0"
                                                       onsubmit="return confirm('Yakin ingin menghapus rubrik {{ $r->jenis_rubrik }} pada mata kuliah {{ $r->mk->kode ?? '' }}?')">
                                                     @csrf
                                                     @method('delete')
                 
                                                     <button type="submit"
-                                                            class="btn btn-danger btn-icon-text p-2"
-                                                            title="Hapus Rubrik">
-                                                        <i class="ti-trash btn-icon"></i>
+                                                            class="btn btn-icons btn-danger"
+                                                            data-bs-toggle="tooltip" title="Hapus Rubrik">
+                                                        <i class="ti-trash"></i>
                                                     </button>
                                                 </form>
                                             @endif

@@ -7,7 +7,7 @@
     <title>Evaluasi OBE — Sistem Penjamin Mutu</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('/assets/template/css/vertical-layout-light/style.css')}}">
     <link rel="stylesheet" href="{{ asset('/assets/template/vendors/feather/feather.css') }}">
     <link rel="stylesheet" href="{{ asset('/assets/template/vendors/mdi/css/materialdesignicons.min.css') }}">
@@ -32,7 +32,7 @@
             --lp-white: #ffffff;
             --lp-radius: 18px;
             --lp-shadow: 0 12px 40px rgba(11, 45, 92, 0.08);
-            --lp-font: "Plus Jakarta Sans", system-ui, sans-serif;
+            --lp-font: "Poppins", system-ui, sans-serif;
         }
 
         body {

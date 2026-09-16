@@ -98,24 +98,10 @@
         </li> -->
         
         <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#komponen" aria-expanded="false"
-                aria-controls="komponen">
+            <a class="nav-link" href="{{ route($currentPrefix . 'Jenis-list') }}">
                 <i class="menu-icon mdi mdi-message-text-outline"></i>
-                <span class="menu-title">Komponen</span>
-                <i class="menu-arrow"></i>
+                <span class="menu-title">Kriteria Penilaian</span>
             </a>
-            <div class="collapse" id="komponen">
-                <ul class="nav flex-column sub-menu">
-                    @if ($userOtoritas == 'Dosen')
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route($currentPrefix . 'Jenis-add') }}">Tambah Komponen</a>
-                        </li>
-                    @endif
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route($currentPrefix . 'Jenis-list') }}">Lihat Komponen</a>
-                    </li>
-                </ul>
-            </div>
         </li>
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#rubrik" aria-expanded="false" aria-controls="rubrik">
@@ -193,29 +179,19 @@
                         </li>
                     @endif
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route($currentPrefix . 'import-mutu') }}">Import Nilai</a>
+                            <a class="nav-link" href="{{ route($currentPrefix . 'import-mutu') }}">Import Nilai Soal</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route($currentPrefix . 'konversi-nilai.index') }}">Import Nilai Konversi</a>
                         </li>
                 </ul>
             </div>
         </li>
         <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#mahasiswa" aria-expanded="false" aria-controls="mahasiswa">
+            <a class="nav-link" href="{{ route($currentPrefix . 'mahasiswa.index') }}">
                 <i class="menu-icon mdi mdi-account-group"></i>
                 <span class="menu-title">Mahasiswa</span>
-                <i class="menu-arrow"></i>
             </a>
-            <div class="collapse" id="mahasiswa">
-                <ul class="nav flex-column sub-menu">
-                    @if ($userOtoritas == 'Dosen')
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route($currentPrefix . 'mahasiswa.create') }}">Tambah Mahasiswa</a>
-                        </li>
-                    @endif
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route($currentPrefix . 'mahasiswa.index') }}">Daftar Mahasiswa</a>
-                    </li>
-                </ul>
-            </div>
         </li>
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#visualisasi" aria-expanded="false"

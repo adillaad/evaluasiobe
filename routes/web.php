@@ -46,6 +46,8 @@ use App\Http\Controllers\PenjaminMutu\VisualisasiController as PenjaminMutuVisua
 use App\Http\Controllers\PenjaminMutu\RpsController as RpsPM;
 use App\Http\Controllers\PenjaminMutu\RubrikController as RubrikPM;
 use App\Http\Controllers\SocialiteController;
+use App\Http\Controllers\Admin\TahunAjaranController;
+use App\Http\Controllers\PenjaminMutu\DaftarAsesmenMkController;
 
 /*
 |--------------------------------------------------------------------------
@@ -87,6 +89,9 @@ Route::get('/login/google', [SocialiteController::class, 'redirectToGoogle'])->n
 Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCallback']);
 
 Route::middleware(['auth'])->group(function () {
+        // GATE MENU (Pilihan Prodi setelah login)
+        Route::get('/gate/menu', [ProdiController::class, 'gateMenu'])->name('gate.menu');
+
         // ROUTE UNTUK CONNECT (UNTUK USER LOGIN)
         Route::get('/connect/google', [SocialiteController::class, 'connectToGoogle'])->name('google.connect');
 
@@ -109,6 +114,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('get-faculties/{universitas_id}', 'getFaculties')->name('get-faculties');
             Route::get('get-programs/{fakultas_id}', 'getPrograms')->name('get-programs');
         });
+
+        // Global Sync Evaluasi OBE Route
+        Route::post('evaluasi-obe/sync', [PenjaminMutuVisualisasiController::class, 'syncEvaluasi'])->name('evaluasi-obe.sync');
 
         // Define roles that will use common routes
         $adminRoles = ['Admin', 'Admin Universitas'];
@@ -135,6 +143,8 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('edit-user/{id}', 'edit')->name('edit-user');
                 Route::put('edit-user/{id}', 'update')->name('update-user');
                 Route::post('add-user-wfile', 'create_wfile')->name('store-user-wfile');
+                Route::post('import-dosen', 'importDosen')->name('import-dosen');
+                Route::get('template-dosen-excel', 'downloadTemplateDosen')->name('template-dosen-excel');
                 Route::get('get-fakultas/{universitas_id}', 'getFakultas');
                 Route::get('get-prodi/{fakultas_id}', 'getProdi');
             });
@@ -165,8 +175,24 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('add-Prodi', 'Add')->name('add-prodi');
                 Route::post('add-Prodi', 'Store')->name('store-prodi');
                 Route::get('list-Prodi', 'List')->name('list-prodi');
+                Route::get('daftar-akun-prodi', 'daftarAkunProdi')->name('daftar-akun-prodi');
                 Route::delete('delete-Prodi/{id}', 'Delete')->name('delete-prodi');
             });
+
+            // TAHUN AJARAN & DAFTAR ASESMEN PER MK
+            Route::controller(TahunAjaranController::class)->group(function () {
+                Route::get('tahun-ajaran', 'index')->name('tahun-ajaran.index');
+                Route::post('tahun-ajaran', 'store')->name('tahun-ajaran.store');
+                Route::put('tahun-ajaran/{id}', 'update')->name('tahun-ajaran.update');
+                Route::delete('tahun-ajaran/{id}', 'destroy')->name('tahun-ajaran.destroy');
+            });
+            Route::get('daftar-asesmen-mk', [DaftarAsesmenMkController::class, 'index'])->name('daftar-asesmen-mk');
+            Route::get('daftar-asesmen-mk/{mkKode}', [DaftarAsesmenMkController::class, 'show'])->name('daftar-asesmen-mk.show');
+            Route::delete('daftar-asesmen-mk/{mkKode}/destroy-all', [DaftarAsesmenMkController::class, 'destroyAll'])->name('daftar-asesmen-mk.destroy-all');
+            Route::put('daftar-asesmen-mk/{mkKode}/metode/{pmId}', [DaftarAsesmenMkController::class, 'updateMetode'])->name('daftar-asesmen-mk.update-metode');
+            Route::delete('daftar-asesmen-mk/{mkKode}/metode/{pmId}', [DaftarAsesmenMkController::class, 'destroyMetode'])->name('daftar-asesmen-mk.destroy-metode');
+            Route::put('daftar-asesmen-mk/{mkKode}/{id}', [DaftarAsesmenMkController::class, 'update'])->name('daftar-asesmen-mk.update');
+            Route::delete('daftar-asesmen-mk/{mkKode}/{id}', [DaftarAsesmenMkController::class, 'destroy'])->name('daftar-asesmen-mk.destroy');
         };
 
         // Common academic routes for Wakil Rektor, Wakil Dekan, Kepala Program Studi, and Dosen
@@ -175,6 +201,20 @@ Route::middleware(['auth'])->group(function () {
             Route::controller(DashboardDosen::class)->group(function () {
                 Route::get('dashboard', 'list')->name('home');
                 Route::get('dashboard-chart', 'chart')->name('chart');
+            });
+
+            Route::get('daftar-asesmen-mk', [DaftarAsesmenMkController::class, 'index'])->name('daftar-asesmen-mk');
+            Route::get('daftar-asesmen-mk/{mkKode}', [DaftarAsesmenMkController::class, 'show'])->name('daftar-asesmen-mk.show');
+            Route::delete('daftar-asesmen-mk/{mkKode}/destroy-all', [DaftarAsesmenMkController::class, 'destroyAll'])->name('daftar-asesmen-mk.destroy-all');
+            Route::put('daftar-asesmen-mk/{mkKode}/metode/{pmId}', [DaftarAsesmenMkController::class, 'updateMetode'])->name('daftar-asesmen-mk.update-metode');
+            Route::delete('daftar-asesmen-mk/{mkKode}/metode/{pmId}', [DaftarAsesmenMkController::class, 'destroyMetode'])->name('daftar-asesmen-mk.destroy-metode');
+            Route::put('daftar-asesmen-mk/{mkKode}/{id}', [DaftarAsesmenMkController::class, 'update'])->name('daftar-asesmen-mk.update');
+            Route::delete('daftar-asesmen-mk/{mkKode}/{id}', [DaftarAsesmenMkController::class, 'destroy'])->name('daftar-asesmen-mk.destroy');
+            Route::controller(TahunAjaranController::class)->group(function () {
+                Route::get('tahun-ajaran', 'index')->name('tahun-ajaran.index');
+                Route::post('tahun-ajaran', 'store')->name('tahun-ajaran.store');
+                Route::put('tahun-ajaran/{id}', 'update')->name('tahun-ajaran.update');
+                Route::delete('tahun-ajaran/{id}', 'destroy')->name('tahun-ajaran.destroy');
             });
 
             Route::get('/get-pustaka-by-mk/{kode_mk}', [RPSdosen::class, 'getPustakaByMk'])->name('get-pustaka-by-mk');
@@ -222,7 +262,9 @@ Route::middleware(['auth'])->group(function () {
                 //Data import/export
                 Route::get('exportmutu', 'mutuexport')->name('exportmutu');
                 Route::post('importmutu', 'mutuimport')->name('importmutu');
+                Route::get('importmutu', 'import');
                 Route::post('importTanpaSoal', 'importTanpaSoal')->name('importTanpaSoal');
+                Route::get('importTanpaSoal', 'import1');
                 Route::get('/tanpa-soal', [App\Http\Controllers\Dosen\SoalController::class, 'listTanpaSoal'])->name('tanpa-soal-list');
 
                 Route::get('TanpaSoal', 'import1')->name('TanpaSoal');
@@ -233,7 +275,22 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('ExcelTanpaSoal', 'ExcelTanpaSoal')->name('ExcelTanpaSoal');
                 Route::get('getCPLBykode_mk', 'getCPLBykode_mk')->name('getCPLBykode_mk');
                 // Route::get('getCPMKBykode_mk', 'getCPMKBykode_mk')->name('getCPMKBykode_mk');
+            });
 
+            // Konversi Nilai (Historis) routes
+            Route::controller(\App\Http\Controllers\Dosen\KonversiNilaiController::class)->prefix('konversi-nilai')->name('konversi-nilai.')->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/create', 'storeSetup')->name('store-setup');
+                Route::get('/{id}/metode', 'stepMetode')->name('step-metode');
+                Route::post('/{id}/metode', 'storeMetodeCpmk')->name('store-metode');
+                Route::get('/{id}/download-template', 'downloadTemplate')->name('download-template');
+                Route::post('/{id}/upload-excel', 'uploadExcel')->name('upload-excel');
+                Route::post('/store-quick-metode', 'storeQuickMetode')->name('store-quick-metode');
+                Route::get('/get-mks-by-kurikulum/{kurikulumId}', 'getMksByKurikulum')->name('get-mks-by-kurikulum');
+                Route::get('/fix-db-index', 'fixDbIndex')->name('fix-db-index');
+                Route::get('/{id}/detail', 'showDetail')->name('detail');
+                Route::delete('/{id}', 'destroy')->name('destroy');
             });
 
             // Visualization routes
@@ -243,6 +300,7 @@ Route::middleware(['auth'])->group(function () {
                 // Route::get('getAngkatanByUniversitas', 'getAngkatanByUniversitas')->name('getAngkatanByUniversitas');
                 // Route::get('getProdiByUniversitas', 'getProdiByUniversitas')->name('getProdiByUniversitas');
                 Route::get('getNpmByAngkatan', 'getNpmByAngkatan')->name('getNpmByAngkatan');
+                Route::get('getTahunSemesterByNpm', 'getTahunSemesterByNpm')->name('getTahunSemesterByNpm');
                 Route::get('getPemetaanCpl', 'getPemetaanCpl')->name('getPemetaanCpl');
                 Route::post('hasilvisual-mahasiswa', 'hasilVisualMahasiswa')->name('hasilvisual-mahasiswa');
                 Route::any('hasilvisualcpmk-mahasiswa', 'hasilVisualCpmkMahasiswa')->name('hasilvisualcpmk-mahasiswa');
@@ -261,6 +319,9 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('hasilvisual-mahasiswaMataKuliah', 'hasilVisualMahasiswaMataKuliah')->name('hasilvisual-mahasiswaMataKuliah');
                 Route::get('getNamaByNpm', 'getNamaByNpm')->name('getNamaByNpm');
 
+                // Sync Evaluasi OBE
+                Route::post('sync-evaluasi', 'syncEvaluasi')->name('sync-evaluasi');
+
                 // generate PDF
                 Route::post('/generate-pdf-visualisasi-mahasiswa', 'generatePDFhasilVisualMahasiswa')->name('generate-pdfVisualMahasiswa');
                 Route::post('/generate-pdf-visualisasi-angkatan', 'generatePDFhasilVisualAngkatan')->name('generate-pdfVisualAngkatan');
@@ -275,6 +336,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('readListProfil', 'readListProfil')->name('readListProfil');
                 Route::get('index-profil-mk', [ProfilController::class, 'indexProfilMK'])->name('indexProfilMK');
                 Route::get('generate-pdf-profil-mk', [ProfilPdfController::class, 'generatePDFProfilMK'])->name('generatePDFProfilMK');
+                Route::get('/print-profil-mk', [ProfilPdfController::class, 'printProfilMK'])->name('printProfilMK');
             });
 
             Route::controller(ProfilCplController::class)->group(function () {
@@ -384,9 +446,8 @@ Route::middleware(['auth'])->group(function () {
             Route::middleware("cekrole:$role")->prefix($prefix)->name("$prefix.")->group(function () use ($academicCommonRoutes, $prefix) {
                 $academicCommonRoutes();
 
-                if($prefix != 'dosen') {
-                    Route::resource('mahasiswa', MahasiswaController::class)->only(['index']);
-                } else {
+                Route::resource('mahasiswa', MahasiswaController::class);
+                if($prefix == 'dosen') {
                     Route::controller(RPSdosen::class)->group(function () {
                         Route::get('rps/add-rps', 'Add')->name('rps-add');
                         Route::post('rps/add-rpsStep1', 'StoreRpsStep1');
@@ -494,6 +555,8 @@ Route::middleware(['auth'])->group(function () {
                         Route::get('ExcelTanpaSoal', 'ExcelTanpaSoal')->name('ExcelTanpaSoal');
                     });
 
+                    Route::post('mahasiswa/import', [\App\Http\Controllers\MahasiswaController::class, 'import'])->name('mahasiswa.import');
+                    Route::get('mahasiswa/template-excel', [\App\Http\Controllers\MahasiswaController::class, 'downloadTemplate'])->name('mahasiswa.template-excel');
                     Route::resource('mahasiswa', MahasiswaController::class);
                 }
             });
@@ -507,15 +570,20 @@ Route::middleware(['auth'])->group(function () {
         foreach ($roles as $role) {
             Route::middleware([$role])->prefix('penjamin-mutu')->name('penjamin-mutu.')->group(function () use ($role) {
                 Route::prefix($role)->name($role . '.')->group(function () use ($role) {
-                    if($role != 'program-studi') {
-                        Route::resource('mahasiswa', MahasiswaController::class)->only(['index']);
-                    } else {
-                        Route::resource('mahasiswa', MahasiswaController::class);
-                    }
+                    Route::resource('mahasiswa', MahasiswaController::class);
 
                     // Dashboard
                     Route::get('dashboard', [DashboardPM::class, 'list'])->name('home');
                     Route::get('dashboard-chart', [DashboardPM::class, 'chart'])->name('chart');
+
+                    // Daftar Asesmen per MK
+                    Route::get('daftar-asesmen-mk', [DaftarAsesmenMkController::class, 'index'])->name('daftar-asesmen-mk');
+                    Route::get('daftar-asesmen-mk/{mkKode}', [DaftarAsesmenMkController::class, 'show'])->name('daftar-asesmen-mk.show');
+                    Route::delete('daftar-asesmen-mk/{mkKode}/destroy-all', [DaftarAsesmenMkController::class, 'destroyAll'])->name('daftar-asesmen-mk.destroy-all');
+                    Route::put('daftar-asesmen-mk/{mkKode}/metode/{pmId}', [DaftarAsesmenMkController::class, 'updateMetode'])->name('daftar-asesmen-mk.update-metode');
+                    Route::delete('daftar-asesmen-mk/{mkKode}/metode/{pmId}', [DaftarAsesmenMkController::class, 'destroyMetode'])->name('daftar-asesmen-mk.destroy-metode');
+                    Route::put('daftar-asesmen-mk/{mkKode}/{id}', [DaftarAsesmenMkController::class, 'update'])->name('daftar-asesmen-mk.update');
+                    Route::delete('daftar-asesmen-mk/{mkKode}/{id}', [DaftarAsesmenMkController::class, 'destroy'])->name('daftar-asesmen-mk.destroy');
 
                     // Soal
                 Route::get('list-soal', [SoalPM::class, 'list'])->name('list-soal');
@@ -532,6 +600,7 @@ Route::middleware(['auth'])->group(function () {
 
                     Route::get('add-user', [UserPM::class, 'create'])->name('add-user');
                     Route::post('add-user', [UserPM::class, 'store'])->name('store-user');
+                    Route::post('assign-dosen', [UserPM::class, 'assignDosen'])->name('assign-dosen');
                     Route::get('list-user', [UserPM::class, 'list'])->name('list-user');
                     Route::put('reset-user/{id}', [UserPM::class, 'reset'])->name('reset-user');
                     Route::delete('delete-user/{id}', [UserPM::class, 'delete'])->name('delete-user');
@@ -619,24 +688,32 @@ Route::middleware(['auth'])->group(function () {
                         Route::post('add-cpl-pl', [CPLPM::class, 'storeCPLPL'])->name('cpl-pl-store');
 
                         Route::get('pemetaan-cpl-pl', [CPLPM::class, 'indexCPLPL'])->name('cpl-pl');
+                        Route::post('update-matrix-cpl-pl', [CPLPM::class, 'updateMatrixCPLPL'])->name('cpl-pl-matrix-update');
                         Route::get('pemetaan-cpl-bk', [CPLPM::class, 'indexCPLBK'])->name('cpl-bk');
                         Route::get('add-cpl-bk', [CPLPM::class, 'addCPLBK'])->name('cpl-bk-add');
                         Route::post('add-cpl-bk', [CPLPM::class, 'storeCPLBK'])->name('cpl-bk-store');
+                        Route::post('update-matrix-cpl-bk', [CPLPM::class, 'updateMatrixCPLBK'])->name('cpl-bk-matrix-update');
                         Route::get('pemetaan-cpl-mk', [CPLPM::class, 'indexCPLMK'])->name('cpl-mk');
                         Route::get('add-cpl-mk', [CPLPM::class, 'addCPLMK'])->name('cpl-mk-add');
+                        Route::get('get-cpls-by-kurikulum/{kurikulumId}', [CPLPM::class, 'getCplsByKurikulum'])->name('cpls-by-kurikulum');
                         Route::post('add-cpl-mk', [CPLPM::class, 'storeCPLMK'])->name('cpl-mk-store');
+                        Route::post('update-matrix-cpl-mk', [CPLPM::class, 'updateMatrixCPLMK'])->name('cpl-mk-matrix-update');
                         Route::get('pemetaan-cpl-bk-mk', [CPLPM::class, 'indexCPLBKMK'])->name('cpl-bk-mk');
+                        Route::post('update-matrix-cpl-bk-mk', [CPLPM::class, 'updateMatrixCPLBKMK'])->name('cpl-bk-mk-matrix-update');
                     });
 
                     // BK Pages
                     Route::prefix('bk')->name('bk.')->group(function () {
                         Route::get('bahan-kajian', [BKPM::class, 'index'])->name('index');
                         Route::get('pemetaan-bk-mk', [BKPM::class, 'indexBKMK'])->name('bk-mk');
+                        Route::post('update-matrix-bk-mk', [BKPM::class, 'updateMatrixBKMK'])->name('bk-mk-matrix-update');
                         Route::get('add-bk-mk', [BKPM::class, 'addBKMK'])->name('bk-mk-add');
                         Route::get('get-mk-by-bk/{bk}', [BKPM::class, 'getMkByBk'])->name('mk-by-mk');
                         Route::post('add-bk-mk', [BKPM::class, 'storeBKMK'])->name('bk-mk-store');
                         Route::get('bk-add', [BKPM::class, 'addBK'])->name('bk-add');
                         Route::post('bk-store', [BKPM::class, 'storeBK'])->name('bk-store');
+                        Route::put('bk-update/{id}', [BKPM::class, 'updateBK'])->name('bk-update');
+                        Route::delete('bk-delete/{id}', [BKPM::class, 'destroyBK'])->name('bk-delete');
                     });
 
                     // MK Pages
@@ -650,6 +727,7 @@ Route::middleware(['auth'])->group(function () {
 
                         Route::get('organisasi-mk', [MKPM::class, 'organisasiMK'])->name('organisasi-mk');
                         Route::get('pemenuhan-cpl', [MKPM::class, 'pemenuhanCPL'])->name('pemenuhan-cpl');
+                        Route::post('update-matrix-pemenuhan-cpl', [MKPM::class, 'updateMatrixPemenuhanCPL'])->name('pemenuhan-cpl-matrix-update');
                     });
 
                     // CPL CPMK Pages
@@ -659,9 +737,16 @@ Route::middleware(['auth'])->group(function () {
                         Route::post('add-cpl-cpmk-mk', [CPLCPMKPM::class, 'storeCPLCPMKMK'])->name('cpl-cpmk-mk-store');
 
                         Route::get('pemetaan-cpl-cpmk-mk', [CPLCPMKPM::class, 'indexCPLCPMKMK'])->name('cpl-cpmk-mk');
+                        Route::get('pemetaan-mk-cpmk', [CPLCPMKPM::class, 'indexMKCPMK'])->name('pemetaan-mk-cpmk');
+                        Route::post('store-mk-cpmk', [CPLCPMKPM::class, 'storeMKCPMK'])->name('mk-cpmk-store');
+                        Route::put('update-mk-cpmk/{mk_kode}', [CPLCPMKPM::class, 'updateMKCPMK'])->name('mk-cpmk-update');
+                        Route::put('update-single-mk-cpmk/{mk_kode}/{cpmk_id}', [CPLCPMKPM::class, 'updateSingleMKCPMK'])->name('mk-cpmk-update-single');
+                        Route::delete('delete-mk-cpmk/{mk_kode}/{cpmk_id}', [CPLCPMKPM::class, 'destroyMKCPMK'])->name('mk-cpmk-destroy');
                         Route::get('pemetaan-cpl-cpmk-mk-semester', [CPLCPMKPM::class, 'indexCPLCPMKMKSMT'])->name('cpl-cpmk-mk-semester');
                         Route::get('pemetaan-cpl-mk-cpmk', [CPLCPMKPM::class, 'indexCPLMKCPMK'])->name('cpl-mk-cpmk');
+                        Route::post('update-matrix-cpl-mk-cpmk', [CPLCPMKPM::class, 'updateMatrixCPLMKCPMK'])->name('cpl-mk-cpmk-matrix-update');
                         Route::get('pemetaan-mk-cpmk-subcpmk', [CPLCPMKPM::class, 'indexMKCPMKSubCPMK'])->name('mk-cpmk-subcpmk');
+                        Route::post('update-matrix-mk-cpmk-subcpmk', [CPLCPMKPM::class, 'updateMatrixMKCPMKSubCPMK'])->name('mk-cpmk-subcpmk-matrix-update');
 
                         Route::get('add-cpmk-mk-subcpmk', [CPLCPMKPM::class, 'addCPMKMKSUBCPMK'])->name('cpmk-mk-subcpmk-add');
                         Route::get('get-subcpmk-by-mk/{mk}', [CPLCPMKPM::class, 'getSUBCPMKByMK'])->name('sub-cpmk-by-mk');
@@ -682,6 +767,16 @@ Route::middleware(['auth'])->group(function () {
                         Route::get('metode-penilaian', [AsesmenPM::class, 'metodePenilaian'])->name('metode-penilaian');
                         Route::get('add-metode-penilaian', [AsesmenPM::class, 'addMetodePenilaian'])->name('metode-penilaian-add');
                         Route::post('store-metode-penilaian', [AsesmenPM::class, 'storeMetodePenilaian'])->name('metode-penilaian-store');
+
+                        // Pengelolaan Metode Penilaian
+                        Route::get('kelola-metode', [AsesmenPM::class, 'indexKelolaMetode'])->name('kelola-metode');
+                        Route::put('kelola-metode/{id}', [AsesmenPM::class, 'updateKelolaMetode'])->name('kelola-metode.update');
+                        Route::delete('kelola-metode/{id}', [AsesmenPM::class, 'destroyKelolaMetode'])->name('kelola-metode.destroy');
+
+                        // Pengelolaan Kriteria Penilaian
+                        Route::get('kelola-kriteria', [AsesmenPM::class, 'indexKelolaKriteria'])->name('kelola-kriteria');
+                        Route::put('kelola-kriteria/{id}', [AsesmenPM::class, 'updateKelolaKriteria'])->name('kelola-kriteria.update');
+                        Route::delete('kelola-kriteria/{id}', [AsesmenPM::class, 'destroyKelolaKriteria'])->name('kelola-kriteria.destroy');
 
                         Route::get('tahap-penilaian', [AsesmenPM::class, 'tahapPenilaian'])->name('tahap-penilaian');
                         Route::get('add-instrumen-penilaian', [AsesmenPM::class, 'addInstrumenPenilaian'])->name('instrumen-penilaian-add');
@@ -718,6 +813,7 @@ Route::middleware(['auth'])->group(function () {
                         // Route::get('getProdiByUniversitas', [PenjaminMutuVisualisasiController::class, 'getProdiByUniversitas'])->name('getProdiByUniversitas');
                         // Route::get('getAngkatanByUniversitas', [PenjaminMutuVisualisasiController::class, 'getAngkatanByUniversitas'])->name('getAngkatanByUniversitas');
                         Route::get('getNpmByAngkatan', [PenjaminMutuVisualisasiController::class, 'getNpmByAngkatan'])->name('getNpmByAngkatan');
+                        Route::get('getTahunSemesterByNpm', [PenjaminMutuVisualisasiController::class, 'getTahunSemesterByNpm'])->name('getTahunSemesterByNpm');
                         Route::get('getPemetaanCpl', [PenjaminMutuVisualisasiController::class, 'getPemetaanCpl'])->name('getPemetaanCpl');
                         Route::post('hasilvisual-mahasiswa', [PenjaminMutuVisualisasiController::class, 'hasilVisualMahasiswa'])->name('hasilvisual-mahasiswa');
 
@@ -740,12 +836,22 @@ Route::middleware(['auth'])->group(function () {
                         Route::post('hasilvisual-mahasiswaMataKuliah', [PenjaminMutuVisualisasiController::class, 'hasilVisualMahasiswaMataKuliah'])->name('hasilvisual-mahasiswaMataKuliah');
                         Route::get('getNamaByNpm', [PenjaminMutuVisualisasiController::class, 'getNamaByNpm'])->name('getNamaByNpm');
 
+                        // Visualisasi Program Studi (Fakultas / Universitas)
+                        Route::get('visual-program-studi', [PenjaminMutuVisualisasiController::class, 'indexProgramStudi'])->name('visual-program-studi');
+                        // Visualisasi Fakultas (Universitas)
+                        Route::get('visual-fakultas', [PenjaminMutuVisualisasiController::class, 'indexFakultas'])->name('visual-fakultas');
+
+                        // Sync Evaluasi OBE
+                        Route::post('sync-evaluasi', [PenjaminMutuVisualisasiController::class, 'syncEvaluasi'])->name('sync-evaluasi');
+
                         // generate PDF
                         Route::post('/generate-pdf-visualisasi-mahasiswa', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualMahasiswa'])->name('generate-pdfVisualMahasiswa');
                         Route::post('/generate-pdf-visualisasi-angkatan', [PenjaminMutuVisualisasiController::class,'generatePDFhasilVisualAngkatan'])->name('generate-pdfVisualAngkatan');
                         Route::post('/generate-pdf-visualisasi-matakuliah', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualMataKuliah'])->name('generate-pdfVisualMataKuliah');
                         Route::post('/generate-pdf-visualisasi-cpmk-mahasiswa', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualCPMKMahasiswa'])->name('generate-pdfVisualCPMKMahasiswa');
                         Route::post('/generate-pdf-visualisasi-cpmk-angkatan', [PenjaminMutuVisualisasiController::class,'generatePDFhasilVisualCPMKAngkatan'])->name('generate-pdfVisualCPMKAngkatan');
+                        Route::any('/generate-pdf-visualisasi-program-studi', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualProgramStudi'])->name('generate-pdfVisualProgramStudi');
+                        Route::any('/generate-pdf-visualisasi-fakultas', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualFakultas'])->name('generate-pdfVisualFakultas');
                     });
                 });
             });
@@ -760,6 +866,15 @@ Route::middleware(['auth'])->group(function () {
                 // Dashboard
                 Route::get('dashboard', [DashboardPM::class, 'list'])->name('home');
                 Route::get('dashboard-chart', [DashboardPM::class, 'chart'])->name('chart');
+
+                // Daftar Asesmen per MK
+                Route::get('daftar-asesmen-mk', [DaftarAsesmenMkController::class, 'index'])->name('daftar-asesmen-mk');
+                Route::get('daftar-asesmen-mk/{mkKode}', [DaftarAsesmenMkController::class, 'show'])->name('daftar-asesmen-mk.show');
+                Route::delete('daftar-asesmen-mk/{mkKode}/destroy-all', [DaftarAsesmenMkController::class, 'destroyAll'])->name('daftar-asesmen-mk.destroy-all');
+                Route::put('daftar-asesmen-mk/{mkKode}/metode/{pmId}', [DaftarAsesmenMkController::class, 'updateMetode'])->name('daftar-asesmen-mk.update-metode');
+                Route::delete('daftar-asesmen-mk/{mkKode}/metode/{pmId}', [DaftarAsesmenMkController::class, 'destroyMetode'])->name('daftar-asesmen-mk.destroy-metode');
+                Route::put('daftar-asesmen-mk/{mkKode}/{id}', [DaftarAsesmenMkController::class, 'update'])->name('daftar-asesmen-mk.update');
+                Route::delete('daftar-asesmen-mk/{mkKode}/{id}', [DaftarAsesmenMkController::class, 'destroy'])->name('daftar-asesmen-mk.destroy');
 
                 // Rubrik Penilaian Pages
                 Route::get('rubrik/list-rubrik', [RubrikPM::class, 'index'])->name('rubrik-list');
@@ -787,6 +902,7 @@ Route::middleware(['auth'])->group(function () {
 
                 Route::get('add-user', [UserPM::class, 'create'])->name('add-user');
                 Route::post('add-user', [UserPM::class, 'store'])->name('store-user');
+                Route::post('assign-dosen', [UserPM::class, 'assignDosen'])->name('assign-dosen');
                 Route::get('list-user', [UserPM::class, 'list'])->name('list-user');
                 Route::put('reset-user/{id}', [UserPM::class, 'reset'])->name('reset-user');
                 Route::delete('delete-user/{id}', [UserPM::class, 'delete'])->name('delete-user');
@@ -872,13 +988,18 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                     Route::post('add-cpl-pl', [CPLPM::class, 'storeCPLPL'])->name('cpl-pl-store');
                     
                     Route::get('pemetaan-cpl-pl', [CPLPM::class, 'indexCPLPL'])->name('cpl-pl');
+                    Route::post('update-matrix-cpl-pl', [CPLPM::class, 'updateMatrixCPLPL'])->name('cpl-pl-matrix-update');
                     Route::get('pemetaan-cpl-bk', [CPLPM::class, 'indexCPLBK'])->name('cpl-bk');
                     Route::get('add-cpl-bk', [CPLPM::class, 'addCPLBK'])->name('cpl-bk-add');
                     Route::post('add-cpl-bk', [CPLPM::class, 'storeCPLBK'])->name('cpl-bk-store');
+                    Route::post('update-matrix-cpl-bk', [CPLPM::class, 'updateMatrixCPLBK'])->name('cpl-bk-matrix-update');
                     Route::get('pemetaan-cpl-mk', [CPLPM::class, 'indexCPLMK'])->name('cpl-mk');
                     Route::get('add-cpl-mk', [CPLPM::class, 'addCPLMK'])->name('cpl-mk-add');
+                    Route::get('get-cpls-by-kurikulum/{kurikulumId}', [CPLPM::class, 'getCplsByKurikulum'])->name('cpls-by-kurikulum');
                     Route::post('add-cpl-mk', [CPLPM::class, 'storeCPLMK'])->name('cpl-mk-store');
+                    Route::post('update-matrix-cpl-mk', [CPLPM::class, 'updateMatrixCPLMK'])->name('cpl-mk-matrix-update');
                     Route::get('pemetaan-cpl-bk-mk', [CPLPM::class, 'indexCPLBKMK'])->name('cpl-bk-mk');
+                    Route::post('update-matrix-cpl-bk-mk', [CPLPM::class, 'updateMatrixCPLBKMK'])->name('cpl-bk-mk-matrix-update');
                 });
 
                 Route::controller(CpmkController::class)->group(function () {
@@ -896,7 +1017,10 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                     Route::get('bahan-kajian', [BKPM::class, 'index'])->name('index');
                     Route::get('bk-add', [BKPM::class, 'addBK'])->name('bk-add');
                     Route::post('bk-store', [BKPM::class, 'storeBK'])->name('bk-store');
+                    Route::put('bk-update/{id}', [BKPM::class, 'updateBK'])->name('bk-update');
+                    Route::delete('bk-delete/{id}', [BKPM::class, 'destroyBK'])->name('bk-delete');
                     Route::get('pemetaan-bk-mk', [BKPM::class, 'indexBKMK'])->name('bk-mk');
+                    Route::post('update-matrix-bk-mk', [BKPM::class, 'updateMatrixBKMK'])->name('bk-mk-matrix-update');
                     Route::get('add-bk-mk', [BKPM::class, 'addBKMK'])->name('bk-mk-add');
                     Route::get('get-mk-by-bk/{bk}', [BKPM::class, 'getMkByBk'])->name('mk-by-mk');
                     Route::post('add-bk-mk', [BKPM::class, 'storeBKMK'])->name('bk-mk-store');
@@ -913,6 +1037,7 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
 
                     Route::get('organisasi-mk', [MKPM::class, 'organisasiMK'])->name('organisasi-mk');
                     Route::get('pemenuhan-cpl', [MKPM::class, 'pemenuhanCPL'])->name('pemenuhan-cpl');
+                    Route::post('update-matrix-pemenuhan-cpl', [MKPM::class, 'updateMatrixPemenuhanCPL'])->name('pemenuhan-cpl-matrix-update');
                 });
 
                 // CPL CPMK Pages
@@ -922,9 +1047,16 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                     Route::post('add-cpl-cpmk-mk', [CPLCPMKPM::class, 'storeCPLCPMKMK'])->name('cpl-cpmk-mk-store');
 
                     Route::get('pemetaan-cpl-cpmk-mk', [CPLCPMKPM::class, 'indexCPLCPMKMK'])->name('cpl-cpmk-mk');
+                    Route::get('pemetaan-mk-cpmk', [CPLCPMKPM::class, 'indexMKCPMK'])->name('pemetaan-mk-cpmk');
+                    Route::post('store-mk-cpmk', [CPLCPMKPM::class, 'storeMKCPMK'])->name('mk-cpmk-store');
+                    Route::put('update-mk-cpmk/{mk_kode}', [CPLCPMKPM::class, 'updateMKCPMK'])->name('mk-cpmk-update');
+                    Route::put('update-single-mk-cpmk/{mk_kode}/{cpmk_id}', [CPLCPMKPM::class, 'updateSingleMKCPMK'])->name('mk-cpmk-update-single');
+                    Route::delete('delete-mk-cpmk/{mk_kode}/{cpmk_id}', [CPLCPMKPM::class, 'destroyMKCPMK'])->name('mk-cpmk-destroy');
                     Route::get('pemetaan-cpl-cpmk-mk-semester', [CPLCPMKPM::class, 'indexCPLCPMKMKSMT'])->name('cpl-cpmk-mk-semester');
                     Route::get('pemetaan-cpl-mk-cpmk', [CPLCPMKPM::class, 'indexCPLMKCPMK'])->name('cpl-mk-cpmk');
+                    Route::post('update-matrix-cpl-mk-cpmk', [CPLCPMKPM::class, 'updateMatrixCPLMKCPMK'])->name('cpl-mk-cpmk-matrix-update');
                     Route::get('pemetaan-mk-cpmk-subcpmk', [CPLCPMKPM::class, 'indexMKCPMKSubCPMK'])->name('mk-cpmk-subcpmk');
+                    Route::post('update-matrix-mk-cpmk-subcpmk', [CPLCPMKPM::class, 'updateMatrixMKCPMKSubCPMK'])->name('mk-cpmk-subcpmk-matrix-update');
 
                     Route::get('add-cpmk-mk-subcpmk', [CPLCPMKPM::class, 'addCPMKMKSUBCPMK'])->name('cpmk-mk-subcpmk-add');
                     Route::get('get-subcpmk-by-mk/{mk}', [CPLCPMKPM::class, 'getSUBCPMKByMK'])->name('sub-cpmk-by-mk');
@@ -945,6 +1077,16 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                     Route::get('metode-penilaian', [AsesmenPM::class, 'metodePenilaian'])->name('metode-penilaian');
                     Route::get('add-metode-penilaian', [AsesmenPM::class, 'addMetodePenilaian'])->name('metode-penilaian-add');
                     Route::post('store-metode-penilaian', [AsesmenPM::class, 'storeMetodePenilaian'])->name('metode-penilaian-store');
+
+                    // Pengelolaan Metode Penilaian
+                    Route::get('kelola-metode', [AsesmenPM::class, 'indexKelolaMetode'])->name('kelola-metode');
+                    Route::put('kelola-metode/{id}', [AsesmenPM::class, 'updateKelolaMetode'])->name('kelola-metode.update');
+                    Route::delete('kelola-metode/{id}', [AsesmenPM::class, 'destroyKelolaMetode'])->name('kelola-metode.destroy');
+
+                    // Pengelolaan Kriteria Penilaian
+                    Route::get('kelola-kriteria', [AsesmenPM::class, 'indexKelolaKriteria'])->name('kelola-kriteria');
+                    Route::put('kelola-kriteria/{id}', [AsesmenPM::class, 'updateKelolaKriteria'])->name('kelola-kriteria.update');
+                    Route::delete('kelola-kriteria/{id}', [AsesmenPM::class, 'destroyKelolaKriteria'])->name('kelola-kriteria.destroy');
 
                     Route::get('tahap-penilaian', [AsesmenPM::class, 'tahapPenilaian'])->name('tahap-penilaian');
                     Route::get('add-instrumen-penilaian', [AsesmenPM::class, 'addInstrumenPenilaian'])->name('instrumen-penilaian-add');
@@ -986,6 +1128,7 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                     // Route::get('getProdiByUniversitas', [PenjaminMutuVisualisasiController::class, 'getProdiByUniversitas'])->name('getProdiByUniversitas');
                     // Route::get('getAngkatanByUniversitas', [PenjaminMutuVisualisasiController::class, 'getAngkatanByUniversitas'])->name('getAngkatanByUniversitas');
                     Route::get('getNpmByAngkatan', [PenjaminMutuVisualisasiController::class, 'getNpmByAngkatan'])->name('getNpmByAngkatan');
+                    Route::get('getTahunSemesterByNpm', [PenjaminMutuVisualisasiController::class, 'getTahunSemesterByNpm'])->name('getTahunSemesterByNpm');
                     Route::get('getPemetaanCpl', [PenjaminMutuVisualisasiController::class, 'getPemetaanCpl'])->name('getPemetaanCpl');
                     Route::post('hasilvisual-mahasiswa', [PenjaminMutuVisualisasiController::class, 'hasilVisualMahasiswa'])->name('hasilvisual-mahasiswa');
 
@@ -1008,12 +1151,22 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                     Route::post('hasilvisual-mahasiswaMataKuliah', [PenjaminMutuVisualisasiController::class, 'hasilVisualMahasiswaMataKuliah'])->name('hasilvisual-mahasiswaMataKuliah');
                     Route::get('getNamaByNpm', [PenjaminMutuVisualisasiController::class, 'getNamaByNpm'])->name('getNamaByNpm');
 
+                    // Visualisasi Program Studi (Fakultas / Universitas)
+                    Route::get('visual-program-studi', [PenjaminMutuVisualisasiController::class, 'indexProgramStudi'])->name('visual-program-studi');
+                    // Visualisasi Fakultas (Universitas)
+                    Route::get('visual-fakultas', [PenjaminMutuVisualisasiController::class, 'indexFakultas'])->name('visual-fakultas');
+
+                    // Sync Evaluasi OBE
+                    Route::post('sync-evaluasi', [PenjaminMutuVisualisasiController::class, 'syncEvaluasi'])->name('sync-evaluasi');
+
                     // generate PDF
                     Route::post('/generate-pdf-visualisasi-mahasiswa', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualMahasiswa'])->name('generate-pdfVisualMahasiswa');
                     Route::post('/generate-pdf-visualisasi-angkatan', [PenjaminMutuVisualisasiController::class,'generatePDFhasilVisualAngkatan'])->name('generate-pdfVisualAngkatan');
                     Route::post('/generate-pdf-visualisasi-matakuliah', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualMataKuliah'])->name('generate-pdfVisualMataKuliah');
                     Route::post('/generate-pdf-visualisasi-cpmk-mahasiswa', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualCPMKMahasiswa'])->name('generate-pdfVisualCPMKMahasiswa');
                     Route::post('/generate-pdf-visualisasi-cpmk-angkatan', [PenjaminMutuVisualisasiController::class,'generatePDFhasilVisualCPMKAngkatan'])->name('generate-pdfVisualCPMKAngkatan');
+                    Route::any('/generate-pdf-visualisasi-program-studi', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualProgramStudi'])->name('generate-pdfVisualProgramStudi');
+                    Route::any('/generate-pdf-visualisasi-fakultas', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualFakultas'])->name('generate-pdfVisualFakultas');
                 });
             });
         });
@@ -1045,8 +1198,15 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
  
                 Route::get('/pemetaan-cpmk-profesi/pdf', [\App\Http\Controllers\Mahasiswa\PemetaanCpmkProfesiController::class, 'pdf'])
                     ->name('pemetaan-cpmk-profesi.pdf');
+                Route::get('/rekomendasi-mk/pdf', [\App\Http\Controllers\Mahasiswa\RekomendasiMkController::class, 'pdf'])
+                    ->name('rekomendasi-mk.pdf');
             });
  
+        // Global Excel import routes
+        Route::post('/import-mahasiswa-excel', [\App\Http\Controllers\MahasiswaController::class, 'import'])->name('mahasiswa.import.global');
+        Route::get('/template-mahasiswa-excel', [\App\Http\Controllers\MahasiswaController::class, 'downloadTemplate'])->name('mahasiswa.template-excel.global');
+        Route::post('/import-dosen-excel', [\App\Http\Controllers\Admin\UserController::class, 'importDosen'])->name('dosen.import.global');
+        Route::get('/template-dosen-excel-file', [\App\Http\Controllers\Admin\UserController::class, 'downloadTemplateDosen'])->name('dosen.template-excel.global');
     }
 ); // <--- Ini penutup Auth Group utama
  

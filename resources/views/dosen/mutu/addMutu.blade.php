@@ -121,11 +121,19 @@
                         </div>
                         <div class="col-5">
                             <div class="form-group">
-                                <label>Semester <span class="text-danger">*</span></label>
+                                <label>Tahun Ajaran <span class="text-danger">*</span></label>
                                 <select class="form-control" name="semester" id="semester" required>
                                     <option value="" disabled selected>Select...</option>
-                                    <option value="Ganjil">Ganjil</option>
-                                    <option value="Genap">Genap</option>
+                                    @if(isset($tahunAjarans))
+                                        @foreach ($tahunAjarans as $ta)
+                                            <option value="{{ $ta->tahun }} - {{ $ta->jenis_semester }}">
+                                                {{ $ta->tahun }} - {{ $ta->jenis_semester }}
+                                            </option>
+                                        @endforeach
+                                    @else
+                                        <option value="2024 - Ganjil">2024 - Ganjil</option>
+                                        <option value="2024 - Genap">2024 - Genap</option>
+                                    @endif
                                 </select>
                             </div>
                         </div>
@@ -246,10 +254,6 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        var currentYear = new Date().getFullYear();
-        document.querySelectorAll('#semester option:not([disabled])').forEach(opt => {
-            opt.innerText = opt.value + ' ' + currentYear;
-        });
         document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
 
         $(document).ready(function() {

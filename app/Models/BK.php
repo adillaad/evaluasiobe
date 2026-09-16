@@ -21,4 +21,8 @@ class BK extends Model
     public function mk(){
         return $this->belongsToMany(MK::class,'bk_mk','bk_id','mk_kode');
     }
+
+    public function kurikulum(){
+        return $this->belongsTo(Kurikulum::class, 'kurikulum_id');
+    }
 }

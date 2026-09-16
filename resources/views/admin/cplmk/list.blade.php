@@ -52,15 +52,15 @@
                                         <td>{{ $cplmk->prodi->fakultas->universitas->nama }}</td>
                                     @endif
                                     @if ($userOtoritas != 'Admin')
-                                    <td class="d-flex">
+                                    <td>
                                         <form action="{{ route($currentPrefix . 'delete-cplmk', $cplmk->id) }}"
-                                            method="post">
+                                            method="post" class="d-inline m-0 p-0">
                                             @csrf
                                             @method('delete')
-                                            <button type="submit" class="btn btn-danger btn-icon-text p-2 me-2"
+                                            <button type="submit" class="btn btn-danger btn-icons"
+                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
                                                 onclick="return confirm('Are you sure to delete CPL {{ $cplmk->cpl->kode }} from CPLMK {{ $cplmk->kode_mk }} ?')">
-                                                Delete
-                                                <i class="ti-trash btn-icon-append"></i>
+                                                <i class="ti-trash"></i>
                                             </button>
                                         </form>
                                     </td>

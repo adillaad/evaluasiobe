@@ -15,50 +15,61 @@ class DashboardController extends Controller
 {
 
     public function index()
-{
-    $authUser = auth()->user(); // Mendapatkan user yang sedang login
+    {
+        $authUser = auth()->user(); // Mendapatkan user yang sedang login
+        $userOtoritas = optional($authUser->otoritas)->otoritas;
 
-    // Cek otoritas pengguna
-    if ($authUser->otoritas->otoritas == "Admin Universitas") {
-        // Hitung userCount hanya untuk universitas tertentu
-        $userCount = User::query()
-            ->leftJoin('user_otoritas', 'users.id', '=', 'user_otoritas.user_id')
-            ->leftJoin('prodi', 'users.id_prodiUser', '=', 'prodi.id')
-            ->leftJoin('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->leftJoin('universitas', 'fakultas.id_universitas', '=', 'universitas.id')
-            ->whereNotNull(['name', 'email', 'id_universitasUser'])
-            ->where('users.id', '!=', auth()->id())
-            ->where('fakultas.id_universitas', $authUser->id_universitasUser)
-            ->distinct()
-            ->count('users.id');
+        // Cek otoritas pengguna
+        if ($userOtoritas == "Admin Universitas") {
+            // Hitung userCount hanya untuk universitas tertentu
+            $userCount = User::query()
+                ->leftJoin('user_otoritas', 'users.id', '=', 'user_otoritas.user_id')
+                ->leftJoin('prodi', 'users.id_prodiUser', '=', 'prodi.id')
+                ->leftJoin('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                ->leftJoin('universitas', 'fakultas.id_universitas', '=', 'universitas.id')
+                ->whereNotNull(['name', 'email', 'id_universitasUser'])
+                ->where('users.id', '!=', auth()->id())
+                ->where('fakultas.id_universitas', $authUser->id_universitasUser)
+                ->distinct()
+                ->count('users.id');
 
-        // Query kurikulum hanya untuk universitas tertentu
-        $kurikulums = Kurikulum::query()
-            ->select('kurikulums.*')
-            ->join('prodi', 'kurikulums.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->where('fakultas.id_universitas', $authUser->id_universitasUser)
-            ->orderBy('tahun', 'asc')
-            ->get();
-        // dd($kurikulums);
-    } else {
-        // Hitung userCount untuk semua data
-        $userCount = User::query()
-            ->leftJoin('user_otoritas', 'users.id', '=', 'user_otoritas.user_id')
-            ->leftJoin('prodi', 'users.id_prodiUser', '=', 'prodi.id')
-            ->leftJoin('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->leftJoin('universitas', 'fakultas.id_universitas', '=', 'universitas.id')
-            ->whereNotNull(['name', 'email', 'id_universitasUser'])
-            ->where('users.id', '!=', auth()->id())
-            ->distinct()
-            ->count('users.id');
+            // Query kurikulum hanya untuk universitas tertentu
+            $kurikulums = Kurikulum::query()
+                ->select('kurikulums.*')
+                ->join('prodi', 'kurikulums.id_prodi', '=', 'prodi.id')
+                ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                ->where('fakultas.id_universitas', $authUser->id_universitasUser)
+                ->orderBy('tahun', 'asc')
+                ->get();
 
-        // Query semua kurikulum tanpa filter universitas
-        $kurikulums = Kurikulum::orderBy('tahun', 'desc')->get();
+            // Query prodis untuk universitas tertentu
+            $prodis = \App\Models\Prodi::query()
+                ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                ->where('fakultas.id_universitas', $authUser->id_universitasUser)
+                ->select('prodi.*')
+                ->with(['fakultas', 'fakultas.universitas'])
+                ->withCount('users')
+                ->get();
+        } else {
+            // Hitung userCount untuk semua data
+            $userCount = User::query()
+                ->leftJoin('user_otoritas', 'users.id', '=', 'user_otoritas.user_id')
+                ->leftJoin('prodi', 'users.id_prodiUser', '=', 'prodi.id')
+                ->leftJoin('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                ->leftJoin('universitas', 'fakultas.id_universitas', '=', 'universitas.id')
+                ->whereNotNull(['name', 'email', 'id_universitasUser'])
+                ->where('users.id', '!=', auth()->id())
+                ->distinct()
+                ->count('users.id');
+
+            // Query semua kurikulum tanpa filter universitas
+            $kurikulums = Kurikulum::orderBy('tahun', 'desc')->get();
+
+            $prodis = \App\Models\Prodi::with(['fakultas', 'fakultas.universitas'])->withCount('users')->get();
+        }
+
+        return view('admin.dashboard', compact('userCount', 'kurikulums', 'prodis'));
     }
-
-    return view('admin.dashboard', compact('userCount', 'kurikulums'));
-}
 
     public function card($filter)
     {

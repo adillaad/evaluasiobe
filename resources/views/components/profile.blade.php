@@ -118,7 +118,12 @@
                             <tr>
                                 <td>Prodi</td>
                                 <td>:</td>
-                                <td>{{ $user->prodi->nama }}</td>
+                                <td>
+                                    {{ $user->prodis->pluck('nama')->implode(', ') ?: ($user->prodi->nama ?? '-') }}
+                                    @if ($user->prodi)
+                                        <span class="badge bg-primary text-white ms-1" style="font-size: 10px;">Aktif: {{ $user->prodi->nama }}</span>
+                                    @endif
+                                </td>
                             </tr>
                         </table>
                     </div>
@@ -239,7 +244,10 @@
         </div>
         @endif
         
-        @if (auth()->user()->otoritas()->count() > 1)
+        @php
+            $isSecondaryProdi = isset($isSecondaryProdi) ? $isSecondaryProdi : ($user->primary_prodi_id && (int)$user->id_prodiUser !== (int)$user->primary_prodi_id);
+        @endphp
+        @if (!$isSecondaryProdi && $profiles->count() > 1)
             <div class="col-md-6 col-lg-6 grid-margin stretch-card">
                 <div class="card">
                     <div class="card-body">
@@ -250,37 +258,12 @@
                                 <select class="form-select" name="otoritas_id">
                                     @foreach ($profiles as $profile)
                                         <option value="{{ $profile->id }}" {{ $profile->active ? 'selected' : '' }}>
-                                            {{ $profile->nama_otoritas ? "$profile->nama_otoritas ($profile->otoritas)" : $profile->otoritas }}
+                                            {{ ($profile->nama_otoritas && trim($profile->nama_otoritas) !== '' && trim($profile->nama_otoritas) !== trim($profile->otoritas)) ? "$profile->nama_otoritas ($profile->otoritas)" : $profile->otoritas }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-primary">Simpan Otoritas</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        @endif
-        @if ($userProdis->count() > 1)
-            <div class="col-md-6 col-lg-6 grid-margin stretch-card">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Pilih Prodi Aktif</h4>
-                        <p class="card-description">
-                            Pilih prodi yang ingin Anda gunakan saat ini. Ini akan mengubah konteks data yang Anda lihat.
-                        </p>
-                        <form method="POST" action="{{ route('profile.switch-prodi') }}">
-                            @csrf
-                            <div class="mb-3">
-                                <select class="form-select" name="prodi_id">
-                                    @foreach ($userProdis as $prodi)
-                                        <option value="{{ $prodi->id }}" {{ $prodi->pivot->active ? 'selected' : '' }}>
-                                            {{ $prodi->nama }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Simpan Prodi Aktif</button>
                         </form>
                     </div>
                 </div>

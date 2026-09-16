@@ -24,7 +24,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Auto-sync seluruh evaluasi OBE secara berkala di latar belakang
+        $schedule->command('evaluasi:sync')->daily();
     }
 
     /**

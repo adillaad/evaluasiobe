@@ -10,8 +10,6 @@
         </div>
     @endif
 
-    <h3 class="px-4 pb-4 fw-bold text-center">Halaman Pemetaan CPL-CPMK-MK-Profesi</h3>
-
     @php
         $otoritas = auth()->user()->otoritas->otoritas;
 
@@ -30,19 +28,14 @@
     @if ($pdfRoute || $printRoute)
         <div class="text-start px-4 mb-3 d-flex gap-2 flex-wrap">
             @if ($pdfRoute)
-                <a href="{{ route($pdfRoute) }}" class="btn btn-danger" target="_blank">
-                    <i class="mdi mdi-file-pdf-box me-1"></i> Unduh PDF
+                <a href="{{ route($pdfRoute) }}" class="btn btn-danger btn-icon-text" target="_blank">
+                    <i class="ti-file me-1"></i> Unduh PDF
                 </a>
             @endif
 
             @if ($printRoute)
-                {{--
-                    Tombol CETAK: membuka halaman print di tab baru.
-                    Halaman itu otomatis membuka dialog print browser
-                    (persis seperti gambar — user bisa atur kertas, warna, dll).
-                --}}
-                <a href="{{ route($printRoute) }}" class="btn btn-primary" target="_blank">
-                    <i class="mdi mdi-printer me-1"></i> Cetak
+                <a href="{{ route($printRoute) }}" class="btn btn-info btn-icon-text" target="_blank">
+                    <i class="ti-printer me-1"></i> Cetak
                 </a>
             @endif
         </div>
@@ -55,7 +48,7 @@
             <div class="card-body">
                 <h4 class="card-title">List Pemetaan CPL-CPMK-MK-Profesi</h4>
                 <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                    <table class="table table-hover">
+                    <table class="table table-hover dataTable">
                         <thead style="position: sticky; top: 0; z-index: 10;" class="bg-light">
                             <tr>
                                 <th>CPL</th>

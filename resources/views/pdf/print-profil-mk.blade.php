@@ -253,73 +253,76 @@
             </tr>
         </table>
 
-        <table class="data">
-            <thead>
-                <tr>
-                    @if ($otoritas === 'Penjamin Mutu Universitas')
-                        <th style="width:4%;">No</th>
-                        <th style="width:8%;">Kode<br>Profil</th>
-                        <th style="width:18%;">Nama Profil Lulusan</th>
-                        <th style="width:13%;">Fakultas</th>
-                        <th style="width:13%;">Jurusan</th>
-                        <th style="width:10%;">Kode MK</th>
-                        <th style="width:24%;">Nama Mata Kuliah</th>
-                        <th style="width:10%;">Kurikulum</th>
-                    @elseif ($otoritas === 'Penjamin Mutu Fakultas')
-                        <th style="width:4%;">No</th>
-                        <th style="width:10%;">Kode<br>Profil</th>
-                        <th style="width:24%;">Nama Profil Lulusan</th>
-                        <th style="width:16%;">Jurusan</th>
-                        <th style="width:10%;">Kode MK</th>
-                        <th style="width:26%;">Nama Mata Kuliah</th>
-                        <th style="width:10%;">Kurikulum</th>
-                    @else
-                        <th style="width:5%;">No</th>
-                        <th style="width:12%;">Kode<br>Profil</th>
-                        <th style="width:30%;">Nama Profil Lulusan</th>
-                        <th style="width:13%;">Kode MK</th>
-                        <th style="width:30%;">Nama Mata Kuliah</th>
-                        <th style="width:10%;">Kurikulum</th>
-                    @endif
-                </tr>
-            </thead>
-            <tbody>
-                @php $no = 1; @endphp
-
-                @forelse ($grouped as $profilKode => $items)
-                    @php $rowspan = max($items->count(), 1); @endphp
-
-                    @foreach ($items as $index => $item)
-                        <tr>
-                            @if ($index === 0)
-                                <td rowspan="{{ $rowspan }}" class="text-center">{{ $no++ }}</td>
-                                <td rowspan="{{ $rowspan }}" class="text-center">{{ $item->profil_kode ?? '-' }}
-                                </td>
-                                <td rowspan="{{ $rowspan }}">{{ $item->profil_nama ?? '-' }}</td>
-
-                                @if ($otoritas === 'Penjamin Mutu Universitas')
-                                    <td rowspan="{{ $rowspan }}">{{ $item->fakultas_nama ?? '-' }}</td>
-                                    <td rowspan="{{ $rowspan }}">{{ $item->prodi_nama ?? '-' }}</td>
-                                @elseif ($otoritas === 'Penjamin Mutu Fakultas')
-                                    <td rowspan="{{ $rowspan }}">{{ $item->prodi_nama ?? '-' }}</td>
-                                @endif
-                            @endif
-
-                            <td class="text-center">{{ $item->mk_kode ?? '-' }}</td>
-                            <td>{{ $item->mk_nama ?? '-' }}</td>
-                            <td class="text-center">{{ $item->kurikulum_tahun ?? '-' }}</td>
-                        </tr>
-                    @endforeach
-
-                @empty
+        @forelse ($groupedByKurikulum as $namaKurikulum => $grouped)
+            <h4 style="margin-top: 15px; margin-bottom: 8px; font-size: 11pt; text-transform: uppercase;">{{ $namaKurikulum }}</h4>
+            <table class="data" style="margin-bottom: 20px;">
+                <thead>
                     <tr>
-                        <td colspan="6" class="text-center" style="padding:15px; color:#888;">
+                        @if ($otoritas === 'Penjamin Mutu Universitas')
+                            <th style="width:4%;">No</th>
+                            <th style="width:8%;">Kode<br>Profil</th>
+                            <th style="width:18%;">Nama Profil Lulusan</th>
+                            <th style="width:13%;">Fakultas</th>
+                            <th style="width:13%;">Jurusan</th>
+                            <th style="width:10%;">Kode MK</th>
+                            <th style="width:24%;">Nama Mata Kuliah</th>
+                            <th style="width:10%;">Kurikulum</th>
+                        @elseif ($otoritas === 'Penjamin Mutu Fakultas')
+                            <th style="width:4%;">No</th>
+                            <th style="width:10%;">Kode<br>Profil</th>
+                            <th style="width:24%;">Nama Profil Lulusan</th>
+                            <th style="width:16%;">Jurusan</th>
+                            <th style="width:10%;">Kode MK</th>
+                            <th style="width:26%;">Nama Mata Kuliah</th>
+                            <th style="width:10%;">Kurikulum</th>
+                        @else
+                            <th style="width:5%;">No</th>
+                            <th style="width:12%;">Kode<br>Profil</th>
+                            <th style="width:30%;">Nama Profil Lulusan</th>
+                            <th style="width:13%;">Kode MK</th>
+                            <th style="width:30%;">Nama Mata Kuliah</th>
+                            <th style="width:10%;">Kurikulum</th>
+                        @endif
+                    </tr>
+                </thead>
+                <tbody>
+                    @php $no = 1; @endphp
+                    @foreach ($grouped as $profilKode => $items)
+                        @php $rowspan = max($items->count(), 1); @endphp
+                        @foreach ($items as $index => $item)
+                            <tr>
+                                @if ($index === 0)
+                                    <td rowspan="{{ $rowspan }}" class="text-center">{{ $no++ }}</td>
+                                    <td rowspan="{{ $rowspan }}" class="text-center">{{ $item->profil_kode ?? '-' }}</td>
+                                    <td rowspan="{{ $rowspan }}">{{ $item->profil_nama ?? '-' }}</td>
+
+                                    @if ($otoritas === 'Penjamin Mutu Universitas')
+                                        <td rowspan="{{ $rowspan }}">{{ $item->fakultas_nama ?? '-' }}</td>
+                                        <td rowspan="{{ $rowspan }}">{{ $item->prodi_nama ?? '-' }}</td>
+                                    @elseif ($otoritas === 'Penjamin Mutu Fakultas')
+                                        <td rowspan="{{ $rowspan }}">{{ $item->prodi_nama ?? '-' }}</td>
+                                    @endif
+                                @endif
+
+                                <td class="text-center">{{ $item->mk_kode ?? '-' }}</td>
+                                <td>{{ $item->mk_nama ?? '-' }}</td>
+                                <td class="text-center">{{ $item->kurikulum_tahun ?? '-' }}</td>
+                            </tr>
+                        @endforeach
+                    @endforeach
+                </tbody>
+            </table>
+        @empty
+            <table class="data">
+                <tbody>
+                    <tr>
+                        <td class="text-center" style="padding:15px; color:#888;">
                             Data tidak tersedia.
                         </td>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        @endforelse
     </div>
 
     <script>

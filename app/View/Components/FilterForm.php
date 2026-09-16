@@ -21,7 +21,9 @@ class FilterForm extends Component
         public bool $showProdi = true,
         public bool $showFakultas = true,
         public bool $showUniversitas = true,
-        public bool $showKurikulum = false
+        public bool $showKurikulum = false,
+        public bool $showCpl = false,
+        public Collection|array $cplsFilter = []
     ) {
         //
     }

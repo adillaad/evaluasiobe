@@ -19,55 +19,98 @@
                     :faculties="$faculties" 
                     :programs="$programs" 
                     :kurikulums="$kurikulums" 
-                    :showKurikulum="true" 
+                    :show-kurikulum="true" 
+                    :show-cpl="true"
+                    :cpls-filter="$cplsFilter ?? []"
                 />
+                <style>
+                    .table-cpmk-list {
+                        width: 100% !important;
+                    }
+                    .table-cpmk-list th {
+                        font-weight: 600 !important;
+                        font-size: 13px !important;
+                    }
+                    .table-cpmk-list td {
+                        vertical-align: middle !important;
+                        white-space: normal !important;
+                        word-wrap: break-word !important;
+                        word-break: break-word !important;
+                    }
+                    .badge-cpl-code {
+                        background-color: #eff6ff;
+                        color: #1d4ed8;
+                        border: 1px solid #bfdbfe;
+                        font-weight: 700;
+                        padding: 4px 10px;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        display: inline-block;
+                    }
+                    .badge-cpmk-code {
+                        background-color: #f0f9ff;
+                        color: #0284c7;
+                        border: 1px solid #bae6fd;
+                        font-weight: 700;
+                        padding: 4px 10px;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        display: inline-block;
+                    }
+                    .badge-tahun-kuri {
+                        background-color: #f8fafc;
+                        color: #475569;
+                        border: 1px solid #e2e8f0;
+                        font-weight: 600;
+                        padding: 4px 10px;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        display: inline-block;
+                    }
+                </style>
                 <div class="table-responsive">
-                    <table class="table table-hover dataTable">
+                    <table class="table table-hover dataTable table-cpmk-list align-middle">
                         <thead class="bg-light">
                             <tr>
-                                <th>No</th>
-                                <th>Kode CPL</th>
-                                <th>Kode CPMK</th>
-                                <th>Rincian CPMK</th>
-                                <th>Tahun Kurikulum</th>
+                                <th style="width: 50px;" class="text-center">No</th>
+                                <th style="width: 110px;">Kode CPL</th>
+                                <th style="width: 120px;">Kode CPMK</th>
+                                <th style="min-width: 320px; max-width: 550px;">Rincian CPMK</th>
+                                <th style="width: 140px;" class="text-center">Tahun Kurikulum</th>
                                 @if (in_array($userOtoritas, [
                                         'Admin',
                                         'Admin Universitas',
                                         'Penjamin Mutu Universitas',
                                         'Penjamin Mutu Fakultas',
                                     ]))
-                                    <th>Prodi</th>
+                                    <th style="width: 180px;">Prodi</th>
                                 @endif
                                 @if (in_array($userOtoritas, ['Admin', 'Admin Universitas', 'Penjamin Mutu Universitas']))
-                                    <th>Fakultas</th>
+                                    <th style="width: 180px;">Fakultas</th>
                                 @endif
                                 @if (in_array($userOtoritas, ['Admin']))
-                                    <th>Universitas</th>
+                                    <th style="width: 180px;">Universitas</th>
                                 @endif
                                 @if (in_array($userOtoritas, [
                                         'Admin Universitas',
                                         'Kepala Program Studi',
                                         'Penjamin Mutu Program Studi',
                                     ]))
-                                    <th class="text-center">Action</th>
+                                    <th style="width: 140px;" class="text-center">Action</th>
                                 @endif
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($cpmks as $cpmk)
                                 <tr>
-                                    <td class="text-center">{{ $loop->iteration }}</td>
-                                    <td> {{ $cpmk->cpl?->kode }}</td>
-                                    <td> {{ $cpmk->kode }}</td>
-                                    <td>
-                                        <div class="text-wrap lh-base" style="width: 300px">
-                                            {{ $cpmk->judul }}
-                                        </div>
+                                    <td class="text-center fw-semibold text-secondary">{{ $loop->iteration }}</td>
+                                    <td><span class="badge-cpl-code">{{ $cpmk->cpl?->kode }}</span></td>
+                                    <td><span class="badge-cpmk-code">{{ $cpmk->kode }}</span></td>
+                                    <td style="line-height: 1.5; color: #334155;">
+                                        {{ $cpmk->judul }}
                                     </td>
-                                    <td>
-                                        <div class="text-wrap lh-base" style="width: 300px">
-                                            {{ $cpmk->cpl->kurikulum->tahun }}
-                                        </div>
+                                    <td class="text-center">
+                                        <span class="badge-tahun-kuri">{{ $cpmk->cpl->kurikulum->tahun }}</span>
                                     </td>
                                     @if (in_array($userOtoritas, [
                                             'Admin',
@@ -88,28 +131,24 @@
                                             'Kepala Program Studi',
                                             'Penjamin Mutu Program Studi',
                                         ]))
-                                        <td>
-                                            <div class="d-flex gap-2">
-                                                <div>
-                                                    <a href="{{ route($currentPrefix . 'edit-cpmk', encrypt($cpmk->id)) }}"
-                                                        class="btn btn-warning p-2">
-                                                        <i class="ti-pencil me-1"></i>
-                                                        Edit
-                                                    </a>
-                                                </div>
-                                                <form
-                                                    action="{{ route($currentPrefix . 'delete-cpmk', encrypt($cpmk->id)) }}"
-                                                    method="post">
-                                                    @csrf
-                                                    @method('delete')
-                                                    <button type="submit" class="btn btn-danger p-2"
-                                                        onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
-                                                        <i class="ti-trash me-1"></i>
-                                                        Delete
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
+                                         <td class="text-center">
+                                             <div class="d-flex justify-content-center align-items-center gap-1">
+                                                 <a href="{{ route($currentPrefix . 'edit-cpmk', encrypt($cpmk->id)) }}"
+                                                     class="btn btn-warning btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                                     <i class="ti-pencil"></i>
+                                                 </a>
+                                                 <form action="{{ route($currentPrefix . 'delete-cpmk', encrypt($cpmk->id)) }}"
+                                                     method="post" class="d-inline m-0 p-0">
+                                                     @csrf
+                                                     @method('delete')
+                                                     <button type="submit" class="btn btn-danger btn-icons"
+                                                         data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
+                                                         onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
+                                                         <i class="ti-trash"></i>
+                                                     </button>
+                                                 </form>
+                                             </div>
+                                         </td>
                                     @endif
                                 </tr>
                             @endforeach

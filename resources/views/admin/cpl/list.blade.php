@@ -48,28 +48,26 @@
                                     @if (auth()->user()->otoritas->otoritas != 'Admin Universitas')
                                         <td>{{ $cpl->prodi->fakultas->universitas->nama }}</td>
                                     @endif
-                                    @if (auth()->user()->otoritas->otoritas != 'Admin')
-                                        <td>
-                                            <div class="d-flex">
-                                                <a href="{{ route('admin-universitas.edit-cpl', encrypt($cpl->id)) }}"
-                                                    class="btn btn-warning btn-icon-text p-2 me-2">
-                                                    Edit
-                                                    <i class="ti-pencil btn-icon-append"></i>
-                                                </a>
-                                                <form
-                                                    action="{{ route('admin-universitas.delete-cpl', encrypt($cpl->id)) }}"
-                                                    method="post">
-                                                    @csrf
-                                                    @method('delete')
-                                                    <button type="submit" class="btn btn-danger btn-icon-text p-2"
-                                                        onclick="return confirm('Hapus CPL {{ $cpl->kode }}?')">
-                                                        Delete
-                                                        <i class="ti-trash btn-icon-append"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    @endif
+                                     @if (auth()->user()->otoritas->otoritas != 'Admin')
+                                         <td>
+                                             <div class="d-flex align-items-center gap-1">
+                                                 <a href="{{ route('admin-universitas.edit-cpl', encrypt($cpl->id)) }}"
+                                                     class="btn btn-warning btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                                     <i class="ti-pencil"></i>
+                                                 </a>
+                                                 <form action="{{ route('admin-universitas.delete-cpl', encrypt($cpl->id)) }}"
+                                                     method="post" class="d-inline m-0 p-0">
+                                                     @csrf
+                                                     @method('delete')
+                                                     <button type="submit" class="btn btn-danger btn-icons"
+                                                         data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
+                                                         onclick="return confirm('Hapus CPL {{ $cpl->kode }}?')">
+                                                         <i class="ti-trash"></i>
+                                                     </button>
+                                                 </form>
+                                             </div>
+                                         </td>
+                                     @endif
                                 </tr>
                             @endforeach
                         </tbody>

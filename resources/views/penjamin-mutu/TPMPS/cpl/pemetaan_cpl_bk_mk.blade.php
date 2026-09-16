@@ -10,8 +10,6 @@
         </div>
     @endif
 
-    <h3 class="px-4 pb-4 fw-bold text-center">Halaman CPL-BK-MK</h3>
-
     <div class="container-fluid">
         <div class="card">
             <div class="card-body">
