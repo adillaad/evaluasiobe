@@ -793,7 +793,7 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
                         <p class="fw-light text-muted mb-0">{{ auth()->user()->email }}</p>
                         @if (auth()->check())
                             @php
-                                $userOtoritasList = auth()->user()->otoritas()->get();
+                                $userOtoritasList = auth()->user()->getOtoritasListForCurrentProdi();
                                 $activeOtoritasId = optional(auth()->user()->otoritas)->id;
                             @endphp
                             @if ($userOtoritasList->count() > 1)
@@ -853,7 +853,7 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
                         <p class="fw-light text-muted mb-0">{{ auth()->user()->email }}</p>
                         @if (auth()->check())
                             @php
-                                $userOtoritasList = auth()->user()->otoritas()->get();
+                                $userOtoritasList = auth()->user()->getOtoritasListForCurrentProdi();
                                 $activeOtoritasId = optional(auth()->user()->otoritas)->id;
                             @endphp
                             @if ($userOtoritasList->count() > 1)

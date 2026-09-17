@@ -92,6 +92,21 @@ class User extends Authenticatable
         return $this->otoritas()->where('otoritas', $otoritas)->where('active', true)->exists();
     }
 
+    public function isSecondaryProdi(): bool
+    {
+        $primaryProdiId = $this->primary_prodi_id ?? $this->id_prodiUser;
+        return (bool) ($primaryProdiId && (int)$this->id_prodiUser !== (int)$primaryProdiId);
+    }
+
+    public function getOtoritasListForCurrentProdi()
+    {
+        if ($this->isSecondaryProdi()) {
+            return $this->otoritas()->where('otoritas', 'Dosen')->get();
+        }
+
+        return $this->otoritas()->get();
+    }
+
     /**
      * Tampilkan string otoritas user berdasarkan konteks prodi yang sedang dilihat.
      * Jika prodi konteks bukan prodi utama user (user ditambahkan sebagai Dosen Pengampu),

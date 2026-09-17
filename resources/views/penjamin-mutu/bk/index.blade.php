@@ -131,7 +131,7 @@
                                         <td class="fw-semibold text-dark">{{ $bk->nama }}</td>
                                         <td class="text-center">
                                             <span class="badge bg-light text-dark border px-2.5 py-1.5 font-12 rounded-2 fw-semibold">
-                                                Kurikulum {{ $bk->kurikulum->tahun ?? '-' }}
+                                                {{ $bk->kurikulum->tahun ?? '-' }}
                                             </span>
                                         </td>
                                         @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))

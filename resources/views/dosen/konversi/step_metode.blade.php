@@ -155,8 +155,12 @@
                         </div>
                     </div>
 
-                    {{-- Action Buttons (Download & Upload Excel) --}}
+                    {{-- Action Buttons (Download & Upload Excel & Lihat Nilai) --}}
                     <div class="d-flex align-items-center gap-2 flex-wrap ms-auto">
+                        <a href="{{ route('dosen.konversi-nilai.detail', $konversi->id) }}"
+                           class="btn btn-info text-white btn-sm px-3 shadow-sm d-inline-flex align-items-center">
+                            <i class="mdi mdi-eye fs-6 me-1"></i> Lihat Nilai
+                        </a>
                         <button type="button"
                                 id="btn-download-ab"
                                 class="btn btn-success text-white border-0 btn-sm px-3 shadow-sm d-inline-flex align-items-center {{ $isComplete ? '' : 'disabled' }}"
@@ -297,8 +301,6 @@
                                             @foreach ($cpmks as $cpmk)
                                                 @php
                                                     $isCpmkChecked = $existingCpmkMap->has($cpmk->id);
-                                                    $subCpmks = $cpmk->subCpmks;
-                                                    $mappedSubIds = $isCpmkChecked ? $existingCpmkMap->get($cpmk->id)->pluck('sub_cpmk_id')->filter()->toArray() : [];
                                                 @endphp
                                                 <div class="col-md-6">
                                                     <div class="border rounded p-2 bg-light h-100 cpmk-card" data-cpmk-id="{{ $cpmk->id }}">
@@ -314,25 +316,6 @@
                                                                 <span style="font-size: 0.82rem;">{{ $cpmk->judul ?? $cpmk->kode }}</span>
                                                             </label>
                                                         </div>
-
-                                                        @if ($subCpmks->isNotEmpty())
-                                                            <div class="ms-4 pt-1 border-start ps-2 mb-2">
-                                                                @foreach ($subCpmks as $sub)
-                                                                    @php $isSubChecked = in_array($sub->id, $mappedSubIds); @endphp
-                                                                    <div class="form-check mb-1 d-flex align-items-start ps-0">
-                                                                        <input class="form-check-input form-check-input-lg sub-cpmk-check me-2 ms-0 mt-1 flex-shrink-0" type="checkbox"
-                                                                               name="cpmk_mapping[{{ $metodeId }}][{{ $cpmk->id }}][]"
-                                                                               value="{{ $sub->id }}"
-                                                                               id="sub_{{ $metodeId }}_{{ $sub->id }}"
-                                                                               {{ $isSubChecked ? 'checked' : '' }}>
-                                                                        <label class="form-check-label text-muted small mb-0 ms-1 text-wrap" for="sub_{{ $metodeId }}_{{ $sub->id }}">
-                                                                            <span class="badge bg-info text-dark me-1" style="font-size: 0.68rem; padding: 2px 5px;">{{ $sub->kode }}</span>
-                                                                            <span style="font-size: 0.78rem;">{{ $sub->uraian ?? '' }}</span>
-                                                                        </label>
-                                                                    </div>
-                                                                @endforeach
-                                                            </div>
-                                                        @endif
 
                                                         {{-- Breakdown Soal / Instrumen Section --}}
                                                         <div class="soal-breakdown-wrapper mt-2 pt-2 border-top {{ $isCpmkChecked ? '' : 'd-none' }}">
@@ -455,22 +438,6 @@
                                 </label>
                             </div>
 
-                            @if ($cpmk->subCpmks->isNotEmpty())
-                                <div class="ms-4 pt-1 border-start ps-2 mb-2">
-                                    @foreach ($cpmk->subCpmks as $sub)
-                                        <div class="form-check mb-1 d-flex align-items-start ps-0">
-                                            <input class="form-check-input form-check-input-lg sub-cpmk-check me-2 ms-0 mt-1 flex-shrink-0" type="checkbox"
-                                                   value="{{ $sub->id }}"
-                                                   data-sub-id="{{ $sub->id }}">
-                                            <label class="form-check-label text-muted small mb-0 ms-1 text-wrap sub-cpmk-label">
-                                                <span class="badge bg-info text-dark me-1" style="font-size: 0.68rem; padding: 2px 5px;">{{ $sub->kode }}</span>
-                                                <span style="font-size: 0.78rem;">{{ $sub->uraian ?? '' }}</span>
-                                            </label>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
-
                             {{-- Breakdown Soal / Instrumen Section --}}
                             <div class="soal-breakdown-wrapper mt-2 pt-2 border-top d-none">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
@@ -543,7 +510,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="small text-secondary fw-semibold mb-3">Pilih format jenis template Excel yang ingin diunduh untuk seluruh metode:</p>
+                    <p class="small text-secondary fw-semibold mb-3">Pilih format jenis template Excel yang ingin diunduh:</p>
                     
                     <div class="d-flex flex-column gap-3">
                         {{-- Opsi A --}}
@@ -561,18 +528,51 @@
                         </label>
 
                         {{-- Opsi B --}}
-                        <label for="dl_format_cpmk" class="modern-option-card">
-                            <div class="d-flex align-items-start gap-3">
+                        <div class="modern-option-card p-3 rounded-3 border">
+                            <label for="dl_format_cpmk" class="d-flex align-items-start gap-3 w-100 mb-0" style="cursor: pointer;">
                                 <input class="form-check-input mt-1 flex-shrink-0" type="radio" name="format_type" id="dl_format_cpmk" value="metode_cpmk">
                                 <div class="flex-grow-1">
                                     <div class="option-title">Nilai Akhir Per Metode & CPMK</div>
-                                    <div class="option-desc">Mengimpor nilai akhir <strong>tiap kombinasi Metode & CPMK</strong> dalam 1 file.</div>
+                                    <div class="option-desc">Mengimpor nilai akhir <strong>metode & CPMK</strong>.</div>
                                     <div class="modern-code-badge">
-                                        <i class="mdi mdi-code-tags me-1"></i>Contoh Kolom: Tahun Ajaran | Nama MK | Angkatan | NPM | Nama | UTS – CPMK 1 | UTS – CPMK 2
+                                        <i class="mdi mdi-code-tags me-1"></i>Contoh Kolom: Tahun Ajaran | Nama MK | Angkatan | NPM | Nama | Nilai Metode UTS | UTS – CPMK 1 | UTS – CPMK 2
                                     </div>
                                 </div>
+                            </label>
+
+                            {{-- Sub Options for Opsi B --}}
+                            <div id="cpmk-scope-wrapper" class="mt-3 pt-3 border-top ms-4 d-none">
+                                <div class="fw-bold text-dark mb-2">
+                                    <i class="mdi mdi-tune-vertical me-1 text-primary"></i>Pilihan Cakupan Metode Template:
+                                </div>
+                                <div class="d-flex flex-column gap-2 mb-3">
+                                    <label for="scope_all" class="d-flex align-items-center gap-2 cursor-pointer mb-0">
+                                        <input class="form-check-input mt-0 flex-shrink-0" type="radio" name="cpmk_scope" id="scope_all" value="all" checked>
+                                        <span class=" fw-semibold text-dark">
+                                            Seluruh Metode Sekaligus <span class="text-muted fw-normal">(1 template memuat seluruh metode & CPMK)</span>
+                                        </span>
+                                    </label>
+
+                                    <label for="scope_single" class="d-flex align-items-center gap-2 cursor-pointer mb-0">
+                                        <input class="form-check-input mt-0 flex-shrink-0" type="radio" name="cpmk_scope" id="scope_single" value="single">
+                                        <span class=" fw-semibold text-dark">
+                                            Satu per Satu Metode <span class="text-muted fw-normal">(Template khusus 1 metode & CPMK)</span>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <div id="cpmk-single-select-container" class="mt-2 ms-4 d-none" style="max-width: 360px;">
+                                    <label class="form-label small text-secondary fw-semibold mb-1">Pilih Metode Penilaian <span class="text-danger">*</span></label>
+                                    <select class="form-select form-select-sm" id="dl_metode_id_select">
+                                        @foreach ($konversi->konversiMetode as $km)
+                                            <option value="{{ $km->metode_id }}">
+                                                {{ $km->metodePenilaian->nama ?? 'Metode ' . $km->metode_id }} (Bobot {{ $km->bobot }}%)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
-                        </label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer d-flex justify-content-between align-items-center">
@@ -632,14 +632,14 @@
 
 {{-- Modal Upload Excel --}}
 <div class="modal fade upload-modal" id="uploadExcelModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 580px;">
         <div class="modal-content modern-modal border-0">
             <form action="{{ route('dosen.konversi-nilai.upload-excel', $konversi->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <div class="modal-header">
+                <div class="modal-header py-2 px-3">
                     <div class="d-flex align-items-center gap-2">
-                        <div class="bg-primary-subtle text-primary p-2 rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i class="mdi mdi-upload-lock fs-4"></i>
+                        <div class="bg-primary-subtle text-primary p-2 rounded-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                            <i class="mdi mdi-upload-lock fs-5"></i>
                         </div>
                         <div>
                             <h5 class="modal-title fs-6 fw-bold mb-0 text-dark">Upload Excel Nilai Konversi</h5>
@@ -648,58 +648,58 @@
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <p class="small text-secondary fw-semibold mb-3">Pilih format jenis file Excel yang akan di-upload:</p>
+                <div class="modal-body p-3">
+                    <p class="small text-secondary fw-semibold mb-2">Pilih format jenis file Excel yang akan di-upload:</p>
 
                     {{-- Kategori 1 --}}
-                    <div class="category-header">
+                    <div class="category-header py-1 px-3 mb-2 small fw-bold">
                         <i class="mdi mdi-buffer me-1 text-primary"></i> KATEGORI 1: Nilai Per Metode
                     </div>
-                    <div class="d-flex flex-column gap-2 mb-3">
-                        <label for="up_format_standar" class="modern-option-card">
-                            <div class="d-flex align-items-start gap-3">
+                    <div class="d-flex flex-column gap-2 mb-2">
+                        <label for="up_format_standar" class="modern-option-card rounded-3" style="padding: 0.6rem 0.85rem !important;">
+                            <div class="d-flex align-items-start gap-2">
                                 <input class="form-check-input option-upload-type mt-1 flex-shrink-0" type="radio" name="format_type" id="up_format_standar" value="standar" checked>
                                 <div class="flex-grow-1">
-                                    <div class="option-title">Nilai Akhir Per Metode Penilaian</div>
-                                    <div class="option-desc">Kolom Excel memuat nama metode (`UTS`, `UAS`, `Tugas`).</div>
+                                    <div class="option-title small fw-bold">Nilai Akhir Per Metode Penilaian</div>
+                                    <div class="option-desc text-muted small">Kolom Excel memuat nama metode (`UTS`, `UAS`, `Tugas`).</div>
                                 </div>
                             </div>
                         </label>
 
-                        <label for="up_format_cpmk" class="modern-option-card">
-                            <div class="d-flex align-items-start gap-3">
+                        <label for="up_format_cpmk" class="modern-option-card rounded-3" style="padding: 0.6rem 0.85rem !important;">
+                            <div class="d-flex align-items-start gap-2">
                                 <input class="form-check-input option-upload-type mt-1 flex-shrink-0" type="radio" name="format_type" id="up_format_cpmk" value="metode_cpmk">
                                 <div class="flex-grow-1">
-                                    <div class="option-title">Nilai Akhir Per Metode & CPMK</div>
-                                    <div class="option-desc">Kolom Excel memuat kombinasi metode dan CPMK (`UAS – CPMK 1`, `UAS – CPMK 2`).</div>
+                                    <div class="option-title small fw-bold">Nilai Akhir Per Metode & CPMK</div>
+                                    <div class="option-desc text-muted small">Kolom Excel memuat kombinasi metode dan CPMK (`UAS – CPMK 1`, `UAS – CPMK 2`).</div>
                                 </div>
                             </div>
                         </label>
                     </div>
 
                     {{-- Kategori 2 --}}
-                    <div class="category-header">
+                    <div class="category-header py-1 px-3 mb-2 small fw-bold">
                         <i class="mdi mdi-format-list-bulleted me-1 text-primary"></i> KATEGORI 2: Nilai Per Soal
                     </div>
-                    <div class="mb-3">
-                        <label for="up_format_soal" class="modern-option-card">
-                            <div class="d-flex align-items-start gap-3">
+                    <div class="mb-2">
+                        <label for="up_format_soal" class="modern-option-card rounded-3" style="padding: 0.6rem 0.85rem !important;">
+                            <div class="d-flex align-items-start gap-2">
                                 <input class="form-check-input option-upload-type mt-1 flex-shrink-0" type="radio" name="format_type" id="up_format_soal" value="breakdown_soal">
                                 <div class="flex-grow-1">
-                                    <div class="option-title">Nilai Per Soal</div>
-                                    <div class="option-desc">Kolom Excel memuat Nilai Metode serta rincian nilai butir soal per CPMK. (Metode otomatis dibaca dari tabel file Excel).</div>
+                                    <div class="option-title small fw-bold">Nilai Per Soal</div>
+                                    <div class="option-desc text-muted small">Kolom Excel memuat Nilai Metode serta rincian nilai butir soal per CPMK.</div>
                                 </div>
                             </div>
                         </label>
                     </div>
 
-                    <div class="pt-3 border-top">
+                    <div class="pt-2 border-top mt-2">
                         <label for="excel_file" class="form-label fw-bold text-dark small mb-1">Pilih File Excel (.xlsx, .xls, .csv) <span class="text-danger">*</span></label>
-                        <input type="file" class="form-control" id="excel_file" name="excel_file" accept=".xlsx,.xls,.csv" required>
-                        <small class="text-muted d-block mt-1"><i class="mdi mdi-information-outline me-1"></i> Pastikan format header kolom pada file Excel sudah sesuai dengan template yang Anda pilih.</small>
+                        <input type="file" class="form-control form-control-sm" id="excel_file" name="excel_file" accept=".xlsx,.xls,.csv" required>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;"><i class="mdi mdi-information-outline me-1"></i> Pastikan format header kolom pada file Excel sudah sesuai dengan template yang Anda pilih.</small>
                     </div>
                 </div>
-                <div class="modal-footer d-flex justify-content-between align-items-center">
+                <div class="modal-footer py-2 px-3 d-flex justify-content-between align-items-center">
                     <button type="button" class="btn btn-light btn-sm px-3 fw-semibold text-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold shadow-sm d-inline-flex align-items-center">
                         <i class="mdi mdi-upload me-1 fs-6"></i> Upload & Process
@@ -864,8 +864,8 @@
                 let bobotVal = parseFloat($(this).find('.metode-bobot-input').val()) || 0;
                 totalBobot += bobotVal;
 
-                $(this).find('.cpmk-section').find('.cpmk-check:checked, .sub-cpmk-check:checked').each(function() {
-                    let cpmkId = $(this).data('cpmk-id') || $(this).closest('.border').find('.cpmk-check').data('cpmk-id');
+                $(this).find('.cpmk-section').find('.cpmk-check:checked').each(function() {
+                    let cpmkId = $(this).data('cpmk-id');
                     if (cpmkId) {
                         mappedCpmkIds.add(cpmkId);
                     }
@@ -1251,6 +1251,28 @@
             updateSelectOptions();
             recalculateStatus();
         }
+
+        // Handler Toggle Sub-Opsi Download Template Metode CPMK
+        $(document).on('change', 'input[name="format_type"]', function() {
+            let val = $(this).val();
+            if (val === 'metode_cpmk') {
+                $('#cpmk-scope-wrapper').removeClass('d-none');
+            } else {
+                $('#cpmk-scope-wrapper').addClass('d-none');
+                $('#dl_metode_id_select').removeAttr('name');
+            }
+        });
+
+        $(document).on('change', 'input[name="cpmk_scope"]', function() {
+            let scope = $(this).val();
+            if (scope === 'single') {
+                $('#cpmk-single-select-container').removeClass('d-none');
+                $('#dl_metode_id_select').attr('name', 'metode_id');
+            } else {
+                $('#cpmk-single-select-container').addClass('d-none');
+                $('#dl_metode_id_select').removeAttr('name');
+            }
+        });
 
         // Terapkan Mode AB secara tegas saat pertama kali dimuat
         applyModeUI('AB');

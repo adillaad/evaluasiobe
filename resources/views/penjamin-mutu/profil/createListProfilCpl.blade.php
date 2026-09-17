@@ -32,9 +32,10 @@
             @enderror
         </div>
         <div class="form-group">
-            <label for="bobot">Profile Weight :</label>
+            <label for="bobot">Profile Weight (% / Opsional) :</label>
             <input type="number" value="{{ old('bobot') }}" name="bobot" id="bobot" class="form-control"
-                min="0" step=".01" placeholder="Profile Weight">
+                min="0" max="100" step="any" placeholder="Bobot (0-100, misal: 25)">
+            <small class="text-muted d-block mt-1">* Jika dikosongkan, bobot akan dihitung sama rata secara otomatis.</small>
             @error('bobot')
                 <div class="alert alert-danger">
                     {{ $message }}

@@ -217,6 +217,8 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                         <li class="nav-item"><a class="nav-link"
                                 href="{{ route($currentPrefix . 'cpl-cpmk.mk-cpmk-subcpmk') }}">Pemetaan MK-CPMK-Sub
                                 CPMK</a></li>
+                        <!-- <li class="nav-item"><a class="nav-link"
+                                href="{{ route($currentPrefix . 'cpl-cpmk.subcpmk-kelola') }}">Kelola Sub CPMK</a></li> -->
                     </ul>
                 </div>
             </li>

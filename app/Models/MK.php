@@ -41,6 +41,13 @@ class MK extends Model
         return $this->belongsTo(Kurikulum::class, 'id_kurikulum','id');
     }
 
+    public function kurikulums()
+    {
+        return $this->belongsToMany(Kurikulum::class, 'mk_kurikulum', 'mk_kode', 'id_kurikulum')
+            ->withPivot('id_prodi', 'semester')
+            ->withTimestamps();
+    }
+
     public function cpl()
     {
         return $this->belongsToMany(CPL::class,'mk_cpl','mk_kode','cpl_id')

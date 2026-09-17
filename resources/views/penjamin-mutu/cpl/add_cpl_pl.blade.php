@@ -31,21 +31,22 @@
 
                 <div class="form-group mb-3">
                     <label for="cpl_ids">Pilih CPL yang Terkait:</label>
-                    <div class="border ps-5" style="max-height: 200px; overflow-y: auto;">
+                    <small class="text-muted d-block mb-2">* Input bobot persentase <strong>(0-100%) opsional</strong>. Jika tidak diisi, bobot akan dihitung <strong>sama rata</strong> secara otomatis (misal: 4 CPL = 25% masing-masing).</small>
+                    <div class="border p-3 rounded" style="max-height: 250px; overflow-y: auto;">
                         @foreach ($cpls as $cpl)
                             <div class="form-check d-flex align-items-center mb-2">
-                                <input class="form-check-input cplId-checkbox" type="checkbox" name="cpl_ids[]"
+                                <input class="form-check-input cplId-checkbox me-2" type="checkbox" name="cpl_ids[]"
                                     value="{{ $cpl->id }}" id="cpl_{{ $cpl->id }}"
                                     {{ in_array($cpl->id, old('cpl_ids', [])) ? 'checked' : '' }}>
 
-                                <label class="form-check-label" style="width: 600px;" for="cpl_{{ $cpl->id }}">
-                                    {{ $cpl->kode }} - {{ $cpl->judul }}
+                                <label class="form-check-label flex-grow-1" for="cpl_{{ $cpl->id }}">
+                                    <strong>{{ $cpl->kode }}</strong> - {{ $cpl->judul }}
                                 </label>
-                                <input class="form-check-input bobot ms-4" type="number" name="bobot[{{ $cpl->id }}]"
-                                    placeholder="Bobot" step="0.01" min="0"
+                                <input class="form-control form-control-sm bobot ms-3" type="number" name="bobot[{{ $cpl->id }}]"
+                                    placeholder="Bobot (%)" step="any" min="0" max="100"
                                     value="{{ old('bobot.' . $cpl->id) }}"
                                     {{ in_array($cpl->id, old('cpl_ids', [])) ? '' : 'disabled' }}
-                                    style="width: 100px; height:40px">
+                                    style="width: 130px; height: 38px;">
                             </div>
                         @endforeach
                     </div>

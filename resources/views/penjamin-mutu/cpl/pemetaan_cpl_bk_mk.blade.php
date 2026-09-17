@@ -74,9 +74,9 @@
                             <tbody>
                                 @forelse ($bks as $bk)
                                     <tr>
-                                        <td class="bg-light fw-bold text-dark text-center align-middle font-13" title="{{ $bk->kode }}: {{ $bk->nama }} (Kurikulum {{ $bk->kurikulum->tahun ?? '-' }})">
+                                        <td class="bg-light fw-bold text-dark text-center align-middle font-13" title="{{ $bk->kode }}: {{ $bk->nama }} ({{ $bk->kurikulum->tahun ?? '-' }})">
                                             <div>{{ $bk->kode }}</div>
-                                            <small class="badge bg-white text-muted border font-10 fw-normal mt-0.5">Kur {{ $bk->kurikulum->tahun ?? '-' }}</small>
+                                            <small class="badge bg-white text-muted border font-10 fw-normal mt-0.5">{{ $bk->kurikulum->tahun ?? '-' }}</small>
                                         </td>
                                         @foreach ($cpls as $cpl)
                                             @php

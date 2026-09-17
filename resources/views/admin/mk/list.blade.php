@@ -48,13 +48,19 @@
                                     <td>{{ $mk->kode }}</td>
                                     <td>{{ $mk->nama }}</td>
                                     <td>{{ $mk->semester }}</td>
-                                    <td>MK {{ $mk->rumpun }}</td>
-                                    <td>{{ $mk->kurikulum->tahun }}</td>
+                                    <td>{{ str_starts_with((string)$mk->rumpun, 'MK') ? $mk->rumpun : 'MK ' . $mk->rumpun }}</td>
+                                    <td>{{ optional($mk->kurikulum)->tahun ?? '-' }}</td>
                                     <td>{{ $mk->total_sks }} SKS</td>
-                                    <td>{{ $mk->prodi->nama }}</td>
-                                    <td>{{ $mk->prodi->fakultas->nama }}</td>
+                                    <td>
+                                        @if($mk->prodi)
+                                            <span class="badge bg-outline-info text-dark">{{ $mk->prodi->nama }}</span>
+                                        @else
+                                            <span class="badge bg-primary">MK Universitas</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ optional(optional($mk->prodi)->fakultas)->nama ?? 'Universitas' }}</td>
                                     @if ($userOtoritas != 'Admin Universitas')
-                                        <td>{{ $mk->prodi->fakultas->universitas->nama }}</td>
+                                        <td>{{ optional(optional(optional($mk->prodi)->fakultas)->universitas)->nama ?? (auth()->user()->universitas->nama ?? '-') }}</td>
                                     @endif
                                      @if ($userOtoritas == 'Admin Universitas')
                                      <td>

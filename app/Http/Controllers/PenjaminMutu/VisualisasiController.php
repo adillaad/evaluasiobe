@@ -1140,14 +1140,15 @@ class VisualisasiController extends Controller
                 $cplInfo = $cplInfo->first();
                 $kode = $cplInfo->kode ?? '';
 
-                // Mengalikan HasilCpl dengan bobot
-                $bobot = $singleProfilCplData->bobot;
-                $total = $hasilCpl * $bobot;
+                // Mengalikan HasilCpl dengan bobot (dikonversi ke skala 0-1 untuk perkalian jika bobot > 1)
+                $bobot = (float) $singleProfilCplData->bobot;
+                $bobotFactor = $bobot > 1.0 ? ($bobot / 100.0) : $bobot;
+                $total = $hasilCpl * $bobotFactor;
 
                 // Menambahkan hasil ke dalam array
                 $hasilFinalProfil[$idProfil]['CPLs'][] = [
                     'CPL' => $kode,
-                    'Bobot' => $bobot,
+                    'Bobot' => (float)$bobot == (int)$bobot ? (int)$bobot : $bobot,
                     'HasilCPL' => $hasilCpl,
                     'Total' => round($total, 2),
                 ];

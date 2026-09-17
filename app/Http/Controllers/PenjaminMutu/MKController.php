@@ -20,24 +20,42 @@ class MKController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $kurikulums = Kurikulum::where('id_prodi', $user->id_prodiUser)
-                            ->orderBy('tahun', 'desc')
-                            ->get();
-        $mks = MK::where('id_prodi', $user->id_prodiUser)->get();
-        $prodi = $user->prodi;
-        return view('penjamin-mutu.mk.add', compact('kurikulums', 'mks', 'prodi'));
+        $isUniversityLevel = in_array($user->otoritas->otoritas, ['Admin Universitas', 'Penjamin Mutu Universitas', 'Wakil Rektor']);
+
+        if ($isUniversityLevel) {
+            $kurikulums = Kurikulum::whereHas('prodi.fakultas', function($q) use ($user) {
+                $q->where('id_universitas', $user->id_universitasUser);
+            })->orderBy('tahun', 'desc')->get();
+            $mks = MK::where(function($q) use ($user) {
+                $q->whereHas('prodi.fakultas', function($sub) use ($user) {
+                    $sub->where('id_universitas', $user->id_universitasUser);
+                })->orWhereNull('id_prodi');
+            })->get();
+            $prodi = null;
+        } else {
+            $kurikulums = Kurikulum::where('id_prodi', $user->id_prodiUser)
+                                ->orderBy('tahun', 'desc')
+                                ->get();
+            $mks = MK::where(function($q) use ($user) {
+                $q->where('id_prodi', $user->id_prodiUser)->orWhereNull('id_prodi');
+            })->get();
+            $prodi = $user->prodi;
+        }
+        $mksUniv = MK::whereNull('id_prodi')->get();
+        return view('penjamin-mutu.mk.add', compact('kurikulums', 'mks', 'prodi', 'mksUniv'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'kode' => ['required', 'alpha_num', 'min:9', 'max:50'],
-            'nama' => ['required', 'string', 'regex:/^[\/a-zA-Z -]+$/', 'max:255'],
-            'nama_eng' => ['required', 'string', 'regex:/^[\/a-zA-Z -]+$/', 'max:50'],
-            'semester' => ['required', 'integer', 'between:1,8'],
+            'kode' => ['required', 'alpha_num', 'min:9'],
+            'nama' => ['required', 'string'],
+            'nama_eng' => ['required', 'string'],
+            'semester' => ['required'],
             'rumpun' => 'required',
-            'prasyarat' => ['nullable', 'string', 'max:255'],
-            'id_kurikulum' => ['required', 'integer'],
+            'prasyarat' => ['nullable', 'string'],
+            'id_kurikulum' => ['nullable'],
+            'id_prodi' => ['nullable'],
             'deskripsi' => 'required',
             'batas_kelulusan_mhs' => ['required','numeric','min:0','max:100'], 
             'batas_kelulusan_mk'  => ['required','numeric','min:0','max:100'],
@@ -47,46 +65,109 @@ class MKController extends Controller
         
         $prasyarat = $request->prasyarat ?? 'Tidak ada';
         $bobot_praktikum = $request->bobot_praktikum ?? 0;
+        $semesterVal = is_array($request->semester) ? implode(',', $request->semester) : $request->semester;
+        
+        $user = auth()->user();
+        $isUniversityLevel = in_array($user->otoritas->otoritas, ['Admin Universitas', 'Penjamin Mutu Universitas', 'Wakil Rektor']);
+        $idProdi = $isUniversityLevel ? ($request->filled('id_prodi') ? $request->id_prodi : null) : $user->id_prodiUser;
+        $idKurikulum = $request->filled('id_kurikulum') ? $request->id_kurikulum : null;
+
         try {
+            $kode = strtoupper($request->kode);
+            $existingMkUniv = MK::where('kode', $kode)->whereNull('id_prodi')->first();
+
+            // Jika memilih MK Universitas yang sudah ada untuk di-assign ke Kurikulum Prodi
+            if ($existingMkUniv && !is_null($idProdi)) {
+                if ($idKurikulum) {
+                    DB::table('mk_kurikulum')->updateOrInsert(
+                        ['mk_kode' => $kode, 'id_kurikulum' => $idKurikulum],
+                        ['id_prodi' => $idProdi, 'semester' => $semesterVal, 'updated_at' => now(), 'created_at' => now()]
+                    );
+                }
+                return redirect()->route($this->getRouteByAuthority())->with('success', 'MK Universitas berhasil ditambahkan ke Kurikulum Prodi!');
+            }
+
+            // Buat MK baru di tabel mks
             MK::create([
-                'kode' => strtoupper($request->kode),
+                'kode' => $kode,
                 'nama' => $request->nama,
                 'nama_eng' => $request->nama_eng,
-                'semester' => $request->semester,
+                'semester' => $semesterVal,
                 'rumpun' => $request->rumpun,
                 'prasyarat' => $prasyarat,
-                'id_kurikulum' => $request->id_kurikulum,
-                'id_prodi' => auth()->user()->id_prodiUser,
+                'id_kurikulum' => $idKurikulum,
+                'id_prodi' => $idProdi,
                 'deskripsi' => $request->deskripsi,
                 'batas_kelulusan_mhs' => $request->batas_kelulusan_mhs,
                 'batas_kelulusan_mk' => $request->batas_kelulusan_mk, 
                 'bobot_teori' => $request->bobot_teori,
                 'bobot_praktikum' => $bobot_praktikum,
             ]);
+
+            // Hanya masukan ke mk_kurikulum jika ini MK Universitas murni (id_prodi NULL)
+            if ($idKurikulum && is_null($idProdi)) {
+                DB::table('mk_kurikulum')->updateOrInsert(
+                    ['mk_kode' => $kode, 'id_kurikulum' => $idKurikulum],
+                    ['id_prodi' => null, 'semester' => $semesterVal, 'updated_at' => now(), 'created_at' => now()]
+                );
+            }
             return redirect()->route($this->getRouteByAuthority())->with('success', 'MK successfully added!');
         } catch (\Illuminate\Database\QueryException $e) {
-            $errorCode = $e->errorInfo[1];
+            $errorCode = $e->errorInfo[1] ?? 0;
             if ($errorCode == 1062)
-                return redirect()->back()->withInput($request->all)->with('error', 'Kode mata kuliah ' . $request->kode . ' sudah ada');
+                return redirect()->back()->withInput()->with('error', 'Kode mata kuliah ' . $request->kode . ' sudah ada');
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan database: ' . $e->getMessage());
         }
     }
 
     public function edit($kode)
     {
         $user = auth()->user();
-        $userProdiId = $user->id_prodiUser;
+        $isUniversityLevel = in_array($user->otoritas->otoritas, ['Admin Universitas', 'Penjamin Mutu Universitas', 'Wakil Rektor']);
 
-        $mk = MK::where('kode', $kode)
-                ->where('id_prodi', $userProdiId)
-                ->firstOrFail();
+        if ($isUniversityLevel) {
+            $mk = MK::where('kode', $kode)->firstOrFail();
+            $kurikulums = Kurikulum::whereHas('prodi.fakultas', function($q) use ($user) {
+                $q->where('id_universitas', $user->id_universitasUser);
+            })->orderBy('tahun', 'desc')->get();
+            $prasyarats = MK::where('kode', '!=', $kode)->get();
+        } else {
+            $userProdiId = $user->id_prodiUser;
+            $mk = MK::where('kode', $kode)
+                    ->where(function($q) use ($userProdiId) {
+                        $q->where('id_prodi', $userProdiId)
+                          ->orWhere(function($sub) use ($userProdiId) {
+                              $sub->whereNull('id_prodi')
+                                  ->whereExists(function($mkKurQuery) use ($userProdiId) {
+                                      $mkKurQuery->select(DB::raw(1))
+                                                 ->from('mk_kurikulum')
+                                                 ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                                                 ->where('mk_kurikulum.id_prodi', $userProdiId);
+                                  });
+                          });
+                    })
+                    ->firstOrFail();
 
-        $kurikulums = Kurikulum::where('id_prodi', $userProdiId)
-                            ->orderBy('tahun', 'desc')
+            if (!$mk->id_kurikulum && $userProdiId) {
+                $mkKurRecord = DB::table('mk_kurikulum')
+                    ->where('mk_kode', $kode)
+                    ->where('id_prodi', $userProdiId)
+                    ->first();
+                if ($mkKurRecord) {
+                    $mk->id_kurikulum = $mkKurRecord->id_kurikulum;
+                }
+            }
+
+            $kurikulums = Kurikulum::where('id_prodi', $userProdiId)
+                                ->orderBy('tahun', 'desc')
+                                ->get();
+
+            $prasyarats = MK::where(function($q) use ($userProdiId) {
+                                $q->where('id_prodi', $userProdiId)->orWhereNull('id_prodi');
+                            })
+                            ->where('kode', '!=', $kode)
                             ->get();
-
-        $prasyarats = MK::where('id_prodi', $userProdiId)
-                        ->where('kode', '!=', $kode)
-                        ->get();
+        }
 
         return view('penjamin-mutu.mk.edit', compact('mk', 'kurikulums', 'prasyarats'));
     }
@@ -94,13 +175,14 @@ class MKController extends Controller
     public function update(Request $request, $kode)
     {
         $request->validate([
-            'id_kurikulum' => 'required|integer',
-            'kode' => ['required', 'alpha_num', 'min:9', 'max:50'],
-            'nama' => ['required', 'string', 'regex:/^[\/a-zA-Z -]+$/', 'max:255'],
-            'nama_eng' => ['required', 'string', 'max:50'],
-            'semester' => ['required', 'integer', 'between:1,8'],
+            'id_kurikulum' => 'nullable',
+            'id_prodi' => 'nullable',
+            'kode' => ['required', 'alpha_num', 'min:9'],
+            'nama' => ['required', 'string'],
+            'nama_eng' => ['required', 'string'],
+            'semester' => ['required'],
             'rumpun' => 'required',
-            'prasyarat' => ['nullable', 'string', 'max:255'],
+            'prasyarat' => ['nullable', 'string'],
             'deskripsi' => 'required',
             'batas_kelulusan_mhs' => ['required','numeric','min:0','max:100'],
             'batas_kelulusan_mk'  => ['required','numeric','min:0','max:100'],
@@ -108,9 +190,33 @@ class MKController extends Controller
             'bobot_praktikum' => ['nullable', 'integer', 'digits:1'],
         ]);
 
-        $mk = MK::where('kode', $kode)
-            ->where('id_prodi', auth()->user()->id_prodiUser)
-            ->firstOrFail();
+        $user = auth()->user();
+        $isUniversityLevel = in_array($user->otoritas->otoritas, ['Admin Universitas', 'Penjamin Mutu Universitas', 'Wakil Rektor']);
+
+        if ($isUniversityLevel) {
+            $mk = MK::where('kode', $kode)->firstOrFail();
+            $isUniv = $request->input('mk_type_toggle') === 'univ';
+            $idProdi = $isUniv ? null : ($request->filled('id_prodi') ? $request->id_prodi : null);
+            $idKurikulum = $isUniv ? null : ($request->filled('id_kurikulum') ? $request->id_kurikulum : null);
+        } else {
+            $userProdiId = $user->id_prodiUser;
+            $mk = MK::where('kode', $kode)
+                ->where(function($q) use ($userProdiId) {
+                    $q->where('id_prodi', $userProdiId)
+                      ->orWhere(function($sub) use ($userProdiId) {
+                          $sub->whereNull('id_prodi')
+                              ->whereExists(function($mkKurQuery) use ($userProdiId) {
+                                  $mkKurQuery->select(DB::raw(1))
+                                             ->from('mk_kurikulum')
+                                             ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                                             ->where('mk_kurikulum.id_prodi', $userProdiId);
+                              });
+                      });
+                })
+                ->firstOrFail();
+            $idProdi = $mk->id_prodi; // Preserve NULL if it's MK Univ
+            $idKurikulum = $request->filled('id_kurikulum') ? $request->id_kurikulum : $mk->id_kurikulum;
+        }
 
         $newKode = strtoupper($request->kode);
 
@@ -120,15 +226,16 @@ class MKController extends Controller
 
         $prasyarat = $request->prasyarat ?? 'Tidak ada';
         $bobot_praktikum = $request->bobot_praktikum ?? 0;
+        $semesterVal = is_array($request->semester) ? implode(',', $request->semester) : $request->semester;
 
         $attributes = [
             'nama' => $request->nama,
             'nama_eng' => $request->nama_eng,
-            'semester' => $request->semester,
+            'semester' => $semesterVal,
             'rumpun' => $request->rumpun,
             'prasyarat' => $prasyarat,
-            'id_kurikulum' => $request->id_kurikulum,
-            'id_prodi' => auth()->user()->id_prodiUser,
+            'id_kurikulum' => $idKurikulum,
+            'id_prodi' => $idProdi,
             'deskripsi' => $request->deskripsi,
             'batas_kelulusan_mhs' => $request->batas_kelulusan_mhs,
             'batas_kelulusan_mk' => $request->batas_kelulusan_mk,
@@ -140,6 +247,14 @@ class MKController extends Controller
         try {
             MkKodeUpdater::rename($mk->kode, $newKode, $attributes);
 
+            $targetProdiId = $user->id_prodiUser ?? $idProdi;
+            if ($idKurikulum && $targetProdiId) {
+                DB::table('mk_kurikulum')->updateOrInsert(
+                    ['mk_kode' => $newKode, 'id_prodi' => $targetProdiId],
+                    ['id_kurikulum' => $idKurikulum, 'semester' => $semesterVal, 'updated_at' => now(), 'created_at' => now()]
+                );
+            }
+
             return redirect()->route($this->getRouteByAuthority())->with('success', 'MK berhasil diubah!');
         } catch (\Illuminate\Database\QueryException $e) {
             return redirect()->back()->withInput()->with('error', MkKodeUpdater::databaseErrorMessage($e));
@@ -148,9 +263,20 @@ class MKController extends Controller
 
     public function delete($kode)
     {
-        $deleted = MK::where('kode', $kode)
-            ->where('id_prodi', auth()->user()->id_prodiUser)
-            ->delete();
+        $user = auth()->user();
+        $query = MK::where('kode', $kode);
+
+        if (in_array($user->otoritas->otoritas, ['Admin Universitas', 'Penjamin Mutu Universitas', 'Wakil Rektor'])) {
+            $query->where(function($q) use ($user) {
+                $q->whereHas('prodi.fakultas', function($f) use ($user) {
+                    $f->where('id_universitas', $user->id_universitasUser);
+                })->orWhereNull('id_prodi');
+            });
+        } else {
+            $query->where('id_prodi', $user->id_prodiUser);
+        }
+
+        $deleted = $query->delete();
 
         if ($deleted) {
             return redirect()->route($this->getRouteByAuthority())->with('success', 'MK successfully deleted!');
@@ -164,30 +290,69 @@ class MKController extends Controller
         $routes = [
             'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.mk.susunan-mk',
             'Kepala Program Studi' => 'kepala-program-studi.mk.susunan-mk',
+            'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.mk.susunan-mk',
+            'Admin Universitas' => 'admin-universitas.list-mk',
         ];
 
-        return $routes[auth()->user()->otoritas->otoritas] ?? 'default.route';
+        return $routes[auth()->user()->otoritas->otoritas] ?? 'penjamin-mutu.universitas.mk.susunan-mk';
     }
     
     public function susunanMK(Request $request)
     {
-        $query = MK::with('kurikulum')
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+        $user = auth()->user();
+        $userProdiId = $user->id_prodiUser;
+
+        $query = MK::with(['kurikulum', 'prodi.fakultas.universitas'])
+            ->leftJoin('prodi', 'mks.id_prodi', '=', 'prodi.id')
+            ->leftJoin('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
             ->leftJoin('universitas', 'fakultas.id_universitas', '=', 'universitas.id')
             ->leftJoin('kurikulums', 'mks.id_kurikulum', '=', 'kurikulums.id')
             ->orderBy('mks.semester', 'asc')
             ->select('mks.*');
 
-        if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
-            $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
-            $query->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $query->where('prodi.id', auth()->user()->id_prodiUser);
+        if ($user->otoritas->otoritas === 'Penjamin Mutu Universitas') {
+            $query->where(function($q) use ($user) {
+                $q->where('fakultas.id_universitas', $user->id_universitasUser)
+                  ->orWhereNull('mks.id_prodi');
+            });
+        } else if ($user->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
+            $query->where(function($q) use ($user) {
+                $q->where('fakultas.id', $user->id_fakultasUser)
+                  ->orWhereNull('mks.id_prodi');
+            });
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $query->where(function($q) use ($userProdiId) {
+                $q->where('prodi.id', $userProdiId)
+                  ->orWhere(function($sub) use ($userProdiId) {
+                      $sub->whereNull('mks.id_prodi')
+                          ->whereExists(function($mkKurQuery) use ($userProdiId) {
+                              $mkKurQuery->select(DB::raw(1))
+                                         ->from('mk_kurikulum')
+                                         ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                                         ->where('mk_kurikulum.id_prodi', $userProdiId);
+                          });
+                  });
+            });
         }
         $query = $this->getFilteredQuery($query, $request);
         $mks = $query->get();
+
+        foreach ($mks as $mkItem) {
+            if (!$mkItem->kurikulum && $userProdiId) {
+                $mkKurRec = DB::table('mk_kurikulum')
+                    ->where('mk_kode', $mkItem->kode)
+                    ->where('id_prodi', $userProdiId)
+                    ->first();
+                if ($mkKurRec) {
+                    $kurModel = Kurikulum::find($mkKurRec->id_kurikulum);
+                    if ($kurModel) {
+                        $mkItem->setRelation('kurikulum', $kurModel);
+                        $mkItem->id_kurikulum = $kurModel->id;
+                    }
+                }
+            }
+        }
+
         $maxSemester = (int)(MK::max('semester') ?: 8);
 
         $filterData = $this->getFilterData($request);
@@ -234,9 +399,9 @@ class MKController extends Controller
             'mks.semester',
             DB::raw('SUM(mks.bobot_teori + mks.bobot_praktikum) as total_sks'),
             DB::raw('COUNT(mks.kode) as jumlah_mk'),
-            DB::raw('GROUP_CONCAT(CASE WHEN mks.rumpun = "wajib" THEN mks.kode END) as kode_wajib'),
-            DB::raw('GROUP_CONCAT(CASE WHEN mks.rumpun = "peminatan" THEN mks.kode END) as kode_peminatan'),
-            DB::raw('GROUP_CONCAT(CASE WHEN mks.rumpun = "wajib_kurikulum" THEN mks.kode END) as kode_wajib_kurikulum')
+            DB::raw('GROUP_CONCAT(CASE WHEN LOWER(mks.rumpun) = "wajib" THEN mks.kode END) as kode_wajib'),
+            DB::raw('GROUP_CONCAT(CASE WHEN LOWER(mks.rumpun) = "peminatan" THEN mks.kode END) as kode_peminatan'),
+            DB::raw('GROUP_CONCAT(CASE WHEN LOWER(mks.rumpun) IN ("wajib_kurikulum", "mkwk") THEN mks.kode END) as kode_wajib_kurikulum')
         )->groupBy('mks.semester')->orderBy('mks.semester')->get();
 
         $mks = $query->select('mks.kode', 'mks.nama', 'mks.rumpun')
@@ -285,8 +450,14 @@ class MKController extends Controller
         $cpls = $query->select('cpls.*')->with('kurikulum')->get();
         $allMks = $queryMks->with('kurikulum')->orderBy('semester')->orderBy('kode')->get();
 
-        $maxSemester = max((int) $allMks->max('semester'), (int) MK::max('semester'), 8);
-        $mksBySemester = $allMks->groupBy('semester');
+        $maxSemester = 8;
+        $mksBySemester = collect();
+        foreach (range(1, $maxSemester) as $s) {
+            $mksBySemester->put($s, $allMks->filter(function($mk) use ($s) {
+                $sems = array_map('trim', explode(',', (string)$mk->semester));
+                return in_array((string)$s, $sems);
+            }));
+        }
 
         $queryKur = Kurikulum::query()
             ->join('prodi', 'kurikulums.id_prodi', '=', 'prodi.id')

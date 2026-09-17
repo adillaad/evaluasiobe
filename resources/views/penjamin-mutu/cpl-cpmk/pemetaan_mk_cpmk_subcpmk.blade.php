@@ -192,6 +192,12 @@
                             @enderror
                         </div>
                         <div class="form-group mb-3">
+                            <label for="cpl_id" class="fw-bold">CPL :</label>
+                            <select name="cpl_id" id="cpl_id" class="form-select">
+                                <option value="">-- Pilih CPL --</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
                             <label for="cpmk_id" class="fw-bold">CPMK :</label>
                             <input type="hidden" name="cpmk_kode" id="cpmk_kode">
                             <select name="cpmk_id" id="cpmk_id" class="form-select" required>
@@ -264,6 +270,12 @@
                                 <i class="ti-pencil-alt"></i>
                                 <span id="btn-matrix-text">Edit Matriks</span>
                             </button>
+
+                            <a href="{{ route($currentPrefix. 'cpl-cpmk.subcpmk-kelola') }}"
+                                class="btn btn-warning font-weight-bold btn-icon-text" style="color: #ffffff !important;">
+                                <i class="ti-settings me-1 text-white"></i>
+                                <span style="color: #ffffff !important;">Kelola Sub CPMK</span>
+                            </a>
 
                             <a href="{{ route($currentPrefix. 'cpl-cpmk.cpmk-mk-subcpmk-add') }}"
                                 class="btn btn-primary btn-icon-text">
@@ -705,59 +717,91 @@
             });
 
             const kurikulumElement = document.getElementById("kurikulum_id");
+            const cplSelect = document.getElementById("cpl_id");
             const cpmkSelect = document.getElementById("cpmk_id");
             const hiddenCpmkKode = document.getElementById("cpmk_kode");
             const otoritas = "{{ $userOtoritas }}";
-        
-            function getSelectedValue() {
-                const kurikulumId = kurikulumElement ? kurikulumElement.value : null;
-                if (!kurikulumId) {
-                    if (cpmkSelect) cpmkSelect.innerHTML = '<option value="" disabled>Kurikulum ID tidak valid.</option>';
-                    if (hiddenCpmkKode) hiddenCpmkKode.value = '';
-                    return;
-                }
-        
-                let urlget = "";
+
+            function getPrefixUrl() {
                 if (otoritas === "Kepala Program Studi") {
-                    urlget = `/kepala-program-studi/cpl-cpmk/get-cpmk-by-kurikulum/${kurikulumId}`;
-                } else if (otoritas === "Penjamin Mutu Program Studi") {
-                    urlget = `/penjamin-mutu/program-studi/cpl-cpmk/get-cpmk-by-kurikulum/${kurikulumId}`;
+                    return "/kepala-program-studi/cpl-cpmk";
                 }
-        
-                if (cpmkSelect) cpmkSelect.innerHTML = '<option>Loading...</option>';
+                return "/penjamin-mutu/program-studi/cpl-cpmk";
+            }
+
+            function fetchCplByKurikulum() {
+                const kurikulumId = kurikulumElement ? kurikulumElement.value : null;
+                if (cplSelect) cplSelect.innerHTML = '<option value="">-- Pilih CPL --</option>';
+                if (cpmkSelect) cpmkSelect.innerHTML = '<option value="">-- Pilih CPMK --</option>';
                 if (hiddenCpmkKode) hiddenCpmkKode.value = '';
-        
+
+                if (!kurikulumId) return;
+
+                if (cplSelect) cplSelect.innerHTML = '<option>Loading CPL...</option>';
+
                 $.ajax({
-                    url: urlget,
+                    url: `${getPrefixUrl()}/get-cpl-by-kurikulum/${kurikulumId}`,
+                    method: 'GET',
+                    success: function (data) {
+                        if (!cplSelect) return;
+                        cplSelect.innerHTML = '<option value="">-- Pilih CPL --</option>';
+                        if (data.cpls && data.cpls.length > 0) {
+                            data.cpls.forEach(cpl => {
+                                cplSelect.innerHTML += `<option value="${cpl.id}">${cpl.kode} - ${cpl.judul}</option>`;
+                            });
+                        } else {
+                            cplSelect.innerHTML = '<option value="" disabled>Tidak ada data CPL untuk kurikulum yang dipilih.</option>';
+                        }
+                    },
+                    error: function () {
+                        if (cplSelect) cplSelect.innerHTML = '<option value="" disabled>Gagal memuat data CPL.</option>';
+                    }
+                });
+            }
+
+            function fetchCpmkByCpl() {
+                const cplId = cplSelect ? cplSelect.value : null;
+                if (cpmkSelect) cpmkSelect.innerHTML = '<option value="">-- Pilih CPMK --</option>';
+                if (hiddenCpmkKode) hiddenCpmkKode.value = '';
+
+                if (!cplId) return;
+
+                if (cpmkSelect) cpmkSelect.innerHTML = '<option>Loading CPMK...</option>';
+
+                $.ajax({
+                    url: `${getPrefixUrl()}/get-cpmk-by-cpl/${cplId}`,
                     method: 'GET',
                     success: function (data) {
                         if (!cpmkSelect) return;
                         cpmkSelect.innerHTML = '<option value="">-- Pilih CPMK --</option>';
-                        if (data.cpmks.length > 0) {
+                        if (data.cpmks && data.cpmks.length > 0) {
                             data.cpmks.forEach(cpmk => {
                                 cpmkSelect.innerHTML += `<option value="${cpmk.id}">${cpmk.kode} - ${cpmk.judul}</option>`;
                             });
                         } else {
-                            cpmkSelect.innerHTML = '<option value="" disabled>Tidak ada data CPMK untuk kurikulum yang dipilih.</option>';
+                            cpmkSelect.innerHTML = '<option value="" disabled>Tidak ada data CPMK untuk CPL yang dipilih.</option>';
                         }
                     },
                     error: function () {
-                        if (cpmkSelect) cpmkSelect.innerHTML = '<option value="" disabled>Gagal memuat data.</option>';
-                        if (hiddenCpmkKode) hiddenCpmkKode.value = '';
+                        if (cpmkSelect) cpmkSelect.innerHTML = '<option value="" disabled>Gagal memuat data CPMK.</option>';
                     }
                 });
             }
-        
+
+            if (kurikulumElement) {
+                kurikulumElement.addEventListener("change", fetchCplByKurikulum);
+            }
+
+            if (cplSelect) {
+                cplSelect.addEventListener("change", fetchCpmkByCpl);
+            }
+
             if (cpmkSelect) {
                 cpmkSelect.addEventListener('change', function () {
                     const selectedText = this.options[this.selectedIndex]?.textContent;
                     const kode = selectedText?.split(" - ")[0] ?? '';
                     if (hiddenCpmkKode) hiddenCpmkKode.value = kode;
                 });
-            }
-        
-            if (kurikulumElement) {
-                kurikulumElement.addEventListener("change", getSelectedValue);
             }
         });
     </script>

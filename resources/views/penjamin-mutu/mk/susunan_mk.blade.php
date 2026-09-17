@@ -56,9 +56,12 @@
                                     <td>{{ $mk->nama }}</td>
                                     <td>{{ $mk->kurikulum->tahun ?? '-' }}</td>
                                     <td>{{ ($mk->bobot_teori ?? 0) + ($mk->bobot_praktikum ?? 0) }}</td>
+                                    @php
+                                        $semestersArr = array_map('trim', explode(',', (string)$mk->semester));
+                                    @endphp
                                     @foreach (range(1, max(1, (int)($maxSemester ?? 8))) as $semester)
-                                        <td style="color:#1d3cb4; font-weight: bold;">
-                                            @if ($mk->semester == $semester)
+                                        <td style="color:#1d3cb4; font-weight: bold; text-align: center;">
+                                            @if (in_array((string)$semester, $semestersArr))
                                                 ✔
                                             @endif
                                         </td>

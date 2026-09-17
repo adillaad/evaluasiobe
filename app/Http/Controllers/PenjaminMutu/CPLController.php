@@ -277,9 +277,78 @@ class CPLController extends Controller
 
         $cpls = $queryCpl->get();
         $profilLulusans = $queryProfilLulusans->get();
+        foreach ($profilLulusans as $pl) {
+            self::recalculateCplPlBobot($pl->id);
+        }
         $kurikulums = $this->getKurikulumsForUser();
 
         return view('penjamin-mutu.cpl.pemetaan_cpl_pl', compact('cpls', 'profilLulusans', 'kurikulums'));
+    }
+
+    public static function recalculateCplPlBobot($idProfil, $forceEqual = false)
+    {
+        if (!$idProfil) {
+            return;
+        }
+
+        $profilCpls = ProfilCpl::where('idProfil', $idProfil)->get();
+        $count = $profilCpls->count();
+
+        if ($count === 0) {
+            return;
+        }
+
+        if ($forceEqual) {
+            $equalBobot = round(100.0 / $count, 2);
+            $equalBobotVal = (float)$equalBobot == (int)$equalBobot ? (int)$equalBobot : $equalBobot;
+            foreach ($profilCpls as $item) {
+                ProfilCpl::where('id', $item->id)->update(['bobot' => $equalBobotVal]);
+            }
+            return;
+        }
+
+        // Convert any legacy decimal weights (<= 1.0) to 100-scale percentages (e.g. 0.25 -> 25)
+        foreach ($profilCpls as $item) {
+            if ($item->bobot !== null && (float)$item->bobot > 0 && (float)$item->bobot <= 1.0) {
+                $converted = round((float)$item->bobot * 100.0, 2);
+                $convertedVal = (float)$converted == (int)$converted ? (int)$converted : $converted;
+                ProfilCpl::where('id', $item->id)->update(['bobot' => $convertedVal]);
+            }
+        }
+        $profilCpls = ProfilCpl::where('idProfil', $idProfil)->get();
+
+        $explicitItems = $profilCpls->filter(function ($item) {
+            return $item->bobot !== null && (float)$item->bobot > 0;
+        });
+
+        $unweightedItems = $profilCpls->filter(function ($item) {
+            return $item->bobot === null || (float)$item->bobot <= 0;
+        });
+
+        if ($explicitItems->isEmpty() || ($unweightedItems->isNotEmpty() && (float)$explicitItems->sum('bobot') >= 100.0)) {
+            $equalBobot = round(100.0 / $count, 2);
+            $equalBobotVal = (float)$equalBobot == (int)$equalBobot ? (int)$equalBobot : $equalBobot;
+            foreach ($profilCpls as $item) {
+                ProfilCpl::where('id', $item->id)->update(['bobot' => $equalBobotVal]);
+            }
+            return;
+        }
+
+        if ($unweightedItems->isEmpty()) {
+            return;
+        }
+
+        $totalExplicit = (float)$explicitItems->sum('bobot');
+        $remainingWeight = max(0, 100.0 - $totalExplicit);
+        $unweightedCount = $unweightedItems->count();
+
+        if ($unweightedCount > 0) {
+            $equalBobot = round($remainingWeight / $unweightedCount, 2);
+            $equalBobotVal = (float)$equalBobot == (int)$equalBobot ? (int)$equalBobot : $equalBobot;
+            foreach ($unweightedItems as $item) {
+                ProfilCpl::where('id', $item->id)->update(['bobot' => $equalBobotVal]);
+            }
+        }
     }
 
     public function indexCPLBK(Request $request)
@@ -433,18 +502,9 @@ class CPLController extends Controller
             'profil_lulusan_id' => 'required|exists:profil_lulusan,id',
             'cpl_ids' => 'required|array|min:1',
             'cpl_ids.*' => 'exists:cpls,id',
-            'bobot' => 'required|array',
-            'bobot.*' => 'nullable|numeric|min:0',
+            'bobot' => 'nullable|array',
+            'bobot.*' => 'nullable|numeric|min:0|max:100',
         ]);
-
-        $validator->after(function ($validator) use ($request) {
-            foreach ($request->cpl_ids ?? [] as $cplId) {
-                $bobot = $request->bobot[$cplId] ?? null;
-                if ($bobot === null || $bobot === '') {
-                    $validator->errors()->add('bobot.' . $cplId, 'Bobot wajib diisi untuk setiap CPL yang dipilih.');
-                }
-            }
-        });
 
         if ($validator->fails()) {
             return redirect()
@@ -458,6 +518,14 @@ class CPLController extends Controller
             $savedCount = 0;
 
             foreach ($request->cpl_ids as $cplId) {
+                $rawBobot = $request->bobot[$cplId] ?? null;
+                $bVal = null;
+                if ($rawBobot !== null && $rawBobot !== '') {
+                    $num = (float)$rawBobot;
+                    $bVal = ($num > 0 && $num <= 1.0) ? round($num * 100.0, 2) : $num;
+                    $bVal = (float)$bVal == (int)$bVal ? (int)$bVal : $bVal;
+                }
+
                 $created = ProfilCpl::updateOrCreate(
                     [
                         'idProfil' => $request->profil_lulusan_id,
@@ -465,7 +533,7 @@ class CPLController extends Controller
                         'id_prodi' => $idProdi,
                     ],
                     [
-                        'bobot' => $request->bobot[$cplId],
+                        'bobot' => $bVal,
                     ]
                 );
 
@@ -473,6 +541,8 @@ class CPLController extends Controller
                     $savedCount++;
                 }
             }
+
+            self::recalculateCplPlBobot($request->profil_lulusan_id);
 
             if ($savedCount === 0) {
                 return redirect()
@@ -705,6 +775,7 @@ class CPLController extends Controller
         $matrix = $request->input('matrix', []);
 
         DB::transaction(function () use ($cpls, $matrix) {
+            $affectedProfilIds = [];
             foreach ($cpls as $cpl) {
                 $selectedProfilIds = isset($matrix[$cpl->id]) ? array_map('intval', (array)$matrix[$cpl->id]) : [];
 
@@ -712,13 +783,18 @@ class CPLController extends Controller
 
                 $syncData = [];
                 foreach ($selectedProfilIds as $profilId) {
+                    $affectedProfilIds[] = $profilId;
                     $syncData[$profilId] = [
                         'id_prodi' => $cpl->id_prodi,
-                        'bobot' => $existingBobotMap[$profilId] ?? 1.0,
+                        'bobot' => $existingBobotMap[$profilId] ?? 0,
                     ];
                 }
 
                 $cpl->profilLulusan()->sync($syncData);
+            }
+
+            foreach (array_unique($affectedProfilIds) as $pId) {
+                self::recalculateCplPlBobot($pId, true);
             }
         });
 

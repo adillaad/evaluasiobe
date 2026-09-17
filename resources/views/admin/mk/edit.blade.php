@@ -3,63 +3,91 @@
 <div class="stretch-card">
     <div class="card">
         <div class="card-body">
-            <h4 class="card-title">Edit Mata Kuliah</h4>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h4 class="card-title m-0">Edit Mata Kuliah</h4>
+                @if(is_null($mk->id_prodi))
+                    <span class="badge bg-primary px-3 py-2 text-white">MK Universitas</span>
+                @else
+                    <span class="badge bg-info px-3 py-2 text-white">MK Reguler / Prodi</span>
+                @endif
+            </div>
+
             <form method="POST" action="{{ route('admin-universitas.update-mk', ['kode' => $mk->kode]) }}">
                 @csrf
                 @method('put')
 
-                {{-- Pengecekan Otoritas & Dropdown Fakultas, Prodi --}}
                 @php
                     $user = auth()->user();
                     $otoritas = $user->otoritas->otoritas;
                     $allowedRoles = ['Admin Universitas', 'Penjamin Mutu Universitas'];
                     $isSelectionDisabled = !in_array($otoritas, $allowedRoles);
+                    $isUnivMk = is_null(old('id_prodi', $mk->id_prodi));
                 @endphp
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Fakultas <span class="text-danger">*</span></label>
-                            <select class="form-control" name="id_fakultas" id="fakultas-select" {{ $isSelectionDisabled ? 'disabled' : '' }}>
-                                @foreach($allFakultas as $fakultas)
-                                <option value="{{ $fakultas->id }}" {{ $fakultas->id == $selectedFakultas->id ? 'selected' : '' }}>{{ $fakultas->nama }}</option>
-                                @endforeach
-                            </select>
-                            @if($isSelectionDisabled)
-                                <input type="hidden" name="id_fakultas" value="{{ $selectedFakultas->id }}">
-                            @endif
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Program Studi <span class="text-danger">*</span></label>
-                            <select class="form-control" name="id_prodi" id="prodi-select">
-                                {{-- Opsi prodi akan diisi oleh Javascript --}}
-                                @foreach($allProdi as $prodi)
-                                <option value="{{ $prodi->id }}" {{ $prodi->id == $selectedProdi->id ? 'selected' : '' }}>{{ $prodi->nama }}</option>
-                                @endforeach
-                            </select>
-                             @error('id_prodi') <div class="alert alert-danger">{{ $message }}</div> @enderror
-                        </div>
-                    </div>
-                </div>
-                <hr>
 
-                {{-- Form Edit Utama MK --}}
-                 <div class="form-group">
-                    <label>Tahun Kurikulum <span class="text-danger">*</span></label>
-                    <select class="form-control" name="id_kurikulum" id="kurikulum-select">
-                         {{-- Opsi kurikulum akan diisi oleh Javascript --}}
-                        @foreach($allKurikulum as $kurikulum)
-                        <option value="{{ $kurikulum->id }}" {{ $kurikulum->id == $selectedKurikulum->id ? 'selected' : '' }}>{{ $kurikulum->tahun }}</option>
-                        @endforeach
-                    </select>
-                    @error('id_kurikulum') <div class="alert alert-danger">{{ $message }}</div> @enderror
+                <div class="form-group mb-4 p-3 bg-light border rounded">
+                    <label class="font-weight-bold d-block">Tipe Mata Kuliah:</label>
+                    <div class="d-flex flex-wrap gap-4 mt-2">
+                        <div class="form-check me-4 mb-0">
+                            <label class="form-check-label font-weight-bold" style="cursor: pointer;">
+                                <input type="radio" class="form-check-input" name="mk_type_toggle" id="type-univ" value="univ" {{ $isUnivMk ? 'checked' : '' }}>
+                                MK Universitas
+                            </label>
+                        </div>
+                        <div class="form-check mb-0">
+                            <label class="form-check-label font-weight-bold" style="cursor: pointer;">
+                                <input type="radio" class="form-check-input" name="mk_type_toggle" id="type-prodi" value="prodi" {{ !$isUnivMk ? 'checked' : '' }}>
+                                MK Reguler / Prodi
+                            </label>
+                        </div>
+                    </div>
                 </div>
+
+                {{-- Section Opsi Prodi & Kurikulum (Hanya tampil jika Tipe MK Reguler/Prodi) --}}
+                <div id="prodi-kurikulum-section" style="{{ $isUnivMk ? 'display: none;' : '' }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Fakultas <span class="text-danger">*</span></label>
+                                <select class="form-control" name="id_fakultas" id="fakultas-select" {{ $isSelectionDisabled ? 'disabled' : '' }}>
+                                    <option value="" {{ !$selectedFakultas ? 'selected' : '' }}>-- Pilih Fakultas --</option>
+                                    @foreach($allFakultas as $fakultas)
+                                    <option value="{{ $fakultas->id }}" {{ $selectedFakultas && $fakultas->id == $selectedFakultas->id ? 'selected' : '' }}>{{ $fakultas->nama }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Program Studi <span class="text-danger">*</span></label>
+                                <select class="form-control" name="id_prodi" id="prodi-select">
+                                    <option value="" {{ !$selectedProdi ? 'selected' : '' }}>-- Pilih Program Studi --</option>
+                                    @foreach($allProdi as $prodi)
+                                    <option value="{{ $prodi->id }}" {{ $selectedProdi && $prodi->id == $selectedProdi->id ? 'selected' : '' }}>{{ $prodi->nama }}</option>
+                                    @endforeach
+                                </select>
+                                @error('id_prodi') <div class="alert alert-danger">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tahun Kurikulum <span class="text-danger">*</span></label>
+                        <select class="form-control" name="id_kurikulum" id="kurikulum-select">
+                            <option value="">-- Pilih Kurikulum --</option>
+                            @foreach($allKurikulum as $kurikulum)
+                            <option value="{{ $kurikulum->id }}" {{ $selectedKurikulum && $kurikulum->id == $selectedKurikulum->id ? 'selected' : '' }}>{{ $kurikulum->tahun }}</option>
+                            @endforeach
+                        </select>
+                        @error('id_kurikulum') <div class="alert alert-danger">{{ $message }}</div> @enderror
+                    </div>
+                    <hr>
+                </div>
+
+                {{-- Form Detail MK --}}
                 <div class="form-group">
                     <label>MK Prasyarat</label>
                     <select class="form-control" name="prasyarat" id="prasyarat-select">
-                         {{-- Opsi prasyarat akan diisi oleh Javascript --}}
-                         <option value="">Tidak ada</option>
+                        <option value="">Tidak ada</option>
                         @foreach($allMkPrasyarat as $prasyarat)
                         <option value="{{ $prasyarat->nama }}" {{ $prasyarat->nama == $mk->prasyarat ? 'selected' : '' }}>{{ $prasyarat->nama }} ({{$prasyarat->kode}})</option>
                         @endforeach
@@ -67,7 +95,6 @@
                     @error('prasyarat') <div class="alert alert-danger">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- Input Fields untuk Detail MK --}}
                 <div class="form-group">
                     <label>Kode MK <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" name="kode" placeholder="Kode MK" value="{{ old('kode', $mk->kode) }}" autocomplete="off">
@@ -80,20 +107,28 @@
                 </div>
                 <div class="form-group">
                     <label>Semester <span class="text-danger">*</span></label>
-                    <select class="form-control" name="semester">
-                        <option value="" disabled>Pilih Semester...</option>
+                    <div class="d-flex flex-wrap gap-3 mt-1 p-3 border rounded bg-light">
+                        @php
+                            $rawOldSem = old('semester', $mk->semester);
+                            $selectedSemesters = is_array($rawOldSem) ? array_map('strval', $rawOldSem) : array_map('trim', explode(',', (string)$rawOldSem));
+                        @endphp
                         @for ($i = 1; $i <= 8; $i++)
-                            <option value="{{ $i }}" {{ old('semester', $mk->semester) == $i ? 'selected' : '' }}>
-                                {{ $i }}
-                            </option>
+                            <div class="form-check me-3 mb-1">
+                                <label class="form-check-label font-weight-normal" style="cursor: pointer;">
+                                    <input type="checkbox" class="form-check-input" name="semester[]" value="{{ $i }}" {{ in_array((string)$i, $selectedSemesters) ? 'checked' : '' }}>
+                                    Semester {{ $i }}
+                                </label>
+                            </div>
                         @endfor
-                    </select>
-                    @error('semester') <div class="alert alert-danger">{{ $message }}</div> @enderror
+                    </div>
+                    <small class="form-text text-muted">Centang satu atau lebih semester jika mata kuliah dapat diambil di beberapa semester.</small>
+                    @error('semester') <div class="alert alert-danger mt-1">{{ $message }}</div> @enderror
                 </div>
                 <div class="form-group">
                     <label>Rumpun <span class="text-danger">*</span></label>
                     <div class="form-check"><label class="form-check-label"><input type="radio" class="form-check-input" name="rumpun" value="Wajib" {{ old('rumpun', $mk->rumpun) == 'Wajib' ? 'checked' : '' }}> Wajib</label></div>
                     <div class="form-check"><label class="form-check-label"><input type="radio" class="form-check-input" name="rumpun" value="Peminatan" {{ old('rumpun', $mk->rumpun) == 'Peminatan' ? 'checked' : '' }}> Peminatan</label></div>
+                    <div class="form-check"><label class="form-check-label"><input type="radio" class="form-check-input" name="rumpun" value="MKWK" {{ old('rumpun', $mk->rumpun) == 'MKWK' ? 'checked' : '' }}> MKWK</label></div>
                     @error('rumpun') <div class="alert alert-danger">{{ $message }}</div> @enderror
                 </div>
                 <div class="row">
@@ -124,7 +159,6 @@
     </div>
 </div>
 
-{{-- Tambahkan jQuery jika belum ada di template utama --}}
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
 $(document).ready(function() {
@@ -132,73 +166,57 @@ $(document).ready(function() {
     const prodiSelect = $('#prodi-select');
     const kurikulumSelect = $('#kurikulum-select');
     const prasyaratSelect = $('#prasyarat-select');
+    const sectionProdiKurikulum = $('#prodi-kurikulum-section');
     const currentMkKode = "{{ $mk->kode }}";
 
-    function resetProdi() {
-        prodiSelect.html('<option value="" disabled selected>Pilih Fakultas Dulu...</option>').prop('disabled', true);
-        resetKurikulumAndPrasyarat();
+    function toggleType(type) {
+        if (type === 'univ') {
+            sectionProdiKurikulum.slideUp(200);
+            fakultasSelect.val('').prop('required', false);
+            prodiSelect.val('').prop('required', false);
+            kurikulumSelect.val('').prop('required', false);
+        } else {
+            sectionProdiKurikulum.slideDown(200);
+            prodiSelect.prop('required', true);
+            kurikulumSelect.prop('required', true);
+        }
     }
 
-    function resetKurikulumAndPrasyarat() {
-        kurikulumSelect.html('<option value="" disabled selected>Pilih Prodi Dulu...</option>').prop('disabled', true);
-        prasyaratSelect.html('<option value="">Tidak ada</option>').prop('disabled', true);
-    }
+    $('input[name="mk_type_toggle"]').on('change', function() {
+        toggleType($(this).val());
+    });
 
     fakultasSelect.on('change', function() {
         const fakultasId = $(this).val();
-        resetProdi();
-
         if (fakultasId) {
-            prodiSelect.html('<option value="" disabled selected>Memuat...</option>').prop('disabled', false);
+            prodiSelect.html('<option value="" disabled selected>Memuat...</option>');
             $.ajax({
-                url: `/admin-universitas/get-prodi/${fakultasId}`, // Pastikan route ini benar
+                url: `/admin-universitas/get-prodi/${fakultasId}`,
                 success: function(data) {
-                    let options = '<option value="" disabled selected>Pilih Prodi...</option>';
+                    let options = '<option value="">-- Pilih Program Studi --</option>';
                     data.forEach(function(prodi) {
                         options += `<option value="${prodi.id}">${prodi.nama}</option>`;
                     });
                     prodiSelect.html(options);
                 }
             });
+        } else {
+            prodiSelect.html('<option value="">-- Pilih Program Studi --</option>');
         }
     });
 
     prodiSelect.on('change', function() {
         const prodiId = $(this).val();
-        resetKurikulumAndPrasyarat();
-
         if (prodiId) {
-            kurikulumSelect.html('<option value="" disabled selected>Memuat...</option>').prop('disabled', false);
-            prasyaratSelect.html('<option value="" disabled selected>Memuat...</option>').prop('disabled', false);
-
-            // Fetch Kurikulum
+            kurikulumSelect.html('<option value="" disabled selected>Memuat...</option>');
             $.ajax({
-                url: `/admin-universitas/get-kurikulum/${prodiId}`, // Pastikan route ini benar
+                url: `/admin-universitas/get-kurikulum/${prodiId}`,
                 success: function(data) {
-                    let options;
-                    if (data.length > 0) {
-                        options = '<option value="" disabled selected>Pilih Kurikulum...</option>';
-                         data.forEach(function(kurikulum) {
-                            options += `<option value="${kurikulum.id}">${kurikulum.tahun}</option>`;
-                        });
-                    } else {
-                        options = '<option value="" disabled selected>Kurikulum tidak ditemukan</option>';
-                    }
-                    kurikulumSelect.html(options);
-                }
-            });
-
-            // Fetch MK Prasyarat
-            $.ajax({
-                url: `/admin-universitas/get-mk-prasyarat/${prodiId}`, // Pastikan route ini benar
-                success: function(data) {
-                    let options = '<option value="">Tidak ada</option>';
-                    data.forEach(function(mk) {
-                         if(mk.kode !== currentMkKode){ // Jangan tampilkan MK itu sendiri sebagai prasyarat
-                            options += `<option value="${mk.nama}">${mk.nama} (${mk.kode})</option>`;
-                         }
+                    let options = '<option value="">-- Pilih Kurikulum --</option>';
+                    data.forEach(function(kurikulum) {
+                        options += `<option value="${kurikulum.id}">${kurikulum.tahun}</option>`;
                     });
-                    prasyaratSelect.html(options);
+                    kurikulumSelect.html(options);
                 }
             });
         }

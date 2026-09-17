@@ -334,6 +334,7 @@
         .interactive-year-tf {
             cursor: pointer;
             transition: background-color 0.2s ease;
+            color: #1F3BB3;
         }
         .interactive-year-tf:hover {
             background-color: #dbeafe !important;
@@ -1919,9 +1920,9 @@
                         var hasDataYr = yearsWithData[yr] !== undefined ? yearsWithData[yr] : true;
                         if (hasDataYr && ketercapaianCplYearlyAvg[yr] !== null && ketercapaianCplYearlyAvg[yr] !== undefined) {
                             var avgPctYr = roundToTwo(ketercapaianCplYearlyAvg[yr]);
-                            footerHtml += '<th class="text-center text-primary fw-bold interactive-year-tf" data-year="' + yr + '" style="color: #1F3BB3 !important; cursor: pointer;" title="Klik tahun ' + yr + '">' + avgPctYr + '%</th>';
+                            footerHtml += '<th class="text-center text-primary fw-bold interactive-year-tf" data-year="' + yr + '" style="cursor: pointer;" title="Klik tahun ' + yr + '">' + avgPctYr + '%</th>';
                         } else {
-                            footerHtml += '<th class="text-center text-muted bg-light interactive-year-tf" data-year="' + yr + '" style="color: #94a3b8 !important; background-color: #f8fafc !important; cursor: pointer;" title="Belum Ditempuh">-</th>';
+                            footerHtml += '<th class="text-center text-muted bg-light interactive-year-tf" data-year="' + yr + '" style="cursor: pointer;" title="Belum Ditempuh">-</th>';
                         }
                     });
                     footerHtml += '</tr>';

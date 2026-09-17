@@ -8,7 +8,11 @@
     .table-responsive table td.wrap-content {
         white-space: normal;
         word-wrap: break-word;
-        max-width: 400px;
+    }
+    .table-responsive table td.profil-karir-col {
+        white-space: normal;
+        word-wrap: break-word;
+        max-width: 260px;
     }
 </style>
 
@@ -17,10 +21,10 @@
         <thead class="table-light">
             <tr>
                 <th width="5%" class="text-center">No</th>
-                <th width="25%">Profil Karir</th>
+                <th width="28%">Profil Karir</th>
                 <th>Graduate Profile</th>
                 @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                    <th width="15%" class="text-center">Action</th>
+                    <th width="12%" class="text-center">Action</th>
                 @endif
             </tr>
         </thead>
@@ -36,7 +40,7 @@
                 @foreach ($listProfil as $key => $profil)
                     <tr>
                         <td class="text-center">{{ $key + 1 }}</td>
-                        <td>
+                        <td class="profil-karir-col">
                             <span class="fw-bold text-dark">{{ $profil->namaProfil ?? '-' }}</span>
                         </td>
                         <td class="wrap-content">{{ ucfirst($profil->deskripsi) }}</td>

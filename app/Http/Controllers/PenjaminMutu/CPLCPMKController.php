@@ -553,6 +553,30 @@ public function getCpmkByKurikulum($id_kurikulum)
     ]);
 }
 
+public function getCplByKurikulum($id_kurikulum)
+{
+    $cpls = CPL::where('id_kurikulum', $id_kurikulum)
+        ->where('id_prodi', auth()->user()->id_prodiUser)
+        ->orderBy('kode', 'asc')
+        ->get();
+
+    return response()->json([
+        'cpls' => $cpls
+    ]);
+}
+
+public function getCpmkByCpl($cpl_id)
+{
+    $cpmks = CPMK::where('cpl_id', $cpl_id)
+        ->where('id_prodi', auth()->user()->id_prodiUser)
+        ->orderBy('kode', 'asc')
+        ->get();
+
+    return response()->json([
+        'cpmks' => $cpmks
+    ]);
+}
+
 public function storeSubCpmk(Request $request)
 {
     // Validasi
@@ -608,4 +632,84 @@ public function storeSubCpmk(Request $request)
     }
 }
 
+public function indexKelolaSubCpmk(Request $request)
+{
+    $kurikulums = $this->getKurikulumsForUser();
+
+    // Ambil daftar CPL milik prodi untuk filter tab CPL
+    $cplQuery = CPL::query();
+    if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        $cplQuery->where('id_prodi', auth()->user()->id_prodiUser);
+    }
+    if ($request->filled('kurikulum_id')) {
+        $cplQuery->where('id_kurikulum', $request->kurikulum_id);
+    }
+    $cpls = $cplQuery->orderBy('kode', 'asc')->get();
+
+    $query = SubCpmk::with(['cpmk.cpl', 'mks'])
+        ->join('cpmks', 'sub_cpmk.cpmk_id', '=', 'cpmks.id')
+        ->join('cpls', 'cpmks.cpl_id', '=', 'cpls.id');
+
+    if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        $query->where('sub_cpmk.id_prodi', auth()->user()->id_prodiUser);
+    }
+
+    if ($request->filled('kurikulum_id')) {
+        $query->where('cpls.id_kurikulum', $request->kurikulum_id);
+    }
+
+    if ($request->filled('cpl_id')) {
+        $query->where('cpls.id', $request->cpl_id);
+    }
+
+    $subCpmks = $query->select('sub_cpmk.*')
+        ->orderBy('cpls.kode', 'asc')
+        ->orderBy('cpmks.kode', 'asc')
+        ->orderBy('sub_cpmk.kode', 'asc')
+        ->paginate(15)
+        ->withQueryString();
+
+    return view('penjamin-mutu.cpl-cpmk.kelola_subcpmk', compact('subCpmks', 'kurikulums', 'cpls'));
 }
+
+public function updateSubCpmk(Request $request, $id)
+{
+    $validated = $request->validate([
+        'kode' => 'nullable|string|max:255',
+        'uraian' => 'required|string',
+    ]);
+
+    try {
+        $subCpmk = SubCpmk::findOrFail($id);
+        $data = ['uraian' => $validated['uraian']];
+        if (!empty($validated['kode'])) {
+            $data['kode'] = $validated['kode'];
+        }
+        $subCpmk->update($data);
+
+        return redirect()->back()->with('success', 'Data Sub CPMK berhasil diperbarui.');
+    } catch (\Exception $e) {
+        Log::error('Error update Sub CPMK: ' . $e->getMessage());
+        return redirect()->back()->withInput()->with('failed', 'Gagal memperbarui Sub CPMK.');
+    }
+}
+
+public function destroySubCpmk($id)
+{
+    try {
+        $subCpmk = SubCpmk::findOrFail($id);
+        $kodeSub = $subCpmk->kode;
+        if (method_exists($subCpmk, 'mks')) {
+            $subCpmk->mks()->detach();
+        }
+        $subCpmk->delete();
+
+        return redirect()->back()->with('success', "Sub CPMK $kodeSub berhasil dihapus.");
+    } catch (\Exception $e) {
+        Log::error('Error delete Sub CPMK: ' . $e->getMessage());
+        return redirect()->back()->with('failed', 'Gagal menghapus Sub CPMK.');
+    }
+}
+
+}
+

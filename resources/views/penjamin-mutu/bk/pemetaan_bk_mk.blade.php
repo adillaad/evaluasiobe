@@ -162,7 +162,7 @@
                                         </td>
                                         <td class="text-center py-3 px-3 font-13">
                                             <span class="badge bg-light text-dark border px-2 py-1 rounded-1 fw-semibold">
-                                                Kurikulum {{ $mk->kurikulum->tahun ?? $mk->kurikulum ?? '-' }}
+                                                {{ $mk->kurikulum->tahun ?? $mk->kurikulum ?? '-' }}
                                             </span>
                                         </td>
                                         @foreach ($bks as $bk)

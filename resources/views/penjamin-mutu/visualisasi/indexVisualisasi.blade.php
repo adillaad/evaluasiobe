@@ -89,6 +89,7 @@
         .interactive-year-tf {
             cursor: pointer;
             transition: background-color 0.2s ease;
+            color: #1F3BB3;
         }
         .interactive-year-tf:hover {
             background-color: #dbeafe !important;
@@ -2674,9 +2675,9 @@
                         var hasData = yearsWithData[yr] !== undefined ? yearsWithData[yr] : true;
                         if (hasData && skorCplYearlyAvg[yr] !== null && skorCplYearlyAvg[yr] !== undefined) {
                             var avgYr = roundToTwo(skorCplYearlyAvg[yr]);
-                            footerHtml += '<th class="text-center text-primary fw-bold interactive-year-tf" data-year="' + yr + '" style="color: #1F3BB3 !important; cursor: pointer;" title="Klik tahun ' + yr + '">' + avgYr + '</th>';
+                            footerHtml += '<th class="text-center text-primary fw-bold interactive-year-tf" data-year="' + yr + '" style="cursor: pointer;" title="Klik tahun ' + yr + '">' + avgYr + '</th>';
                         } else {
-                            footerHtml += '<th class="text-center text-muted bg-light interactive-year-tf" data-year="' + yr + '" style="color: #94a3b8 !important; background-color: #f8fafc !important; cursor: pointer;" title="Belum Ditempuh">-</th>';
+                            footerHtml += '<th class="text-center text-muted bg-light interactive-year-tf" data-year="' + yr + '" style="cursor: pointer;" title="Belum Ditempuh">-</th>';
                         }
                     });
                     footerHtml += '</tr>';
@@ -2724,9 +2725,9 @@
                         var hasData = yearsWithData[yr] !== undefined ? yearsWithData[yr] : true;
                         if (hasData && ketercapaianCplYearlyAvg[yr] !== null && ketercapaianCplYearlyAvg[yr] !== undefined) {
                             var avgPctYr = roundToTwo(ketercapaianCplYearlyAvg[yr]);
-                            footerPctHtml += '<th class="text-center text-primary fw-bold interactive-year-tf" data-year="' + yr + '" style="color: #1F3BB3 !important; cursor: pointer;" title="Klik tahun ' + yr + '">' + avgPctYr + '%</th>';
+                            footerPctHtml += '<th class="text-center text-primary fw-bold interactive-year-tf" data-year="' + yr + '" style="cursor: pointer;" title="Klik tahun ' + yr + '">' + avgPctYr + '%</th>';
                         } else {
-                            footerPctHtml += '<th class="text-center text-muted bg-light interactive-year-tf" data-year="' + yr + '" style="color: #94a3b8 !important; background-color: #f8fafc !important; cursor: pointer;" title="Belum Ditempuh">-</th>';
+                            footerPctHtml += '<th class="text-center text-muted bg-light interactive-year-tf" data-year="' + yr + '" style="cursor: pointer;" title="Belum Ditempuh">-</th>';
                         }
                     });
                     footerPctHtml += '</tr>';

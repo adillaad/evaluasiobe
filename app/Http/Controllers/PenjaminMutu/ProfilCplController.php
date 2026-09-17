@@ -73,11 +73,17 @@ class ProfilCplController extends Controller
                 }),
             ],
             'bobot' => [
-                'required',
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:100',
                 function ($attribute, $value, $fail) use ($request) {
-                    $totalBobot = ProfilCpl::where('idProfil', $request->idProfil)->sum('bobot');
-                    if (($totalBobot + $value) > 1) {
-                        $fail('Total bobot tidak boleh melebihi 1 untuk Profil ini.');
+                    if ($value !== null && $value !== '') {
+                        $valNum = (float)$value <= 1.0 ? (float)$value * 100.0 : (float)$value;
+                        $totalBobot = ProfilCpl::where('idProfil', $request->idProfil)->sum('bobot');
+                        if (($totalBobot + $valNum) > 100.0) {
+                            $fail('Total bobot tidak boleh melebihi 100% untuk Profil ini.');
+                        }
                     }
                 },
             ],
@@ -88,12 +94,22 @@ class ProfilCplController extends Controller
         }
 
         try {
+            $rawBobot = null;
+            if ($request->bobot !== null && $request->bobot !== '') {
+                $num = (float)$request->bobot;
+                $rawBobot = ($num > 0 && $num <= 1.0) ? round($num * 100.0, 2) : $num;
+                $rawBobot = (float)$rawBobot == (int)$rawBobot ? (int)$rawBobot : $rawBobot;
+            }
+
             ProfilCpl::create([
                 'idProfil' => $request->idProfil,
                 'idCpl' => $request->idCpl,
-                'bobot' => $request->bobot,
+                'bobot' => $rawBobot,
                 'id_prodi' => auth()->user()->id_prodiUser,
             ]);
+
+            \App\Http\Controllers\PenjaminMutu\CPLController::recalculateCplPlBobot($request->idProfil);
+
             return response()->json(['message' => 'Data berhasil disimpan'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Gagal menyimpan data'], 422);
@@ -133,20 +149,19 @@ class ProfilCplController extends Controller
                 }),
             ],
             'bobot' => [
-                'required',
+                'nullable',
                 'numeric',
+                'min:0',
+                'max:100',
                 function ($attribute, $value, $fail) use ($request, $id) {
-                    $existingProfilCpl = ProfilCpl::find($id);
-                    $totalBobot = ProfilCpl::where('idProfil', $request->idProfil)->where('id', '!=', $id)->sum('bobot');
+                    if ($value !== null && $value !== '') {
+                        $valNum = (float)$value <= 1.0 ? (float)$value * 100.0 : (float)$value;
+                        $existingProfilCpl = ProfilCpl::find($id);
+                        $totalBobot = ProfilCpl::where('idProfil', $request->idProfil)->where('id', '!=', $id)->sum('bobot');
 
-                    // Tambahkan nilai bobot dari entry yang sedang diperbarui jika ada
-                    if ($existingProfilCpl) {
-                        $totalBobot += $existingProfilCpl->bobot;
-                    }
-
-                    // Periksa apakah total bobot ditambah nilai yang baru melebihi 1
-                    if (($totalBobot - ($existingProfilCpl ? $existingProfilCpl->bobot : 0) + $value) > 1) {
-                        $fail('Total bobot tidak boleh melebihi 1 untuk Profil ini.');
+                        if (($totalBobot + $valNum) > 100.0) {
+                            $fail('Total bobot tidak boleh melebihi 100% untuk Profil ini.');
+                        }
                     }
                 },
             ],
@@ -160,8 +175,16 @@ class ProfilCplController extends Controller
             $profilCpl = ProfilCpl::findOrFail($id);
             $profilCpl->idProfil = $request->idProfil;
             $profilCpl->idCpl = $request->idCpl;
-            $profilCpl->bobot = $request->bobot;
+            $rawBobot = null;
+            if ($request->bobot !== null && $request->bobot !== '') {
+                $num = (float)$request->bobot;
+                $rawBobot = ($num > 0 && $num <= 1.0) ? round($num * 100.0, 2) : $num;
+                $rawBobot = (float)$rawBobot == (int)$rawBobot ? (int)$rawBobot : $rawBobot;
+            }
+            $profilCpl->bobot = $rawBobot;
             $profilCpl->save();
+
+            \App\Http\Controllers\PenjaminMutu\CPLController::recalculateCplPlBobot($request->idProfil);
 
             return response()->json(['message' => 'Data berhasil diperbarui'], 200);
         } catch (\Exception $e) {
@@ -173,7 +196,11 @@ class ProfilCplController extends Controller
     public function deleteProfilCpl($id)
     {
         $profil = ProfilCpl::findOrFail($id);
+        $idProfil = $profil->idProfil;
         $profil->delete();
+
+        \App\Http\Controllers\PenjaminMutu\CPLController::recalculateCplPlBobot($idProfil);
+
         return response()->json(['message' => 'Data berhasil dihapus']);
     }
 }

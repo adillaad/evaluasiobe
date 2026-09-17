@@ -261,13 +261,16 @@ class KonversiNilaiController extends Controller
             ->where('dosen_id', $user->id)
             ->findOrFail($id);
 
-        $prodiId = $konversi->mk->id_prodi ?: ($user->id_prodiUser ?: 1);
+        $prodiId = ($konversi->mk && $konversi->mk->id_prodi) ? $konversi->mk->id_prodi : ($user->id_prodiUser ?: 1);
 
-        // Ambil master metode penilaian prodi
-        $masterMetodes = MetodePenilaian::where('id_prodi', $prodiId)->get();
-        if ($masterMetodes->isEmpty()) {
-            $masterMetodes = MetodePenilaian::all();
-        }
+        // Ambil master metode penilaian prodi saja
+        $savedMetodeIds = $konversi->konversiMetode->pluck('metode_id')->toArray();
+        $masterMetodes = MetodePenilaian::where(function($q) use ($prodiId, $savedMetodeIds) {
+            $q->where('id_prodi', $prodiId);
+            if (!empty($savedMetodeIds)) {
+                $q->orWhereIn('id', $savedMetodeIds);
+            }
+        })->orderBy('nama', 'asc')->get();
 
         // Ambil CPMK milik MK ini via relasi cpmks / cpmk_mk atau kode_mk
         $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
@@ -435,61 +438,24 @@ class KonversiNilaiController extends Controller
 
                                 $effBobotSoal = round(($relBobot / 100.0) * $cpmkPortion, 4);
 
-                                $subIds = is_array($subData) ? array_filter($subData, fn($v) => (int)$v > 0) : [];
-                                if (!empty($subIds)) {
-                                    foreach ($subIds as $subId) {
-                                        KonversiCpmkMetode::create([
-                                            'konversi_metode_id' => $km->id,
-                                            'cpmk_id' => $cpmkId,
-                                            'sub_cpmk_id' => $subId,
-                                            'nama_soal' => $namaSoal,
-                                            'bobot_soal' => $effBobotSoal,
-                                        ]);
-                                    }
-                                } else {
-                                    KonversiCpmkMetode::create([
-                                        'konversi_metode_id' => $km->id,
-                                        'cpmk_id' => $cpmkId,
-                                        'sub_cpmk_id' => null,
-                                        'nama_soal' => $namaSoal,
-                                        'bobot_soal' => $effBobotSoal,
-                                    ]);
-                                }
-                            }
-                        } else {
-                            // Standard tanpa breakdown soal (1 CPMK mengambil porsi cpmkPortion)
-                            $effBobotSoal = round($cpmkPortion, 4);
-
-                            if (is_array($subData) && !empty($subData)) {
-                                $subIds = array_filter($subData, fn($v) => (int)$v > 0);
-                                if (!empty($subIds)) {
-                                    foreach ($subIds as $subId) {
-                                        KonversiCpmkMetode::create([
-                                            'konversi_metode_id' => $km->id,
-                                            'cpmk_id' => $cpmkId,
-                                            'sub_cpmk_id' => $subId,
-                                            'nama_soal' => null,
-                                            'bobot_soal' => $effBobotSoal,
-                                        ]);
-                                    }
-                                } else {
-                                    KonversiCpmkMetode::create([
-                                        'konversi_metode_id' => $km->id,
-                                        'cpmk_id' => $cpmkId,
-                                        'sub_cpmk_id' => null,
-                                        'nama_soal' => null,
-                                        'bobot_soal' => $effBobotSoal,
-                                    ]);
-                                }
-                            } else {
                                 KonversiCpmkMetode::create([
                                     'konversi_metode_id' => $km->id,
                                     'cpmk_id' => $cpmkId,
                                     'sub_cpmk_id' => null,
-                                    'nama_soal' => null,
+                                    'nama_soal' => $namaSoal,
                                     'bobot_soal' => $effBobotSoal,
                                 ]);
                             }
+                        } else {
+                            // Standard pemetaan CPMK langsung
+                            $effBobotSoal = round($cpmkPortion, 4);
+                            KonversiCpmkMetode::create([
+                                'konversi_metode_id' => $km->id,
+                                'cpmk_id' => $cpmkId,
+                                'sub_cpmk_id' => null,
+                                'nama_soal' => null,
+                                'bobot_soal' => $effBobotSoal,
+                            ]);
                         }
                     }
                 }
@@ -558,7 +524,17 @@ class KonversiNilaiController extends Controller
         }
         // Opsi B: Nilai Akhir Per Metode & CPMK
         else if ($formatType === 'metode_cpmk') {
-            foreach ($konversi->konversiMetode as $km) {
+            $targetMetodes = $konversi->konversiMetode;
+            if ($metodeIdParam && $metodeIdParam !== 'all') {
+                $filtered = $konversi->konversiMetode->filter(function ($km) use ($metodeIdParam) {
+                    return $km->metode_id == $metodeIdParam || $km->id == $metodeIdParam;
+                });
+                if ($filtered->isNotEmpty()) {
+                    $targetMetodes = $filtered;
+                }
+            }
+
+            foreach ($targetMetodes as $km) {
                 $mNama = $km->metodePenilaian->nama ?? ('Metode ' . $km->metode_id);
                 $mBobot = $km->bobot ?? 0;
                 $uniqueCpmks = $km->cpmkMetode->unique('cpmk_id');
@@ -573,7 +549,14 @@ class KonversiNilaiController extends Controller
                     }
                 }
             }
-            $fileName = 'Template_Konversi_Metode_CPMK_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $konversi->mk_kode) . '.xlsx';
+
+            if ($metodeIdParam && $metodeIdParam !== 'all' && $targetMetodes->count() === 1) {
+                $singleKm = $targetMetodes->first();
+                $singleNama = $singleKm->metodePenilaian->nama ?? 'Metode';
+                $fileName = 'Template_Konversi_Metode_CPMK_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $singleNama) . '_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $konversi->mk_kode) . '.xlsx';
+            } else {
+                $fileName = 'Template_Konversi_Metode_CPMK_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $konversi->mk_kode) . '.xlsx';
+            }
         }
         // Opsi A: Nilai Akhir Per Metode (Format Standar / All Metode)
         else {
@@ -672,6 +655,60 @@ class KonversiNilaiController extends Controller
 
             $columnMap = []; // [colIndex => ['type' => ..., 'km' => ..., 'cm_list' => ..., 'cm' => ...]]
             $tempMetodeMapSession = []; // serializable array for session
+
+            /* 
+            // --- Auto-detect Format Type dari Header Excel (Disimpan untuk pengembangan selanjutnya) ---
+            $inputFormat = $request->input('format_type');
+            if (empty($inputFormat) || $inputFormat === 'auto') {
+                $hasSoalHeader = false;
+                $hasCpmkHeader = false;
+                $hasMetodeHeader = false;
+
+                $configuredSoalNames = [];
+                foreach ($konversi->konversiMetode as $km) {
+                    foreach ($km->cpmkMetode as $cm) {
+                        if (!empty($cm->nama_soal)) {
+                            $configuredSoalNames[] = strtolower(trim($cm->nama_soal));
+                        }
+                    }
+                }
+
+                foreach ($headerRow as $colIdx => $colName) {
+                    if ($colIdx < 5) continue;
+                    $colNameLower = strtolower(trim((string)$colName));
+
+                    if (strpos($colNameLower, 'soal') !== false) {
+                        $hasSoalHeader = true;
+                    }
+                    foreach ($configuredSoalNames as $soalName) {
+                        if (!empty($soalName) && strpos($colNameLower, $soalName) !== false) {
+                            $hasSoalHeader = true;
+                        }
+                    }
+
+                    if (strpos($colNameLower, 'cpmk') !== false || strpos($colNameLower, 'nilai metode') !== false) {
+                        $hasCpmkHeader = true;
+                    }
+
+                    foreach ($konversi->konversiMetode as $km) {
+                        $mNama = strtolower(trim($km->metodePenilaian->nama ?? ''));
+                        if (!empty($mNama) && strpos($colNameLower, $mNama) !== false) {
+                            $hasMetodeHeader = true;
+                        }
+                    }
+                }
+
+                if ($hasSoalHeader) {
+                    $formatType = 'breakdown_soal';
+                } else if ($hasCpmkHeader) {
+                    $formatType = 'metode_cpmk';
+                } else if ($hasMetodeHeader) {
+                    $formatType = 'standar';
+                } else {
+                    $formatType = 'standar';
+                }
+            }
+            */
 
             // --- Logika Pemetaan Kolom berdasarkan Format Type ---
             if ($formatType === 'breakdown_soal') {
@@ -1190,7 +1227,7 @@ class KonversiNilaiController extends Controller
         $user = auth()->user();
         $userOtoritas = $user->otoritas->otoritas ?? 'Dosen';
 
-        $konversi = PenilaianKonversi::with(['mk', 'tahunAjaran', 'kurikulum', 'konversiMetode.metodePenilaian'])
+        $konversi = PenilaianKonversi::with(['mk', 'tahunAjaran', 'kurikulum', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
             ->where('dosen_id', $user->id)
             ->findOrFail($id);
 
@@ -1199,7 +1236,42 @@ class KonversiNilaiController extends Controller
             $metodeList[$km->id] = $km->metodePenilaian->nama ?? 'Metode ' . $km->metode_id;
         }
 
-        $mutuData = Mutu::with('mahasiswa')
+        // Ambil daftar CPMK terkonfigurasi pada konversi ini
+        $cpmkList = []; // [cpmk_id => cpmk_kode]
+        $cpmkToKmMap = []; // [cpmk_id => [km_id_1, km_id_2]]
+
+        foreach ($konversi->konversiMetode as $km) {
+            foreach ($km->cpmkMetode as $cm) {
+                if ($cm->cpmk_id) {
+                    if (!isset($cpmkList[$cm->cpmk_id])) {
+                        $cpmkList[$cm->cpmk_id] = $cm->cpmk?->kode ?? ('CPMK-' . $cm->cpmk_id);
+                    }
+                    if (!isset($cpmkToKmMap[$cm->cpmk_id])) {
+                        $cpmkToKmMap[$cm->cpmk_id] = [];
+                    }
+                    if (!in_array($km->id, $cpmkToKmMap[$cm->cpmk_id])) {
+                        $cpmkToKmMap[$cm->cpmk_id][] = $km->id;
+                    }
+                }
+            }
+        }
+
+        // Fallback jika cpmkMetode belum diset spesifik, ambil CPMK dari MK
+        if (empty($cpmkList)) {
+            $cpmks = $konversi->mk?->cpmks;
+            if (!$cpmks || $cpmks->isEmpty()) {
+                $cpmks = CPMK::whereHas('mks', function ($q) use ($konversi) {
+                    $q->where('kode', $konversi->mk_kode);
+                })->get();
+            }
+            if ($cpmks) {
+                foreach ($cpmks as $c) {
+                    $cpmkList[$c->id] = $c->kode;
+                }
+            }
+        }
+
+        $mutuData = Mutu::with(['mahasiswa', 'cpmk', 'konversiMetode.metodePenilaian'])
             ->where('Course', $konversi->mk_kode)
             ->where('sumber', 'konversi')
             ->where('tahun_ajaran_id', $konversi->tahun_ajaran_id)
@@ -1207,7 +1279,15 @@ class KonversiNilaiController extends Controller
 
         $mhsGrouped = $mutuData->groupBy('NPM');
 
-        return view('dosen.konversi.detail', compact('konversi', 'metodeList', 'mutuData', 'mhsGrouped', 'userOtoritas'));
+        return view('dosen.konversi.detail', compact(
+            'konversi',
+            'metodeList',
+            'cpmkList',
+            'cpmkToKmMap',
+            'mutuData',
+            'mhsGrouped',
+            'userOtoritas'
+        ));
     }
 
     // Hapus Data Konversi Nilai Historis

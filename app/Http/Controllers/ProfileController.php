@@ -22,12 +22,14 @@ class ProfileController extends Controller
         $primaryProdiId = $user->primary_prodi_id ?? $user->id_prodiUser;
         $isSecondaryProdi = $primaryProdiId && (int)$user->id_prodiUser !== (int)$primaryProdiId;
 
-        // Ambil semua otoritas user
-        $profiles = UserOtoritas::where('user_id', Auth::id())
-            ->orderByRaw("FIELD(otoritas, 'Admin', 'Admin Universitas', 'Wakil Rektor', 'Wakil Dekan', 'Kepala Program Studi' ,'Dosen', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi')")
-            ->get()
-            ->unique('otoritas') // Pastikan tidak ada duplikat otoritas yang sama
-            ->values();
+        // Ambil otoritas user sesuai konteks prodi saat ini
+        $profiles = $isSecondaryProdi
+            ? UserOtoritas::where('user_id', Auth::id())->where('otoritas', 'Dosen')->get()
+            : UserOtoritas::where('user_id', Auth::id())
+                ->orderByRaw("FIELD(otoritas, 'Admin', 'Admin Universitas', 'Wakil Rektor', 'Wakil Dekan', 'Kepala Program Studi' ,'Dosen', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi')")
+                ->get()
+                ->unique('otoritas')
+                ->values();
 
         // BARU: Ambil semua prodi milik user
         $userProdis = $user->prodis()->withPivot('active')->get();

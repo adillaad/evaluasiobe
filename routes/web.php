@@ -752,7 +752,12 @@ Route::middleware(['auth'])->group(function () {
                         Route::get('get-subcpmk-by-mk/{mk}', [CPLCPMKPM::class, 'getSUBCPMKByMK'])->name('sub-cpmk-by-mk');
                         Route::post('add-cpmk-mk-subcpmk', [CPLCPMKPM::class, 'storeCPMKMKSUBCPMK'])->name('cpmk-mk-subcpmk-store');
                         Route::get('get-cpmk-by-kurikulum/{kurikulum_id}', [CPLCPMKPM::class, 'getCpmkByKurikulum'])->name('cpmk-by-kurikulum');
+                        Route::get('get-cpl-by-kurikulum/{kurikulum_id}', [CPLCPMKPM::class, 'getCplByKurikulum'])->name('cpl-by-kurikulum');
+                        Route::get('get-cpmk-by-cpl/{cpl_id}', [CPLCPMKPM::class, 'getCpmkByCpl'])->name('cpmk-by-cpl');
+                        Route::get('kelola-subcpmk', [CPLCPMKPM::class, 'indexKelolaSubCpmk'])->name('subcpmk-kelola');
                         Route::post('add-subcpmk', [CPLCPMKPM::class, 'storeSubCpmk'])->name('subCpmk-store');
+                        Route::put('update-subcpmk/{id}', [CPLCPMKPM::class, 'updateSubCpmk'])->name('subCpmk-update');
+                        Route::delete('delete-subcpmk/{id}', [CPLCPMKPM::class, 'destroySubCpmk'])->name('subCpmk-destroy');
                     });
 
                     // Asesmen
@@ -1062,7 +1067,12 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                     Route::get('get-subcpmk-by-mk/{mk}', [CPLCPMKPM::class, 'getSUBCPMKByMK'])->name('sub-cpmk-by-mk');
                     Route::post('add-cpmk-mk-subcpmk', [CPLCPMKPM::class, 'storeCPMKMKSUBCPMK'])->name('cpmk-mk-subcpmk-store');
                     Route::get('get-cpmk-by-kurikulum/{kurikulum_id}', [CPLCPMKPM::class, 'getCpmkByKurikulum'])->name('cpmk-by-kurikulum');
+                    Route::get('get-cpl-by-kurikulum/{kurikulum_id}', [CPLCPMKPM::class, 'getCplByKurikulum'])->name('cpl-by-kurikulum');
+                    Route::get('get-cpmk-by-cpl/{cpl_id}', [CPLCPMKPM::class, 'getCpmkByCpl'])->name('cpmk-by-cpl');
+                    Route::get('kelola-subcpmk', [CPLCPMKPM::class, 'indexKelolaSubCpmk'])->name('subcpmk-kelola');
                     Route::post('add-subcpmk', [CPLCPMKPM::class, 'storeSubCpmk'])->name('subCpmk-store');
+                    Route::put('update-subcpmk/{id}', [CPLCPMKPM::class, 'updateSubCpmk'])->name('subCpmk-update');
+                    Route::delete('delete-subcpmk/{id}', [CPLCPMKPM::class, 'destroySubCpmk'])->name('subCpmk-destroy');
                 });
 
                 // Asesmen

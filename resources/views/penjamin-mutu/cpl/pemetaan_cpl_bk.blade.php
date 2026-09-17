@@ -80,7 +80,7 @@
                                         <td class="py-3 px-3 font-13 text-secondary">{{ $bk->nama }}</td>
                                         <td class="text-center py-3 px-3 font-13">
                                             <span class="badge bg-light text-dark border px-2 py-1 rounded-1 fw-semibold">
-                                                Kurikulum {{ $bk->kurikulum->tahun ?? '-' }}
+                                                {{ $bk->kurikulum->tahun ?? '-' }}
                                             </span>
                                         </td>
                                         @foreach ($cpls as $cpl)

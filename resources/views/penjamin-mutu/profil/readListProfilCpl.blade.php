@@ -28,7 +28,7 @@
                         <td>{{ ucfirst($profilCpl->profilLulusan->kode ?? '-') }}</td>
                         <td>{{ $profilCpl->cpl->kode ?? '-' }}</td>
                         <td>{{ $profilCpl->cpl->judul ?? '-' }}</td>
-                        <td>{{ $profilCpl->bobot }}</td>
+                        <td>{{ (float)$profilCpl->bobot == (int)$profilCpl->bobot ? (int)$profilCpl->bobot : $profilCpl->bobot }}%</td>
                         @if (in_array($userOtoritas, [
                                 'Penjamin Mutu Program Studi',
                                 'Kepala Program Studi',
