@@ -179,7 +179,7 @@
                                                     <i class="ti-lock me-1"></i> Terkunci
                                                 </span>
                                             @elseif ($soal->status === 'Menunggu')
-                                                <button class="btn btn-warning btn-sm p-1" disabled data-bs-toggle="tooltip"
+                                                <button class="btn btn-outline-primary btn-sm p-1" disabled data-bs-toggle="tooltip"
                                                     title="Sedang ditinjau, tidak dapat diedit">
                                                     <i class="ti-pencil"></i>
                                                 </button>
@@ -187,13 +187,13 @@
                                                     title="Sudah diajukan">
                                                     <i class="ti-share"></i>
                                                 </button>
-                                                <button class="btn btn-danger btn-sm p-1" disabled data-bs-toggle="tooltip"
+                                                <button class="btn btn-outline-danger btn-sm p-1" disabled data-bs-toggle="tooltip"
                                                     title="Sedang ditinjau, tidak dapat dihapus">
                                                     <i class="ti-trash"></i>
                                                 </button>
                                             @elseif (in_array($soal->status, ['Belum', 'Tolak']))
                                                 <a href="/dosen/soal/edit-soal/{{ $soal->id }}"
-                                                    class="btn btn-warning btn-sm p-1" data-bs-toggle="tooltip"
+                                                    class="btn btn-outline-primary btn-sm p-1" data-bs-toggle="tooltip"
                                                     title="Edit Soal">
                                                     <i class="ti-pencil"></i>
                                                 </a>
@@ -213,7 +213,7 @@
                                                     onsubmit="return confirm('Hapus soal ini?')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm p-1"
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm p-1"
                                                         data-bs-toggle="tooltip" title="Hapus Soal">
                                                         <i class="ti-trash"></i>
                                                     </button>

@@ -1,6 +1,58 @@
+@php
+    $selectedProdiId = request('prodi_id');
+    if (!$selectedProdiId && request('kurikulum_id')) {
+        $selectedProdiId = \Illuminate\Support\Facades\DB::table('kurikulums')->where('id', request('kurikulum_id'))->value('id_prodi');
+    }
+    if (!$selectedProdiId && auth()->check()) {
+        $selectedProdiId = auth()->user()->id_prodiUser ?? (auth()->user()->prodi ? auth()->user()->prodi->id : null);
+    }
+    if ($selectedProdiId) {
+        $isAptikom = (bool) \Illuminate\Support\Facades\DB::table('prodi')->where('id', $selectedProdiId)->value('is_aptikom');
+    } else {
+        $isAptikom = auth()->check() && auth()->user()->prodi ? (bool) auth()->user()->prodi->is_aptikom : true;
+    }
+@endphp
+
 @extends('penjamin-mutu.template')
 
 @section('content')
+<style>
+    /* Custom Badge & Button Styles matching System Accent Theme */
+    .badge-system {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+        color: #ffffff !important;
+        font-weight: 500;
+    }
+    .badge-system-outline {
+        background-color: #e0f2fe !important;
+        color: #0369a1 !important;
+        border: 1px solid #bae6fd !important;
+        font-weight: 600;
+    }
+    .btn-outline-primary {
+        color: #0284c7 !important;
+        background-color: #ffffff !important;
+        border-color: #0284c7 !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active {
+        color: #ffffff !important;
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+        border-color: #0284c7 !important;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+    }
+    .btn-outline-danger {
+        color: #dc3545 !important;
+        background-color: #ffffff !important;
+        border-color: #dc3545 !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    .btn-outline-danger:hover, .btn-outline-danger:focus, .btn-outline-danger:active {
+        color: #ffffff !important;
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+    }
+</style>
 <div class="row">
     <div class="col-md-12">
         <div class="card mb-4">
@@ -76,7 +128,7 @@
                             @forelse ($mks as $i => $mk)
                                 <tr>
                                     <td class="text-center">{{ ($mks->currentPage() - 1) * $mks->perPage() + $i + 1 }}</td>
-                                    <td><span class="badge bg-secondary">{{ $mk->kode }}</span></td>
+                                    <td><span class="badge badge-system">{{ $mk->kode }}</span></td>
                                     <td>
                                         <strong>{{ $mk->nama }}</strong>
                                         @if ($mk->nama_eng)
@@ -91,15 +143,15 @@
                                     </td>
                                     <td class="text-center">
                                         @if ($mk->kurikulum)
-                                            <span class="badge bg-info text-dark">{{ $mk->kurikulum->tahun }}</span>
+                                            <span class="badge badge-system-outline">{{ $mk->kurikulum->tahun }}</span>
                                         @else
                                             <span class="text-muted">-</span>
                                         @endif
                                     </td>
                                     <td class="text-center">
                                         <div class="d-inline-flex gap-1 justify-content-center">
-                                            <a href="{{ url()->current() }}/{{ $mk->kode }}" class="btn btn-sm btn-primary">
-                                                <i class="mdi mdi-eye me-1"></i> Detail
+                                            <a href="{{ url()->current() }}/{{ $mk->kode }}" class="btn btn-sm btn-outline-primary p-1 px-2" title="Detail Asesmen">
+                                                <i class="mdi mdi-eye me-1"></i>
                                             </a>
 
                                             @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
@@ -107,8 +159,8 @@
                                                       onsubmit="return confirm('Apakah Anda yakin ingin menghapus SEMUA asesmen pada mata kuliah {{ $mk->nama }}?')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger">
-                                                        <i class="mdi mdi-delete me-1"></i> Hapus
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger p-1 px-2" title="Hapus Semua Asesmen">
+                                                        <i class="mdi mdi-delete me-1"></i>
                                                     </button>
                                                 </form>
                                             @endif

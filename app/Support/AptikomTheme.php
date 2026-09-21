@@ -8,7 +8,7 @@ class AptikomTheme
 {
     public const APTIKOM_COLOR = '#007bff';
 
-    public const NON_APTIKOM_COLOR = '#ffeb3b';
+    public const NON_APTIKOM_COLOR = '#007bff';
 
     public static function resolve(?User $user, ?string $fallback = null): string
     {

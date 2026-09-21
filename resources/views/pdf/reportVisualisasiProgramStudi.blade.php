@@ -220,9 +220,9 @@
                     <div class="summary-card-title">Total Butir CPL</div>
                     <div class="summary-card-value" style="color: #7c3aed;">{{ $selectedProdi['total_cpl'] }} <span style="font-size: 7.5pt; color: #64748b;">Butir</span></div>
                 </td>
-                <td class="summary-card" style="border-top: 3px solid #f59e0b;">
+                <td class="summary-card" style="border-top: 3px solid #0ea5e9;">
                     <div class="summary-card-title">Mahasiswa Terdaftar</div>
-                    <div class="summary-card-value" style="color: #d97706;">{{ $selectedProdi['total_mhs'] }} <span style="font-size: 7.5pt; color: #64748b;">Mhs</span></div>
+                    <div class="summary-card-value" style="color: #0284c7;">{{ $selectedProdi['total_mhs'] }} <span style="font-size: 7.5pt; color: #64748b;">Mhs</span></div>
                 </td>
             </tr>
         </table>
@@ -296,9 +296,9 @@
                     <div class="summary-card-title">Total Program Studi</div>
                     <div class="summary-card-value" style="color: #7c3aed;">{{ count($fakultasCplData['prodi_stats']) }} <span style="font-size: 7.5pt; color: #64748b;">Prodi</span></div>
                 </td>
-                <td class="summary-card" style="border-top: 3px solid #f59e0b;">
+                <td class="summary-card" style="border-top: 3px solid #0ea5e9;">
                     <div class="summary-card-title">Total Butir CPL</div>
-                    <div class="summary-card-value" style="color: #d97706;">{{ $fakultasCplData['summary']['total_cpl_count'] ?? 0 }} <span style="font-size: 7.5pt; color: #64748b;">CPL</span></div>
+                    <div class="summary-card-value" style="color: #0284c7;">{{ $fakultasCplData['summary']['total_cpl_count'] ?? 0 }} <span style="font-size: 7.5pt; color: #64748b;">CPL</span></div>
                 </td>
             </tr>
         </table>

@@ -1,5 +1,42 @@
 @extends('admin.template')
 @section('content')
+    <style>
+        .btn-outline-primary {
+            color: #0284c7 !important;
+            border-color: #0284c7 !important;
+            background-color: #ffffff !important;
+        }
+        .btn-outline-primary i {
+            color: #0284c7 !important;
+            transition: color 0.2s ease;
+        }
+        .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active {
+            background-color: #0284c7 !important;
+            border-color: #0284c7 !important;
+            color: #ffffff !important;
+        }
+        .btn-outline-primary:hover i, .btn-outline-primary:focus i, .btn-outline-primary:active i {
+            color: #ffffff !important;
+        }
+
+        .btn-outline-danger {
+            color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            background-color: #ffffff !important;
+        }
+        .btn-outline-danger i {
+            color: #dc3545 !important;
+            transition: color 0.2s ease;
+        }
+        .btn-outline-danger:hover, .btn-outline-danger:focus, .btn-outline-danger:active {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: #ffffff !important;
+        }
+        .btn-outline-danger:hover i, .btn-outline-danger:focus i, .btn-outline-danger:active i {
+            color: #ffffff !important;
+        }
+    </style>
     <div class="col-lg-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
@@ -90,16 +127,16 @@
                                      <td>
                                          <div class="d-flex align-items-center gap-1">
                                              <a href="edit-user/{{ encrypt($user->id) }}"
-                                                 class="btn btn-warning btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                                 class="btn btn-outline-primary btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
                                                  <i class="ti-pencil"></i>
                                              </a>
                                              <form action="delete-user/{{ encrypt($user->id) }}" method="post" class="d-inline m-0 p-0">
                                                  @csrf
                                                  @method('delete')
-                                                 <button type="submit" class="btn btn-danger btn-icons"
+                                                 <button type="submit" class="btn btn-outline-danger btn-icons"
                                                      data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
                                                      onclick="return confirm('Are you sure to delete {{ $user->name }}?')">
-                                                      <i class="ti-trash mdi mdi-delete"></i>
+                                                      <i class="ti-trash"></i>
                                                  </button>
                                              </form>
                                          </div>

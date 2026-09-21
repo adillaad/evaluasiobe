@@ -720,7 +720,7 @@
         </div>
 
         {{-- Alert Notice jika data kosong --}}
-        <div id="emptyDataAlert" class="alert alert-warning border-0 shadow-sm mb-4 py-3 px-4" style="display: none; background: #fffbeb; border-left: 4px solid #f59e0b !important; border-radius: 10px;">
+        <div id="emptyDataAlert" class="alert alert-warning border-0 shadow-sm mb-4 py-3 px-4" style="display: none; background: #fffbeb; border-left: 4px solid #0ea5e9 !important; border-radius: 10px;">
             <div class="d-flex align-items-center">
                 <i class="bi bi-exclamation-triangle-fill text-warning fs-4 me-3"></i>
                 <div>

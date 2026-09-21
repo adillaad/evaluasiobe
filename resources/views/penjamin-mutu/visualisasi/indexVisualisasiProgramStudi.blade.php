@@ -534,15 +534,15 @@
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="summary-box-card" style="border-top: 3px solid #f59e0b;">
+                    <div class="summary-box-card" style="border-top: 3px solid #0ea5e9;">
                         <div>
                             <div class="summary-box-label">Total Butir CPL</div>
-                            <div class="summary-box-val" style="color: #d97706;">
+                            <div class="summary-box-val" style="color: #0284c7;">
                                 {{ $fakultasCplData['summary']['total_cpl_count'] }}
                                 <span style="font-size: 0.9rem; font-weight: 500; color: #64748b;">Butir</span>
                             </div>
                         </div>
-                        <div class="summary-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: #d97706;">
+                        <div class="summary-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: #0284c7;">
                             <i class="bi bi-people-fill"></i>
                         </div>
                     </div>
@@ -931,7 +931,7 @@
                     trendChartInstance.destroy();
                 }
 
-                var colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#14b8a6', '#f97316'];
+                var colors = ['#3b82f6', '#10b981', '#8b5cf6', '#0ea5e9', '#ec4899', '#06b6d4', '#14b8a6', '#f97316'];
                 var datasets = [];
 
                 yearlyProgressionData.forEach(function(item, idx) {

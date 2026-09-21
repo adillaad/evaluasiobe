@@ -40,8 +40,8 @@
         }
     @else
         .btn-primary {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-            border-color: #d97706 !important;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+            border-color: #0284c7 !important;
             color: #ffffff !important;
         }
         .btn-primary:hover, .btn-primary:focus {

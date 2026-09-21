@@ -78,9 +78,9 @@
             .card-accent-3 .card-value { color: #e11d48 !important; }
             .card-accent-3 .icon-badge { background: rgba(225, 29, 72, 0.12) !important; color: #e11d48 !important; }
 
-            .card-accent-4 { border: 1px solid rgba(217, 119, 6, 0.25) !important; border-top: 4px solid #d97706 !important; }
-            .card-accent-4 .card-value { color: #d97706 !important; }
-            .card-accent-4 .icon-badge { background: rgba(217, 119, 6, 0.12) !important; color: #d97706 !important; }
+            .card-accent-4 { border: 1px solid rgba(217, 119, 6, 0.25) !important; border-top: 4px solid #0284c7 !important; }
+            .card-accent-4 .card-value { color: #0284c7 !important; }
+            .card-accent-4 .icon-badge { background: rgba(217, 119, 6, 0.12) !important; color: #0284c7 !important; }
         @else
             /* Non-Aptikom Color Accents (Gold/Amber Theme) */
             .card-accent-1 { border: 1px solid rgba(217, 119, 6, 0.3) !important; border-top: 4px solid #b45309 !important; }
@@ -119,7 +119,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            border-bottom: 3px solid {{ $isAptikom ? '#007bff' : '#d97706' }};
+            border-bottom: 3px solid {{ $isAptikom ? '#007bff' : '#0284c7' }};
             padding-bottom: 6px;
             margin-bottom: 1.25rem;
         }

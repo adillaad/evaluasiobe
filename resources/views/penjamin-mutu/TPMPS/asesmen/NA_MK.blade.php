@@ -15,33 +15,34 @@
           />
 
           {{-- Control bar: Search & Entries per Page --}}
-          <form method="GET" action="{{ route(Request::route()->getName()) }}" class="row g-2 mb-3 align-items-center">
+          <form method="GET" action="{{ route(Request::route()->getName()) }}" class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
               {{-- Preserve existing filter values --}}
               @if(request('universitas_id')) <input type="hidden" name="universitas_id" value="{{ request('universitas_id') }}"> @endif
               @if(request('fakultas_id')) <input type="hidden" name="fakultas_id" value="{{ request('fakultas_id') }}"> @endif
               @if(request('prodi_id')) <input type="hidden" name="prodi_id" value="{{ request('prodi_id') }}"> @endif
               @if(request('kurikulum_id')) <input type="hidden" name="kurikulum_id" value="{{ request('kurikulum_id') }}"> @endif
 
-              <div class="col-auto d-flex align-items-center gap-2">
-                  <label for="per_page" class="col-form-label text-muted small mb-0 text-nowrap">Tampilkan:</label>
-                  <select name="per_page" id="per_page" class="form-select form-select-sm" style="width: auto; padding-right: 1.8rem; height: 31px;" onchange="this.form.submit()">
+              <div class="d-flex align-items-center gap-2">
+                  <label for="per_page" class="fw-normal text-secondary mb-0 text-nowrap" style="font-size: 14px;">Tampilkan:</label>
+                  <select name="per_page" id="per_page" class="form-select form-select-sm bg-white" style="min-width: 75px; width: auto; padding-left: 10px; padding-right: 28px; height: 34px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px;" onchange="this.form.submit()">
                       <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
                       <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25</option>
                       <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
                       <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
                   </select>
-                  <span class="text-muted small text-nowrap">data/halaman</span>
+                  <span class="text-secondary text-nowrap" style="font-size: 14px;">data/halaman</span>
               </div>
 
-              <div class="col-md-4 ms-auto">
-                  <div class="input-group input-group-sm">
-                      <input type="text" name="search" class="form-control" placeholder="Cari Kode atau Nama MK..." value="{{ $search }}">
-                      <button class="btn btn-outline-secondary" type="submit">
-                          <i class="mdi mdi-magnify"></i> Cari
-                      </button>
+              <div class="d-flex align-items-center gap-2 ms-sm-auto">
+                  <label for="search_input_na_mk" class="fw-semibold text-dark mb-0 me-1 text-nowrap" style="font-size: 14px;">Search:</label>
+                  <div class="position-relative d-inline-block">
+                      <input type="text" id="search_input_na_mk" name="search" class="form-control form-control-sm bg-white"
+                             value="{{ $search }}" autocomplete="off" placeholder=""
+                             onkeydown="if(event.key==='Enter'){ this.form.submit(); }"
+                             style="width: 220px; height: 34px; border-radius: 8px; border: 1px solid #cbd5e1; padding-right: {{ !empty($search) ? '30px' : '12px' }}; font-size: 14px;">
                       @if(!empty($search))
-                          <a href="{{ route(Request::route()->getName(), request()->except('search', 'page')) }}" class="btn btn-outline-danger" title="Reset Search">
-                              <i class="mdi mdi-close"></i>
+                          <a href="{{ route(Request::route()->getName(), request()->except('search', 'page')) }}" class="position-absolute text-secondary" style="right: 8px; top: 50%; transform: translateY(-50%); text-decoration: none;" title="Reset Search">
+                              <i class="mdi mdi-close-circle font-16"></i>
                           </a>
                       @endif
                   </div>

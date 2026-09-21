@@ -9,7 +9,45 @@
 @endphp --}}
 
 @extends($userOtoritas === 'Dosen' ? 'dosen.template' : 'penjamin-mutu.template')
-@section('content')    <div class="container-fluid">
+@section('content')
+    <style>
+        .btn-outline-primary {
+            color: #0284c7 !important;
+            border-color: #0284c7 !important;
+            background-color: #ffffff !important;
+        }
+        .btn-outline-primary i {
+            color: #0284c7 !important;
+            transition: color 0.2s ease;
+        }
+        .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active {
+            background-color: #0284c7 !important;
+            border-color: #0284c7 !important;
+            color: #ffffff !important;
+        }
+        .btn-outline-primary:hover i, .btn-outline-primary:focus i, .btn-outline-primary:active i {
+            color: #ffffff !important;
+        }
+
+        .btn-outline-danger {
+            color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            background-color: #ffffff !important;
+        }
+        .btn-outline-danger i {
+            color: #dc3545 !important;
+            transition: color 0.2s ease;
+        }
+        .btn-outline-danger:hover, .btn-outline-danger:focus, .btn-outline-danger:active {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: #ffffff !important;
+        }
+        .btn-outline-danger:hover i, .btn-outline-danger:focus i, .btn-outline-danger:active i {
+            color: #ffffff !important;
+        }
+    </style>
+    <div class="container-fluid">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
@@ -70,13 +108,13 @@
                                         <td>
                                             <div class="d-flex align-items-center gap-1">
                                                 <a href="edit-mk/{{ $mk->kode }}"
-                                                    class="btn btn-warning btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                                    class="btn btn-outline-primary btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
                                                     <i class="ti-pencil"></i>
                                                 </a>
                                                 <form action="delete-mk/{{ $mk->kode }}" method="post" class="d-inline m-0 p-0">
                                                     @csrf
                                                     @method('delete')
-                                                    <button type="submit" class="btn btn-danger btn-icons"
+                                                    <button type="submit" class="btn btn-outline-danger btn-icons"
                                                         data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
                                                         onclick="return confirm('Are you sure to delete {{ $mk->nama }}?')">
                                                         <i class="ti-trash"></i>

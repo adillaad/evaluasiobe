@@ -40,9 +40,19 @@
             display: inline-block;
             margin: 2px 1px;
         }
+        .code-badge-mkwk {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: inline-block;
+            margin: 2px 1px;
+        }
         .code-badge-peminatan {
-            background-color: #fef9c3;
-            color: #a16207;
+            background-color: #f3e8ff;
+            color: #6b21a8;
             font-weight: 600;
             padding: 2px 7px;
             border-radius: 6px;
@@ -75,17 +85,18 @@
                     <table class="table table-hover table-bordered table-organisasi-mk align-middle">
                         <thead>
                             <tr>
-                                <th style="width: 7%; text-align: center;">SMT</th>
-                                <th style="width: 8%; text-align: center;">SKS</th>
-                                <th style="width: 10%; text-align: center;">JML MK</th>
-                                <th style="width: 45%;">MK Kompetensi Utama Prodi</th>
-                                <th style="width: 30%;">MK Pilihan</th>
+                                <th style="width: 6%; text-align: center;">SMT</th>
+                                <th style="width: 7%; text-align: center;">SKS</th>
+                                <th style="width: 8%; text-align: center;">JML MK</th>
+                                <th style="width: 27%;">MK Wajib</th>
+                                <th style="width: 26%;">MK Pilihan (Peminatan)</th>
+                                <th style="width: 26%;">MKWK</th>
                             </tr>
                         </thead>
                         <tbody>
                             @if ($semesters->isEmpty())
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">Tidak ada data Organisasi Mata Kuliah.</td>
+                                    <td colspan="6" class="text-center text-muted py-4">Tidak ada data Organisasi Mata Kuliah.</td>
                                 </tr>
                             @else
                                 @foreach ($semesters as $semester)
@@ -95,8 +106,10 @@
                                         <td class="text-center fw-semibold">{{ $semester->jumlah_mk }}</td>
                                         <td>
                                             @if(!empty($semester->kode_wajib))
-                                                @foreach(explode(',', $semester->kode_wajib) as $kode)
-                                                    <span class="code-badge-wajib">{{ trim($kode) }}</span>
+                                                @foreach(array_filter(array_map('trim', explode(',', $semester->kode_wajib))) as $kode)
+                                                    @if(!empty($kode))
+                                                        <span class="code-badge-wajib">{{ $kode }}</span>
+                                                    @endif
                                                 @endforeach
                                             @else
                                                 <span class="text-muted small">-</span>
@@ -104,8 +117,21 @@
                                         </td>
                                         <td>
                                             @if(!empty($semester->kode_peminatan))
-                                                @foreach(explode(',', $semester->kode_peminatan) as $kode)
-                                                    <span class="code-badge-peminatan">{{ trim($kode) }}</span>
+                                                @foreach(array_filter(array_map('trim', explode(',', $semester->kode_peminatan))) as $kode)
+                                                    @if(!empty($kode))
+                                                        <span class="code-badge-peminatan">{{ $kode }}</span>
+                                                    @endif
+                                                @endforeach
+                                            @else
+                                                <span class="text-muted small">-</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if(!empty($semester->kode_wajib_kurikulum))
+                                                @foreach(array_filter(array_map('trim', explode(',', $semester->kode_wajib_kurikulum))) as $kode)
+                                                    @if(!empty($kode))
+                                                        <span class="code-badge-mkwk">{{ $kode }}</span>
+                                                    @endif
                                                 @endforeach
                                             @else
                                                 <span class="text-muted small">-</span>
@@ -120,7 +146,7 @@
                                 <td class="text-center">Total:</td>
                                 <td class="text-center text-primary">{{ $totals->total_sks ?? 0 }}</td>
                                 <td class="text-center text-primary">{{ $totals->jumlah_mk ?? 0 }}</td>
-                                <td colspan="2" class="text-muted small font-weight-normal align-middle">Total SKS dan Jumlah Mata Kuliah per Kurikulum</td>
+                                <td colspan="3" class="text-muted small font-weight-normal align-middle">Total SKS dan Jumlah Mata Kuliah per Kurikulum</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -132,32 +158,47 @@
             <div class="card-body">
                 <h5 class="fw-bold mb-3"><i class="mdi mdi-information-outline me-1 text-primary"></i> Deskripsi Mata Kuliah</h5>
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="p-3 border rounded bg-white h-100 shadow-sm">
-                            <h6 class="fw-bold text-success mb-2"><i class="mdi mdi-bookmark-check me-1"></i> MK Kompetensi Utama Prodi (Wajib)</h6>
+                            <h6 class="fw-bold text-success mb-2"><i class="mdi mdi-bookmark-check me-1"></i> MK Wajib</h6>
                             <div style="max-height: 250px; overflow-y: auto;">
-                                @forelse ($mks->where('rumpun', 'Wajib') as $mk)
+                                @forelse ($mks->filter(fn($mk) => strtolower($mk->rumpun) === 'wajib') as $mk)
                                     <div class="d-flex align-items-center py-1 border-bottom">
                                         <span class="code-badge-wajib me-2">{{ $mk->kode }}</span>
                                         <span class="small fw-semibold text-dark">{{ $mk->nama }}</span>
                                     </div>
                                 @empty
-                                    <span class="text-muted small fst-italic">Tidak ada MK Kompetensi Utama</span>
+                                    <span class="text-muted small fst-italic">Tidak ada MK Wajib</span>
                                 @endforelse
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="p-3 border rounded bg-white h-100 shadow-sm">
-                            <h6 class="fw-bold text-warning mb-2" style="color: #a16207 !important;"><i class="mdi mdi-bookmark-outline me-1"></i> MK Pilihan (Peminatan)</h6>
+                            <h6 class="fw-bold text-purple mb-2" style="color: #6b21a8;"><i class="mdi mdi-bookmark-outline me-1"></i> MK Pilihan (Peminatan)</h6>
                             <div style="max-height: 250px; overflow-y: auto;">
-                                @forelse ($mks->where('rumpun', 'Peminatan') as $mk)
+                                @forelse ($mks->filter(fn($mk) => strtolower($mk->rumpun) === 'peminatan') as $mk)
                                     <div class="d-flex align-items-center py-1 border-bottom">
                                         <span class="code-badge-peminatan me-2">{{ $mk->kode }}</span>
                                         <span class="small fw-semibold text-dark">{{ $mk->nama }}</span>
                                     </div>
                                 @empty
                                     <span class="text-muted small fst-italic">Tidak ada MK Pilihan</span>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded bg-white h-100 shadow-sm">
+                            <h6 class="fw-bold text-info mb-2"><i class="mdi mdi-bookmark-plus me-1"></i> MKWK</h6>
+                            <div style="max-height: 250px; overflow-y: auto;">
+                                @forelse ($mks->filter(fn($mk) => in_array(strtolower($mk->rumpun), ['mkwk', 'wajib_kurikulum', 'wajib kurikulum'])) as $mk)
+                                    <div class="d-flex align-items-center py-1 border-bottom">
+                                        <span class="code-badge-mkwk me-2">{{ $mk->kode }}</span>
+                                        <span class="small fw-semibold text-dark">{{ $mk->nama }}</span>
+                                    </div>
+                                @empty
+                                    <span class="text-muted small fst-italic">Tidak ada MKWK</span>
                                 @endforelse
                             </div>
                         </div>

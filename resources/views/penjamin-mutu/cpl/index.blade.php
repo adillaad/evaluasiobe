@@ -84,26 +84,26 @@
                                     @if (!in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi']))
                                         <td>{{ $cpl->prodi->fakultas->nama }}</td>
                                     @endif
-                                    @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
-                                     <td>
-                                         <div class="d-flex align-items-center gap-1">
-                                             <a href="{{ route($currentPrefix . 'cpl.edit', encrypt($cpl->id)) }}"
-                                                 class="btn btn-warning btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
-                                                 <i class="ti-pencil"></i>
-                                             </a>
-                                             <form action="{{ route($currentPrefix . 'cpl.delete', encrypt($cpl->id)) }}"
-                                                 method="post" class="d-inline m-0 p-0">
-                                                 @csrf
-                                                 @method('delete')
-                                                 <button type="submit" class="btn btn-danger btn-icons"
-                                                     data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
-                                                     onclick="return confirm('Hapus CPL {{ $cpl->kode }}?')">
-                                                     <i class="ti-trash"></i>
-                                                 </button>
-                                             </form>
-                                         </div>
-                                     </td>
-                                @endif
+                                     @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+                                      <td>
+                                          <div class="d-flex align-items-center gap-1">
+                                              <a href="{{ route($currentPrefix . 'cpl.edit', encrypt($cpl->id)) }}"
+                                                  class="btn btn-outline-primary btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                                  <i class="ti-pencil"></i>
+                                              </a>
+                                              <form action="{{ route($currentPrefix . 'cpl.delete', encrypt($cpl->id)) }}"
+                                                  method="post" class="d-inline m-0 p-0">
+                                                  @csrf
+                                                  @method('delete')
+                                                  <button type="submit" class="btn btn-outline-danger btn-icons"
+                                                      data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
+                                                      onclick="return confirm('Hapus CPL {{ $cpl->kode }}?')">
+                                                      <i class="ti-trash"></i>
+                                                  </button>
+                                              </form>
+                                          </div>
+                                      </td>
+                                 @endif
                                 </tr>
                             @endforeach
                         </tbody>

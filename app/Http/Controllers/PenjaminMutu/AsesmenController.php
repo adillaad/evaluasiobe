@@ -263,26 +263,24 @@ class AsesmenController extends Controller
 
         $search = $request->input('search');
 
-        // Query MKs yang terdaftar dalam asesmen/penilaian
-        $queryMKs = DB::table('cpl_mk_cpmk_penilaian')
-            ->join('cpls', 'cpl_mk_cpmk_penilaian.cpl_id', '=', 'cpls.id')
-            ->join('cpmks', 'cpl_mk_cpmk_penilaian.cpmk_id', '=', 'cpmks.id')
-            ->join('mks', 'cpl_mk_cpmk_penilaian.mk_kode', '=', 'mks.kode')
-            ->join('prodi', 'cpmks.id_prodi', '=', 'prodi.id')
+        // Query MKs milik prodi/kurikulum yang terpilih
+        $queryMKs = DB::table('mks')
+            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
             ->select('mks.kode as mk_kode', 'mks.nama as mk_nama')
             ->distinct();
 
-        // Filtering berdasarkan otoritas
-        if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
+        // Filtering berdasarkan otoritas pengguna
+        $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
+        if ($userOtoritas === 'Penjamin Mutu Universitas') {
             $queryMKs->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } elseif (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
+        } elseif ($userOtoritas === 'Penjamin Mutu Fakultas') {
             $queryMKs->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
             $queryMKs->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
-        // Filtering request
+        // Filtering request (Universitas, Fakultas, Prodi, Kurikulum)
         if ($request->filled('universitas_id')) {
             $queryMKs->where('fakultas.id_universitas', $request->universitas_id);
         }
@@ -293,7 +291,13 @@ class AsesmenController extends Controller
             $queryMKs->where('prodi.id', $request->prodi_id);
         }
         if ($request->filled('kurikulum_id')) {
-            $queryMKs->where('cpls.id_kurikulum', $request->kurikulum_id);
+            $kurikulumId = $request->kurikulum_id;
+            $queryMKs->where(function ($q) use ($kurikulumId) {
+                $q->where('mks.id_kurikulum', $kurikulumId)
+                  ->orWhereIn('mks.kode', function ($sub) use ($kurikulumId) {
+                      $sub->select('mk_kode')->from('mk_kurikulum')->where('id_kurikulum', $kurikulumId);
+                  });
+            });
         }
 
         // Filter pencarian MK (kode / nama)
@@ -304,7 +308,7 @@ class AsesmenController extends Controller
             });
         }
 
-        $paginatedMKs = $queryMKs->paginate($perPage)->appends($request->all());
+        $paginatedMKs = $queryMKs->orderBy('mks.kode', 'asc')->paginate($perPage)->appends($request->all());
         $mkCodesOnPage = collect($paginatedMKs->items())->pluck('mk_kode')->toArray();
 
         // Ambil data detail penilaian & bobot metode hanya untuk MK yang ada pada halaman aktif
@@ -316,8 +320,6 @@ class AsesmenController extends Controller
                 ->join('cpls', 'cpl_mk_cpmk_penilaian.cpl_id', '=', 'cpls.id')
                 ->join('cpmks', 'cpl_mk_cpmk_penilaian.cpmk_id', '=', 'cpmks.id')
                 ->join('mks', 'cpl_mk_cpmk_penilaian.mk_kode', '=', 'mks.kode')
-                ->join('prodi', 'cpmks.id_prodi', '=', 'prodi.id')
-                ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
                 ->whereIn('mks.kode', $mkCodesOnPage)
                 ->select(
                     'cpls.kode as cpl_kode',

@@ -367,51 +367,81 @@ class MKController extends Controller
         ));
     }
 
-    public function organisasiMK()
+    public function organisasiMK(Request $request)
     {
-        $query = DB::table('mks')
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id');
+        $user = auth()->user();
+        $userProdiId = $user->id_prodiUser;
 
-        // Filter berdasarkan otoritas pengguna
-        if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
-            $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
-            $query->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $query->where('prodi.id', auth()->user()->id_prodiUser);
+        $query = MK::with(['kurikulum', 'prodi.fakultas.universitas'])
+            ->leftJoin('prodi', 'mks.id_prodi', '=', 'prodi.id')
+            ->leftJoin('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->leftJoin('mk_kurikulum', function($join) use ($userProdiId) {
+                $join->on('mks.kode', '=', 'mk_kurikulum.mk_kode');
+                if ($userProdiId) {
+                    $join->where('mk_kurikulum.id_prodi', '=', $userProdiId);
+                }
+            });
+
+        if ($user->otoritas->otoritas === 'Penjamin Mutu Universitas') {
+            $query->where(function($q) use ($user) {
+                $q->where('fakultas.id_universitas', $user->id_universitasUser)
+                  ->orWhereNull('mks.id_prodi');
+            });
+        } else if ($user->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
+            $query->where(function($q) use ($user) {
+                $q->where('fakultas.id', $user->id_fakultasUser)
+                  ->orWhereNull('mks.id_prodi');
+            });
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $query->where(function($q) use ($userProdiId) {
+                $q->where('prodi.id', $userProdiId)
+                  ->orWhere(function($sub) use ($userProdiId) {
+                      $sub->whereNull('mks.id_prodi')
+                          ->whereExists(function($mkKurQuery) use ($userProdiId) {
+                              $mkKurQuery->select(DB::raw(1))
+                                         ->from('mk_kurikulum')
+                                         ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                                         ->where('mk_kurikulum.id_prodi', $userProdiId);
+                          });
+                  });
+            });
         }
 
-        $querySemester = DB::table('mks')
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id');
+        $query = $this->getFilteredQuery($query, $request);
 
-        // Filter berdasarkan otoritas pengguna
-        if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
-            $querySemester->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
-            $querySemester->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $querySemester->where('prodi.id', auth()->user()->id_prodiUser);
+        $mksList = $query->select(
+            'mks.kode',
+            'mks.nama',
+            'mks.rumpun',
+            'mks.bobot_teori',
+            'mks.bobot_praktikum',
+            DB::raw('COALESCE(mk_kurikulum.semester, mks.semester) as semester')
+        )->get();
+
+        $grouped = $mksList->groupBy('semester')->sortKeys();
+
+        $semesters = collect();
+        foreach ($grouped as $semNum => $items) {
+            $wajibKodes = $items->filter(fn($i) => strtolower($i->rumpun) === 'wajib')->pluck('kode')->implode(', ');
+            $peminatanKodes = $items->filter(fn($i) => strtolower($i->rumpun) === 'peminatan')->pluck('kode')->implode(', ');
+            $wajibKurKodes = $items->filter(fn($i) => in_array(strtolower($i->rumpun), ['wajib_kurikulum', 'mkwk', 'wajib kurikulum']))->pluck('kode')->implode(', ');
+
+            $semesters->push((object)[
+                'semester' => $semNum,
+                'total_sks' => $items->sum(fn($i) => (int)$i->bobot_teori + (int)$i->bobot_praktikum),
+                'jumlah_mk' => $items->count(),
+                'kode_wajib' => $wajibKodes,
+                'kode_peminatan' => $peminatanKodes,
+                'kode_wajib_kurikulum' => $wajibKurKodes,
+            ]);
         }
 
-        $semesters = $querySemester->select(
-            'mks.semester',
-            DB::raw('SUM(mks.bobot_teori + mks.bobot_praktikum) as total_sks'),
-            DB::raw('COUNT(mks.kode) as jumlah_mk'),
-            DB::raw('GROUP_CONCAT(CASE WHEN LOWER(mks.rumpun) = "wajib" THEN mks.kode END) as kode_wajib'),
-            DB::raw('GROUP_CONCAT(CASE WHEN LOWER(mks.rumpun) = "peminatan" THEN mks.kode END) as kode_peminatan'),
-            DB::raw('GROUP_CONCAT(CASE WHEN LOWER(mks.rumpun) IN ("wajib_kurikulum", "mkwk") THEN mks.kode END) as kode_wajib_kurikulum')
-        )->groupBy('mks.semester')->orderBy('mks.semester')->get();
+        $totals = (object)[
+            'total_sks' => $mksList->sum(fn($i) => (int)$i->bobot_teori + (int)$i->bobot_praktikum),
+            'jumlah_mk' => $mksList->count(),
+        ];
 
-        $mks = $query->select('mks.kode', 'mks.nama', 'mks.rumpun')
-            ->orderBy('mks.rumpun')
-            ->get();
-            
-        $totals = $query->select(
-            DB::raw('SUM(mks.bobot_teori + mks.bobot_praktikum) as total_sks'),
-            DB::raw('COUNT(mks.kode) as jumlah_mk')
-        )->first();
+        $mks = $mksList;
 
         return view('penjamin-mutu.mk.organisasi_mk', compact('semesters', 'totals', 'mks'));
     }

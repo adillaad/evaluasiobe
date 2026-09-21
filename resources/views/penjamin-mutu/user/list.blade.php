@@ -107,13 +107,13 @@
                                      <td>
                                          <div class="d-flex align-items-center gap-1">
                                              <a href="edit-user/{{ encrypt($user->id) }}"
-                                                 class="btn btn-warning btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                                 class="btn btn-outline-primary btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
                                                  <i class="ti-pencil"></i>
                                              </a>
                                              <form action="delete-user/{{ encrypt($user->id) }}" method="post" class="d-inline m-0 p-0">
                                                  @csrf
                                                  @method('delete')
-                                                 <button type="submit" class="btn btn-danger btn-icons"
+                                                 <button type="submit" class="btn btn-outline-danger btn-icons"
                                                      data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $isKaprodiRole ? 'Keluarkan dari Prodi' : 'Hapus' }}"
                                                      onclick="return confirm('{{ $isKaprodiRole ? 'Apakah Anda yakin ingin mengeluarkan dosen ' . addslashes($user->name) . ' dari prodi ini?' : 'Are you sure to delete ' . addslashes($user->name) . '?' }}')">
                                                      <i class="{{ $isKaprodiRole ? 'ti-user-minus' : 'ti-trash' }}"></i>

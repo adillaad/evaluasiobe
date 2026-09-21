@@ -66,13 +66,13 @@
                                      <td>
                                          <div class="d-flex align-items-center gap-1">
                                              <a href="edit-mk/{{ $mk->kode }}"
-                                                 class="btn btn-warning btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                                 class="btn btn-outline-primary btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
                                                  <i class="ti-pencil"></i>
                                              </a>
                                              <form action="delete-mk/{{ $mk->kode }}" method="post" class="d-inline m-0 p-0">
                                                  @csrf
                                                  @method('delete')
-                                                 <button type="submit" class="btn btn-danger btn-icons"
+                                                 <button type="submit" class="btn btn-outline-danger btn-icons"
                                                      data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
                                                      onclick="return confirm('Are you sure to delete {{ $mk->nama }}?')">
                                                      <i class="ti-trash"></i>

@@ -84,10 +84,95 @@
         }
         .btn-icons i, .btn-icons svg {
             font-size: 15px !important;
-            color: #ffffff !important;
-            stroke: #ffffff !important;
             margin: 0 !important;
             line-height: 1 !important;
+        }
+
+        /* UNIFIED GLOBAL BUTTON COLOR STYLES & OUTLINE ICON STATES */
+        .btn-primary, a.btn-primary, button.btn-primary {
+            background-color: #0284c7 !important;
+            border-color: #0284c7 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary i, .btn-primary i::before, .btn-primary span, .btn-primary svg {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+            fill: #ffffff !important;
+        }
+        .btn-primary:hover, .btn-primary:focus, .btn-primary:active,
+        a.btn-primary:hover, a.btn-primary:focus, a.btn-primary:active {
+            background-color: #0369a1 !important;
+            border-color: #0369a1 !important;
+            color: #ffffff !important;
+        }
+
+        .btn-outline-primary, a.btn-outline-primary, button.btn-outline-primary {
+            border: 1px solid #0284c7 !important;
+            background-color: transparent !important;
+            color: #0284c7 !important;
+        }
+        .btn-outline-primary i, .btn-outline-primary i::before, .btn-outline-primary span, .btn-outline-primary svg {
+            color: #0284c7 !important;
+            stroke: #0284c7 !important;
+        }
+        .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active, .btn-outline-primary.active,
+        a.btn-outline-primary:hover, a.btn-outline-primary:focus, a.btn-outline-primary:active, a.btn-outline-primary.active {
+            background-color: #0284c7 !important;
+            border-color: #0284c7 !important;
+            color: #ffffff !important;
+        }
+        .btn-outline-primary:hover i, .btn-outline-primary:hover i::before,
+        .btn-outline-primary:focus i, .btn-outline-primary:focus i::before,
+        .btn-outline-primary:active i, .btn-outline-primary:active i::before,
+        .btn-outline-primary.active i, .btn-outline-primary.active i::before,
+        .btn-outline-primary:hover svg, .btn-outline-primary:focus svg,
+        .btn-outline-primary:active svg, .btn-outline-primary.active svg {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+            fill: #ffffff !important;
+        }
+
+        .btn-danger, a.btn-danger, button.btn-danger {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: #ffffff !important;
+        }
+        .btn-danger i, .btn-danger i::before, .btn-danger span, .btn-danger svg {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+            fill: #ffffff !important;
+        }
+        .btn-danger:hover, .btn-danger:focus, .btn-danger:active,
+        a.btn-danger:hover, a.btn-danger:focus, a.btn-danger:active {
+            background-color: #bb2d3b !important;
+            border-color: #bb2d3b !important;
+            color: #ffffff !important;
+        }
+
+        .btn-outline-danger, a.btn-outline-danger, button.btn-outline-danger {
+            border: 1px solid #dc3545 !important;
+            background-color: transparent !important;
+            color: #dc3545 !important;
+        }
+        .btn-outline-danger i, .btn-outline-danger i::before, .btn-outline-danger span, .btn-outline-danger svg {
+            color: #dc3545 !important;
+            stroke: #dc3545 !important;
+        }
+        .btn-outline-danger:hover, .btn-outline-danger:focus, .btn-outline-danger:active, .btn-outline-danger.active,
+        a.btn-outline-danger:hover, a.btn-outline-danger:focus, a.btn-outline-danger:active, a.btn-outline-danger.active {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: #ffffff !important;
+        }
+        .btn-outline-danger:hover i, .btn-outline-danger:hover i::before,
+        .btn-outline-danger:focus i, .btn-outline-danger:focus i::before,
+        .btn-outline-danger:active i, .btn-outline-danger:active i::before,
+        .btn-outline-danger.active i, .btn-outline-danger.active i::before,
+        .btn-outline-danger:hover svg, .btn-outline-danger:focus svg,
+        .btn-outline-danger:active svg, .btn-outline-danger.active svg {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+            fill: #ffffff !important;
         }
 
         /* Icon Text Buttons (.btn-icon-text) */

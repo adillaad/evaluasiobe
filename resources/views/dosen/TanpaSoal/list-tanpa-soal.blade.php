@@ -106,7 +106,7 @@
                                                     <i class="ti-lock me-1"></i> Terkunci
                                                 </span>
                                             @elseif ($item->status === 'Menunggu Validasi')
-                                                <button class="btn btn-warning btn-sm p-1" disabled data-bs-toggle="tooltip"
+                                                <button class="btn btn-outline-primary btn-sm p-1" disabled data-bs-toggle="tooltip"
                                                     title="Sedang ditinjau">
                                                     <i class="ti-pencil"></i>
                                                 </button>
@@ -114,13 +114,13 @@
                                                     title="Sudah diajukan">
                                                     <i class="ti-share"></i>
                                                 </button>
-                                                <button class="btn btn-danger btn-sm p-1" disabled data-bs-toggle="tooltip"
+                                                <button class="btn btn-outline-danger btn-sm p-1" disabled data-bs-toggle="tooltip"
                                                     title="Sedang ditinjau">
                                                     <i class="ti-trash"></i>
                                                 </button>
                                             @elseif (in_array($item->status, ['Draft', 'Ditolak']))
                                                 <a href="{{ route('dosen.tanpa-soal.edit', $item->id) }}"
-                                                    class="btn btn-warning btn-sm p-1" data-bs-toggle="tooltip"
+                                                    class="btn btn-outline-primary btn-sm p-1" data-bs-toggle="tooltip"
                                                     title="Edit Instrumen">
                                                     <i class="ti-pencil"></i>
                                                 </a>
@@ -140,7 +140,7 @@
                                                     onsubmit="return confirm('Hapus instrumen ini?')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm p-1"
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm p-1"
                                                         data-bs-toggle="tooltip" title="Hapus Instrumen">
                                                         <i class="ti-trash"></i>
                                                     </button>

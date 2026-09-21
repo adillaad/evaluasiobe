@@ -66,39 +66,39 @@
         @else
             /* ── NON-APTIKOM Theme (Warm Amber/Gold Accent) ── */
             .btn-primary {
-                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-                border-color: #d97706 !important;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                border-color: #0284c7 !important;
                 color: #ffffff !important;
             }
             .btn-primary:hover, .btn-primary:focus {
-                background: #b45309 !important;
-                border-color: #b45309 !important;
+                background: #0284c7 !important;
+                border-color: #38bdf8 !important;
                 color: #ffffff !important;
             }
             .btn-outline-primary {
-                color: #d97706 !important;
-                border-color: #d97706 !important;
+                color: #0284c7 !important;
+                border-color: #0284c7 !important;
                 background-color: #ffffff !important;
             }
             .btn-outline-primary:hover, .btn-outline-primary.active, .btn-outline-primary:focus {
-                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
                 color: #ffffff !important;
-                border-color: #d97706 !important;
-                box-shadow: 0 4px 12px rgba(217, 119, 6, 0.28) !important;
+                border-color: #0284c7 !important;
+                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
             }
             .badge-mk {
-                color: #b45309 !important;
-                background-color: #fffbe6 !important;
-                border: 1px solid #fde68a !important;
+                color: #0284c7 !important;
+                background-color: #f0f9ff !important;
+                border: 1px solid #bae6fd !important;
             }
             .cpl-nav-pills .nav-link.active {
-                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
                 color: #ffffff !important;
-                border-color: #d97706 !important;
-                box-shadow: 0 4px 12px rgba(217, 119, 6, 0.28) !important;
+                border-color: #0284c7 !important;
+                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
             }
             .text-primary {
-                color: #d97706 !important;
+                color: #0284c7 !important;
             }
         @endif
         .table-pemetaan {

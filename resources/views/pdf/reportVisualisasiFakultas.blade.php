@@ -220,9 +220,9 @@
                     <div class="summary-card-title">Total Program Studi</div>
                     <div class="summary-card-value" style="color: #7c3aed;">{{ $selectedFakultas['total_prodi'] }} <span style="font-size: 7.5pt; color: #64748b;">Prodi</span></div>
                 </td>
-                <td class="summary-card" style="border-top: 3px solid #f59e0b;">
+                <td class="summary-card" style="border-top: 3px solid #0ea5e9;">
                     <div class="summary-card-title">Mahasiswa Terdaftar</div>
-                    <div class="summary-card-value" style="color: #d97706;">{{ $selectedFakultas['total_mhs'] }} <span style="font-size: 7.5pt; color: #64748b;">Mhs</span></div>
+                    <div class="summary-card-value" style="color: #0284c7;">{{ $selectedFakultas['total_mhs'] }} <span style="font-size: 7.5pt; color: #64748b;">Mhs</span></div>
                 </td>
             </tr>
         </table>
@@ -298,9 +298,9 @@
                     <div class="summary-card-title">Total Fakultas</div>
                     <div class="summary-card-value" style="color: #7c3aed;">{{ $universitasCplData['summary']['total_fakultas_count'] }} <span style="font-size: 7.5pt; color: #64748b;">Fakultas</span></div>
                 </td>
-                <td class="summary-card" style="border-top: 3px solid #f59e0b;">
+                <td class="summary-card" style="border-top: 3px solid #0ea5e9;">
                     <div class="summary-card-title">Total Program Studi</div>
-                    <div class="summary-card-value" style="color: #d97706;">{{ $universitasCplData['summary']['total_prodi_count'] }} <span style="font-size: 7.5pt; color: #64748b;">Prodi</span></div>
+                    <div class="summary-card-value" style="color: #0284c7;">{{ $universitasCplData['summary']['total_prodi_count'] }} <span style="font-size: 7.5pt; color: #64748b;">Prodi</span></div>
                 </td>
             </tr>
         </table>

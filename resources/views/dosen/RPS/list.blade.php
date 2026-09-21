@@ -116,7 +116,7 @@
                                                         <i class="ti-eye"></i>
                                                     </a>
                                                     {{-- Tombol Edit --}}
-                                                    <a href="#" role="button" class="btn btn-icons btn-warning" 
+                                                    <a href="#" role="button" class="btn btn-icons btn-outline-primary" 
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#editRpsModal{{ $rps->id }}" 
                                                         data-bs-placement="top" 
@@ -128,7 +128,7 @@
                                                     <form action="/dosen/rps/delete-rps/{{ $rps->id }}" method="post" class="d-inline m-0 p-0" onsubmit="return confirm('Yakin ingin menghapus RPS no. {{ $rps->nomor }}?')">
                                                         @csrf
                                                         @method('delete')
-                                                        <button type="submit" class="btn btn-icons btn-danger" 
+                                                        <button type="submit" class="btn btn-icons btn-outline-danger" 
                                                             data-bs-toggle="tooltip" data-bs-placement="top" 
                                                             title="Hapus RPS">
                                                             <i class="ti-trash"></i>

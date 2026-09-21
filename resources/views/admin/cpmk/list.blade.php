@@ -134,14 +134,14 @@
                                          <td class="text-center">
                                              <div class="d-flex justify-content-center align-items-center gap-1">
                                                  <a href="{{ route($currentPrefix . 'edit-cpmk', encrypt($cpmk->id)) }}"
-                                                     class="btn btn-warning btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                                     class="btn btn-outline-primary btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
                                                      <i class="ti-pencil"></i>
                                                  </a>
                                                  <form action="{{ route($currentPrefix . 'delete-cpmk', encrypt($cpmk->id)) }}"
                                                      method="post" class="d-inline m-0 p-0">
                                                      @csrf
                                                      @method('delete')
-                                                     <button type="submit" class="btn btn-danger btn-icons"
+                                                     <button type="submit" class="btn btn-outline-danger btn-icons"
                                                          data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
                                                          onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
                                                          <i class="ti-trash"></i>

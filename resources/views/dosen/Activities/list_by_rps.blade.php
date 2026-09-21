@@ -258,7 +258,7 @@
                                 @if ($isDosen)
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center" style="gap: 5px;">
-                                            <button type="button" class="btn btn-warning btn-sm p-2" 
+                                            <button type="button" class="btn btn-outline-primary btn-sm p-2" 
                                                     data-bs-toggle="modal" 
                                                     data-bs-target="#editActivityModal{{ $activity->id }}" 
                                                     title="Edit">
@@ -267,7 +267,7 @@
                                             <form action="{{ route($currentPrefix . 'activity-delete', $activity->id) }}" method="post" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kegiatan ini?')">
                                                 @csrf
                                                 @method('delete')
-                                                <button type="submit" class="btn btn-danger btn-sm p-2" title="Hapus">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm p-2" title="Hapus">
                                                     <i class="ti-trash"></i>
                                                 </button>
                                             </form>

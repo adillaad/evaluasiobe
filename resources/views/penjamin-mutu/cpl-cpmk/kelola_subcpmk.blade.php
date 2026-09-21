@@ -9,12 +9,115 @@
 
     $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
     $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program-studi.';
+
+    $selectedProdiId = request('prodi_id');
+    if (!$selectedProdiId && request('kurikulum_id')) {
+        $selectedProdiId = \Illuminate\Support\Facades\DB::table('kurikulums')->where('id', request('kurikulum_id'))->value('id_prodi');
+    }
+    if (!$selectedProdiId && auth()->check()) {
+        $selectedProdiId = auth()->user()->id_prodiUser ?? (auth()->user()->prodi ? auth()->user()->prodi->id : null);
+    }
+    if ($selectedProdiId) {
+        $isAptikom = (bool) \Illuminate\Support\Facades\DB::table('prodi')->where('id', $selectedProdiId)->value('is_aptikom');
+    } else {
+        $isAptikom = auth()->check() && auth()->user()->prodi ? (bool) auth()->user()->prodi->is_aptikom : true;
+    }
 @endphp
 
 @extends($userOtoritas === 'Dosen' ? 'dosen.template' : 'penjamin-mutu.template')
 @section('content')
 
     <style>
+        @if ($isAptikom)
+            /* ── APTIKOM Theme (Sky Blue Accent) ── */
+            .cpl-nav-pills .nav-link.active {
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                color: #ffffff !important;
+                border-color: #0284c7 !important;
+                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+            }
+            .text-primary-accent {
+                color: #0284c7 !important;
+            }
+        @else
+            /* ── NON-APTIKOM Theme (Warm Amber/Gold Accent) ── */
+            .cpl-nav-pills .nav-link.active {
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                color: #ffffff !important;
+                border-color: #0284c7 !important;
+                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+            }
+            .text-primary-accent {
+                color: #0284c7 !important;
+            }
+        @endif
+        .cpl-tabs-wrapper {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 14px 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e2e8f0;
+        }
+        .cpl-nav-pills {
+            gap: 8px;
+        }
+        .cpl-nav-pills .nav-link {
+            color: #475569 !important;
+            background-color: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            padding: 8px 14px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            transition: all 0.2s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            white-space: nowrap !important;
+        }
+        .cpl-nav-pills .nav-link:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+        .cpl-nav-pills .nav-link.active .badge-cpmk-count {
+            background-color: rgba(255, 255, 255, 0.25) !important;
+            color: #ffffff !important;
+        }
+        .badge-cpmk-count {
+            background-color: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            border-radius: 6px;
+            padding: 2px 6px;
+            margin-left: 6px;
+            font-weight: 700;
+        }
+        .table-pemetaan {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+        .table-pemetaan th {
+            background-color: #f8fafc !important;
+            color: #334155 !important;
+            font-weight: 600 !important;
+            font-size: 13.5px !important;
+            padding: 12px 14px !important;
+            vertical-align: middle !important;
+            border-bottom: 2px solid #cbd5e1 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .table-pemetaan td {
+            vertical-align: middle !important;
+            line-height: 1.6 !important;
+            padding: 12px 14px !important;
+            font-size: 13.5px !important;
+            color: #1e293b !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+        }
+        .table-pemetaan tbody tr:hover {
+            background-color: #f8fafc !important;
+        }
         .code-pink {
             background-color: #fce4ec;
             color: #d81b60;
@@ -117,7 +220,7 @@
 
         {{-- Filter Kurikulum --}}
         @if(isset($kurikulums))
-            <div class="card mb-3 shadow-sm">
+            <div class="card mb-3 shadow-sm border-0">
                 <div class="card-body py-2">
                     <x-filter-form :showKurikulum="true" :kurikulums="$kurikulums" />
                 </div>
@@ -125,38 +228,47 @@
         @endif
 
         {{-- Tabel List Sub CPMK --}}
-        <div class="card shadow-sm">
-            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
-                <h5 class="card-title fw-bold mb-0 text-dark">Daftar Sub CPMK</h5>
-                <span class="badge bg-primary rounded-pill">{{ $subCpmks->total() }} Sub CPMK</span>
-            </div>
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                    <h5 class="card-title fw-bold mb-0 text-dark">Daftar Sub CPMK</h5>
+                    <span class="badge bg-primary rounded-pill">{{ $subCpmks->total() }} Sub CPMK</span>
+                </div>
 
-            {{-- Tab Filter Per CPL --}}
-            @if(isset($cpls) && $cpls->isNotEmpty())
-                <div class="px-3 pt-3 border-bottom bg-white">
-                    <ul class="nav nav-tabs border-0 flex-nowrap overflow-auto" style="scrollbar-width: thin;">
-                        <li class="nav-item">
-                            <a class="nav-link px-3 py-2 {{ !request('cpl_id') ? 'active fw-bold text-primary border-bottom border-primary border-2' : 'text-secondary' }}" 
-                               href="{{ request()->fullUrlWithQuery(['cpl_id' => null, 'page' => null]) }}">
-                               Semua CPL
-                            </a>
-                        </li>
-                        @foreach ($cpls as $cplItem)
+                {{-- Tab Filter Per CPL --}}
+                @if(isset($cpls) && $cpls->isNotEmpty())
+                    <div class="cpl-tabs-wrapper mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                            <span class="fw-bold text-secondary text-uppercase small" style="letter-spacing: 0.5px;">
+                                <i class="mdi mdi-filter-variant me-1"></i> Pilih CPL:
+                            </span>
+                            <span class="text-muted small">Klik tab CPL untuk memfilter data Sub CPMK</span>
+                        </div>
+                        <ul class="nav nav-pills cpl-nav-pills overflow-auto flex-nowrap pb-1">
                             <li class="nav-item">
-                                <a class="nav-link px-3 py-2 {{ request('cpl_id') == $cplItem->id ? 'active fw-bold text-primary border-bottom border-primary border-2' : 'text-secondary' }}" 
-                                   href="{{ request()->fullUrlWithQuery(['cpl_id' => $cplItem->id, 'page' => null]) }}">
-                                   {{ $cplItem->kode }}
+                                <a class="nav-link {{ !request('cpl_id') ? 'active' : '' }}" 
+                                   href="{{ request()->fullUrlWithQuery(['cpl_id' => null, 'page' => null]) }}">
+                                   <i class="mdi mdi-grid me-1"></i> Semua CPL
                                 </a>
                             </li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+                            @foreach ($cpls as $cplItem)
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request('cpl_id') == $cplItem->id ? 'active' : '' }}" 
+                                       href="{{ request()->fullUrlWithQuery(['cpl_id' => $cplItem->id, 'page' => null]) }}">
+                                       {{ $cplItem->kode }}
+                                       @if(isset($cplItem->cpmk))
+                                           <span class="badge-cpmk-count">{{ $cplItem->cpmk->count() }}</span>
+                                       @endif
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
-            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
+                    <table class="table table-bordered table-hover align-middle table-pemetaan mb-0">
+                        <thead>
                             <tr>
                                 <th style="width: 50px;" class="text-center">No</th>
                                 <th style="width: 140px;">Kode Sub CPMK</th>
@@ -178,7 +290,7 @@
                                     </td>
                                     <td>
                                         @if($sub->cpmk)
-                                            <div class="fw-bold small">{{ $sub->cpmk->kode }}</div>
+                                            <div class="fw-bold small text-dark">{{ $sub->cpmk->kode }}</div>
                                             <div class="text-muted text-truncate small" style="max-width: 180px;" title="{{ $sub->cpmk->judul }}">
                                                 {{ $sub->cpmk->judul }}
                                             </div>
@@ -196,16 +308,16 @@
                                     <td class="text-center">
                                         @if(in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
                                             <div class="d-flex align-items-center justify-content-center gap-1">
-                                                <button type="button" class="btn btn-sm btn-outline-warning p-1 px-2" 
+                                                <button type="button" class="btn btn-sm btn-outline-primary p-1 px-2" 
                                                     title="Edit Sub CPMK"
                                                     onclick="openEditSubCpmkModal({{ $sub->id }}, '{{ addslashes($sub->kode) }}', '{{ addslashes($sub->uraian) }}')">
-                                                    <i class="ti-pencil me-1"></i> Edit
+                                                    <i class="ti-pencil me-1"></i>
                                                 </button>
                                                 <form action="{{ route($currentPrefix . 'cpl-cpmk.subCpmk-destroy', $sub->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus Sub-CPMK {{ $sub->kode }}?')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-outline-danger p-1 px-2" title="Hapus Sub CPMK">
-                                                        <i class="ti-trash me-1"></i> Hapus
+                                                        <i class="ti-trash me-1"></i>
                                                     </button>
                                                 </form>
                                             </div>

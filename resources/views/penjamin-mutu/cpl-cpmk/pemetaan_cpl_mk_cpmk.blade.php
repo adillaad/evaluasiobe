@@ -112,22 +112,22 @@
         @else
             /* ── NON-APTIKOM Theme (Warm Amber/Gold Accent) ── */
             .cpl-nav-pills .nav-link:hover {
-                color: #d97706 !important;
-                background-color: #fffbe6 !important;
-                border-color: #fcd34d !important;
+                color: #0284c7 !important;
+                background-color: #0ea5e9 !important;
+                border-color: #38bdf8 !important;
             }
             .cpl-nav-pills .nav-link.active {
                 color: #ffffff !important;
-                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-                border-color: #d97706 !important;
-                box-shadow: 0 4px 12px rgba(217, 119, 6, 0.28) !important;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                border-color: #0284c7 !important;
+                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
             }
             .bg-primary-soft {
                 background-color: rgba(217, 119, 6, 0.12);
             }
             .cpl-card-header {
                 background: linear-gradient(135deg, #fffbe6 0%, #fef3c7 100%);
-                border-left: 4px solid #d97706;
+                border-left: 4px solid #0284c7;
                 border-radius: 8px;
                 padding: 16px;
             }

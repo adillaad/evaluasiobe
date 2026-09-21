@@ -157,8 +157,8 @@
 
         /* NON-APTIKOM Card (SOLID AMBER GOLD) */
         .prodi-card.non-aptikom-yellow {
-            background-color: #d97706;
-            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            background-color: #0284c7;
+            background: linear-gradient(135deg, #0284c7 0%, #b45309 100%);
             border: 1px solid #b45309;
             color: #ffffff;
         }

@@ -31,20 +31,18 @@
     $themeColor = AptikomTheme::resolve(auth()->user(), $themeColor ?? null);
     $navbarLogoDark = AptikomTheme::isColorDark($themeColor);
 
-    // --- Warna highlight menu aktif di sidebar sesuai tema prodi ---
-    // Jika Aptikom: Biru (#007bff)
-    // Jika Non-Aptikom: Emas/Kuning Gelap (#d97706) agar tidak biru dan terbaca di background putih
-    $sidebarActiveColor = $isAptikom ? '#007bff' : '#d97706';
-    $sidebarActiveBg = $isAptikom ? 'rgba(0, 123, 255, 0.1)' : 'rgba(255, 235, 59, 0.35)';
+    // --- Warna highlight menu aktif di sidebar (Biru seragam) ---
+    $sidebarActiveColor = '#007bff';
+    $sidebarActiveBg = 'rgba(0, 123, 255, 0.1)';
 
-    // --- Warna badge otoritas berdasarkan Aptikom / Non-Aptikom ---
-    $otoritasBadgeBg = $isAptikom ? '#e0f2fe' : '#fef3c7';
-    $otoritasBadgeColor = $isAptikom ? '#0369a1' : '#b45309';
-    $otoritasBadgeBorder = $isAptikom ? '#bae6fd' : '#fde68a';
+    // --- Warna badge otoritas ---
+    $otoritasBadgeBg = '#e0f2fe';
+    $otoritasBadgeColor = '#0369a1';
+    $otoritasBadgeBorder = '#bae6fd';
 
     // --- Warna badge prodi di header navbar ---
-    $prodiHeaderBadgeBg = $isAptikom ? 'rgba(255, 255, 255, 0.25)' : 'rgba(15, 23, 42, 0.12)';
-    $prodiHeaderBadgeColor = $isAptikom ? '#ffffff' : '#0f172a';
+    $prodiHeaderBadgeBg = 'rgba(255, 255, 255, 0.25)';
+    $prodiHeaderBadgeColor = '#ffffff';
 
     // --- Cek apakah halaman saat ini adalah dashboard ---
     $isDashboard = request()->routeIs('*.home', 'home', '*.dashboard', 'dashboard')
@@ -97,15 +95,15 @@
 
         // 3. Profil Lulusan & Profesi
         elseif (str_contains($path, 'indexProfilProfesi') || str_contains($path, 'ProfilLulusanprof') || str_contains($path, 'ProfilProfesi')) {
-            $pageTitle = 'Profil Lulusan - Profesi';
+            $pageTitle = 'Profil Lulusan';
         } elseif (str_contains($path, 'indexProfilMK') || str_contains($path, 'profil-mk')) {
-            $pageTitle = 'Profil Lulusan - MK';
+            $pageTitle = 'Profil Lulusan';
         } elseif (str_contains($path, 'indexListProfesi') || str_contains($path, 'list-profesi')) {
-            $pageTitle = 'Daftar Profesi';
+            $pageTitle = 'Profil Lulusan';
         } elseif (str_contains($path, 'indexListProfil') || str_contains($path, 'list-profil')) {
-            $pageTitle = 'Daftar Profil Lulusan';
+            $pageTitle = 'Profil Lulusan';
         } elseif (str_contains($path, 'kompetensi')) {
-            $pageTitle = 'Profil Kompetensi';
+            $pageTitle = 'Profil Lulusan';
         }
 
         // 4. Asesmen
@@ -127,52 +125,40 @@
 
         // 5. Visualisasi
         elseif (str_contains($path, 'visual-fakultas') || str_contains($path, 'visualisasi-fakultas')) {
-            $pageTitle = 'Visualisasi CPL Per Fakultas';
+            $pageTitle = 'Visualisasi';
         } elseif (str_contains($path, 'visual-program-studi') || str_contains($path, 'visualisasi-program-studi') || str_contains($path, 'visual-prodi')) {
-            $pageTitle = 'Visualisasi CPL Per Program Studi';
+            $pageTitle = 'Visualisasi';
         } elseif (str_contains($path, 'visual-mk') || str_contains($path, 'visualisasi-mk') || str_contains($path, 'visual-mahasiswaMataKuliah') || str_contains($path, 'hasilvisual-mahasiswaMataKuliah')) {
-            $pageTitle = 'Visualisasi CPMK Per Mata Kuliah';
+            $pageTitle = 'Visualisasi';
         } elseif (str_contains($path, 'visual-angkatan') || str_contains($path, 'visualisasi-angkatan') || str_contains($path, 'visual-mahasiswaAngkatan') || str_contains($path, 'hasilvisual-mahasiswaAngkatan') || str_contains($path, 'hasilvisualcpmk-angkatan')) {
-            $pageTitle = 'Visualisasi CPL Per Angkatan';
+            $pageTitle = 'Visualisasi';
         } elseif (str_contains($path, 'visual-mahasiswa') || str_contains($path, 'visualisasi-mahasiswa') || str_contains($path, 'visualisasi')) {
-            $pageTitle = 'Visualisasi CPL Per Mahasiswa';
+            $pageTitle = 'Visualisasi';
         }
 
         // 6. RPS & Soal & User & Kurikulum & General
         elseif (str_contains($path, 'validation') || str_contains($path, 'validasi')) {
             $pageTitle = 'Validasi RPS';
         } elseif (str_contains($path, 'rps')) {
-            $pageTitle = 'Rencana Pembelajaran Semester (RPS)';
-        } elseif (str_contains($path, 'add-cpmk')) {
-            $pageTitle = 'Tambah CPMK';
-        } elseif (str_contains($path, 'list-cpmk')) {
-            $pageTitle = 'Daftar CPMK';
+            $pageTitle = 'RPS';
+        } elseif (str_contains($path, 'add-cpmk') || str_contains($path, 'list-cpmk') || str_contains($path, 'cpmk')) {
+            $pageTitle = 'CPMK';
         } elseif (str_contains($path, 'kurikulum')) {
             $pageTitle = 'Daftar Kurikulum';
-        } elseif (str_contains($path, 'add-user')) {
-            $pageTitle = 'Tambah User';
-        } elseif (str_contains($path, 'edit-user')) {
-            $pageTitle = 'Edit User';
-        } elseif (str_contains($path, 'list-user')) {
+        } elseif (str_contains($path, 'add-user') || str_contains($path, 'edit-user') || str_contains($path, 'list-user')) {
             $pageTitle = 'Daftar User';
         } elseif (str_contains($path, 'list-Jenis') || str_contains($path, 'list-jenis') || str_contains($path, 'Jenis') || str_contains($path, 'kriteria')) {
             $pageTitle = 'Kriteria Penilaian';
-        } elseif (str_contains($path, 'import-mutu') || str_contains($path, 'importmutu')) {
-            $pageTitle = 'Penilaian';
-        } elseif (str_contains($path, 'konversi-nilai')) {
+        } elseif (str_contains($path, 'import-mutu') || str_contains($path, 'importmutu') || str_contains($path, 'konversi-nilai') || str_contains($path, 'penilaian')) {
             $pageTitle = 'Penilaian';
         } elseif (str_contains($path, 'soal')) {
-            $pageTitle = 'Daftar Soal';
-        } elseif (str_contains($path, 'penilaian')) {
-            $pageTitle = 'Penilaian';
+            $pageTitle = 'Soal';
         } elseif (str_contains($path, 'mahasiswa')) {
-            $pageTitle = 'Daftar Mahasiswa';
+            $pageTitle = 'Mahasiswa';
         } elseif (str_contains($path, 'cpl')) {
-            $pageTitle = 'CPL Prodi';
+            $pageTitle = 'CPLMK';
         } elseif (str_contains($path, 'bk')) {
             $pageTitle = 'Bahan Kajian (BK)';
-        } elseif (str_contains($path, 'cpmk')) {
-            $pageTitle = 'CPMK';
         } elseif (str_contains($path, 'profile')) {
             $pageTitle = 'Profile';
         } else {
@@ -767,11 +753,10 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
         </ul>
         <ul class="navbar-nav ms-auto align-items-center">
             <li class="nav-item d-none d-lg-block">
-                <div id="datepicker-popup" class="input-group date datepicker navbar-date-picker">
-                    <span class="input-group-addon input-group-prepend border-right">
-                        <span class="icon-calendar input-group-text calendar-icon"></span>
+                <div class="d-flex align-items-center bg-white border rounded-pill px-3 py-1" style="height: 38px; border-color: #cbd5e1 !important; box-shadow: 0 2px 6px rgba(15,23,42,0.04);">
+                    <span class="fw-bold" style="font-size: 13px; color: #007bff;">
+                        {{ $isAptikom ? 'APTIKOM' : 'NON APTIKOM' }}
                     </span>
-                    <input style="background-color:white" disabled="disabled" type="text" class="form-control">
                 </div>
             </li>
             {{-- User dropdown untuk desktop --}}

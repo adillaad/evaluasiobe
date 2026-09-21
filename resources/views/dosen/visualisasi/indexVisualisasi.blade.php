@@ -776,7 +776,7 @@
         </div>
 
         {{-- Alert Notice jika data kosong --}}
-        <div id="emptyDataAlert" class="alert alert-warning border-0 shadow-sm mb-4 py-3 px-4" style="display: none; background: #fffbeb; border-left: 4px solid #f59e0b !important; border-radius: 10px;">
+        <div id="emptyDataAlert" class="alert alert-warning border-0 shadow-sm mb-4 py-3 px-4" style="display: none; background: #fffbeb; border-left: 4px solid #0ea5e9 !important; border-radius: 10px;">
             <div class="d-flex align-items-center">
                 <i class="bi bi-exclamation-triangle-fill text-warning fs-4 me-3"></i>
                 <div>
@@ -2284,7 +2284,7 @@
                 var labels = chartDataProfil.map(p => p.label);
                 var data = chartDataProfil.map(p => p.data);
                 var backgroundColors = chartDataProfil.map((_, index) => {
-                    var colors = ['#1F3BB3', '#0284c7', '#059669', '#d97706', '#7c3aed', '#db2777'];
+                    var colors = ['#1F3BB3', '#0284c7', '#059669', '#0284c7', '#7c3aed', '#db2777'];
                     return colors[index % colors.length];
                 });
                 var ctx = document.getElementById('profilChart').getContext('2d');

@@ -76,47 +76,47 @@
         @else
             /* ── NON-APTIKOM Theme (Warm Amber/Gold Accent) ── */
             .matrix-banner-style {
-                background-color: #fef3c7 !important;
-                border: 1px solid #fde68a !important;
+                background-color: #0ea5e9 !important;
+                border: 1px solid #0284c7 !important;
             }
             .matrix-badge-style {
-                background-color: #f59e0b !important;
+                background-color: #0ea5e9 !important;
                 color: #ffffff !important;
             }
             .matrix-title-style {
-                color: #d97706 !important;
+                color: #0284c7 !important;
             }
             .btn-primary {
-                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-                border-color: #d97706 !important;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                border-color: #0284c7 !important;
                 color: #ffffff !important;
             }
             .btn-primary:hover, .btn-primary:focus {
-                background: #b45309 !important;
-                border-color: #b45309 !important;
+                background: #0ea5e9 !important;
+                border-color: #0ea5e9 !important;
                 color: #ffffff !important;
             }
             .btn-outline-primary {
-                color: #d97706 !important;
-                border-color: #d97706 !important;
+                color: #0284c7 !important;
+                border-color: #0284c7 !important;
                 background-color: #ffffff !important;
             }
             .btn-outline-primary:hover, .btn-outline-primary.active, .btn-outline-primary:focus {
-                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
                 color: #ffffff !important;
-                border-color: #d97706 !important;
-                box-shadow: 0 4px 12px rgba(217, 119, 6, 0.28) !important;
+                border-color: #0284c7 !important;
+                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
             }
             .code-pink {
-                color: #d97706 !important;
+                color: #0284c7 !important;
                 font-weight: 700;
             }
             .icon-box-cyan {
-                background-color: #f59e0b !important;
+                background-color: #0ea5e9 !important;
                 color: #fff;
             }
             .text-primary {
-                color: #d97706 !important;
+                color: #0284c7 !important;
             }
         @endif
 
@@ -272,7 +272,7 @@
                             </button>
 
                             <a href="{{ route($currentPrefix. 'cpl-cpmk.subcpmk-kelola') }}"
-                                class="btn btn-warning font-weight-bold btn-icon-text" style="color: #ffffff !important;">
+                                class="btn btn-primary font-weight-bold btn-icon-text" style="color: #ffffff !important;">
                                 <i class="ti-settings me-1 text-white"></i>
                                 <span style="color: #ffffff !important;">Kelola Sub CPMK</span>
                             </a>

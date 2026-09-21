@@ -58,7 +58,14 @@ class DaftarAsesmenMkController extends Controller
             }
         }
 
-        $kurikulumOptions = Kurikulum::orderBy('tahun', 'desc')->get();
+        $kurikulumQuery = Kurikulum::orderBy('tahun', 'desc');
+        if ($selectedProdiId) {
+            $kurikulumQuery->where('id_prodi', $selectedProdiId);
+        } elseif ($selectedFakultasId) {
+            $prodiIds = Prodi::where('id_fakultas', $selectedFakultasId)->pluck('id');
+            $kurikulumQuery->whereIn('id_prodi', $prodiIds);
+        }
+        $kurikulumOptions = $kurikulumQuery->get();
 
         $queryMks = MK::with(['prodi.fakultas', 'kurikulum']);
 

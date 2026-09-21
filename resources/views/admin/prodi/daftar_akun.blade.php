@@ -64,7 +64,7 @@
 
     /* NON-APTIKOM Card Styling (Yellow Theme) */
     .prodi-card-box.non-aptikom-card {
-        background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%) !important;
+        background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%) !important;
         color: #ffffff !important;
         box-shadow: 0 8px 24px rgba(217, 119, 6, 0.22) !important;
     }
@@ -134,7 +134,7 @@
 
     .badge-aptikom-yellow {
         background: #1e293b !important;
-        color: #f59e0b !important;
+        color: #0ea5e9 !important;
     }
 
     .prodi-actions-row {

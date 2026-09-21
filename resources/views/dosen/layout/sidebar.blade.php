@@ -175,7 +175,7 @@
                 <ul class="nav flex-column sub-menu">
                     @if ($userOtoritas == 'Dosen')
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route($currentPrefix . 'add-mutu') }}">Download Template</a>
+                            <a class="nav-link" href="{{ route($currentPrefix . 'add-mutu') }}">Download Template Soal</a>
                         </li>
                     @endif
                         <li class="nav-item">

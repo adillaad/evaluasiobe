@@ -1,6 +1,44 @@
 @extends($userOtoritas === 'Dosen' ? 'dosen.template' : 'penjamin-mutu.template')
 @section('content')
 
+    <style>
+        .btn-outline-primary {
+            color: #0284c7 !important;
+            border-color: #0284c7 !important;
+            background-color: #ffffff !important;
+        }
+        .btn-outline-primary i {
+            color: #0284c7 !important;
+            transition: color 0.2s ease;
+        }
+        .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active {
+            background-color: #0284c7 !important;
+            border-color: #0284c7 !important;
+            color: #ffffff !important;
+        }
+        .btn-outline-primary:hover i, .btn-outline-primary:focus i, .btn-outline-primary:active i {
+            color: #ffffff !important;
+        }
+
+        .btn-outline-danger {
+            color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            background-color: #ffffff !important;
+        }
+        .btn-outline-danger i {
+            color: #dc3545 !important;
+            transition: color 0.2s ease;
+        }
+        .btn-outline-danger:hover, .btn-outline-danger:focus, .btn-outline-danger:active {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: #ffffff !important;
+        }
+        .btn-outline-danger:hover i, .btn-outline-danger:focus i, .btn-outline-danger:active i {
+            color: #ffffff !important;
+        }
+    </style>
+
     @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
         <div class="container-fluid mb-4">
             <div class="card border-0 shadow-sm rounded-4">
@@ -138,7 +176,7 @@
                                             <td class="text-center">
                                                 <div class="d-flex align-items-center justify-content-center gap-1">
                                                     <button type="button" 
-                                                            class="btn btn-warning btn-icons btn-edit-bk"
+                                                            class="btn btn-outline-primary btn-icons btn-edit-bk"
                                                             data-id="{{ $bk->id }}"
                                                             data-nama="{{ $bk->nama }}"
                                                             data-kurikulum="{{ $bk->kurikulum_id }}"
@@ -153,7 +191,7 @@
                                                           onsubmit="return confirm('Apakah Anda yakin ingin menghapus Bahan Kajian {{ $bk->kode }}?')">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger btn-icons" data-bs-toggle="tooltip" title="Hapus">
+                                                        <button type="submit" class="btn btn-outline-danger btn-icons" data-bs-toggle="tooltip" title="Hapus">
                                                             <i class="ti-trash"></i>
                                                         </button>
                                                     </form>

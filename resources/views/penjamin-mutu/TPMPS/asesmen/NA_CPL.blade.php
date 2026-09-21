@@ -1,10 +1,120 @@
+@php
+    $selectedProdiId = request('prodi_id');
+    if (!$selectedProdiId && request('kurikulum_id')) {
+        $selectedProdiId = \Illuminate\Support\Facades\DB::table('kurikulums')->where('id', request('kurikulum_id'))->value('id_prodi');
+    }
+    if (!$selectedProdiId && auth()->check()) {
+        $selectedProdiId = auth()->user()->id_prodiUser ?? (auth()->user()->prodi ? auth()->user()->prodi->id : null);
+    }
+    if ($selectedProdiId) {
+        $isAptikom = (bool) \Illuminate\Support\Facades\DB::table('prodi')->where('id', $selectedProdiId)->value('is_aptikom');
+    } else {
+        $isAptikom = auth()->check() && auth()->user()->prodi ? (bool) auth()->user()->prodi->is_aptikom : true;
+    }
+@endphp
+
 @extends(auth()->user()->otoritas->otoritas === 'Dosen' ? 'dosen.template' : 'penjamin-mutu.template')
 @section('content')
-<div class="container-fluid">
-  <div class="card">
-      <div class="card-body">
-          <h4 class="card-title mb-3">Nilai Akhir CPL</h4>
 
+<style>
+    @if ($isAptikom)
+        /* ── APTIKOM Theme (Sky Blue Accent) ── */
+        .cpl-nav-pills .nav-link.active {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+            color: #ffffff !important;
+            border-color: #0284c7 !important;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+        }
+        .text-primary-accent {
+            color: #0284c7 !important;
+        }
+    @else
+        /* ── NON-APTIKOM Theme (Warm Amber/Gold Accent) ── */
+        .cpl-nav-pills .nav-link.active {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+            color: #ffffff !important;
+            border-color: #0284c7 !important;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+        }
+        .text-primary-accent {
+            color: #0284c7 !important;
+        }
+    @endif
+    .cpl-tabs-wrapper {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 14px 18px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        border: 1px solid #e2e8f0;
+    }
+    .cpl-nav-pills {
+        gap: 8px;
+    }
+    .cpl-nav-pills .nav-link {
+        color: #475569 !important;
+        background-color: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        padding: 8px 14px !important;
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        white-space: nowrap !important;
+    }
+    .cpl-nav-pills .nav-link:hover {
+        background-color: #e2e8f0 !important;
+        color: #0f172a !important;
+    }
+    .cpl-nav-pills .nav-link.active .badge-cpmk-count {
+        background-color: rgba(255, 255, 255, 0.25) !important;
+        color: #ffffff !important;
+    }
+    .badge-cpmk-count {
+        background-color: #e2e8f0;
+        color: #475569;
+        font-size: 11px;
+        border-radius: 6px;
+        padding: 2px 6px;
+        margin-left: 6px;
+        font-weight: 700;
+    }
+    .table-pemetaan {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+    .table-pemetaan th {
+        background-color: #f8fafc !important;
+        color: #334155 !important;
+        font-weight: 600 !important;
+        font-size: 13.5px !important;
+        padding: 12px 14px !important;
+        vertical-align: middle !important;
+        border-bottom: 2px solid #cbd5e1 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .table-pemetaan td {
+        vertical-align: middle !important;
+        line-height: 1.6 !important;
+        padding: 12px 14px !important;
+        font-size: 13.5px !important;
+        color: #1e293b !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+    .table-pemetaan tbody tr:hover {
+        background-color: #f8fafc !important;
+    }
+</style>
+
+<div class="container-fluid mb-4">
+  <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+          <h5 class="card-title fw-bold mb-0 text-dark">Nilai Akhir CPL</h5>
+      </div>
+      <div class="card-body">
           <x-filter-form
               :universities="$universities ?? collect()"
               :faculties="$faculties ?? collect()"
@@ -14,91 +124,156 @@
           />
 
           @php
-              $groupedCPLs = $penilaian->groupBy('cpl_kode');
+              $groupedCPLs = $penilaian->groupBy('cpl_kode')->sortKeys(SORT_NATURAL | SORT_FLAG_CASE);
+              $totalValidPenilaianCount = 0;
+              foreach ($groupedCPLs as $cpl_kode => $rows) {
+                  if ($instrumens->whereIn('id', $rows->pluck('id'))->isNotEmpty()) {
+                      $totalValidPenilaianCount += $rows->count();
+                  }
+              }
           @endphp
 
-          @if($groupedCPLs->isNotEmpty())
-              <style>
-                  #cplTab .nav-link {
-                      border: 1px solid transparent;
-                      border-bottom: 1px solid #dee2e6;
-                      color: #0d6efd;
-                      background-color: transparent;
-                      border-top-left-radius: 0.375rem;
-                      border-top-right-radius: 0.375rem;
-                      font-weight: 500;
-                      padding: 0.5rem 1rem;
-                  }
-                  #cplTab .nav-link:hover {
-                      border-color: #e9ecef #e9ecef #dee2e6;
-                      color: #0b5ed7;
-                  }
-                  #cplTab .nav-link.active {
-                      color: #212529;
-                      background-color: #fff;
-                      border-color: #dee2e6 #dee2e6 #fff;
-                      font-weight: 600;
-                  }
-              </style>
-              {{-- Navigation Tabs Per CPL --}}
-              <ul class="nav nav-tabs mb-0 border-bottom-0" id="cplTab" role="tablist">
-                  @foreach ($groupedCPLs as $cpl_kode => $rows)
-                      @if ($instrumens->whereIn('id', $rows->pluck('id'))->isNotEmpty())
-                          <li class="nav-item" role="presentation">
-                              <button 
-                                  class="nav-link {{ $loop->first ? 'active' : '' }}" 
-                                  id="tab-{{ Str::slug($cpl_kode) }}" 
-                                  data-bs-toggle="tab" 
-                                  data-bs-target="#content-{{ Str::slug($cpl_kode) }}" 
-                                  type="button" 
-                                  role="tab" 
-                                  aria-controls="content-{{ Str::slug($cpl_kode) }}" 
-                                  aria-selected="{{ $loop->first ? 'true' : 'false' }}">
-                                  {{ $cpl_kode }}
-                              </button>
-                          </li>
-                      @endif
-                  @endforeach
-              </ul>
+          @if($groupedCPLs->isNotEmpty() && $totalValidPenilaianCount > 0)
+              {{-- Tab Filter Per CPL --}}
+              <div class="cpl-tabs-wrapper mb-3 mt-3">
+                  <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                      <span class="fw-bold text-secondary text-uppercase small" style="letter-spacing: 0.5px;">
+                          <i class="mdi mdi-filter-variant me-1"></i> Pilih CPL:
+                      </span>
+                      <span class="text-muted small">Klik tab CPL untuk melihat nilai akhir</span>
+                  </div>
+                  <ul class="nav nav-pills cpl-nav-pills overflow-auto flex-nowrap pb-1" id="cplTab" role="tablist">
+                      <li class="nav-item" role="presentation">
+                          <button
+                              class="nav-link active"
+                              id="tab-semua-cpl"
+                              data-bs-toggle="tab"
+                              data-bs-target="#content-semua-cpl"
+                              type="button"
+                              role="tab"
+                              aria-controls="content-semua-cpl"
+                              aria-selected="true">
+                              Semua CPL
+                              <span class="badge-cpmk-count">{{ $totalValidPenilaianCount }}</span>
+                          </button>
+                      </li>
+                      @foreach ($groupedCPLs as $cpl_kode => $rows)
+                          @if ($instrumens->whereIn('id', $rows->pluck('id'))->isNotEmpty())
+                              <li class="nav-item" role="presentation">
+                                  <button
+                                      class="nav-link"
+                                      id="tab-{{ Str::slug($cpl_kode) }}"
+                                      data-bs-toggle="tab"
+                                      data-bs-target="#content-{{ Str::slug($cpl_kode) }}"
+                                      type="button"
+                                      role="tab"
+                                      aria-controls="content-{{ Str::slug($cpl_kode) }}"
+                                      aria-selected="false">
+                                      {{ $cpl_kode }}
+                                      <span class="badge-cpmk-count">{{ $rows->count() }}</span>
+                                  </button>
+                              </li>
+                          @endif
+                      @endforeach
+                  </ul>
+              </div>
 
               {{-- Tab Content Per CPL --}}
               <div class="tab-content" id="cplTabContent">
+                  {{-- Tab Pane: Semua CPL --}}
+                  <div
+                      class="tab-pane fade show active"
+                      id="content-semua-cpl"
+                      role="tabpanel"
+                      aria-labelledby="tab-semua-cpl">
+
+                      <div class="table-responsive">
+                          <table class="table table-bordered table-hover align-middle table-pemetaan mb-0">
+                              <thead>
+                                  <tr>
+                                      <th style="width: 15%;">CPL</th>
+                                      <th>CPMK</th>
+                                      <th>MK</th>
+                                      <th style="width: 15%;">Skor Max</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  @foreach ($groupedCPLs as $cpl_kode => $rows)
+                                      @php
+                                          $validRows = $rows->filter(function($row) use ($instrumens) {
+                                              return $instrumens->where('id', $row->id)->isNotEmpty();
+                                          });
+                                      @endphp
+                                      @if ($validRows->isNotEmpty())
+                                          @php
+                                              $cplRowspan = $validRows->count();
+                                              $cplTotalBobot = $instrumens->whereIn('id', $validRows->pluck('id'))->sum('bobot_metode');
+                                              $isFirstRow = true;
+                                          @endphp
+                                          @foreach ($validRows as $row)
+                                              @php
+                                                  $bobotPerRow = $instrumens->where('id', $row->id)->sum('bobot_metode');
+                                              @endphp
+                                              <tr>
+                                                  @if ($isFirstRow)
+                                                      <td rowspan="{{ $cplRowspan }}" class="fw-bold align-middle bg-light text-center">
+                                                          {{ $cpl_kode }}
+                                                      </td>
+                                                      @php $isFirstRow = false; @endphp
+                                                  @endif
+                                                  <td class="fw-semibold">{{ $row->cpmk_kode }}</td>
+                                                  <td>{{ $row->mk_kode }}</td>
+                                                  <td>{{ $bobotPerRow }}</td>
+                                              </tr>
+                                          @endforeach
+                                          <tr class="table-light">
+                                              <td colspan="3" class="text-end fw-bold">Nilai {{ $cpl_kode }} :</td>
+                                              <td class="fw-bold text-primary-accent">{{ $cplTotalBobot }}</td>
+                                          </tr>
+                                      @endif
+                                  @endforeach
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+
+                  {{-- Tab Pane: Per CPL --}}
                   @foreach ($groupedCPLs as $cpl_kode => $rows)
                       @if ($instrumens->whereIn('id', $rows->pluck('id'))->isNotEmpty())
                           @php
                               $totalBobot = $instrumens->whereIn('id', $rows->pluck('id'))->sum('bobot_metode');
                           @endphp
-                          <div 
-                              class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" 
-                              id="content-{{ Str::slug($cpl_kode) }}" 
-                              role="tabpanel" 
+                          <div
+                              class="tab-pane fade"
+                              id="content-{{ Str::slug($cpl_kode) }}"
+                              role="tabpanel"
                               aria-labelledby="tab-{{ Str::slug($cpl_kode) }}">
-                              
+
                               <div class="table-responsive">
-                                  <table class="table table-hover table-bordered">
-                                      <thead class="bg-light">
+                                  <table class="table table-bordered table-hover align-middle table-pemetaan mb-0">
+                                      <thead>
                                           <tr>
                                               <th>CPMK</th>
                                               <th>MK</th>
-                                              <th>Skor Max</th>
+                                              <th style="width: 15%;">Skor Max</th>
                                           </tr>
                                       </thead>
                                       <tbody>
                                           @foreach ($rows as $row)
                                               @php
-                                                  $bobotPerRow = $instrumens->where('id', $row->id)->sum('bobot_metode');        
+                                                  $bobotPerRow = $instrumens->where('id', $row->id)->sum('bobot_metode');
                                               @endphp
                                               <tr>
-                                                  <td>{{ $row->cpmk_kode }}</td>
+                                                  <td class="fw-semibold">{{ $row->cpmk_kode }}</td>
                                                   <td>{{ $row->mk_kode }}</td>
                                                   <td>{{ $bobotPerRow }}</td>
                                               </tr>
                                           @endforeach
                                       </tbody>
-                                      <tfoot class="bg-light font-weight-bold">
+                                      <tfoot class="bg-light">
                                           <tr>
                                               <td colspan="2" class="text-end fw-bold">Nilai {{ $cpl_kode }} :</td>
-                                              <td class="fw-bold">{{ $totalBobot }}</td>
+                                              <td class="fw-bold text-primary-accent">{{ $totalBobot }}</td>
                                           </tr>
                                       </tfoot>
                                   </table>
@@ -115,121 +290,4 @@
       </div>
   </div>
 </div>
-
-
-
-{{-- <div class="container-fluid mt-4">
-    <div class="card">
-        <div class="card-body">
-            <div id="NA_CPL"></div>
-        </div>
-    </div>
-</div> --}}
-
-<!-- NA_CPL -->
-{{-- <script>
-    Highcharts.chart('NA_CPL', {
-      chart: {
-        type: 'column'
-      },
-
-      title: {
-        text: 'Nilai Akhir CPL',
-        align: 'center'
-      },
-
-      xAxis: {
-        categories: ['CPL05', 'CPL06', 'CPL07']
-      },
-
-      yAxis: {
-        allowDecimals: false,
-        min: 0,
-        title: {
-          text: 'Nilai Akhir CPL'
-        }
-      },
-
-      tooltip: {
-        format: '<b>{key}</b><br/>{series.name}: {y}<br/>' +
-          'Total: {point.stackTotal}'
-      },
-
-      plotOptions: {
-        column: {
-          stacking: 'normal'
-        }
-      },
-
-      series: [
-        {
-          id: 'MK08-CPMK051-CPL05',
-          name: 'CPMK051',
-          data: [11, 0, 0],
-          color: '#FF9999'
-        },
-        {
-          id: 'MK08-CPMK052-CPL05',
-          name: 'CPMK052',
-          data: [11, 0, 0],
-          color: '#FF7777'
-        },
-        {
-          id: 'MK09-CPMK051-CPL05',
-          name: 'CPMK051',
-          data: [10, 0, 0],
-          color: '#FF5555'
-        },
-        {
-          id: 'MK24-CPMK051-CPL05',
-          name: 'CPMK051',
-          data: [15, 0, 0],
-          color: '#FFDD77'
-        },
-        {
-          id: 'MK24-CPMK052-CPL05',
-          name: 'CPMK052',
-          data: [15, 0, 0],
-          color: '#FFBB44'
-        },
-        {
-          id: 'MK04-CPMK061-CPL06',
-          name: 'CPMK061',
-          data: [0, 15, 0],
-          color: '#77DD77'
-        },
-        {
-          id: 'MK04-CPMK062-CPL06',
-          name: 'CPMK062',
-          data: [0, 15, 0],
-          color: '#55AA55'
-        },
-        {
-          id: 'MK04-CPMK063-CPL06',
-          name: 'CPMK063',
-          data: [0, 20, 0],
-          color: '#339933'
-        },
-        {
-          id: 'MK34-CPMK063-CPL06',
-          name: 'CPMK063',
-          data: [0, 30, 0],
-          color: '#227722'
-        },
-        {
-          id: 'MK34-CPMK071-CPL07',
-          name: 'CPMK071',
-          data: [0, 0, 40],
-          color: '#99DD99'
-        },
-        {
-          id: 'MK34-CPMK071-CPL07',
-          name: 'CPMK072',
-          data: [0, 0, 30],
-          color: '#77BB77'
-        }
-      ]
-    });
-  </script> --}}
-
 @endsection

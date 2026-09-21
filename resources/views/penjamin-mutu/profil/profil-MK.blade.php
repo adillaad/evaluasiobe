@@ -143,15 +143,15 @@
         @else
             /* ── NON-APTIKOM Theme (Warm Amber/Gold Accent) ── */
             .custom-kurikulum-tabs .nav-link:hover {
-                color: #d97706;
+                color: #0284c7;
                 background: #fffbe6;
                 border-color: #fcd34d;
             }
             .custom-kurikulum-tabs .nav-link.active {
                 color: #ffffff !important;
-                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-                border-color: #d97706 !important;
-                box-shadow: 0 4px 12px rgba(217, 119, 6, 0.28) !important;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                border-color: #0284c7 !important;
+                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
             }
             .code-profil-badge {
                 color: #b45309;
@@ -174,11 +174,11 @@
                 display: inline-block;
             }
             .text-theme-accent {
-                color: #d97706 !important;
+                color: #0284c7 !important;
             }
             .btn-theme-cetak {
-                background-color: #d97706 !important;
-                border-color: #d97706 !important;
+                background-color: #0284c7 !important;
+                border-color: #0284c7 !important;
                 color: #ffffff !important;
             }
             .btn-theme-cetak:hover {

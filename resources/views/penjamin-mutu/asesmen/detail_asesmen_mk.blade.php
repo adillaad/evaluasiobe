@@ -1,3 +1,42 @@
+<style>
+    /* Custom Theme Badges & Action Buttons */
+    .badge-cpl {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+        color: #ffffff !important;
+        font-weight: 500;
+    }
+    .badge-cpmk {
+        background-color: #e0f2fe !important;
+        color: #0369a1 !important;
+        border: 1px solid #bae6fd !important;
+        font-weight: 600;
+    }
+    .btn-outline-primary {
+        color: #0284c7 !important;
+        background-color: #ffffff !important;
+        border-color: #0284c7 !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active {
+        color: #ffffff !important;
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+        border-color: #0284c7 !important;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+    }
+    .btn-outline-danger {
+        color: #dc3545 !important;
+        background-color: #ffffff !important;
+        border-color: #dc3545 !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    .btn-outline-danger:hover, .btn-outline-danger:focus, .btn-outline-danger:active {
+        color: #ffffff !important;
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+    }
+</style>
+
+
 @extends('penjamin-mutu.template')
 
 @section('content')
@@ -230,11 +269,11 @@
                                             @if ($jm === 0 && $ji === 0)
                                                 <td class="text-center fw-bold align-top" rowspan="{{ $totalRows }}">{{ $rowNum }}</td>
                                                 <td rowspan="{{ $totalRows }}" class="align-top">
-                                                    <span class="badge bg-info text-dark d-block mb-1 text-wrap">{{ $p->cpl->kode ?? '-' }}</span>
+                                                    <span class="badge badge-cpl d-block mb-1 text-wrap">{{ $p->cpl->kode ?? '-' }}</span>
                                                     <small class="text-muted d-block">{{ Str::limit($p->cpl->deskripsi ?? '', 70) }}</small>
                                                 </td>
                                                 <td rowspan="{{ $totalRows }}" class="align-top">
-                                                    <span class="badge bg-success d-block mb-1 text-wrap">{{ $p->cpmk->kode ?? '-' }}</span>
+                                                    <span class="badge badge-cpmk d-block mb-1 text-wrap">{{ $p->cpmk->kode ?? '-' }}</span>
                                                     <small class="text-muted d-block">{{ Str::limit($p->cpmk->deskripsi ?? '', 70) }}</small>
                                                 </td>
                                             @endif
@@ -265,7 +304,7 @@
                                                 @if ($ji === 0)
                                                     <td class="text-center align-middle" rowspan="{{ $instrumenRows }}">
                                                         <div class="d-inline-flex gap-1 justify-content-center">
-                                                            <button type="button" class="btn btn-warning btn-sm p-1" style="font-size: 0.75rem; line-height: 1;" data-bs-toggle="modal" data-bs-target="#editMetodeModal{{ $pm->id }}" title="Edit Metode & Kriteria">
+                                                            <button type="button" class="btn btn-outline-primary btn-sm p-1" style="font-size: 0.75rem; line-height: 1;" data-bs-toggle="modal" data-bs-target="#editMetodeModal{{ $pm->id }}" title="Edit Metode & Kriteria">
                                                                 <i class="mdi mdi-pencil"></i>
                                                             </button>
 
@@ -273,7 +312,7 @@
                                                                   onsubmit="return confirm('Hapus paket metode ini ({{ $pm->metode->nama ?? 'Metode' }}) beserta seluruh kriteria di dalamnya?')">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="submit" class="btn btn-danger btn-sm p-1" style="font-size: 0.75rem; line-height: 1;" title="Hapus Paket Metode">
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger btn-sm p-1" style="font-size: 0.75rem; line-height: 1;" title="Hapus Paket Metode">
                                                                     <i class="mdi mdi-delete"></i>
                                                                 </button>
                                                             </form>
