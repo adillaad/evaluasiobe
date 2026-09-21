@@ -75,6 +75,7 @@
 
                 <div class="form-group mb-4">
                     <label for="sub_cpmk_id" class="fw-bold mb-2">Pilih Sub CPMK:</label>
+                    <input type="text" id="search_subcpmk" class="form-control form-control-sm mb-2" placeholder="Cari Sub CPMK...">
                     <div id="sub_cpmk_id" class="border rounded-3 p-3 bg-light" style="max-height: 250px; overflow-y: auto;">
                         <span class="text-muted small italic">Silakan pilih Mata Kuliah terlebih dahulu.</span>
                     </div>
@@ -92,7 +93,16 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script type="text/javascript">
     document.addEventListener("DOMContentLoaded", function() {
+        $(document).on('input', '#search_subcpmk', function() {
+            let val = $(this).val().toLowerCase();
+            $('#sub_cpmk_id .form-check').each(function() {
+                let text = $(this).text().toLowerCase();
+                $(this).toggle(text.includes(val));
+            });
+        });
+
         function getSelectedValue() {
+            $('#search_subcpmk').val('');
             var mkKode = document.getElementById("mk_kode").value;
             if (mkKode) {
                 var baseUrl = "{{ route($currentPrefix . 'cpl-cpmk.sub-cpmk-by-mk', ['mk' => ':mkKode']) }}";

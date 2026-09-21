@@ -86,9 +86,10 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script type="text/javascript">
-    $('#kurikulum_id').on('change', function() {
-        var kurikulumID = $(this).val();
+    function loadCpl() {
+        var kurikulumID = $('#kurikulum_id').val();
         const otoritas = "{{ $userOtoritas }}";
+        let urlget = '';
         if(otoritas === "Kepala Program Studi"){
             urlget = `/kepala-program-studi/get-cpl-by-kurikulum/${kurikulumID}`;
         } else if (otoritas === 'Penjamin Mutu Program Studi'){
@@ -99,37 +100,45 @@
         var cplSelect = document.getElementById('cplSelect'); 
         if (kurikulumID) {
             cplSelect.innerHTML = '<option value="">Loading...</option>';
-            cplSelect.disabled = true ;
+            cplSelect.disabled = true;
             $.ajax({
                 url: urlget,
                 type: 'GET',
                 dataType: 'json',
                 success: function(data) {
-                    if (data.length > 0) {
+                    let cpls = Array.isArray(data) ? data : (data.cpls || []);
+                    if (cpls.length > 0) {
                         cplSelect.innerHTML = '<option value="">-- Pilih CPL --</option>';
-                        data.forEach(cpl => {
+                        cpls.forEach(cpl => {
                             const option = document.createElement('option');
                             const maxLength = 100;
-                            let judul = cpl.judul;
+                            let judul = cpl.judul || '';
                             if (judul.length > maxLength) {
-                            judul = judul.substring(0, maxLength) + '...';
+                                judul = judul.substring(0, maxLength) + '...';
                             }
                             option.value = cpl.id;
                             option.textContent = `${cpl.kode} - ${judul}`;
                             cplSelect.appendChild(option);
-                            // $('#cpl').append('<option value="'+ cpl.id +'">'+ cpl.kode +' - '+ cpl.judul +'</option>');
-                    });
-                    cplSelect.disabled = false;
+                        });
+                        cplSelect.disabled = false;
                     } else {
                         cplSelect.innerHTML = '<option value="">-- Tidak ada data CPL untuk Kurikulum yang dipilih --</option>';
                     }
-                    
+                },
+                error: function() {
+                    cplSelect.innerHTML = '<option value="">-- Gagal memuat data CPL --</option>';
                 }
             });
         } else {
-            console.log("test");
-            
             cplSelect.innerHTML = '<option value="">-- Tidak ada data Kurikulum yang dipilih --</option>';
+        }
+    }
+
+    $('#kurikulum_id').on('change', loadCpl);
+
+    $(document).ready(function() {
+        if ($('#kurikulum_id').val()) {
+            loadCpl();
         }
     });
 

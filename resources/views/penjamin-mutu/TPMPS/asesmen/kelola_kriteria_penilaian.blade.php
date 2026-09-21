@@ -16,19 +16,37 @@
     <div class="col-md-12">
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h4 class="card-title mb-1">Pengelolaan Kriteria Penilaian</h4>
-                        <p class="text-muted small mb-0">Kelola daftar kriteria/instrumen penilaian yang digunakan dalam asesmen mata kuliah.</p>
-                    </div>
-                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addKriteriaModal">
-                            <i class="mdi mdi-plus-circle me-1"></i> Tambah Kriteria Penilaian
-                        </button>
-                    @endif
+                <div class="mb-3">
+                    <h4 class="card-title fw-bold mb-1">Pengelolaan Kriteria Penilaian</h4>
+                    <p class="text-muted small mb-0">Kelola daftar kriteria/instrumen penilaian yang digunakan dalam asesmen mata kuliah.</p>
                 </div>
 
+                <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-4">
+                    <div>
+                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                            <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#addKriteriaModal">
+                                <i class="mdi mdi-plus-circle font-16"></i>
+                                <span>Tambah Kriteria Penilaian</span>
+                            </button>
+                        @endif
+                    </div>
 
+                    <div>
+                        <form action="{{ url()->current() }}" method="GET" class="d-flex align-items-center gap-2 m-0">
+                            <label for="search_input_kriteria" class="fw-semibold text-dark mb-0 me-1" style="font-size: 15px;">Search:</label>
+                            <div class="position-relative d-inline-block">
+                                <input type="text" id="search_input_kriteria" name="search" class="form-control bg-white"
+                                       value="{{ request('search') }}" autocomplete="off"
+                                       style="width: 220px; border-radius: 8px; border: 1px solid #cbd5e1; padding-right: {{ request('search') ? '30px' : '12px' }};">
+                                @if(request('search'))
+                                    <a href="{{ url()->current() }}" class="position-absolute text-secondary" style="right: 8px; top: 50%; transform: translateY(-50%); text-decoration: none;" title="Reset Search">
+                                        <i class="mdi mdi-close-circle font-16"></i>
+                                    </a>
+                                @endif
+                            </div>
+                        </form>
+                    </div>
+                </div>
 
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered align-middle">
@@ -37,7 +55,7 @@
                                 <th style="width: 8%" class="text-center">No</th>
                                 <th>Nama Kriteria Penilaian</th>
                                 @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                                    <th style="width: 15%" class="text-center">Aksi</th>
+                                    <th style="width: 20%" class="text-center">Aksi</th>
                                 @endif
                             </tr>
                         </thead>
@@ -53,12 +71,12 @@
                                                     <i class="mdi mdi-pencil me-1"></i> Edit
                                                 </button>
                                                 <form action="{{ route($currentPrefix . 'asesmen.kelola-kriteria.destroy', $kriteria->id) }}" method="POST"
-                                                      onsubmit="return confirm('Yakin ingin menghapus kriteria {{ $kriteria->nama_kriteria }}?')">
+                                                      onsubmit="return confirm('Yakin ingin menghapus kriteria {{ $kriteria->nama_kriteria }}?')" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <!-- <button type="submit" class="btn btn-danger btn-sm py-1 px-2">
+                                                    <button type="submit" class="btn btn-danger btn-sm py-1 px-2">
                                                         <i class="mdi mdi-delete me-1"></i> Hapus
-                                                    </button> -->
+                                                    </button>
                                                 </form>
                                             </div>
 

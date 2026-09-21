@@ -557,6 +557,10 @@ class AsesmenController extends Controller
             $query->where('id_prodi', $user->id_prodiUser);
         }
 
+        if ($request->filled('search')) {
+            $query->where('nama', 'like', '%' . $request->search . '%');
+        }
+
         $metodes = $query->orderBy('nama', 'asc')->paginate(10)->withQueryString();
 
         // Data Matriks Pemetaan Metode Penilaian
@@ -670,6 +674,10 @@ class AsesmenController extends Controller
 
         if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
             $query->where('id_prodi', $user->id_prodiUser);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('nama_kriteria', 'like', '%' . $request->search . '%');
         }
 
         $kriterias = $query->orderBy('nama_kriteria', 'asc')->paginate(10)->withQueryString();

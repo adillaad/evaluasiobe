@@ -657,6 +657,7 @@ Route::middleware(['auth'])->group(function () {
                         Route::controller(CpmkController::class)->group(function () {
                             Route::get('list-cpmk', 'list')->name('list-cpmk');
                             Route::get('add-cpmk', 'create')->name('add-cpmk');
+                            Route::get('/get-cpl-by-kurikulum/{kurikulum_id}','getCplbyKurkulum')->name('getCplByKurikulum');
                             Route::post('add-cpmk', 'store')->name('store-cpmk');
                             Route::get('edit-cpmk/{id}', 'edit')->name('edit-cpmk');
                             Route::put('edit-cpmk/{id}', 'update')->name('update-cpmk');
