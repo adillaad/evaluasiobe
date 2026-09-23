@@ -102,7 +102,7 @@
                                                         <div class="d-flex flex-column gap-1">
                                                             @foreach ($mappedInSemester as $mk)
                                                                 <span class="badge font-11 px-2 py-1 rounded-2 text-start"
-                                                                      style="background-color: @if ($mk->rumpun === 'Wajib') #dcfce7; color: #15803d; border: 1px solid #bbf7d0; @elseif($mk->rumpun === 'Peminatan') #fef3c7; color: #b45309; border: 1px solid #fde68a; @elseif($mk->rumpun === 'Wajib_kurikulum') #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; @else #f1f5f9; color: #334155; border: 1px solid #e2e8f0; @endif"
+                                                                      style="background-color: @if ($mk->rumpun === 'Wajib') #dcfce7; color: #15803d; border: 1px solid #bbf7d0; @elseif($mk->rumpun === 'Peminatan') #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; @elseif($mk->rumpun === 'Wajib_kurikulum') #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; @else #f1f5f9; color: #334155; border: 1px solid #e2e8f0; @endif"
                                                                       title="{{ $mk->kode }}: {{ $mk->nama }}">
                                                                     {{ $mk->kode }}
                                                                 </span>

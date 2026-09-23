@@ -29,94 +29,98 @@
 
     <style>
         @if ($isAptikom)
-            /* ── APTIKOM Theme (Sky Blue Accent) ── */
+            /* ── APTIKOM Theme (Ocean Blue #006199 Accent) ── */
             .matrix-banner-style {
-                background-color: #e0f2fe !important;
+                background-color: #f0f9ff !important;
                 border: 1px solid #bae6fd !important;
+                border-left: 5px solid #006199 !important;
             }
             .matrix-badge-style {
-                background-color: #0ea5e9 !important;
+                background-color: #006199 !important;
                 color: #ffffff !important;
             }
             .matrix-title-style {
-                color: #0284c7 !important;
+                color: #006199 !important;
+                font-weight: 700 !important;
             }
             .btn-primary {
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-                border-color: #0284c7 !important;
+                background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
+                border-color: #006199 !important;
                 color: #ffffff !important;
             }
             .btn-primary:hover, .btn-primary:focus {
-                background: #0369a1 !important;
-                border-color: #0369a1 !important;
+                background: #004c78 !important;
+                border-color: #004c78 !important;
                 color: #ffffff !important;
             }
             .btn-outline-primary {
-                color: #0284c7 !important;
-                border-color: #0284c7 !important;
+                color: #006199 !important;
+                border-color: #006199 !important;
                 background-color: #ffffff !important;
             }
             .btn-outline-primary:hover, .btn-outline-primary.active, .btn-outline-primary:focus {
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
                 color: #ffffff !important;
-                border-color: #0284c7 !important;
-                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+                border-color: #006199 !important;
+                box-shadow: 0 4px 12px rgba(0, 97, 153, 0.28) !important;
             }
             .code-pink {
-                color: #0284c7 !important;
+                color: #006199 !important;
                 font-weight: 700;
             }
             .icon-box-cyan {
-                background-color: #0ea5e9 !important;
+                background-color: #006199 !important;
                 color: #fff;
             }
             .text-primary {
-                color: #0284c7 !important;
+                color: #006199 !important;
             }
         @else
-            /* ── NON-APTIKOM Theme (Warm Amber/Gold Accent) ── */
+            /* ── NON-APTIKOM Theme (Sky Blue #76C0EC Accent) ── */
             .matrix-banner-style {
-                background-color: #0ea5e9 !important;
-                border: 1px solid #0284c7 !important;
+                background-color: #f0f9ff !important;
+                border: 1px solid #bae6fd !important;
+                border-left: 5px solid #76C0EC !important;
             }
             .matrix-badge-style {
-                background-color: #0ea5e9 !important;
+                background-color: #76C0EC !important;
                 color: #ffffff !important;
             }
             .matrix-title-style {
-                color: #0284c7 !important;
+                color: #004c78 !important;
+                font-weight: 700 !important;
             }
             .btn-primary {
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-                border-color: #0284c7 !important;
+                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
+                border-color: #76C0EC !important;
                 color: #ffffff !important;
             }
             .btn-primary:hover, .btn-primary:focus {
-                background: #0ea5e9 !important;
-                border-color: #0ea5e9 !important;
+                background: #4faae5 !important;
+                border-color: #4faae5 !important;
                 color: #ffffff !important;
             }
             .btn-outline-primary {
-                color: #0284c7 !important;
-                border-color: #0284c7 !important;
+                color: #76C0EC !important;
+                border-color: #76C0EC !important;
                 background-color: #ffffff !important;
             }
             .btn-outline-primary:hover, .btn-outline-primary.active, .btn-outline-primary:focus {
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
                 color: #ffffff !important;
-                border-color: #0284c7 !important;
-                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+                border-color: #76C0EC !important;
+                box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
             }
             .code-pink {
-                color: #0284c7 !important;
+                color: #76C0EC !important;
                 font-weight: 700;
             }
             .icon-box-cyan {
-                background-color: #0ea5e9 !important;
+                background-color: #76C0EC !important;
                 color: #fff;
             }
             .text-primary {
-                color: #0284c7 !important;
+                color: #76C0EC !important;
             }
         @endif
 

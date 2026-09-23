@@ -77,20 +77,20 @@
         }
 
         @if ($isAptikom)
-            /* ── APTIKOM Theme (Sky Blue Accent) ── */
+            /* ── APTIKOM Theme (Ocean Blue #006199 Accent) ── */
             .cpl-nav-pills .nav-link:hover {
-                color: #0284c7 !important;
+                color: #006199 !important;
                 background-color: #f0f9ff !important;
-                border-color: #38bdf8 !important;
+                border-color: #006199 !important;
             }
             .cpl-nav-pills .nav-link.active {
                 color: #ffffff !important;
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-                border-color: #0284c7 !important;
-                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+                background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
+                border-color: #006199 !important;
+                box-shadow: 0 4px 12px rgba(0, 97, 153, 0.28) !important;
             }
             .smt-nav-tabs .nav-link {
-                color: #0284c7 !important;
+                color: #006199 !important;
                 border: none !important;
                 border-bottom: 2px solid transparent !important;
                 padding: 10px 18px !important;
@@ -100,18 +100,18 @@
                 transition: all 0.2s ease !important;
             }
             .smt-nav-tabs .nav-link:hover {
-                color: #0369a1 !important;
-                border-bottom: 2px solid #38bdf8 !important;
+                color: #004c78 !important;
+                border-bottom: 2px solid #006199 !important;
             }
             .smt-nav-tabs .nav-link.active {
-                color: #0284c7 !important;
+                color: #006199 !important;
                 font-weight: 700 !important;
                 border: none !important;
-                border-bottom: 3px solid #0284c7 !important;
+                border-bottom: 3px solid #006199 !important;
                 background: transparent !important;
             }
             .badge-code-cpmk {
-                color: #0284c7 !important;
+                color: #006199 !important;
                 background-color: #f0f9ff !important;
                 border: 1px solid #bae6fd !important;
                 font-weight: 700;
@@ -122,7 +122,7 @@
             }
             .badge-code-cpl {
                 background-color: #f0f9ff !important;
-                color: #0284c7 !important;
+                color: #006199 !important;
                 border: 1px solid #bae6fd !important;
                 font-weight: 700;
                 padding: 4px 10px;
@@ -131,20 +131,20 @@
                 display: inline-block;
             }
         @else
-            /* ── NON-APTIKOM Theme (Warm Amber/Gold Accent) ── */
+            /* ── NON-APTIKOM Theme (Sky Blue #76C0EC Accent) ── */
             .cpl-nav-pills .nav-link:hover {
-                color: #0284c7 !important;
-                background-color: #fffbe6 !important;
-                border-color: #fcd34d !important;
+                color: #76C0EC !important;
+                background-color: #f0f9ff !important;
+                border-color: #76C0EC !important;
             }
             .cpl-nav-pills .nav-link.active {
                 color: #ffffff !important;
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-                border-color: #0284c7 !important;
-                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
+                border-color: #76C0EC !important;
+                box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
             }
             .smt-nav-tabs .nav-link {
-                color: #0284c7 !important;
+                color: #76C0EC !important;
                 border: none !important;
                 border-bottom: 2px solid transparent !important;
                 padding: 10px 18px !important;
@@ -154,14 +154,14 @@
                 transition: all 0.2s ease !important;
             }
             .smt-nav-tabs .nav-link:hover {
-                color: #b45309 !important;
-                border-bottom: 2px solid #fcd34d !important;
+                color: #4faae5 !important;
+                border-bottom: 2px solid #76C0EC !important;
             }
             .smt-nav-tabs .nav-link.active {
-                color: #0284c7 !important;
+                color: #76C0EC !important;
                 font-weight: 700 !important;
                 border: none !important;
-                border-bottom: 3px solid #0284c7 !important;
+                border-bottom: 3px solid #76C0EC !important;
                 background: transparent !important;
             }
             .badge-code-cpmk {
@@ -221,7 +221,7 @@
         }
         .badge-code-mk {
             background-color: #f8fafc;
-            color: {{ $isAptikom ? '#0284c7' : '#0284c7' }};
+            color: {{ $isAptikom ? '#006199' : '#76C0EC' }};
             border: 1px solid #e2e8f0;
             font-weight: 700;
             padding: 3px 8px;

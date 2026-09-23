@@ -31,14 +31,15 @@
     $themeColor = AptikomTheme::resolve(auth()->user(), $themeColor ?? null);
     $navbarLogoDark = AptikomTheme::isColorDark($themeColor);
 
-    // --- Warna highlight menu aktif di sidebar (Biru seragam) ---
-    $sidebarActiveColor = '#007bff';
-    $sidebarActiveBg = 'rgba(0, 123, 255, 0.1)';
+    // --- Warna highlight menu aktif di sidebar (Aptikom #006199 / Non-Aptikom #76C0EC) ---
+    $themeHoverColor = $isAptikom ? '#004c78' : '#5bb0e5';
+    $sidebarActiveColor = $themeColor;
+    $sidebarActiveBg = $isAptikom ? 'rgba(0, 97, 153, 0.12)' : 'rgba(118, 192, 236, 0.18)';
 
     // --- Warna badge otoritas ---
-    $otoritasBadgeBg = '#e0f2fe';
-    $otoritasBadgeColor = '#0369a1';
-    $otoritasBadgeBorder = '#bae6fd';
+    $otoritasBadgeBg = $isAptikom ? 'rgba(0, 97, 153, 0.1)' : 'rgba(118, 192, 236, 0.18)';
+    $otoritasBadgeColor = $isAptikom ? '#006199' : '#2b7fb3';
+    $otoritasBadgeBorder = $isAptikom ? 'rgba(0, 97, 153, 0.3)' : 'rgba(118, 192, 236, 0.5)';
 
     // --- Warna badge prodi di header navbar ---
     $prodiHeaderBadgeBg = 'rgba(255, 255, 255, 0.25)';
@@ -350,16 +351,65 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
             margin-top: 3px !important;
         }
 
-        /* Focus State for all inputs & Select2 */
+        /* Focus State for all inputs, selects & Select2 matching prodi theme */
         .form-control:focus,
         .form-select:focus,
+        select:focus,
+        input:focus,
+        textarea:focus,
         .select2-container--default.select2-container--focus .select2-selection--single,
         .select2-container--default.select2-container--focus .select2-selection--multiple,
         .select2-container--open .select2-selection--single,
         .select2-container--open .select2-selection--multiple {
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+            border-color: {{ $themeColor }} !important;
+            box-shadow: 0 0 0 3px {{ $isAptikom ? 'rgba(0, 97, 153, 0.2)' : 'rgba(118, 192, 236, 0.3)' }} !important;
             outline: 0 !important;
+        }
+
+        /* Select2 & Native option selection highlights */
+        .select2-container--default .select2-results__option--highlighted[aria-selected],
+        .select2-container--bootstrap .select2-results__option--highlighted[aria-selected] {
+            background-color: {{ $themeColor }} !important;
+            color: #ffffff !important;
+        }
+
+        /* UNIFIED PAGINATION & NAV LINKS SYSTEM MATCHING PRODI THEME */
+        .pagination {
+            display: inline-flex !important;
+            border-radius: 8px !important;
+        }
+        .pagination .page-item .page-link,
+        .page-link,
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: {{ $themeColor }} !important;
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            transition: all 0.15s ease-in-out !important;
+        }
+        .pagination .page-item .page-link:hover,
+        .page-link:hover,
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            color: {{ $themeColor }} !important;
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+        .pagination .page-item.active .page-link,
+        .page-item.active .page-link,
+        .page-link.active,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background-color: {{ $themeColor }} !important;
+            background: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 2px 6px {{ $isAptikom ? 'rgba(0, 97, 153, 0.3)' : 'rgba(118, 192, 236, 0.4)' }} !important;
+        }
+        .pagination .page-item.disabled .page-link,
+        .page-link.disabled {
+            color: #94a3b8 !important;
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
         }
 
         /* Form Labels Uniformity */
@@ -597,7 +647,7 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
     width: 42px !important;
     height: 42px !important;
     border-radius: 50% !important;
-    border: 2.5px solid rgba(255, 255, 255, 0.95) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
     box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12) !important;
     transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     object-fit: cover !important;
@@ -656,18 +706,19 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
 }
 
 .navbar .navbar-dropdown .dropdown-item:hover {
-    background-color: #f1f5f9 !important;
-    color: #0284c7 !important;
+    background-color: {{ $sidebarActiveBg }} !important;
+    color: {{ $themeColor }} !important;
     transform: translateX(3px) !important;
 }
 
 .navbar .navbar-dropdown .dropdown-item i.dropdown-item-icon {
     font-size: 18px !important;
-    color: #0284c7 !important;
+    color: {{ $themeColor }} !important;
     transition: transform 0.18s ease !important;
 }
 
 .navbar .navbar-dropdown .dropdown-item:hover i.dropdown-item-icon {
+    color: {{ $themeColor }} !important;
     transform: scale(1.15) !important;
 }
 
@@ -752,10 +803,11 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
             </li>
         </ul>
         <ul class="navbar-nav ms-auto align-items-center">
-            <li class="nav-item d-none d-lg-block">
+            <li class="nav-item d-none d-lg-block ms-auto me-2">
                 <div class="d-flex align-items-center bg-white border rounded-pill px-3 py-1" style="height: 38px; border-color: #cbd5e1 !important; box-shadow: 0 2px 6px rgba(15,23,42,0.04);">
-                    <span class="fw-bold" style="font-size: 13px; color: #007bff;">
-                        {{ $isAptikom ? 'APTIKOM' : 'NON APTIKOM' }}
+                    <i class="mdi mdi-calendar-month-outline me-1.5" style="font-size: 15px; color: {{ $themeColor }};"></i>
+                    <span class="fw-bold" id="navbar-realtime-date" style="font-size: 13px; color: {{ $themeColor }};">
+                        {{ now()->format('d/m/Y') }}
                     </span>
                 </div>
             </li>
@@ -949,8 +1001,21 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
             updateNavbarTextColors(newColor);
         }
 
+        // Function to update real-time date (dd/mm/yyyy)
+        function updateRealtimeDate() {
+            const dateEl = document.getElementById('navbar-realtime-date');
+            if (dateEl) {
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                dateEl.textContent = `${day}/${month}/${year}`;
+            }
+        }
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            updateRealtimeDate();
             // Get the current background color from the navbar
             const navbarSection = document.querySelector('.navbar-themed-section');
             if (navbarSection) {

@@ -23,56 +23,56 @@
 
     <style>
         @if ($isAptikom)
-            /* ── APTIKOM Theme (Sky Blue Accent) ── */
+            /* ── APTIKOM Theme (Ocean Blue #006199 Accent) ── */
             .btn-primary, .bg-primary {
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-                border-color: #0284c7 !important;
+                background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
+                border-color: #006199 !important;
                 color: #ffffff !important;
             }
             .btn-primary:hover, .btn-primary:focus {
-                background: #0369a1 !important;
-                border-color: #0369a1 !important;
+                background: #004c78 !important;
+                border-color: #004c78 !important;
                 color: #ffffff !important;
             }
             .btn-outline-primary {
-                color: #0284c7 !important;
-                border-color: #0284c7 !important;
+                color: #006199 !important;
+                border-color: #006199 !important;
                 background-color: #ffffff !important;
             }
             .btn-outline-primary:hover, .btn-outline-primary.active, .btn-outline-primary:focus {
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
                 color: #ffffff !important;
-                border-color: #0284c7 !important;
-                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+                border-color: #006199 !important;
+                box-shadow: 0 4px 12px rgba(0, 97, 153, 0.28) !important;
             }
             .text-primary {
-                color: #0284c7 !important;
+                color: #006199 !important;
             }
         @else
-            /* ── NON-APTIKOM Theme (Warm Amber/Gold Accent) ── */
+            /* ── NON-APTIKOM Theme (Sky Blue #76C0EC Accent) ── */
             .btn-primary, .bg-primary {
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-                border-color: #0284c7 !important;
+                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
+                border-color: #76C0EC !important;
                 color: #ffffff !important;
             }
             .btn-primary:hover, .btn-primary:focus {
-                background: #b45309 !important;
-                border-color: #b45309 !important;
+                background: #4faae5 !important;
+                border-color: #4faae5 !important;
                 color: #ffffff !important;
             }
             .btn-outline-primary {
-                color: #0284c7 !important;
-                border-color: #0284c7 !important;
+                color: #76C0EC !important;
+                border-color: #76C0EC !important;
                 background-color: #ffffff !important;
             }
             .btn-outline-primary:hover, .btn-outline-primary.active, .btn-outline-primary:focus {
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
                 color: #ffffff !important;
-                border-color: #0284c7 !important;
-                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+                border-color: #76C0EC !important;
+                box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
             }
             .text-primary {
-                color: #0284c7 !important;
+                color: #76C0EC !important;
             }
         @endif
     </style>

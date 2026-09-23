@@ -1,28 +1,58 @@
+@php
+    $isAptikom = auth()->check() && auth()->user()->prodi ? (bool) auth()->user()->prodi->is_aptikom : true;
+@endphp
 <style>
-    /* Custom Theme Badges & Action Buttons */
-    .badge-cpl {
-        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-        color: #ffffff !important;
-        font-weight: 500;
-    }
-    .badge-cpmk {
-        background-color: #e0f2fe !important;
-        color: #0369a1 !important;
-        border: 1px solid #bae6fd !important;
-        font-weight: 600;
-    }
-    .btn-outline-primary {
-        color: #0284c7 !important;
-        background-color: #ffffff !important;
-        border-color: #0284c7 !important;
-        transition: all 0.2s ease-in-out !important;
-    }
-    .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active {
-        color: #ffffff !important;
-        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-        border-color: #0284c7 !important;
-        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
-    }
+    @if ($isAptikom)
+        /* ── APTIKOM Theme (Ocean Blue #006199 Accent) ── */
+        .badge-cpl {
+            background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
+            color: #ffffff !important;
+            font-weight: 500;
+        }
+        .badge-cpmk {
+            background-color: rgba(0, 97, 153, 0.12) !important;
+            color: #006199 !important;
+            border: 1px solid rgba(0, 97, 153, 0.3) !important;
+            font-weight: 600;
+        }
+        .btn-outline-primary {
+            color: #006199 !important;
+            background-color: #ffffff !important;
+            border-color: #006199 !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+        .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
+            border-color: #006199 !important;
+            box-shadow: 0 4px 12px rgba(0, 97, 153, 0.28) !important;
+        }
+    @else
+        /* ── NON-APTIKOM Theme (Sky Blue #76C0EC Accent) ── */
+        .badge-cpl {
+            background: linear-gradient(135deg, #76C0EC 0%, #5bb0e5 100%) !important;
+            color: #ffffff !important;
+            font-weight: 500;
+        }
+        .badge-cpmk {
+            background-color: rgba(118, 192, 236, 0.18) !important;
+            color: #76C0EC !important;
+            border: 1px solid rgba(118, 192, 236, 0.4) !important;
+            font-weight: 600;
+        }
+        .btn-outline-primary {
+            color: #76C0EC !important;
+            background-color: #ffffff !important;
+            border-color: #76C0EC !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+        .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #76C0EC 0%, #5bb0e5 100%) !important;
+            border-color: #76C0EC !important;
+            box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
+        }
+    @endif
     .btn-outline-danger {
         color: #dc3545 !important;
         background-color: #ffffff !important;

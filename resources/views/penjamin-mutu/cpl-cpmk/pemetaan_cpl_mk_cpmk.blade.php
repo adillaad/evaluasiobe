@@ -88,48 +88,64 @@
         }
 
         @if ($isAptikom)
-            /* ── APTIKOM Theme (Sky Blue Accent) ── */
+            /* ── APTIKOM Theme (Ocean Blue #006199 Accent) ── */
             .cpl-nav-pills .nav-link:hover {
-                color: #0284c7 !important;
+                color: #006199 !important;
                 background-color: #f0f9ff !important;
-                border-color: #38bdf8 !important;
+                border-color: #006199 !important;
             }
             .cpl-nav-pills .nav-link.active {
                 color: #ffffff !important;
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-                border-color: #0284c7 !important;
-                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+                background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
+                border-color: #006199 !important;
+                box-shadow: 0 4px 12px rgba(0, 97, 153, 0.28) !important;
             }
             .bg-primary-soft {
-                background-color: rgba(2, 132, 199, 0.12);
+                background-color: rgba(0, 97, 153, 0.12) !important;
+                color: #006199 !important;
             }
             .cpl-card-header {
                 background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-                border-left: 4px solid #0284c7;
+                border-left: 4px solid #006199;
                 border-radius: 8px;
                 padding: 16px;
             }
+            .badge.bg-primary, .cell-view-mode .badge.bg-primary, .cell-view-mode .badge {
+                background-color: #006199 !important;
+                color: #ffffff !important;
+            }
+            .double-table-head-data-top-right, .text-primary {
+                color: #006199 !important;
+            }
         @else
-            /* ── NON-APTIKOM Theme (Warm Amber/Gold Accent) ── */
+            /* ── NON-APTIKOM Theme (Sky Blue #76C0EC Accent) ── */
             .cpl-nav-pills .nav-link:hover {
-                color: #0284c7 !important;
-                background-color: #0ea5e9 !important;
-                border-color: #38bdf8 !important;
+                color: #76C0EC !important;
+                background-color: #f0f9ff !important;
+                border-color: #76C0EC !important;
             }
             .cpl-nav-pills .nav-link.active {
                 color: #ffffff !important;
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-                border-color: #0284c7 !important;
-                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
+                border-color: #76C0EC !important;
+                box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
             }
             .bg-primary-soft {
-                background-color: rgba(217, 119, 6, 0.12);
+                background-color: rgba(118, 192, 236, 0.18) !important;
+                color: #76C0EC !important;
             }
             .cpl-card-header {
-                background: linear-gradient(135deg, #fffbe6 0%, #fef3c7 100%);
-                border-left: 4px solid #0284c7;
+                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                border-left: 4px solid #76C0EC;
                 border-radius: 8px;
                 padding: 16px;
+            }
+            .badge.bg-primary, .cell-view-mode .badge.bg-primary, .cell-view-mode .badge {
+                background-color: #76C0EC !important;
+                color: #ffffff !important;
+            }
+            .double-table-head-data-top-right, .text-primary {
+                color: #76C0EC !important;
             }
         @endif
 

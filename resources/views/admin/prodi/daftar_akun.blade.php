@@ -50,28 +50,28 @@
         gap: 1.5rem;
     }
 
-    /* APTIKOM Card Styling (Blue Theme) */
+    /* APTIKOM Card Styling (Ocean Blue Theme) */
     .prodi-card-box.aptikom-card {
-        background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%) !important;
+        background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
         color: #ffffff !important;
-        box-shadow: 0 8px 24px rgba(2, 132, 199, 0.22) !important;
+        box-shadow: 0 8px 24px rgba(0, 97, 153, 0.22) !important;
     }
 
     .prodi-card-box.aptikom-card:hover {
         transform: translateY(-5px) scale(1.01) !important;
-        box-shadow: 0 16px 32px rgba(2, 132, 199, 0.35) !important;
+        box-shadow: 0 16px 32px rgba(0, 97, 153, 0.35) !important;
     }
 
-    /* NON-APTIKOM Card Styling (Yellow Theme) */
+    /* NON-APTIKOM Card Styling (Sky Blue Theme) */
     .prodi-card-box.non-aptikom-card {
-        background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%) !important;
+        background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
         color: #ffffff !important;
-        box-shadow: 0 8px 24px rgba(217, 119, 6, 0.22) !important;
+        box-shadow: 0 8px 24px rgba(118, 192, 236, 0.22) !important;
     }
 
     .prodi-card-box.non-aptikom-card:hover {
         transform: translateY(-5px) scale(1.01) !important;
-        box-shadow: 0 16px 32px rgba(217, 119, 6, 0.35) !important;
+        box-shadow: 0 16px 32px rgba(118, 192, 236, 0.35) !important;
     }
 
     .prodi-card-box {

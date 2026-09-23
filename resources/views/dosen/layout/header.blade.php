@@ -121,10 +121,14 @@
             border-color: #0284c7 !important;
             color: #ffffff !important;
         }
+        .btn-outline-primary:hover *, .btn-outline-primary:focus *,
+        .btn-outline-primary:active *, .btn-outline-primary.active *,
         .btn-outline-primary:hover i, .btn-outline-primary:hover i::before,
         .btn-outline-primary:focus i, .btn-outline-primary:focus i::before,
         .btn-outline-primary:active i, .btn-outline-primary:active i::before,
         .btn-outline-primary.active i, .btn-outline-primary.active i::before,
+        .btn-outline-primary:hover span, .btn-outline-primary:focus span,
+        .btn-outline-primary:active span, .btn-outline-primary.active span,
         .btn-outline-primary:hover svg, .btn-outline-primary:focus svg,
         .btn-outline-primary:active svg, .btn-outline-primary.active svg {
             color: #ffffff !important;
@@ -195,6 +199,71 @@
         }
         .btn-icon-text svg {
             stroke: #ffffff !important;
+        }
+
+        /* UNIFIED MATRIX EDIT BANNER STYLES - LIGHT BLUE, HIGH CONTRAST & LEGIBLE */
+        #matrix-edit-banner, .matrix-banner-style {
+            background-color: #f0f9ff !important;
+            border: 1px solid #bae6fd !important;
+            border-left: 5px solid #0284c7 !important;
+            color: #1e293b !important;
+        }
+        #matrix-edit-banner h6, #matrix-edit-banner .text-primary, .matrix-banner-style h6, .matrix-title-style {
+            color: #0369a1 !important;
+            font-weight: 700 !important;
+        }
+        #matrix-edit-banner small, #matrix-edit-banner .text-secondary, .matrix-banner-style small {
+            color: #475569 !important;
+            font-weight: 500 !important;
+        }
+        #matrix-edit-banner .badge, .matrix-badge-style {
+            background-color: #0284c7 !important;
+            color: #ffffff !important;
+        }
+        #matrix-edit-banner .btn,
+        #matrix-edit-banner button,
+        .matrix-banner-style .btn,
+        .matrix-banner-style button {
+            height: 36px !important;
+            min-height: 36px !important;
+            max-height: 36px !important;
+            padding: 0 20px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            line-height: 1 !important;
+            border-radius: 20px !important;
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            text-align: center !important;
+        }
+        #matrix-edit-banner .btn *,
+        .matrix-banner-style .btn * {
+            white-space: nowrap !important;
+            line-height: 1 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 !important;
+        }
+        #matrix-edit-banner .btn-light, .matrix-banner-style .btn-light {
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #334155 !important;
+            font-weight: 600 !important;
+        }
+        #matrix-edit-banner .btn-light:hover, .matrix-banner-style .btn-light:hover {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+        #matrix-edit-banner .btn-primary, .matrix-banner-style .btn-primary {
+            background-color: #0284c7 !important;
+            border-color: #0284c7 !important;
+            color: #ffffff !important;
         }
 
         /* Fix DataTables Controls Layout & Structure */

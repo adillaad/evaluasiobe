@@ -48,8 +48,8 @@
         }
 
         .gate-header-bar {
-            background-color: #0052cc;
-            background: linear-gradient(90deg, #0040a8 0%, #0052cc 100%);
+            background-color: #006199;
+            background: linear-gradient(90deg, #006199 0%, #004c78 100%);
             color: #ffffff;
             padding: 18px 28px;
             display: flex;
@@ -147,19 +147,19 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         }
 
-        /* APTIKOM Card (SOLID ROYAL BLUE) */
+        /* APTIKOM Card (SOLID OCEAN BLUE) */
         .prodi-card.aptikom-blue {
-            background-color: #0052cc;
-            background: linear-gradient(135deg, #0052cc 0%, #0040a8 100%);
-            border: 1px solid #0040a8;
+            background-color: #006199;
+            background: linear-gradient(135deg, #006199 0%, #004c78 100%);
+            border: 1px solid #004c78;
             color: #ffffff;
         }
 
-        /* NON-APTIKOM Card (SOLID AMBER GOLD) */
+        /* NON-APTIKOM Card (SOLID SKY BLUE #76C0EC) */
         .prodi-card.non-aptikom-yellow {
-            background-color: #0284c7;
-            background: linear-gradient(135deg, #0284c7 0%, #b45309 100%);
-            border: 1px solid #b45309;
+            background-color: #76C0EC;
+            background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%);
+            border: 1px solid #4faae5;
             color: #ffffff;
         }
 
@@ -229,11 +229,11 @@
         }
 
         .aptikom-blue .btn-select-modul {
-            color: #0040a8;
+            color: #006199;
         }
 
         .non-aptikom-yellow .btn-select-modul {
-            color: #b45309;
+            color: #004c78;
         }
 
         .btn-select-modul:hover {

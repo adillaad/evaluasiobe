@@ -30,23 +30,23 @@
 <style>
     @if ($isAptikom)
         .btn-primary {
-            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-            border-color: #0284c7 !important;
+            background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
+            border-color: #006199 !important;
             color: #ffffff !important;
         }
         .btn-primary:hover, .btn-primary:focus {
-            background: #0369a1 !important;
-            border-color: #0369a1 !important;
+            background: #004c78 !important;
+            border-color: #004c78 !important;
         }
     @else
         .btn-primary {
-            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-            border-color: #0284c7 !important;
+            background: linear-gradient(135deg, #76C0EC 0%, #5bb0e5 100%) !important;
+            border-color: #76C0EC !important;
             color: #ffffff !important;
         }
         .btn-primary:hover, .btn-primary:focus {
-            background: #b45309 !important;
-            border-color: #b45309 !important;
+            background: #5bb0e5 !important;
+            border-color: #5bb0e5 !important;
         }
     @endif
 </style>

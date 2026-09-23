@@ -6,9 +6,9 @@ use App\Models\User;
 
 class AptikomTheme
 {
-    public const APTIKOM_COLOR = '#007bff';
+    public const APTIKOM_COLOR = '#006199';
 
-    public const NON_APTIKOM_COLOR = '#007bff';
+    public const NON_APTIKOM_COLOR = '#76C0EC';
 
     public static function resolve(?User $user, ?string $fallback = null): string
     {

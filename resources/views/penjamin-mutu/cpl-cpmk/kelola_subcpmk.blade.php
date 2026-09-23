@@ -29,26 +29,26 @@
 
     <style>
         @if ($isAptikom)
-            /* ── APTIKOM Theme (Sky Blue Accent) ── */
+            /* ── APTIKOM Theme (Ocean Blue #006199 Accent) ── */
             .cpl-nav-pills .nav-link.active {
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
                 color: #ffffff !important;
-                border-color: #0284c7 !important;
-                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+                border-color: #006199 !important;
+                box-shadow: 0 4px 12px rgba(0, 97, 153, 0.28) !important;
             }
             .text-primary-accent {
-                color: #0284c7 !important;
+                color: #006199 !important;
             }
         @else
-            /* ── NON-APTIKOM Theme (Warm Amber/Gold Accent) ── */
+            /* ── NON-APTIKOM Theme (Sky Blue #76C0EC Accent) ── */
             .cpl-nav-pills .nav-link.active {
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
                 color: #ffffff !important;
-                border-color: #0284c7 !important;
-                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+                border-color: #76C0EC !important;
+                box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
             }
             .text-primary-accent {
-                color: #0284c7 !important;
+                color: #76C0EC !important;
             }
         @endif
         .cpl-tabs-wrapper {

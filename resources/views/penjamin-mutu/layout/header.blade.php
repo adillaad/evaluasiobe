@@ -1,3 +1,9 @@
+@php
+    use App\Support\AptikomTheme;
+    $isAptikomHeader = auth()->check() && auth()->user()->prodi ? (bool) auth()->user()->prodi->is_aptikom : true;
+    $themeHeaderColor = AptikomTheme::resolve(auth()->user(), $themeColor ?? null);
+    $themeHeaderHoverColor = $isAptikomHeader ? '#004c78' : '#5bb0e5';
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -88,42 +94,91 @@
         }
 
         /* UNIFIED GLOBAL BUTTON COLOR STYLES & OUTLINE ICON STATES */
-        .btn-primary, a.btn-primary, button.btn-primary {
-            background-color: #0284c7 !important;
-            border-color: #0284c7 !important;
+        .btn-primary, a.btn-primary, button.btn-primary,
+        .btn-info, a.btn-info, button.btn-info,
+        .btn-cyan, a.btn-cyan, button.btn-cyan,
+        .modern-btn-primary, .btn-theme-cetak {
+            background-color: {{ $themeHeaderColor }} !important;
+            background: {{ $themeHeaderColor }} !important;
+            border-color: {{ $themeHeaderColor }} !important;
             color: #ffffff !important;
         }
-        .btn-primary i, .btn-primary i::before, .btn-primary span, .btn-primary svg {
+        .btn-primary i, .btn-primary i::before, .btn-primary span, .btn-primary svg,
+        .btn-info i, .btn-info i::before, .btn-info span, .btn-info svg,
+        .btn-cyan i, .btn-cyan i::before, .btn-cyan span, .btn-cyan svg,
+        .modern-btn-primary i, .modern-btn-primary span,
+        .btn-theme-cetak i, .btn-theme-cetak span {
             color: #ffffff !important;
             stroke: #ffffff !important;
             fill: #ffffff !important;
         }
         .btn-primary:hover, .btn-primary:focus, .btn-primary:active,
-        a.btn-primary:hover, a.btn-primary:focus, a.btn-primary:active {
-            background-color: #0369a1 !important;
-            border-color: #0369a1 !important;
+        a.btn-primary:hover, a.btn-primary:focus, a.btn-primary:active,
+        .btn-info:hover, .btn-info:focus, .btn-info:active,
+        a.btn-info:hover, a.btn-info:focus, a.btn-info:active,
+        .btn-cyan:hover, .btn-cyan:focus, .btn-cyan:active,
+        a.btn-cyan:hover, a.btn-cyan:focus, a.btn-cyan:active,
+        .modern-btn-primary:hover, .btn-theme-cetak:hover {
+            background-color: {{ $themeHeaderHoverColor }} !important;
+            background: {{ $themeHeaderHoverColor }} !important;
+            border-color: {{ $themeHeaderHoverColor }} !important;
             color: #ffffff !important;
         }
 
-        .btn-outline-primary, a.btn-outline-primary, button.btn-outline-primary {
-            border: 1px solid #0284c7 !important;
+        .btn-outline-primary, a.btn-outline-primary, button.btn-outline-primary,
+        .btn-outline-info, a.btn-outline-info, button.btn-outline-info {
+            border: 1px solid {{ $themeHeaderColor }} !important;
             background-color: transparent !important;
-            color: #0284c7 !important;
+            color: {{ $themeHeaderColor }} !important;
         }
-        .btn-outline-primary i, .btn-outline-primary i::before, .btn-outline-primary span, .btn-outline-primary svg {
-            color: #0284c7 !important;
-            stroke: #0284c7 !important;
+        .btn-outline-primary i, .btn-outline-primary i::before, .btn-outline-primary span, .btn-outline-primary svg,
+        .btn-outline-info i, .btn-outline-info i::before, .btn-outline-info span, .btn-outline-info svg {
+            color: {{ $themeHeaderColor }} !important;
+            stroke: {{ $themeHeaderColor }} !important;
         }
         .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active, .btn-outline-primary.active,
-        a.btn-outline-primary:hover, a.btn-outline-primary:focus, a.btn-outline-primary:active, a.btn-outline-primary.active {
-            background-color: #0284c7 !important;
-            border-color: #0284c7 !important;
+        a.btn-outline-primary:hover, a.btn-outline-primary:focus, a.btn-outline-primary:active, a.btn-outline-primary.active,
+        .btn-outline-info:hover, .btn-outline-info:focus, .btn-outline-info:active, .btn-outline-info.active,
+        a.btn-outline-info:hover, a.btn-outline-info:focus, a.btn-outline-info:active, a.btn-outline-info.active {
+            background-color: {{ $themeHeaderColor }} !important;
+            border-color: {{ $themeHeaderColor }} !important;
             color: #ffffff !important;
         }
+
+        /* UNIFIED GLOBAL ACCENT STYLES FOR BADGES & UI ELEMENTS */
+        .bg-primary,
+        .badge.bg-primary,
+        .badge-primary,
+        .badge-info,
+        .badge-cyan,
+        .badge-system,
+        span.bg-primary {
+            background-color: {{ $themeHeaderColor }} !important;
+            background: {{ $themeHeaderColor }} !important;
+            color: #ffffff !important;
+        }
+
+        .text-primary,
+        th .text-primary,
+        td .text-primary,
+        .text-theme-accent {
+            color: {{ $themeHeaderColor }} !important;
+        }
+
+        .bg-primary-soft,
+        .badge-system-outline {
+            background-color: {{ $isAptikomHeader ? 'rgba(0, 97, 153, 0.12)' : 'rgba(118, 192, 236, 0.18)' }} !important;
+            color: {{ $themeHeaderColor }} !important;
+            border: 1px solid {{ $isAptikomHeader ? 'rgba(0, 97, 153, 0.3)' : 'rgba(118, 192, 236, 0.4)' }} !important;
+        }
+        .btn-outline-primary:hover *, .btn-outline-primary:focus *,
+        .btn-outline-primary:active *, .btn-outline-primary.active *,
         .btn-outline-primary:hover i, .btn-outline-primary:hover i::before,
         .btn-outline-primary:focus i, .btn-outline-primary:focus i::before,
         .btn-outline-primary:active i, .btn-outline-primary:active i::before,
         .btn-outline-primary.active i, .btn-outline-primary.active i::before,
+        .btn-outline-primary:hover span, .btn-outline-primary:focus span,
+        .btn-outline-primary:active span, .btn-outline-primary.active span,
         .btn-outline-primary:hover svg, .btn-outline-primary:focus svg,
         .btn-outline-primary:active svg, .btn-outline-primary.active svg {
             color: #ffffff !important;
@@ -194,6 +249,71 @@
         }
         .btn-icon-text svg {
             stroke: #ffffff !important;
+        }
+
+        /* UNIFIED MATRIX EDIT BANNER STYLES - LIGHT BLUE, HIGH CONTRAST & LEGIBLE */
+        #matrix-edit-banner, .matrix-banner-style {
+            background-color: #f0f9ff !important;
+            border: 1px solid #bae6fd !important;
+            border-left: 5px solid #0284c7 !important;
+            color: #1e293b !important;
+        }
+        #matrix-edit-banner h6, #matrix-edit-banner .text-primary, .matrix-banner-style h6, .matrix-title-style {
+            color: #0369a1 !important;
+            font-weight: 700 !important;
+        }
+        #matrix-edit-banner small, #matrix-edit-banner .text-secondary, .matrix-banner-style small {
+            color: #475569 !important;
+            font-weight: 500 !important;
+        }
+        #matrix-edit-banner .badge, .matrix-badge-style {
+            background-color: #0284c7 !important;
+            color: #ffffff !important;
+        }
+        #matrix-edit-banner .btn,
+        #matrix-edit-banner button,
+        .matrix-banner-style .btn,
+        .matrix-banner-style button {
+            height: 36px !important;
+            min-height: 36px !important;
+            max-height: 36px !important;
+            padding: 0 20px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            line-height: 1 !important;
+            border-radius: 20px !important;
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            text-align: center !important;
+        }
+        #matrix-edit-banner .btn *,
+        .matrix-banner-style .btn * {
+            white-space: nowrap !important;
+            line-height: 1 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 !important;
+        }
+        #matrix-edit-banner .btn-light, .matrix-banner-style .btn-light {
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #334155 !important;
+            font-weight: 600 !important;
+        }
+        #matrix-edit-banner .btn-light:hover, .matrix-banner-style .btn-light:hover {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+        #matrix-edit-banner .btn-primary, .matrix-banner-style .btn-primary {
+            background-color: #0284c7 !important;
+            border-color: #0284c7 !important;
+            color: #ffffff !important;
         }
 
         /* Fix DataTables Controls Layout & Structure */
@@ -268,6 +388,45 @@
             margin-top: 0.75rem !important;
         }
 
+        /* UNIFIED PAGINATION & NAV LINKS SYSTEM MATCHING PRODI THEME */
+        .pagination {
+            display: inline-flex !important;
+            border-radius: 8px !important;
+        }
+        .pagination .page-item .page-link,
+        .page-link,
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: {{ $themeHeaderColor }} !important;
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            transition: all 0.15s ease-in-out !important;
+        }
+        .pagination .page-item .page-link:hover,
+        .page-link:hover,
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            color: {{ $themeHeaderColor }} !important;
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+        .pagination .page-item.active .page-link,
+        .page-item.active .page-link,
+        .page-link.active,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background-color: {{ $themeHeaderColor }} !important;
+            background: {{ $themeHeaderColor }} !important;
+            border-color: {{ $themeHeaderColor }} !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 2px 6px {{ $isAptikomHeader ? 'rgba(0, 97, 153, 0.3)' : 'rgba(118, 192, 236, 0.4)' }} !important;
+        }
+        .pagination .page-item.disabled .page-link,
+        .page-link.disabled {
+            color: #94a3b8 !important;
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+
         /* UNIFIED GLOBAL FORM INPUT SYSTEM */
         .form-control,
         .form-select,
@@ -331,16 +490,26 @@
             margin-top: 3px !important;
         }
 
-        /* Focus State for all inputs & Select2 */
+        /* Focus State for all inputs, selects & Select2 matching prodi theme */
         .form-control:focus,
         .form-select:focus,
+        select:focus,
+        input:focus,
+        textarea:focus,
         .select2-container--default.select2-container--focus .select2-selection--single,
         .select2-container--default.select2-container--focus .select2-selection--multiple,
         .select2-container--open .select2-selection--single,
         .select2-container--open .select2-selection--multiple {
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+            border-color: {{ $themeHeaderColor }} !important;
+            box-shadow: 0 0 0 3px {{ $isAptikomHeader ? 'rgba(0, 97, 153, 0.2)' : 'rgba(118, 192, 236, 0.3)' }} !important;
             outline: 0 !important;
+        }
+
+        /* Select2 & Native option selection highlights */
+        .select2-container--default .select2-results__option--highlighted[aria-selected],
+        .select2-container--bootstrap .select2-results__option--highlighted[aria-selected] {
+            background-color: {{ $themeHeaderColor }} !important;
+            color: #ffffff !important;
         }
 
         /* Form Labels Uniformity */

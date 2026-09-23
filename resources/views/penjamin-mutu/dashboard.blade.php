@@ -65,10 +65,10 @@
         }
 
         @if ($isAptikom)
-            /* Aptikom Color Accents (Blue Theme) */
-            .card-accent-1 { border: 1px solid rgba(2, 132, 199, 0.25) !important; border-top: 4px solid #0284c7 !important; }
-            .card-accent-1 .card-value { color: #0284c7 !important; }
-            .card-accent-1 .icon-badge { background: rgba(2, 132, 199, 0.12) !important; color: #0284c7 !important; }
+            /* Aptikom Color Accents (Ocean Blue Theme) */
+            .card-accent-1 { border: 1px solid rgba(0, 97, 153, 0.25) !important; border-top: 4px solid #006199 !important; }
+            .card-accent-1 .card-value { color: #006199 !important; }
+            .card-accent-1 .icon-badge { background: rgba(0, 97, 153, 0.12) !important; color: #006199 !important; }
 
             .card-accent-2 { border: 1px solid rgba(16, 185, 129, 0.25) !important; border-top: 4px solid #10b981 !important; }
             .card-accent-2 .card-value { color: #059669 !important; }
@@ -78,9 +78,9 @@
             .card-accent-3 .card-value { color: #e11d48 !important; }
             .card-accent-3 .icon-badge { background: rgba(225, 29, 72, 0.12) !important; color: #e11d48 !important; }
 
-            .card-accent-4 { border: 1px solid rgba(217, 119, 6, 0.25) !important; border-top: 4px solid #0284c7 !important; }
-            .card-accent-4 .card-value { color: #0284c7 !important; }
-            .card-accent-4 .icon-badge { background: rgba(217, 119, 6, 0.12) !important; color: #0284c7 !important; }
+            .card-accent-4 { border: 1px solid rgba(0, 97, 153, 0.25) !important; border-top: 4px solid #006199 !important; }
+            .card-accent-4 .card-value { color: #006199 !important; }
+            .card-accent-4 .icon-badge { background: rgba(0, 97, 153, 0.12) !important; color: #006199 !important; }
         @else
             /* Non-Aptikom Color Accents (Gold/Amber Theme) */
             .card-accent-1 { border: 1px solid rgba(217, 119, 6, 0.3) !important; border-top: 4px solid #b45309 !important; }
@@ -119,7 +119,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            border-bottom: 3px solid {{ $isAptikom ? '#007bff' : '#0284c7' }};
+            border-bottom: 3px solid {{ $isAptikom ? '#006199' : '#76C0EC' }};
             padding-bottom: 6px;
             margin-bottom: 1.25rem;
         }

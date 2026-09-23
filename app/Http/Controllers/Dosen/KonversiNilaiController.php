@@ -760,37 +760,62 @@ class KonversiNilaiController extends Controller
                     }
 
                     $offset = ($nilaiMetodeColIdx !== null) ? ($nilaiMetodeColIdx + 1) : 5;
+                    $usedCmIds = [];
 
                     foreach ($headerRow as $colIdx => $colName) {
                         if ($colIdx < 5) continue; // Kolom 0: TA, 1: Nama MK, 2: Angkatan, 3: NPM, 4: Nama
                         if ($nilaiMetodeColIdx !== null && $colIdx === $nilaiMetodeColIdx) continue; // Skip kolom Nilai Metode murni
 
+                        $colNameClean = trim((string)$colName);
                         $matchedCm = null;
-                        foreach ($cmItems as $cm) {
-                            $cpmkKode = $cm->cpmk?->kode ?? ('CPMK-' . $cm->cpmk_id);
-                            $expectedLabel1 = !empty($cm->nama_soal) ? ($cm->nama_soal . ' - ' . $cpmkKode) : $cpmkKode;
-                            $expectedLabel2 = !empty($cm->nama_soal) ? ($cm->nama_soal . ' (' . $cpmkKode . ')') : $cpmkKode;
-                            $expectedLabel3 = $cm->nama_soal ?: $cpmkKode;
 
-                            if (strcasecmp(trim($colName), trim($expectedLabel1)) === 0 ||
-                                strcasecmp(trim($colName), trim($expectedLabel2)) === 0 ||
-                                strcasecmp(trim($colName), trim($expectedLabel3)) === 0 ||
-                                strcasecmp(trim($colName), trim($cpmkKode)) === 0 ||
-                                strpos(strtolower($colName), strtolower($cpmkKode)) !== false) {
+                        // 1. Precise check: match nama_soal + cpmkKode or exact nama_soal
+                        foreach ($cmItems as $cm) {
+                            if (in_array($cm->id, $usedCmIds)) continue;
+
+                            $cpmkKode = $cm->cpmk?->kode ?? ('CPMK-' . $cm->cpmk_id);
+                            $soalName = $cm->nama_soal ?: '';
+
+                            $expectedLabel1 = !empty($soalName) ? ($soalName . ' - ' . $cpmkKode) : $cpmkKode;
+                            $expectedLabel2 = !empty($soalName) ? ($soalName . ' (' . $cpmkKode . ')') : $cpmkKode;
+                            $expectedLabel3 = $soalName;
+
+                            if ((!empty($expectedLabel1) && strcasecmp($colNameClean, trim($expectedLabel1)) === 0) ||
+                                (!empty($expectedLabel2) && strcasecmp($colNameClean, trim($expectedLabel2)) === 0) ||
+                                (!empty($expectedLabel3) && strcasecmp($colNameClean, trim($expectedLabel3)) === 0)) {
                                 $matchedCm = $cm;
                                 break;
                             }
                         }
 
-                        // Fallback matching berdasar urutan jika tidak ketemu persis
+                        // 2. Partial check on nama_soal if header contains specific question name
                         if (!$matchedCm) {
-                            $idxInGroup = $colIdx - $offset;
-                            if ($idxInGroup >= 0 && isset($cmItems[$idxInGroup])) {
+                            foreach ($cmItems as $cm) {
+                                if (in_array($cm->id, $usedCmIds)) continue;
+                                if (!empty($cm->nama_soal) && strpos(strtolower($colNameClean), strtolower(trim($cm->nama_soal))) !== false) {
+                                    $matchedCm = $cm;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // 3. Fallback matching berdasar urutan item yang belum terpakai
+                        if (!$matchedCm) {
+                            $idxInGroup = ($nilaiMetodeColIdx !== null && $colIdx > $nilaiMetodeColIdx) ? ($colIdx - $nilaiMetodeColIdx - 1) : ($colIdx - 5);
+                            if (isset($cmItems[$idxInGroup]) && !in_array($cmItems[$idxInGroup]->id, $usedCmIds)) {
                                 $matchedCm = $cmItems[$idxInGroup];
+                            } else {
+                                foreach ($cmItems as $cm) {
+                                    if (!in_array($cm->id, $usedCmIds)) {
+                                        $matchedCm = $cm;
+                                        break;
+                                    }
+                                }
                             }
                         }
 
                         if ($matchedCm) {
+                            $usedCmIds[] = $matchedCm->id;
                             $columnMap[$colIdx] = [
                                 'type' => 'breakdown_soal',
                                 'km' => $targetKm,
@@ -1061,8 +1086,25 @@ class KonversiNilaiController extends Controller
                             $nilaiMetodeVal = (float) $item['scores'][$metodeColIdx];
                         }
 
-                        // Jika kolom Nilai Metode murni diisi, gunakan nilainya untuk 'Nilai'. Jika tidak, fallback ke $scoreVal
-                        $finalNilaiMetode = ($nilaiMetodeVal !== null) ? $nilaiMetodeVal : $scoreVal;
+                        // Jika kolom Nilai Metode murni tidak diisi, hitung rata-rata berbobot dari seluruh soal breakdown pada metode ini
+                        if ($nilaiMetodeVal === null) {
+                            $kmCols = collect($columnMap)->filter(fn($col) => ($col['km']->id ?? null) === $km->id && ($col['type'] ?? '') === 'breakdown_soal');
+                            $totalW = 0;
+                            $weightedSum = 0;
+                            foreach ($kmCols as $cIdx => $cMeta) {
+                                if (isset($item['scores'][$cIdx]) && $item['scores'][$cIdx] !== '') {
+                                    $sc = (float) $item['scores'][$cIdx];
+                                    $w = ($cMeta['cm']->bobot_soal ?? 0) > 0 ? (float)$cMeta['cm']->bobot_soal : 1;
+                                    $weightedSum += ($sc * $w);
+                                    $totalW += $w;
+                                }
+                            }
+                            $finalNilaiMetode = ($totalW > 0) ? ($weightedSum / $totalW) : $scoreVal;
+                        } else {
+                            $finalNilaiMetode = $nilaiMetodeVal;
+                        }
+
+                        $soalName = !empty($cm->nama_soal) ? $cm->nama_soal : ('Soal #' . $cm->id);
 
                         Mutu::updateOrCreate(
                             [
@@ -1070,7 +1112,7 @@ class KonversiNilaiController extends Controller
                                 'Course' => $konversi->mk_kode,
                                 'konversi_metode_id' => $km->id,
                                 'Cpmk' => $cm->cpmk_id,
-                                'soal' => $cm->nama_soal ?: ('Soal ' . $cm->cpmk_id),
+                                'soal' => $soalName,
                                 'sumber' => 'konversi',
                             ],
                             [

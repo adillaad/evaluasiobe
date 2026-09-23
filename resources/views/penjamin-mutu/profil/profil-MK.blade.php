@@ -96,20 +96,20 @@
         }
 
         @if ($isAptikom)
-            /* ── APTIKOM Theme (Sky Blue Accent) ── */
+            /* ── APTIKOM Theme (Ocean Blue #006199 Accent) ── */
             .custom-kurikulum-tabs .nav-link:hover {
-                color: #0284c7;
+                color: #006199;
                 background: #f0f9ff;
-                border-color: #38bdf8;
+                border-color: #006199;
             }
             .custom-kurikulum-tabs .nav-link.active {
                 color: #ffffff !important;
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-                border-color: #0284c7 !important;
-                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+                background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
+                border-color: #006199 !important;
+                box-shadow: 0 4px 12px rgba(0, 97, 153, 0.28) !important;
             }
             .code-profil-badge {
-                color: #0284c7;
+                color: #006199;
                 font-weight: 700;
                 font-size: 13.5px;
                 background: #f0f9ff;
@@ -119,7 +119,7 @@
                 display: inline-block;
             }
             .code-mk-badge {
-                color: #0369a1;
+                color: #006199;
                 font-weight: 700;
                 font-size: 13px;
                 background: #e0f2fe;
@@ -141,49 +141,49 @@
                 border-color: #0369a1 !important;
             }
         @else
-            /* ── NON-APTIKOM Theme (Warm Amber/Gold Accent) ── */
+            /* ── Non-APTIKOM Theme (Sky Blue #76C0EC Accent) ── */
             .custom-kurikulum-tabs .nav-link:hover {
-                color: #0284c7;
-                background: #fffbe6;
-                border-color: #fcd34d;
+                color: #76C0EC;
+                background: #f0f9ff;
+                border-color: #76C0EC;
             }
             .custom-kurikulum-tabs .nav-link.active {
                 color: #ffffff !important;
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
-                border-color: #0284c7 !important;
-                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28) !important;
+                background: linear-gradient(135deg, #76C0EC 0%, #5bb0e5 100%) !important;
+                border-color: #76C0EC !important;
+                box-shadow: 0 4px 12px rgba(118, 192, 236, 0.35) !important;
             }
             .code-profil-badge {
-                color: #b45309;
+                color: #2b7fb3;
                 font-weight: 700;
                 font-size: 13.5px;
-                background: #fffbe6;
-                border: 1px solid #fde68a;
+                background: #f0f9ff;
+                border: 1px solid #bae6fd;
                 padding: 4px 10px;
                 border-radius: 8px;
                 display: inline-block;
             }
             .code-mk-badge {
-                color: #c2410c;
+                color: #2b7fb3;
                 font-weight: 700;
                 font-size: 13px;
-                background: #ffedd5;
-                border: 1px solid #fed7aa;
+                background: #e0f2fe;
+                border: 1px solid #bae6fd;
                 padding: 4px 9px;
                 border-radius: 6px;
                 display: inline-block;
             }
             .text-theme-accent {
-                color: #0284c7 !important;
+                color: #76C0EC !important;
             }
             .btn-theme-cetak {
-                background-color: #0284c7 !important;
-                border-color: #0284c7 !important;
+                background-color: #76C0EC !important;
+                border-color: #76C0EC !important;
                 color: #ffffff !important;
             }
             .btn-theme-cetak:hover {
-                background-color: #b45309 !important;
-                border-color: #b45309 !important;
+                background-color: #5bb0e5 !important;
+                border-color: #5bb0e5 !important;
             }
         @endif
 
