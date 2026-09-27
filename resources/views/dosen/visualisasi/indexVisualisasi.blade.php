@@ -174,51 +174,50 @@
             flex: 0 0 100% !important;
         }
 
-        /* Student Profile Hero Header (Fixed / Sticky when scrolling, Prominent, Neat Alignment) */
+        /* Student Profile Hero Header (Compact & Non-Sticky) */
         .student-profile-hero {
-            position: -webkit-sticky !important;
-            position: sticky !important;
-            top: 75px !important;
-            z-index: 1020 !important;
+            position: relative !important;
+            top: auto !important;
+            z-index: 1 !important;
             background: #ffffff !important;
             border: 1px solid #e2e8f0;
-            border-left: 5px solid #1F3BB3 !important;
-            border-radius: 14px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            padding: 20px 28px;
-            margin-bottom: 24px;
+            border-left: 4px solid #1F3BB3 !important;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            padding: 12px 20px;
+            margin-bottom: 16px;
         }
 
         .student-label-tag {
-            font-size: 0.75rem;
+            font-size: 0.68rem;
             font-weight: 700;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.06em;
             text-transform: uppercase;
             color: #1F3BB3;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .student-name-text {
-            font-size: 1.65rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: #0f172a;
-            line-height: 1.25;
-            margin-bottom: 10px;
-            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin-bottom: 4px;
+            letter-spacing: -0.01em;
         }
 
         .student-meta-row {
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 8px;
         }
 
         .meta-item {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.88rem;
+            gap: 4px;
+            font-size: 0.82rem;
         }
 
         .meta-label {
@@ -732,44 +731,42 @@
     {{-- ========================================================================= --}}
     <div id="visualContainer" style="display:none;">
 
-        {{-- HERO PROFILE CARD (Sticky, Clean, Solid Alignment) --}}
+        {{-- HERO PROFILE CARD (Static Modern Display) --}}
         <div class="student-profile-hero">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
                     <div class="student-label-tag">PROFIL MAHASISWA</div>
-                    <h3 class="student-name-text" id="displayNamaMahasiswa">-</h3>
+                    <h3 class="student-name-text" id="displayNamaMhs">-</h3>
                     <div class="student-meta-row">
                         <div class="meta-item">
                             <span class="meta-label">NPM:</span>
-                            <span class="meta-value" id="npmDataText">-</span>
+                            <span class="meta-value font-monospace text-primary fw-bold" id="displayNpmMhs">-</span>
                         </div>
                         <span class="meta-pipe">|</span>
                         <div class="meta-item">
                             <span class="meta-label">Angkatan:</span>
-                            <span class="meta-value" id="angkatanDataText">-</span>
+                            <span class="meta-value text-dark" id="displayAngkatanMhs">-</span>
                         </div>
                         <span class="meta-pipe">|</span>
                         <div class="meta-item">
                             <span class="meta-label">Program Studi:</span>
-                            <span class="meta-value" id="prodiDataText">-</span>
+                            <span class="meta-value text-dark" id="displayProdiMhs">-</span>
+                        </div>
+                        <span class="meta-pipe">|</span>
+                        <div class="meta-item">
+                            <span class="meta-label">Universitas:</span>
+                            <span class="meta-value text-secondary" id="displayUniversitasMhs">-</span>
                         </div>
                     </div>
                 </div>
 
                 {{-- Toolbar Tombol Aksi --}}
                 <div class="d-flex align-items-center flex-wrap gap-2">
-                    <button type="button" class="modern-btn-outline" id="btnBackToFilter">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-                        </svg>
-                        Ganti Mahasiswa
+                    <button type="button" class="modern-btn-outline btn-sm px-3" id="btnBackToFilter" style="height: 34px;">
+                        <i class="bi bi-arrow-left me-1"></i> Ganti Mahasiswa
                     </button>
-                    <button id="btnPrintPdf" type="button" class="modern-btn-primary" disabled>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-pdf me-1" viewBox="0 0 16 16">
-                            <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
-                            <path d="M4.603 14.087a.81.81 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.143.244-.427.721-.867 1.482-1.347.165-.104.34-.207.525-.308a10.98 10.98 0 0 1-.965-1.776 19.78 19.78 0 0 1-.5-1.783c-.153-.746-.118-1.338.106-1.774.225-.436.643-.655 1.254-.655.672 0 1.13.344 1.373.91.244.566.19 1.34-.162 2.32-.083.232-.18.473-.291.722a20.08 20.08 0 0 0 2.855.772c.49-.428.972-.888 1.446-1.38.614-.64.97-1.206 1.068-1.698.147-.738-.086-1.347-.7-1.826a.614.614 0 0 0-.441-.122c-.22.02-.375.14-.465.361-.09.22-.058.497.096.83.155.334.398.67.729 1.011zm-.75-2.02c-.23.23-.393.473-.489.73-.095.257-.087.48.024.67.112.19.294.286.547.286.253 0 .524-.096.813-.288-.344-.45-.643-.917-.895-1.398zm3.567-4.228c-.143-.377-.323-.566-.54-.566-.217 0-.377.126-.48.378-.103.252-.093.585.03 1 .123.415.305.85.546 1.306.126-.415.226-.789.3-1.122.074-.333.12-.665.144-.996z"/>
-                        </svg>
-                        Unduh PDF
+                    <button id="btnPrintPdf" type="button" class="modern-btn-primary btn-sm px-3" style="height: 34px;" disabled>
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Unduh PDF
                     </button>
                 </div>
             </div>
@@ -1896,6 +1893,7 @@
                         isStudentLoading = false;
                         studentOptionsData = parseStudentOptionsFromHtml(data);
                         renderNpmOptions($('#npmDisplayInput').val().trim());
+                        syncNavbarStudentOptions();
                         if (autoOpenNpm || $('#npmDisplayInput').is(':focus') || $('#npmComboboxWrapper').hasClass('is-open')) {
                             $('#npmComboboxWrapper').addClass('is-open');
                             $('#npmDropdownMenu').show();
@@ -1930,6 +1928,7 @@
                     success: function(data) {
                         angkatanOptionsData = parseAngkatanOptionsFromHtml(data);
                         renderAngkatanOptions($('#angkatanDisplayInput').val().trim());
+                        syncNavbarAngkatanOptions();
                         if (typeof callback === 'function') {
                             callback();
                         }
@@ -1939,6 +1938,236 @@
                     }
                 });
             }
+
+            // ---------------- CARD COMBOBOX SYNC (IN-CARD INTERACTIVE SELECTION) ----------------
+            function renderCardAngkatanOptions(filterText) {
+                var $list = $('#cardAngkatanOptionsList');
+                $list.empty();
+                if (!angkatanOptionsData || angkatanOptionsData.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak ada data angkatan</div>');
+                    return;
+                }
+                var query = (filterText || '').toLowerCase().trim();
+                var filtered = angkatanOptionsData.filter(function(item) {
+                    if (!query) return true;
+                    return item.text.toLowerCase().indexOf(query) !== -1 || item.value.toLowerCase().indexOf(query) !== -1;
+                });
+                if (filtered.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak cocok</div>');
+                    return;
+                }
+                var currentVal = $('#cardAngkatanValue').val() || $('#angkatanForm').val();
+                filtered.forEach(function(item) {
+                    var isSelected = (item.value === currentVal);
+                    var $opt = $('<div>')
+                        .addClass('combobox-option' + (isSelected ? ' is-selected' : ''))
+                        .attr('data-value', item.value)
+                        .text(item.text);
+                    $opt.on('mousedown', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectCardAngkatanItem(item.value, item.text);
+                    });
+                    $list.append($opt);
+                });
+            }
+
+            // ---------------- NAVBAR COMBOBOX CONTROL & SYNC ----------------
+            function mountNavbarControls() {
+                if ($('#navVisualisasiSlot').length && !$('#navbarVisualisasiControls').length) {
+                    var html = '' +
+                        '<div class="d-flex align-items-center gap-2" id="navbarVisualisasiControls">' +
+                        '    <div class="nav-combobox-wrapper" id="navAngkatanComboboxWrapper" style="width: 110px;">' +
+                        '        <input type="text" id="navAngkatanDisplayInput" class="form-control nav-combobox-input" placeholder="Angkatan" autocomplete="off" title="Pilih / Ketik Angkatan">' +
+                        '        <input type="hidden" id="navAngkatanValue" value="">' +
+                        '        <button type="button" class="nav-combobox-toggle-btn" tabindex="-1" id="navAngkatanToggleBtn" title="Daftar Angkatan"><i class="bi bi-chevron-down"></i></button>' +
+                        '        <div class="nav-combobox-dropdown-menu" id="navAngkatanDropdownMenu" style="display: none;"><div class="nav-combobox-options-list" id="navAngkatanOptionsList"></div></div>' +
+                        '    </div>' +
+                        '    <div class="nav-combobox-wrapper" id="navNpmComboboxWrapper" style="width: 290px;">' +
+                        '        <input type="text" id="navNpmDisplayInput" class="form-control nav-combobox-input" placeholder="Cari Mahasiswa..." autocomplete="off" title="Ketik NPM atau Nama Mahasiswa">' +
+                        '        <input type="hidden" id="navNpmValue" value="">' +
+                        '        <button type="button" class="nav-combobox-toggle-btn" tabindex="-1" id="navNpmToggleBtn" title="Daftar Mahasiswa"><i class="bi bi-chevron-down"></i></button>' +
+                        '        <div class="nav-combobox-dropdown-menu" id="navNpmDropdownMenu" style="display: none;"><div class="nav-combobox-options-list" id="navNpmOptionsList"></div></div>' +
+                        '    </div>' +
+                        '</div>';
+                    $('#navVisualisasiSlot').html(html);
+                    syncNavbarAngkatanOptions();
+                    syncNavbarStudentOptions();
+                }
+            }
+
+            function syncNavbarAngkatanOptions() {
+                if ($('#navAngkatanDisplayInput').length) {
+                    var currentVal = $('#angkatanForm').val() || $('#navAngkatanValue').val();
+                    var currentText = $('#angkatanDisplayInput').val() || $('#navAngkatanDisplayInput').val();
+                    if (currentVal) {
+                        $('#navAngkatanValue').val(currentVal);
+                        if (currentText) $('#navAngkatanDisplayInput').val(currentText);
+                    }
+                    renderNavAngkatanOptions('');
+                }
+            }
+
+            function syncNavbarStudentOptions() {
+                if ($('#navNpmDisplayInput').length) {
+                    var currentVal = $('#npm').val() || $('#navNpmValue').val();
+                    var currentText = $('#npmDisplayInput').val() || $('#navNpmDisplayInput').val();
+                    if (currentVal) {
+                        $('#navNpmValue').val(currentVal);
+                        if (currentText) $('#navNpmDisplayInput').val(currentText).attr('title', currentText);
+                    }
+                    renderNavNpmOptions('');
+                }
+            }
+
+            function renderNavAngkatanOptions(filterText) {
+                var $list = $('#navAngkatanOptionsList');
+                $list.empty();
+                if (!angkatanOptionsData || angkatanOptionsData.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak ada data angkatan</div>');
+                    return;
+                }
+                var query = (filterText || '').toLowerCase().trim();
+                var filtered = angkatanOptionsData.filter(function(item) {
+                    if (!query) return true;
+                    return item.text.toLowerCase().indexOf(query) !== -1 || item.value.toLowerCase().indexOf(query) !== -1;
+                });
+                if (filtered.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak cocok</div>');
+                    return;
+                }
+                var currentVal = $('#navAngkatanValue').val() || $('#angkatanForm').val();
+                filtered.forEach(function(item) {
+                    var isSelected = (item.value === currentVal);
+                    var $opt = $('<div>')
+                        .addClass('nav-combobox-option' + (isSelected ? ' is-selected' : ''))
+                        .attr('data-value', item.value)
+                        .text(item.text);
+                    $opt.on('mousedown', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectNavAngkatanItem(item.value, item.text);
+                    });
+                    $list.append($opt);
+                });
+            }
+
+            function selectNavAngkatanItem(val, text) {
+                $('#navAngkatanValue').val(val);
+                $('#navAngkatanDisplayInput').val(text);
+                $('#angkatanForm').val(val);
+                $('#angkatanDisplayInput').val(text);
+                $('#navAngkatanDropdownMenu').hide();
+                $('#npm').val('');
+                $('#npmDisplayInput').val('');
+                $('#navNpmValue').val('');
+                $('#navNpmDisplayInput').val('');
+                onAngkatanSelected(val, true);
+            }
+
+            function renderNavNpmOptions(filterText) {
+                var $list = $('#navNpmOptionsList');
+                $list.empty();
+                if (isStudentLoading) {
+                    $list.html('<div class="combobox-empty-state"><span class="spinner-border spinner-border-sm me-2 text-primary"></span>Memuat...</div>');
+                    return;
+                }
+                if (!studentOptionsData || studentOptionsData.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak ada data mahasiswa</div>');
+                    return;
+                }
+                var query = (filterText || '').toLowerCase().trim();
+                var filtered = studentOptionsData.filter(function(item) {
+                    if (!query) return true;
+                    return (item.npm && item.npm.toLowerCase().indexOf(query) !== -1) ||
+                           (item.nama && item.nama.toLowerCase().indexOf(query) !== -1) ||
+                           (item.text && item.text.toLowerCase().indexOf(query) !== -1);
+                });
+                if (filtered.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak ada yang cocok</div>');
+                    return;
+                }
+                var currentVal = $('#navNpmValue').val() || $('#npm').val();
+                filtered.forEach(function(item) {
+                    var isSelected = (item.value === currentVal);
+                    var itemNpm = item.npm || (item.text && item.text.indexOf('-') !== -1 ? item.text.split('-')[0].trim() : item.value);
+                    var itemNama = item.nama || (item.text && item.text.indexOf('-') !== -1 ? item.text.split('-').slice(1).join('-').trim() : item.text);
+                    var $opt = $('<div>')
+                        .addClass('nav-combobox-option' + (isSelected ? ' is-selected' : ''))
+                        .attr('data-value', item.value)
+                        .attr('title', item.text)
+                        .html('<span class="font-monospace fw-semibold me-2">' + itemNpm + '</span><span class="text-secondary">-</span> <span class="ms-1">' + itemNama + '</span>');
+                    $opt.on('mousedown', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectNavNpmItem(item.value, item.text);
+                    });
+                    $list.append($opt);
+                });
+            }
+
+            function selectNavNpmItem(val, text) {
+                $('#navNpmValue').val(val);
+                $('#navNpmDisplayInput').val(text).attr('title', text);
+                $('#npm').val(val);
+                $('#npmDisplayInput').val(text).attr('title', text);
+                $('#navNpmDropdownMenu').hide();
+
+                var prodi = $('#prodiForm').val() || "{{ auth()->user()->id_prodiUser ?? '' }}";
+                var angkatan = $('#angkatanForm').val();
+                fetchAndRenderMahasiswa(prodi, angkatan, val, false);
+            }
+
+            $(document).on('focus click', '#navAngkatanDisplayInput', function() {
+                renderNavAngkatanOptions('');
+                $('#navAngkatanDropdownMenu').show();
+                try { $(this).select(); } catch(e) {}
+            }).on('input', '#navAngkatanDisplayInput', function() {
+                var q = $(this).val().trim();
+                renderNavAngkatanOptions(q);
+                $('#navAngkatanDropdownMenu').show();
+            });
+
+            $(document).on('click', '#navAngkatanToggleBtn', function(e) {
+                e.preventDefault();
+                if ($('#navAngkatanDropdownMenu').is(':visible')) {
+                    $('#navAngkatanDropdownMenu').hide();
+                } else {
+                    renderNavAngkatanOptions('');
+                    $('#navAngkatanDropdownMenu').show();
+                    $('#navAngkatanDisplayInput').focus();
+                }
+            });
+
+            $(document).on('focus click', '#navNpmDisplayInput', function() {
+                renderNavNpmOptions('');
+                $('#navNpmDropdownMenu').show();
+                try { $(this).select(); } catch(e) {}
+            }).on('input', '#navNpmDisplayInput', function() {
+                var q = $(this).val();
+                renderNavNpmOptions(q);
+                $('#navNpmDropdownMenu').show();
+            });
+
+            $(document).on('click', '#navNpmToggleBtn', function(e) {
+                e.preventDefault();
+                if ($('#navNpmDropdownMenu').is(':visible')) {
+                    $('#navNpmDropdownMenu').hide();
+                } else {
+                    renderNavNpmOptions('');
+                    $('#navNpmDropdownMenu').show();
+                    $('#navNpmDisplayInput').focus();
+                }
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#navAngkatanComboboxWrapper').length) {
+                    $('#navAngkatanDropdownMenu').hide();
+                }
+                if (!$(e.target).closest('#navNpmComboboxWrapper').length) {
+                    $('#navNpmDropdownMenu').hide();
+                }
+            });
 
             var userProdi = "{{ auth()->user()->id_prodiUser ?? '' }}";
             if (userProdi) {
@@ -2084,6 +2313,7 @@
                 sessionStorage.removeItem('active_mhs_angkatan');
                 sessionStorage.removeItem('active_mhs_prodi');
                 $('#antiFlickerStyle').remove();
+                $('#navVisualisasiSlot').empty();
 
                 var cleanUrl = new URL(window.location.href);
                 cleanUrl.searchParams.delete('npm');
@@ -2226,11 +2456,19 @@
                 var skorCplGrandAvg = response.result.skorCplGrandAvg || 0;
                 var ketercapaianCplGrandAvg = response.result.ketercapaianCplGrandAvg || 0;
 
-                // Header Info Mahasiswa
-                $('#displayNamaMahasiswa').text(nama);
-                $('#npmDataText').text(npm);
-                $('#angkatanDataText').text(angkatan);
-                $('#prodiDataText').text(prodi);
+                // Mount & Sync Navbar Comboboxes
+                mountNavbarControls();
+                $('#navAngkatanValue').val(angkatan);
+                $('#navAngkatanDisplayInput').val(angkatan);
+                $('#navNpmValue').val(npm);
+                $('#navNpmDisplayInput').val(npm !== '-' ? (npm + ' - ' + nama) : '-').attr('title', (npm !== '-' ? (npm + ' - ' + nama) : '-'));
+
+                // Header Static Info Mahasiswa
+                $('#displayNamaMhs').text(nama);
+                $('#displayNpmMhs').text(npm);
+                $('#displayAngkatanMhs').text(angkatan);
+                $('#displayProdiMhs').text(prodi);
+                $('#displayUniversitasMhs').text(universitas);
 
                 // Handle Empty Data Notice Banner
                 if (!hasData) {

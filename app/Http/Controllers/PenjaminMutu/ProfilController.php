@@ -85,8 +85,194 @@ class ProfilController extends Controller
     public function readListProfil(Request $request)
     {
         $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
-        $listProfil = ProfilLulusan::filterOtoritas(auth()->user(), $request->kurikulum_id)->get();
-        return view('penjamin-mutu.profil.readListProfil', compact('listProfil', 'userOtoritas'));
+        $listProfil = ProfilLulusan::with(['kurikulum', 'prodi.fakultas'])
+            ->filterOtoritas(auth()->user(), $request->kurikulum_id)
+            ->get();
+
+        $filterData = $this->getFilterData($request);
+
+        return view('penjamin-mutu.profil.readListProfil', array_merge(
+            compact('listProfil', 'userOtoritas'),
+            $filterData
+        ));
+    }
+
+    // Download Template Excel Profil Lulusan
+    public function downloadTemplateProfil()
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template Import PL');
+
+        // Header
+        $sheet->setCellValue('A1', 'Tahun Kurikulum');
+        $sheet->setCellValue('B1', 'Nama Profil Karir');
+        $sheet->setCellValue('C1', 'Deskripsi / Graduate Profile');
+
+        // Style Header
+        $sheet->getStyle('A1:C1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:C1')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFE0E0E0');
+
+        // Sample data
+        $sheet->setCellValue('A2', '2025');
+        $sheet->setCellValue('B2', 'Software Engineer');
+        $sheet->setCellValue('C2', 'Lulusan yang mampu merancang, membangun, dan menguji sistem perangkat lunak secara profesional.');
+
+        $sheet->setCellValue('A3', '2025');
+        $sheet->setCellValue('B3', 'Data Analyst');
+        $sheet->setCellValue('C3', 'Lulusan yang mampu mengolah dan menganalisis data untuk mendukung pengambilan keputusan.');
+
+        foreach (range('A', 'C') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'Template_Import_Profil_Lulusan.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
+    }
+
+    // Import Excel Profil Lulusan
+    public function importExcelProfil(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+            'id_kurikulum' => 'nullable|integer',
+        ]);
+
+        $user = auth()->user();
+        $id_prodi_user = $user->id_prodiUser;
+
+        $file = $request->file('excel_file');
+        if (!$file || !$file->isValid()) {
+            return redirect()->back()->with('error', 'File Excel tidak valid.');
+        }
+
+        try {
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $dataRows = $worksheet->toArray();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
+        }
+
+        if (count($dataRows) <= 1) {
+            return redirect()->back()->with('error', 'File Excel kosong atau hanya berisi header.');
+        }
+
+        // Cek struktur header (apakah ada kolom Kode Profil atau tidak)
+        $headerRow = $dataRows[0] ?? [];
+        $hasKodeColumn = isset($headerRow[1]) && str_contains(strtolower((string)$headerRow[1]), 'kode');
+
+        // Drop header
+        unset($dataRows[0]);
+
+        $importedCount = 0;
+        $updatedCount = 0;
+
+        DB::beginTransaction();
+        try {
+            foreach ($dataRows as $row) {
+                if ($hasKodeColumn) {
+                    $rawTahunKurikulum = trim((string)($row[0] ?? ''));
+                    $rawKode           = str_replace('-', '', trim((string)($row[1] ?? '')));
+                    $namaProfil        = trim((string)($row[2] ?? ''));
+                    $deskripsi         = trim((string)($row[3] ?? ''));
+                } else {
+                    $rawTahunKurikulum = trim((string)($row[0] ?? ''));
+                    $rawKode           = '';
+                    $namaProfil        = trim((string)($row[1] ?? ''));
+                    $deskripsi         = trim((string)($row[2] ?? ''));
+                }
+
+                if (empty($rawKode) && empty($namaProfil) && empty($deskripsi)) {
+                    continue;
+                }
+
+                // 1. Tentukan Kurikulum
+                $kurikulumObj = null;
+                $tahunClean = preg_replace('/[^\d]/', '', $rawTahunKurikulum);
+
+                if (!empty($tahunClean)) {
+                    $kurikulumObj = Kurikulum::where('id_prodi', $id_prodi_user)
+                        ->where('tahun', $tahunClean)
+                        ->first();
+                    if (!$kurikulumObj) {
+                        $kurikulumObj = Kurikulum::where('tahun', $tahunClean)->first();
+                    }
+                }
+
+                if (!$kurikulumObj && $request->id_kurikulum) {
+                    $kurikulumObj = Kurikulum::find($request->id_kurikulum);
+                }
+
+                if (!$kurikulumObj) {
+                    $kurikulumObj = Kurikulum::where('id_prodi', $id_prodi_user)->orderBy('tahun', 'desc')->first()
+                        ?: Kurikulum::orderBy('tahun', 'desc')->first();
+                }
+
+                if (!$kurikulumObj) {
+                    continue;
+                }
+
+                // Check existing PL by prodi, kurikulum, and namaProfil / kode
+                $existingPl = ProfilLulusan::where('id_prodi', $id_prodi_user)
+                    ->where('kurikulum_id', $kurikulumObj->id)
+                    ->where(function($q) use ($rawKode, $namaProfil) {
+                        if (!empty($rawKode)) {
+                            $q->where('kode', $rawKode);
+                        }
+                        if (!empty($namaProfil)) {
+                            $q->orWhere('namaProfil', $namaProfil)->orWhere('jenis', $namaProfil);
+                        }
+                    })->first();
+
+                if ($existingPl) {
+                    $existingPl->update([
+                        'namaProfil' => !empty($namaProfil) ? $namaProfil : ($existingPl->namaProfil ?: $existingPl->jenis),
+                        'jenis'      => !empty($namaProfil) ? $namaProfil : ($existingPl->jenis ?: $existingPl->namaProfil),
+                        'deskripsi'  => !empty($deskripsi) ? $deskripsi : $existingPl->deskripsi,
+                    ]);
+                    $updatedCount++;
+                } else {
+                    $kode = !empty($rawKode)
+                        ? $rawKode
+                        : ProfilLulusan::generateKode($id_prodi_user, $kurikulumObj->id);
+
+                    ProfilLulusan::create([
+                        'kurikulum_id' => $kurikulumObj->id,
+                        'id_prodi'     => $id_prodi_user,
+                        'kode'         => $kode,
+                        'namaProfil'   => !empty($namaProfil) ? $namaProfil : $kode,
+                        'jenis'        => !empty($namaProfil) ? $namaProfil : $kode,
+                        'deskripsi'    => !empty($deskripsi) ? $deskripsi : ($namaProfil ?: $kode),
+                    ]);
+                    $importedCount++;
+                }
+            }
+
+            DB::commit();
+
+            $msg = "Berhasil memproses impor Profil Lulusan: {$importedCount} data baru ditambahkan";
+            if ($updatedCount > 0) {
+                $msg .= ", {$updatedCount} data diperbarui.";
+            } else {
+                $msg .= ".";
+            }
+
+            return redirect()->back()->with('success', $msg);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal mengimpor data Profil Lulusan: ' . $e->getMessage());
+        }
     }
 
     public function readListProfilProf(Request $request)

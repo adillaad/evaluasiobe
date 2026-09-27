@@ -200,8 +200,8 @@ class VisualisasiController extends Controller
                 'normalYears' => 3,
                 'normalSemesters' => 6,
                 'normalYearsSpan' => 4,
-                'maxYears' => 3,
-                'maxSemesters' => 6,
+                'maxYears' => 7,
+                'maxSemesters' => 14,
             ];
         } elseif (str_contains($jenjang, 'D3') || str_contains($jenjang, 'D-3') || str_contains($jenjang, 'D-III') || str_contains($jenjang, 'DIPLOMA 3') || str_contains($jenjang, 'DIPLOMA III')) {
             return [
@@ -1339,7 +1339,9 @@ class VisualisasiController extends Controller
             ->toArray();
         $actualSem = !empty($studentSemesters) ? max($studentSemesters) : 0;
         $extraYears = $actualSem > $normalSemesters ? (int) ceil(($actualSem - $normalSemesters) / 2) : 0;
-        $displayYearsCount = min($maxYears, $normalYearsSpan + $extraYears);
+        $currentCalYear = (int) date('Y');
+        $maxAllowedYear = min($currentCalYear, $baseAngkatan + $maxYears - 1);
+        $displayYearsCount = max(1, $maxAllowedYear - $baseAngkatan + 1);
 
         $yearsList = [];
         for ($i = 0; $i < $displayYearsCount; $i++) {
@@ -2801,7 +2803,9 @@ class VisualisasiController extends Controller
 
         $actualSem = !empty($batchSemesters) ? max($batchSemesters) : 0;
         $extraYears = $actualSem > $normalSemesters ? (int) ceil(($actualSem - $normalSemesters) / 2) : 0;
-        $displayYearsCount = min($maxYears, $normalYearsSpan + $extraYears);
+        $currentCalYear = (int) date('Y');
+        $maxAllowedYear = min($currentCalYear, $baseAngkatan + $maxYears - 1);
+        $displayYearsCount = max(1, $maxAllowedYear - $baseAngkatan + 1);
 
         $yearsList = [];
         for ($i = 0; $i < $displayYearsCount; $i++) {

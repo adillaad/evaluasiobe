@@ -918,6 +918,119 @@
                 }
             });
 
+            // ---------------- NAVBAR COMBOBOX CONTROL & SYNC ----------------
+            function mountNavbarControls() {
+                if ($('#navVisualisasiSlot').length && !$('#navbarVisualisasiControls').length) {
+                    var html = '' +
+                        '<div class="d-flex align-items-center gap-2" id="navbarVisualisasiControls">' +
+                        '    <div class="nav-combobox-wrapper" id="navNpmComboboxWrapper" style="width: 290px;">' +
+                        '        <input type="text" id="navNpmDisplayInput" class="form-control nav-combobox-input" placeholder="Cari Mahasiswa..." autocomplete="off" title="Ketik NPM atau Nama Mahasiswa">' +
+                        '        <input type="hidden" id="navNpmValue" value="">' +
+                        '        <button type="button" class="nav-combobox-toggle-btn" tabindex="-1" id="navNpmToggleBtn" title="Daftar Mahasiswa"><i class="bi bi-chevron-down"></i></button>' +
+                        '        <div class="nav-combobox-dropdown-menu" id="navNpmDropdownMenu" style="display: none;"><div class="nav-combobox-options-list" id="navNpmOptionsList"></div></div>' +
+                        '    </div>' +
+                        '</div>';
+                    $('#navVisualisasiSlot').html(html);
+                    syncNavbarStudentOptions();
+                }
+            }
+
+            function syncNavbarStudentOptions() {
+                if ($('#navNpmDisplayInput').length) {
+                    var currentVal = $('#npm').val() || $('#navNpmValue').val();
+                    var currentText = $('#npmDisplayInput').val() || $('#navNpmDisplayInput').val();
+                    if (currentVal) {
+                        $('#navNpmValue').val(currentVal);
+                        if (currentText) $('#navNpmDisplayInput').val(currentText).attr('title', currentText);
+                    }
+                    renderNavNpmOptions('');
+                }
+            }
+
+            function renderNavNpmOptions(filterText) {
+                var $list = $('#navNpmOptionsList');
+                $list.empty();
+                if (!mhsOptionsData || mhsOptionsData.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak ada data mahasiswa</div>');
+                    return;
+                }
+                var query = (filterText || '').toLowerCase().trim();
+                var filtered = mhsOptionsData.filter(function(item) {
+                    if (!query) return true;
+                    return (item.npm && item.npm.toLowerCase().indexOf(query) !== -1) ||
+                           (item.nama && item.nama.toLowerCase().indexOf(query) !== -1) ||
+                           (item.text && item.text.toLowerCase().indexOf(query) !== -1);
+                });
+                if (filtered.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak ada yang cocok</div>');
+                    return;
+                }
+                var currentVal = $('#navNpmValue').val() || $('#npm').val();
+                filtered.forEach(function(item) {
+                    var isSelected = (item.value === currentVal);
+                    var itemNpm = item.npm || (item.text && item.text.indexOf('-') !== -1 ? item.text.split('-')[0].trim() : item.value);
+                    var itemNama = item.nama || (item.text && item.text.indexOf('-') !== -1 ? item.text.split('-').slice(1).join('-').trim() : item.text);
+                    var $opt = $('<div>')
+                        .addClass('nav-combobox-option' + (isSelected ? ' is-selected' : ''))
+                        .attr('data-value', item.value)
+                        .attr('title', item.text)
+                        .html('<span class="font-monospace fw-semibold me-2">' + itemNpm + '</span><span class="text-secondary">-</span> <span class="ms-1">' + itemNama + '</span>');
+                    $opt.on('mousedown', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectNavNpmItem(item.value, item.text, item.nama);
+                    });
+                    $list.append($opt);
+                });
+            }
+
+            function selectNavNpmItem(val, text, nama) {
+                $('#navNpmValue').val(val);
+                $('#navNpmDisplayInput').val(text).attr('title', text);
+                selectNpmItem(val, text, nama);
+                $('#navNpmDropdownMenu').hide();
+                $('#visualCpmkMahasiswa').submit();
+            }
+
+            mountNavbarControls();
+
+            $(document).on('focus click', '#navNpmDisplayInput', function() {
+                var q = $(this).val().trim();
+                var currentVal = $('#navNpmValue').val();
+                var match = mhsOptionsData.find(function(s) { return s.value === currentVal; });
+                if (match && (match.text === q || match.value === q)) {
+                    renderNavNpmOptions('');
+                } else {
+                    renderNavNpmOptions(q);
+                }
+                $('#navNpmDropdownMenu').show();
+            });
+
+            $(document).on('input keyup', '#navNpmDisplayInput', function(e) {
+                if (e.key === 'Enter' || e.key === 'Escape') return;
+                var q = $(this).val();
+                renderNavNpmOptions(q);
+                $('#navNpmDropdownMenu').show();
+            });
+
+            $(document).on('click', '#navNpmToggleBtn', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                var $menu = $('#navNpmDropdownMenu');
+                if ($menu.is(':visible')) {
+                    $menu.hide();
+                } else {
+                    renderNavNpmOptions('');
+                    $menu.show();
+                }
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#navNpmComboboxWrapper').length) {
+                    $('#navNpmDropdownMenu').hide();
+                }
+            });
+
             // Toggle Handler untuk Petunjuk Membaca Diagram
             $('#btnToggleGuideCpmk').on('click', function(e) {
                 e.preventDefault();

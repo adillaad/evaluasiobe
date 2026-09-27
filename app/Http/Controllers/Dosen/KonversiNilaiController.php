@@ -162,7 +162,9 @@ class KonversiNilaiController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(10);
 
-        return view('dosen.konversi.index', compact('konversis', 'userOtoritas'));
+        $tahunAjarans = TahunAjaran::orderBy('tahun', 'desc')->get();
+
+        return view('dosen.konversi.index', compact('konversis', 'userOtoritas', 'tahunAjarans'));
     }
 
     // Step 1: Form Setup Konversi (MK, Tahun Ajaran, Kurikulum)
@@ -249,6 +251,35 @@ class KonversiNilaiController extends Controller
 
         return redirect()->route('dosen.konversi-nilai.step-metode', $konversi->id)
             ->with('success', 'Setup konversi berhasil disimpan. Silakan lanjutkan ke pemilihan metode & pemetaan CPMK.');
+    }
+
+    // Update Setup Konversi (khusus mengubah Tahun Ajaran)
+    public function updateSetup(Request $request, $id)
+    {
+        $user = auth()->user();
+
+        $konversi = PenilaianKonversi::where('dosen_id', $user->id)->findOrFail($id);
+
+        $request->validate([
+            'tahun_ajaran_id' => 'required|integer|exists:tahun_ajaran,id',
+        ]);
+
+        $oldTaId = $konversi->tahun_ajaran_id;
+        $newTaId = $request->tahun_ajaran_id;
+
+        $konversi->update([
+            'tahun_ajaran_id' => $newTaId,
+        ]);
+
+        if ($oldTaId != $newTaId) {
+            Mutu::where('Course', $konversi->mk_kode)
+                ->where('tahun_ajaran_id', $oldTaId)
+                ->where('sumber', 'konversi')
+                ->update(['tahun_ajaran_id' => $newTaId]);
+        }
+
+        return redirect()->route('dosen.konversi-nilai.index')
+            ->with('success', 'Tahun Ajaran setup konversi berhasil diperbarui.');
     }
 
     // Step 2 & 3: Kelola Metode & Pemetaan CPMK/Sub-CPMK

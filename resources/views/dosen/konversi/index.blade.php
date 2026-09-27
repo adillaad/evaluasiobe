@@ -50,19 +50,71 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-inline-flex gap-1 justify-content-center">
-                                        <a href="{{ route('dosen.konversi-nilai.detail', $konversi->id) }}" class="btn btn-sm btn-info text-white px-2 py-1" title="Lihat Nilai Konversi">
-                                            <i class="ti ti-eye me-1"></i> Nilai
+                                        <a href="{{ route('dosen.konversi-nilai.step-metode', $konversi->id) }}" class="btn btn-sm btn-info text-white px-2 py-1" title="Lihat Detail MK">
+                                            <i class="ti ti-eye"></i>
                                         </a>
-                                        <a href="{{ route('dosen.konversi-nilai.step-metode', $konversi->id) }}" class="btn btn-sm btn-primary px-2 py-1" title="Kelola Metode & Upload Nilai">
-                                            <i class="ti ti-settings me-1"></i> Kelola
-                                        </a>
+                                        <button type="button" class="btn btn-sm btn-primary px-2 py-1" data-bs-toggle="modal" data-bs-target="#editSetupModal{{ $konversi->id }}" title="Edit Setup MK Kurikulum">
+                                            <i class="ti ti-settings"></i>
+                                        </button>
                                         <form action="{{ route('dosen.konversi-nilai.destroy', $konversi->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data konversi untuk MK {{ $konversi->mk_kode }} ini? Seluruh data nilai konversi mahasiswa terkait akan ikut terhapus.')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1" title="Hapus Konversi">
-                                                <i class="ti ti-trash me-1"></i> Hapus
+                                                <i class="ti ti-trash"></i>
                                             </button>
                                         </form>
+                                    </div>
+
+                                    {{-- Modal Edit Setup MK Kurikulum (Hanya Tahun Ajaran yang bisa diubah) --}}
+                                    <div class="modal fade" id="editSetupModal{{ $konversi->id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content border-0 shadow-sm rounded-3">
+                                                <form action="{{ route('dosen.konversi-nilai.update-setup', $konversi->id) }}" method="POST">
+                                                    @csrf
+                                                    <div class="modal-header py-3 px-4 bg-light border-bottom text-start">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <div class="bg-warning bg-opacity-10 text-warning p-2 rounded-2">
+                                                                <i class="ti ti-pencil fs-5"></i>
+                                                            </div>
+                                                            <div>
+                                                                <h5 class="modal-title fs-6 fw-bold mb-0 text-dark">Edit Setup MK Kurikulum</h5>
+                                                                <span class="text-muted small">Perbarui Tahun Ajaran Konversi</span>
+                                                            </div>
+                                                        </div>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4 text-start">
+                                                        <div class="mb-3">
+                                                            <label class="form-label small fw-bold text-dark mb-1">Mata Kuliah</label>
+                                                            <input type="text" class="form-control form-control-sm bg-light text-dark fw-semibold" value="{{ $konversi->mk_kode }} &mdash; {{ $konversi->mk->nama ?? '' }}" disabled readonly>
+                                                            <small class="text-muted" style="font-size: 0.75rem;"><i class="ti ti-info-circle me-1"></i> Mata Kuliah tidak dapat diubah.</small>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label small fw-bold text-dark mb-1">Kurikulum</label>
+                                                            <input type="text" class="form-control form-control-sm bg-light text-dark fw-semibold" value="Kurikulum {{ $konversi->kurikulum->tahun ?? '-' }}" disabled readonly>
+                                                            <small class="text-muted" style="font-size: 0.75rem;"><i class="ti ti-info-circle me-1"></i> Kurikulum tidak dapat diubah.</small>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="tahun_ajaran_id_{{ $konversi->id }}" class="form-label small fw-bold text-dark mb-1">Tahun Ajaran <span class="text-danger">*</span></label>
+                                                            <select name="tahun_ajaran_id" id="tahun_ajaran_id_{{ $konversi->id }}" class="form-select form-select-sm" required>
+                                                                @foreach ($tahunAjarans as $ta)
+                                                                    <option value="{{ $ta->id }}" {{ $konversi->tahun_ajaran_id == $ta->id ? 'selected' : '' }}>
+                                                                        {{ $ta->tahun }} {{ $ta->jenis_semester ? '(' . $ta->jenis_semester . ')' : '' }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;"><i class="ti ti-check me-1"></i> Silakan pilih Tahun Ajaran yang ingin diperbarui.</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer py-2 px-4 bg-light border-top justify-content-between">
+                                                        <button type="button" class="btn btn-light btn-sm text-secondary px-3" data-bs-dismiss="modal">Batal</button>
+                                                        <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold shadow-sm">
+                                                            <i class="ti ti-device-floppy me-1"></i> Simpan Perubahan
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>

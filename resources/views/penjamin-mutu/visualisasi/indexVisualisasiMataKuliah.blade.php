@@ -258,10 +258,9 @@
 
         /* Course Profile Hero Header */
         .course-profile-hero {
-            position: -webkit-sticky !important;
-            position: sticky !important;
-            top: 70px !important;
-            z-index: 1020 !important;
+            position: relative !important;
+            top: auto !important;
+            z-index: 1 !important;
             background: #ffffff !important;
             border: 1px solid #e2e8f0;
             border-left: 5px solid #1F3BB3 !important;
@@ -1311,13 +1310,201 @@
                 });
             }
 
-            @if ($userOtoritas == 'Dosen' || $userOtoritas == 'Kepala Program Studi' || $userOtoritas == 'Penjamin Mutu Program Studi')
-                var userProdi = "{{ auth()->user()->id_prodiUser ?? '' }}";
-                var universitas = $('#universitas').val();
-                if (userProdi) {
-                    loadAngkatan(userProdi, universitas);
+            var userProdiVal = $('#prodiForm').val() || "{{ auth()->user()->id_prodiUser ?? '' }}";
+            var universitasVal = $('#universitas').val();
+            if (userProdiVal) {
+                loadAngkatan(userProdiVal, universitasVal);
+            }
+
+            // ---------------- NAVBAR COMBOBOX CONTROL & SYNC (PER MATA KULIAH) ----------------
+            function mountNavbarControls() {
+                if ($('#navVisualisasiSlot').length && !$('#navbarVisualisasiControls').length) {
+                    var html = '' +
+                        '<div class="d-flex align-items-center gap-2" id="navbarVisualisasiControls">' +
+                        '    <div class="nav-combobox-wrapper" id="navAngkatanComboboxWrapper" style="width: 110px;">' +
+                        '        <input type="text" id="navAngkatanDisplayInput" class="form-control nav-combobox-input" placeholder="Angkatan" autocomplete="off" title="Pilih / Ketik Angkatan">' +
+                        '        <input type="hidden" id="navAngkatanValue" value="">' +
+                        '        <button type="button" class="nav-combobox-toggle-btn" tabindex="-1" id="navAngkatanToggleBtn" title="Daftar Angkatan"><i class="bi bi-chevron-down"></i></button>' +
+                        '        <div class="nav-combobox-dropdown-menu" id="navAngkatanDropdownMenu" style="display: none;"><div class="nav-combobox-options-list" id="navAngkatanOptionsList"></div></div>' +
+                        '    </div>' +
+                        '    <div class="nav-combobox-wrapper" id="navCourseComboboxWrapper" style="width: 290px;">' +
+                        '        <input type="text" id="navCourseDisplayInput" class="form-control nav-combobox-input" placeholder="Cari Mata Kuliah..." autocomplete="off" title="Ketik Mata Kuliah">' +
+                        '        <input type="hidden" id="navCourseValue" value="">' +
+                        '        <button type="button" class="nav-combobox-toggle-btn" tabindex="-1" id="navCourseToggleBtn" title="Daftar Mata Kuliah"><i class="bi bi-chevron-down"></i></button>' +
+                        '        <div class="nav-combobox-dropdown-menu" id="navCourseDropdownMenu" style="display: none;"><div class="nav-combobox-options-list" id="navCourseOptionsList"></div></div>' +
+                        '    </div>' +
+                        '</div>';
+                    $('#navVisualisasiSlot').html(html);
+                    syncNavbarAngkatanOptions();
+                    syncNavbarCourseOptions();
                 }
-            @endif
+            }
+
+            function syncNavbarAngkatanOptions() {
+                if ($('#navAngkatanDisplayInput').length) {
+                    var currentVal = $('#angkatanForm').val() || $('#navAngkatanValue').val();
+                    var currentText = $('#angkatanDisplayInput').val() || $('#navAngkatanDisplayInput').val();
+                    if (currentVal) {
+                        $('#navAngkatanValue').val(currentVal);
+                        if (currentText) $('#navAngkatanDisplayInput').val(currentText);
+                    }
+                    renderNavAngkatanOptions('');
+                }
+            }
+
+            function syncNavbarCourseOptions() {
+                if ($('#navCourseDisplayInput').length) {
+                    var currentVal = $('#courseSelect').val() || $('#navCourseValue').val();
+                    var currentText = $('#courseDisplayInput').val() || $('#navCourseDisplayInput').val();
+                    if (currentVal) {
+                        $('#navCourseValue').val(currentVal);
+                        if (currentText) $('#navCourseDisplayInput').val(currentText).attr('title', currentText);
+                    }
+                    renderNavCourseOptions('');
+                }
+            }
+
+            function renderNavAngkatanOptions(filterText) {
+                var $list = $('#navAngkatanOptionsList');
+                $list.empty();
+                if (!angkatanOptionsData || angkatanOptionsData.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak ada data angkatan</div>');
+                    return;
+                }
+                var query = (filterText || '').toLowerCase().trim();
+                var filtered = angkatanOptionsData.filter(function(item) {
+                    if (!query) return true;
+                    return item.text.toLowerCase().indexOf(query) !== -1 || item.value.toLowerCase().indexOf(query) !== -1;
+                });
+                if (filtered.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak cocok</div>');
+                    return;
+                }
+                var currentVal = $('#navAngkatanValue').val() || $('#angkatanForm').val();
+                filtered.forEach(function(item) {
+                    var isSelected = (item.value === currentVal);
+                    var $opt = $('<div>')
+                        .addClass('nav-combobox-option' + (isSelected ? ' is-selected' : ''))
+                        .attr('data-value', item.value)
+                        .text(item.text);
+                    $opt.on('mousedown', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectNavAngkatanItem(item.value, item.text);
+                    });
+                    $list.append($opt);
+                });
+            }
+
+            function selectNavAngkatanItem(val, text) {
+                $('#navAngkatanValue').val(val);
+                $('#navAngkatanDisplayInput').val(text);
+                $('#angkatanForm').val(val);
+                $('#angkatanDisplayInput').val(text);
+                $('#navAngkatanDropdownMenu').hide();
+                var prodi = $('#prodiForm').val() || "{{ auth()->user()->id_prodiUser ?? '' }}";
+                var universitas = $('#universitas').val();
+                loadCourses(prodi, val, universitas);
+            }
+
+            function renderNavCourseOptions(filterText) {
+                var $list = $('#navCourseOptionsList');
+                $list.empty();
+                if (!courseOptionsData || courseOptionsData.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak ada data mata kuliah</div>');
+                    return;
+                }
+                var query = (filterText || '').toLowerCase().trim();
+                var filtered = courseOptionsData.filter(function(item) {
+                    if (!query) return true;
+                    return (item.code && item.code.toLowerCase().indexOf(query) !== -1) ||
+                           (item.name && item.name.toLowerCase().indexOf(query) !== -1) ||
+                           (item.text && item.text.toLowerCase().indexOf(query) !== -1);
+                });
+                if (filtered.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak ada yang cocok</div>');
+                    return;
+                }
+                var currentVal = $('#navCourseValue').val() || $('#courseSelect').val();
+                filtered.forEach(function(item) {
+                    var isSelected = (item.value === currentVal);
+                    var itemCode = item.code || (item.text && item.text.indexOf('-') !== -1 ? item.text.split('-')[0].trim() : item.value);
+                    var itemName = item.name || (item.text && item.text.indexOf('-') !== -1 ? item.text.split('-').slice(1).join('-').trim() : item.text);
+                    var $opt = $('<div>')
+                        .addClass('nav-combobox-option' + (isSelected ? ' is-selected' : ''))
+                        .attr('data-value', item.value)
+                        .attr('title', item.text)
+                        .html('<span class="font-monospace fw-semibold me-2">' + itemCode + '</span><span class="text-secondary">-</span> <span class="ms-1">' + itemName + '</span>');
+                    $opt.on('mousedown', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectNavCourseItem(item.value, item.text);
+                    });
+                    $list.append($opt);
+                });
+            }
+
+            function selectNavCourseItem(val, text) {
+                $('#navCourseValue').val(val);
+                $('#navCourseDisplayInput').val(text).attr('title', text);
+                $('#courseSelect').val(val);
+                $('#courseDisplayInput').val(text).attr('title', text);
+                $('#navCourseDropdownMenu').hide();
+                var prodi = $('#prodiForm').val() || "{{ auth()->user()->id_prodiUser ?? '' }}";
+                var angkatan = $('#angkatanForm').val();
+                fetchAndRenderMataKuliah(prodi, angkatan, val, false);
+            }
+
+            $(document).on('focus click', '#navAngkatanDisplayInput', function() {
+                renderNavAngkatanOptions('');
+                $('#navAngkatanDropdownMenu').show();
+                try { $(this).select(); } catch(e) {}
+            }).on('input', '#navAngkatanDisplayInput', function() {
+                var q = $(this).val().trim();
+                renderNavAngkatanOptions(q);
+                $('#navAngkatanDropdownMenu').show();
+            });
+
+            $(document).on('click', '#navAngkatanToggleBtn', function(e) {
+                e.preventDefault();
+                if ($('#navAngkatanDropdownMenu').is(':visible')) {
+                    $('#navAngkatanDropdownMenu').hide();
+                } else {
+                    renderNavAngkatanOptions('');
+                    $('#navAngkatanDropdownMenu').show();
+                    $('#navAngkatanDisplayInput').focus();
+                }
+            });
+
+            $(document).on('focus click', '#navCourseDisplayInput', function() {
+                renderNavCourseOptions('');
+                $('#navCourseDropdownMenu').show();
+                try { $(this).select(); } catch(e) {}
+            }).on('input', '#navCourseDisplayInput', function() {
+                var q = $(this).val();
+                renderNavCourseOptions(q);
+                $('#navCourseDropdownMenu').show();
+            });
+
+            $(document).on('click', '#navCourseToggleBtn', function(e) {
+                e.preventDefault();
+                if ($('#navCourseDropdownMenu').is(':visible')) {
+                    $('#navCourseDropdownMenu').hide();
+                } else {
+                    renderNavCourseOptions('');
+                    $('#navCourseDropdownMenu').show();
+                    $('#navCourseDisplayInput').focus();
+                }
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#navAngkatanComboboxWrapper').length) {
+                    $('#navAngkatanDropdownMenu').hide();
+                }
+                if (!$(e.target).closest('#navCourseComboboxWrapper').length) {
+                    $('#navCourseDropdownMenu').hide();
+                }
+            });
 
             // ---------------- SEARCHABLE COMBOBOX UNTUK PILIH MAHASISWA (CPMK INDIVIDU) ----------------
             var cpmkMahasiswaOptionsData = [];
@@ -1797,6 +1984,14 @@
 
                             renderMataKuliahData(response.result);
 
+                            mountNavbarControls();
+                            $('#navAngkatanValue').val(angkatan);
+                            $('#navAngkatanDisplayInput').val(angkatan);
+                            $('#navCourseValue').val(course);
+                            if ($('#courseDisplayInput').val()) {
+                                $('#navCourseDisplayInput').val($('#courseDisplayInput').val());
+                            }
+
                             if (!isAutoLoad) {
                                 $('html, body').animate({
                                     scrollTop: $('#visualContainer').offset().top - 80
@@ -1899,6 +2094,9 @@
                 $('#antiFlickerStyle').remove();
                 $('#tugas').show();
                 $('#visualContainer').hide();
+                if (savedProdi) {
+                    loadAngkatan(savedProdi, $('#universitas').val());
+                }
             }
 
             // Back to filter button (Ganti Mata Kuliah)

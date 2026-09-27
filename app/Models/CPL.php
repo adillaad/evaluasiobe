@@ -20,7 +20,7 @@ class CPL extends Model
     }
 
     public function profilLulusan(){
-        return $this->belongsToMany(ProfilLulusan::class,'profil_cpl','idCpl','idProfil');
+        return $this->belongsToMany(ProfilLulusan::class,'profil_cpl','idCpl','idProfil')->withPivot('bobot', 'id', 'id_prodi');
     }
 
     public function prodi()

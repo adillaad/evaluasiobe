@@ -78,10 +78,9 @@
 
         /* Hero Header Profile (Fixed / Sticky when scrolling, Prominent, Neat Alignment) */
         .faculty-profile-hero {
-            position: -webkit-sticky !important;
-            position: sticky !important;
-            top: 75px !important;
-            z-index: 1020 !important;
+            position: relative !important;
+            top: auto !important;
+            z-index: 1 !important;
             background: #ffffff !important;
             border: 1px solid #e2e8f0;
             border-left: 5px solid #1F3BB3 !important;

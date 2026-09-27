@@ -18,7 +18,7 @@ class ProfilLulusan extends Model
 
     public function cpls()
     {
-        return $this->belongsToMany(CPL::class, 'profil_cpl', 'idProfil', 'idCpl');
+        return $this->belongsToMany(CPL::class, 'profil_cpl', 'idProfil', 'idCpl')->withPivot('bobot', 'id', 'id_prodi');
     }
     public function prodi()
     {
@@ -112,7 +112,15 @@ class ProfilLulusan extends Model
             ->where('kurikulum_id', $kurikulumId)
             ->count();
 
-        return 'PL0' . ($jumlah + 1);
+        $nextNum = $jumlah + 1;
+        $kode = sprintf('PL%02d', $nextNum);
+
+        while (static::where('id_prodi', $prodiId)->where('kurikulum_id', $kurikulumId)->where('kode', $kode)->exists()) {
+            $nextNum++;
+            $kode = sprintf('PL%02d', $nextNum);
+        }
+
+        return $kode;
     }
 }
 

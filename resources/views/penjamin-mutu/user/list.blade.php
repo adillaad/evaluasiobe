@@ -116,7 +116,7 @@
                                                  <button type="submit" class="btn btn-outline-danger btn-icons"
                                                      data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $isKaprodiRole ? 'Keluarkan dari Prodi' : 'Hapus' }}"
                                                      onclick="return confirm('{{ $isKaprodiRole ? 'Apakah Anda yakin ingin mengeluarkan dosen ' . addslashes($user->name) . ' dari prodi ini?' : 'Are you sure to delete ' . addslashes($user->name) . '?' }}')">
-                                                     <i class="{{ $isKaprodiRole ? 'ti-user-minus' : 'ti-trash' }}"></i>
+                                                     <i class="{{ $isKaprodiRole ? 'mdi mdi-account-minus' : 'ti-trash' }}"></i>
                                                  </button>
                                              </form>
                                          </div>

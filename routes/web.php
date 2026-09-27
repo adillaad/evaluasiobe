@@ -289,6 +289,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('/store-quick-metode', 'storeQuickMetode')->name('store-quick-metode');
                 Route::get('/get-mks-by-kurikulum/{kurikulumId}', 'getMksByKurikulum')->name('get-mks-by-kurikulum');
                 Route::get('/fix-db-index', 'fixDbIndex')->name('fix-db-index');
+                Route::post('/{id}/update-setup', 'updateSetup')->name('update-setup');
                 Route::get('/{id}/detail', 'showDetail')->name('detail');
                 Route::delete('/{id}', 'destroy')->name('destroy');
             });
@@ -611,6 +612,8 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('get-prodi/{fakultas_id}', [UserPM::class, 'getProdi']);
 
                     Route::get('indexListProfil', [ProfilController::class, 'indexListProfil'])->name('indexListProfil');
+                    Route::get('profil-lulusan/download-template', [ProfilController::class, 'downloadTemplateProfil'])->name('profil-lulusan.download-template');
+                    Route::post('profil-lulusan/import-excel', [ProfilController::class, 'importExcelProfil'])->name('profil-lulusan.import-excel');
                     Route::get('indexProfilProfesi', [ProfilController::class, 'indexProfilProfesi'])->name('indexProfilProfesi');
                     Route::get('readListProfil', [ProfilController::class, 'readListProfil'])->name('readListProfil');
                     Route::get('readListProfilProf', [ProfilController::class, 'readListProfilProf'])->name('readListProfilProf');
@@ -679,6 +682,8 @@ Route::middleware(['auth'])->group(function () {
                     // CPL Pages
                     Route::prefix('cpl')->name('cpl.')->group(function () {
                         Route::get('cpl-prodi', [CPLPM::class, 'index'])->name('index');
+                        Route::get('download-template', [CPLPM::class, 'downloadTemplate'])->name('download-template');
+                        Route::post('import-excel', [CPLPM::class, 'importExcel'])->name('import-excel');
                         Route::get('add-cpl', [CPLPM::class, 'create'])->name('create');
                         Route::post('add-cpl', [CPLPM::class, 'store'])->name('store');
                         Route::get('edit/{id}', [CPLPM::class, 'edit'])->name('edit');
@@ -962,6 +967,8 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
 
                 // Profesi
             Route::get('indexListProfil', [ProfilController::class, 'indexListProfil'])->name('indexListProfil');
+            Route::get('profil-lulusan/download-template', [ProfilController::class, 'downloadTemplateProfil'])->name('profil-lulusan.download-template');
+            Route::post('profil-lulusan/import-excel', [ProfilController::class, 'importExcelProfil'])->name('profil-lulusan.import-excel');
             Route::get('readListProfil', [ProfilController::class, 'readListProfil'])->name('readListProfil');
             Route::get('indexPemetaanCPMKProf', [ProfilController::class, 'indexPemetaanCPMKProf'])->name('indexPemetaanCPMKProf');
             Route::get('add-profesi-cpmks', [ProfilController::class, 'addProfesiCpmk'])->name('profesi-cpmk-add');
@@ -984,6 +991,8 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                 // CPL Pages
                 Route::prefix('cpl')->name('cpl.')->group(function () {
                     Route::get('cpl-prodi', [CPLPM::class, 'index'])->name('index');
+                    Route::get('download-template', [CPLPM::class, 'downloadTemplate'])->name('download-template');
+                    Route::post('import-excel', [CPLPM::class, 'importExcel'])->name('import-excel');
                     Route::get('add-cpl', [CPLPM::class, 'create'])->name('create');
                     Route::post('add-cpl', [CPLPM::class, 'store'])->name('store');
                     Route::get('edit/{id}', [CPLPM::class, 'edit'])->name('edit');

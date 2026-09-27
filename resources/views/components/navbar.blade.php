@@ -168,6 +168,34 @@
             $pageTitle = ucwords(str_replace(['-', '_', '.'], ' ', $lastSegment));
         }
     }
+
+    // --- Tentukan apakah halaman saat ini adalah Visualisasi ---
+    $isVisualisasi = str_contains(request()->path(), 'visual') || request()->routeIs('*.visual*');
+
+    $visualRoutes = [];
+    if ($isVisualisasi) {
+        $visualRoutes = [
+            'mahasiswa' => Route::has($currentPrefix . 'visualisasi.visual-mahasiswa')
+                ? route($currentPrefix . 'visualisasi.visual-mahasiswa')
+                : (Route::has($currentPrefix . 'visual-mahasiswa') ? route($currentPrefix . 'visual-mahasiswa') : url('/visual-mahasiswa')),
+
+            'angkatan' => Route::has($currentPrefix . 'visualisasi.visual-mahasiswaAngkatan')
+                ? route($currentPrefix . 'visualisasi.visual-mahasiswaAngkatan')
+                : (Route::has($currentPrefix . 'visual-mahasiswaAngkatan') ? route($currentPrefix . 'visual-mahasiswaAngkatan') : url('/visual-mahasiswaAngkatan')),
+
+            'matakuliah' => Route::has($currentPrefix . 'visualisasi.visual-mahasiswaMataKuliah')
+                ? route($currentPrefix . 'visualisasi.visual-mahasiswaMataKuliah')
+                : (Route::has($currentPrefix . 'visual-mahasiswaMataKuliah') ? route($currentPrefix . 'visual-mahasiswaMataKuliah') : url('/visual-mahasiswaMataKuliah')),
+
+            'program-studi' => Route::has($currentPrefix . 'visualisasi.visual-program-studi')
+                ? route($currentPrefix . 'visualisasi.visual-program-studi')
+                : (Route::has($currentPrefix . 'visual-program-studi') ? route($currentPrefix . 'visual-program-studi') : url('/visual-program-studi')),
+
+            'fakultas' => Route::has($currentPrefix . 'visualisasi.visual-fakultas')
+                ? route($currentPrefix . 'visualisasi.visual-fakultas')
+                : (Route::has($currentPrefix . 'visual-fakultas') ? route($currentPrefix . 'visual-fakultas') : url('/visual-fakultas')),
+        ];
+    }
 @endphp
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -410,6 +438,119 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
             color: #94a3b8 !important;
             background-color: #f8fafc !important;
             border-color: #e2e8f0 !important;
+        }
+
+        /* Sleek Modern Navbar Combobox Controls */
+        /* Sleek Modern Navbar Combobox Controls - Borderless Text Trigger Style */
+        #navbarVisualisasiControls .nav-combobox-wrapper,
+        #navVisualisasiSlot .nav-combobox-wrapper,
+        .nav-combobox-wrapper {
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+        }
+        #navbarVisualisasiControls .nav-combobox-input,
+        #navVisualisasiSlot .nav-combobox-input,
+        .nav-combobox-input.form-control,
+        .nav-combobox-input {
+            height: 32px !important;
+            min-height: 32px !important;
+            padding: 2px 26px 2px 10px !important;
+            font-size: 0.88rem !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            border: 1px solid rgba(255, 255, 255, 0.35) !important;
+            background: rgba(255, 255, 255, 0.18) !important;
+            background-color: rgba(255, 255, 255, 0.18) !important;
+            color: #ffffff !important;
+            backdrop-filter: blur(4px) !important;
+            box-shadow: none !important;
+            outline: none !important;
+            transition: all 0.18s ease !important;
+            text-overflow: ellipsis !important;
+            overflow: hidden !important;
+            white-space: nowrap !important;
+            cursor: pointer !important;
+        }
+        #navbarVisualisasiControls .nav-combobox-input::placeholder,
+        #navVisualisasiSlot .nav-combobox-input::placeholder,
+        .nav-combobox-input::placeholder {
+            color: rgba(255, 255, 255, 0.85) !important;
+        }
+        #navbarVisualisasiControls .nav-combobox-input:hover,
+        #navVisualisasiSlot .nav-combobox-input:hover,
+        .nav-combobox-input:hover {
+            background: rgba(255, 255, 255, 0.28) !important;
+            background-color: rgba(255, 255, 255, 0.28) !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
+            color: #ffffff !important;
+        }
+        #navbarVisualisasiControls .nav-combobox-input:focus,
+        #navVisualisasiSlot .nav-combobox-input:focus,
+        .nav-combobox-input:focus {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #1F3BB3 !important;
+            box-shadow: 0 0 0 3px rgba(31, 59, 179, 0.15) !important;
+            outline: none !important;
+        }
+        #navbarVisualisasiControls .nav-combobox-toggle-btn,
+        #navVisualisasiSlot .nav-combobox-toggle-btn,
+        .nav-combobox-toggle-btn {
+            position: absolute !important;
+            right: 4px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            color: #ffffff !important;
+            opacity: 0.9 !important;
+            padding: 2px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 0.75rem !important;
+            pointer-events: none !important;
+        }
+        .nav-combobox-dropdown-menu {
+            position: absolute !important;
+            top: calc(100% + 6px) !important;
+            left: 0 !important;
+            min-width: 220px !important;
+            max-width: 340px !important;
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 10px !important;
+            z-index: 99999 !important;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16) !important;
+            overflow: hidden !important;
+        }
+        .nav-combobox-options-list {
+            max-height: 250px !important;
+            overflow-y: auto !important;
+            padding: 4px 0 !important;
+        }
+        .nav-combobox-option {
+            padding: 8px 12px !important;
+            font-size: 0.83rem !important;
+            color: #334155 !important;
+            cursor: pointer !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            transition: background 0.12s ease !important;
+        }
+        .nav-combobox-option:hover,
+        .nav-combobox-option.is-focused {
+            background: #f1f5f9 !important;
+            color: #1F3BB3 !important;
+        }
+        .nav-combobox-option.is-selected {
+            background: #eff6ff !important;
+            color: #1F3BB3 !important;
+            font-weight: 700 !important;
         }
 
         /* Form Labels Uniformity */
@@ -792,6 +933,13 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
                                 </span>
                             @endif
                         </p>
+                    </div>
+                @elseif ($isVisualisasi)
+                    <div class="d-flex align-items-center flex-wrap gap-2 py-1" id="navVisualisasiHeaderGroup">
+                        <h1 class="welcome-text themed-text mb-0 me-2" style="font-size: 1.1rem; font-weight: 600; letter-spacing: -0.2px; color: #ffffff !important;">
+                            Visualisasi
+                        </h1>
+                        <div id="navVisualisasiSlot" class="d-flex align-items-center flex-wrap gap-2"></div>
                     </div>
                 @else
                     <div class="d-flex align-items-center">

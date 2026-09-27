@@ -23,9 +23,11 @@ class CPLController extends Controller
     public function index(Request $request)
     {
         $query = CPL::query()
+            ->with(['kurikulum', 'prodi.fakultas'])
+            ->leftJoin('kurikulums', 'cpls.id_kurikulum', '=', 'kurikulums.id')
             ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->select('cpls.id', 'cpls.kode', 'cpls.judul', 'cpls.id_prodi');
+            ->select('cpls.*', 'kurikulums.tahun as kurikulum_tahun');
 
         if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
             $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
@@ -211,7 +213,13 @@ class CPLController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk menghapus CPL ini.');
         }
 
+        $affectedProfilIds = ProfilCpl::where('idCpl', $cpl->id)->pluck('idProfil')->toArray();
         $cpl->delete();
+
+        foreach ($affectedProfilIds as $pId) {
+            self::recalculateCplPlBobot($pId);
+        }
+
         return redirect()->route($this->getRouteByAuthority())->with('success', 'CPL berhasil dihapus!');
     }
 
@@ -298,6 +306,11 @@ class CPLController extends Controller
             return;
         }
 
+        if ($count === 1) {
+            ProfilCpl::where('id', $profilCpls->first()->id)->update(['bobot' => 100]);
+            return;
+        }
+
         if ($forceEqual) {
             $equalBobot = round(100.0 / $count, 2);
             $equalBobotVal = (float)$equalBobot == (int)$equalBobot ? (int)$equalBobot : $equalBobot;
@@ -325,28 +338,46 @@ class CPLController extends Controller
             return $item->bobot === null || (float)$item->bobot <= 0;
         });
 
-        if ($explicitItems->isEmpty() || ($unweightedItems->isNotEmpty() && (float)$explicitItems->sum('bobot') >= 100.0)) {
-            $equalBobot = round(100.0 / $count, 2);
+        if ($unweightedItems->isNotEmpty()) {
+            $totalExplicit = (float)$explicitItems->sum('bobot');
+            if ($explicitItems->isEmpty() || $totalExplicit >= 100.0) {
+                $equalBobot = round(100.0 / $count, 2);
+                $equalBobotVal = (float)$equalBobot == (int)$equalBobot ? (int)$equalBobot : $equalBobot;
+                foreach ($profilCpls as $item) {
+                    ProfilCpl::where('id', $item->id)->update(['bobot' => $equalBobotVal]);
+                }
+                return;
+            }
+
+            $remainingWeight = max(0, 100.0 - $totalExplicit);
+            $unweightedCount = $unweightedItems->count();
+            $equalBobot = round($remainingWeight / $unweightedCount, 2);
             $equalBobotVal = (float)$equalBobot == (int)$equalBobot ? (int)$equalBobot : $equalBobot;
-            foreach ($profilCpls as $item) {
+            foreach ($unweightedItems as $item) {
                 ProfilCpl::where('id', $item->id)->update(['bobot' => $equalBobotVal]);
             }
             return;
         }
 
-        if ($unweightedItems->isEmpty()) {
-            return;
-        }
-
-        $totalExplicit = (float)$explicitItems->sum('bobot');
-        $remainingWeight = max(0, 100.0 - $totalExplicit);
-        $unweightedCount = $unweightedItems->count();
-
-        if ($unweightedCount > 0) {
-            $equalBobot = round($remainingWeight / $unweightedCount, 2);
-            $equalBobotVal = (float)$equalBobot == (int)$equalBobot ? (int)$equalBobot : $equalBobot;
-            foreach ($unweightedItems as $item) {
-                ProfilCpl::where('id', $item->id)->update(['bobot' => $equalBobotVal]);
+        // When all items have explicit weights ($unweightedItems is empty):
+        // Check if total sum is not 100% (e.g. after deleting a CPL)
+        $totalSum = (float)$explicitItems->sum('bobot');
+        if (abs($totalSum - 100.0) > 0.01) {
+            // Check if all items currently have equal weights
+            $uniqueWeights = $explicitItems->pluck('bobot')->map(fn($w) => (float)$w)->unique();
+            if ($uniqueWeights->count() <= 1) {
+                $equalBobot = round(100.0 / $count, 2);
+                $equalBobotVal = (float)$equalBobot == (int)$equalBobot ? (int)$equalBobot : $equalBobot;
+                foreach ($profilCpls as $item) {
+                    ProfilCpl::where('id', $item->id)->update(['bobot' => $equalBobotVal]);
+                }
+            } else {
+                // Scale weights proportionally to sum up to 100%
+                foreach ($profilCpls as $item) {
+                    $scaled = round(((float)$item->bobot / $totalSum) * 100.0, 2);
+                    $scaledVal = (float)$scaled == (int)$scaled ? (int)$scaled : $scaled;
+                    ProfilCpl::where('id', $item->id)->update(['bobot' => $scaledVal]);
+                }
             }
         }
     }
@@ -773,28 +804,40 @@ class CPLController extends Controller
 
         $cpls = $queryCpl->get();
         $matrix = $request->input('matrix', []);
+        $bobots = $request->input('bobot', []);
 
-        DB::transaction(function () use ($cpls, $matrix) {
+        DB::transaction(function () use ($cpls, $matrix, $bobots) {
             $affectedProfilIds = [];
+            $cplIds = $cpls->pluck('id')->toArray();
+            $existingProfilIds = ProfilCpl::whereIn('idCpl', $cplIds)->pluck('idProfil')->toArray();
+            $affectedProfilIds = array_merge($affectedProfilIds, $existingProfilIds);
+
             foreach ($cpls as $cpl) {
                 $selectedProfilIds = isset($matrix[$cpl->id]) ? array_map('intval', (array)$matrix[$cpl->id]) : [];
-
-                $existingBobotMap = ProfilCpl::where('idCpl', $cpl->id)->pluck('bobot', 'idProfil')->toArray();
 
                 $syncData = [];
                 foreach ($selectedProfilIds as $profilId) {
                     $affectedProfilIds[] = $profilId;
+
+                    $rawBobot = $bobots[$cpl->id][$profilId] ?? null;
+                    $bVal = null;
+                    if ($rawBobot !== null && $rawBobot !== '') {
+                        $num = (float)$rawBobot;
+                        $bVal = ($num > 0 && $num <= 1.0) ? round($num * 100.0, 2) : $num;
+                        $bVal = (float)$bVal == (int)$bVal ? (int)$bVal : $bVal;
+                    }
+
                     $syncData[$profilId] = [
                         'id_prodi' => $cpl->id_prodi,
-                        'bobot' => $existingBobotMap[$profilId] ?? 0,
+                        'bobot' => $bVal,
                     ];
                 }
 
                 $cpl->profilLulusan()->sync($syncData);
             }
 
-            foreach (array_unique($affectedProfilIds) as $pId) {
-                self::recalculateCplPlBobot($pId, true);
+            foreach (array_unique(array_filter($affectedProfilIds)) as $pId) {
+                self::recalculateCplPlBobot($pId, false);
             }
         });
 
@@ -943,5 +986,157 @@ class CPLController extends Controller
         }
 
         return redirect()->back()->with('success', 'Matriks Pemetaan CPL - BK - MK berhasil diperbarui!');
+    }
+
+    // Download Template Excel CPL Prodi
+    public function downloadTemplate()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CplProdiTemplateExport, 'Template_Import_CPL_Prodi.xlsx');
+    }
+
+    // Import Excel CPL Prodi
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+            'id_kurikulum' => 'nullable|integer',
+        ]);
+
+        $user = auth()->user();
+        $id_prodi_user = $user->id_prodiUser;
+
+        $file = $request->file('excel_file');
+        if (!$file || !$file->isValid()) {
+            return redirect()->back()->with('error', 'File Excel tidak valid.');
+        }
+
+        try {
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $dataRows = $worksheet->toArray();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
+        }
+
+        if (count($dataRows) <= 1) {
+            return redirect()->back()->with('error', 'File Excel kosong atau hanya berisi header.');
+        }
+
+        // Drop header (baris 1)
+        unset($dataRows[0]);
+
+        $validAspeks = [
+            'Sikap',
+            'Keterampilan Umum',
+            'Keterampilan Khusus',
+            'Pengetahuan',
+            'Pengetahuan & Keterampilan',
+            'Pengetahuan Interdisipliner',
+            'Keterampilan Umum & Khusus',
+            'Lainnya'
+        ];
+
+        $importedCount = 0;
+        $updatedCount = 0;
+
+        DB::beginTransaction();
+        try {
+            foreach ($dataRows as $row) {
+                $rawTahunKurikulum = trim((string)($row[0] ?? ''));
+                $rawKode = trim((string)($row[1] ?? ''));
+                $rawAspek = trim((string)($row[2] ?? ''));
+                $judul = trim((string)($row[3] ?? ''));
+
+                if (empty($rawKode) && empty($judul)) {
+                    continue;
+                }
+
+                // 1. Tentukan Kurikulum
+                $kurikulumObj = null;
+                $tahunClean = preg_replace('/[^\d]/', '', $rawTahunKurikulum);
+
+                if (!empty($tahunClean)) {
+                    $kurikulumObj = Kurikulum::where('id_prodi', $id_prodi_user)
+                        ->where('tahun', $tahunClean)
+                        ->first();
+                    if (!$kurikulumObj) {
+                        $kurikulumObj = Kurikulum::where('tahun', $tahunClean)->first();
+                    }
+                }
+
+                if (!$kurikulumObj && $request->id_kurikulum) {
+                    $kurikulumObj = Kurikulum::find($request->id_kurikulum);
+                }
+
+                if (!$kurikulumObj) {
+                    $kurikulumObj = Kurikulum::where('id_prodi', $id_prodi_user)->orderBy('tahun', 'desc')->first()
+                        ?: Kurikulum::orderBy('tahun', 'desc')->first();
+                }
+
+                if (!$kurikulumObj) {
+                    continue;
+                }
+
+                // 2. Format Kode & Nomor CPL (User hanya mengisi nomor, misal '01' atau '1')
+                $trimmedNum = preg_replace('/^CPL/i', '', trim((string)$rawKode));
+                $trimmedNum = trim($trimmedNum);
+
+                if (empty($trimmedNum)) {
+                    continue;
+                }
+
+                $nomor = $trimmedNum;
+                $formattedKode = 'CPL' . $trimmedNum;
+
+                // 3. Tentukan Aspek
+                $aspekVal = 'Pengetahuan'; // Default
+                foreach ($validAspeks as $va) {
+                    if (strcasecmp($rawAspek, $va) === 0 || stristr($rawAspek, $va) !== false) {
+                        $aspekVal = $va;
+                        break;
+                    }
+                }
+
+                // 4. Update or Create CPL record
+                $existingCpl = CPL::where('id_prodi', $id_prodi_user)
+                    ->where('id_kurikulum', $kurikulumObj->id)
+                    ->where(function($q) use ($formattedKode, $nomor) {
+                        $q->where('kode', $formattedKode)->orWhere('nomor', $nomor);
+                    })->first();
+
+                if ($existingCpl) {
+                    $existingCpl->update([
+                        'aspek' => $aspekVal,
+                        'judul' => !empty($judul) ? $judul : $existingCpl->judul,
+                    ]);
+                    $updatedCount++;
+                } else {
+                    CPL::create([
+                        'aspek' => $aspekVal,
+                        'id_kurikulum' => $kurikulumObj->id,
+                        'kode' => $formattedKode,
+                        'nomor' => $nomor,
+                        'judul' => !empty($judul) ? $judul : ('CPL ' . $formattedKode),
+                        'id_prodi' => $id_prodi_user,
+                    ]);
+                    $importedCount++;
+                }
+            }
+
+            DB::commit();
+
+            $msg = "Berhasil memproses impor CPL Prodi: {$importedCount} data baru ditambahkan";
+            if ($updatedCount > 0) {
+                $msg .= ", {$updatedCount} data diperbarui.";
+            } else {
+                $msg .= ".";
+            }
+
+            return redirect()->back()->with('success', $msg);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal mengimpor data CPL: ' . $e->getMessage());
+        }
     }
 }

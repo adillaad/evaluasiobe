@@ -94,29 +94,52 @@
                                         </td>
                                         @foreach ($profilLulusans as $profilLulusan)
                                             @php
-                                                $isChecked = $cpl->profilLulusan->contains($profilLulusan->id);
+                                                $mappedProfil = $cpl->profilLulusan->firstWhere('id', $profilLulusan->id);
+                                                $isChecked = !is_null($mappedProfil);
+                                                $bobotRaw = $isChecked ? $mappedProfil->pivot->bobot : null;
+                                                $formattedBobot = null;
+                                                if ($bobotRaw !== null && $bobotRaw !== '') {
+                                                    $num = (float)$bobotRaw;
+                                                    $formattedBobot = ($num == (int)$num) ? (int)$num : $num;
+                                                }
                                             @endphp
                                             <td class="text-center matrix-cell {{ $isChecked ? 'is-mapped' : '' }}"
                                                 data-cpl="{{ $cpl->id }}"
                                                 data-pl="{{ $profilLulusan->id }}">
                                                 
-                                                <!-- View Mode Icon -->
+                                                <!-- View Mode Icon & Bobot -->
                                                 <div class="cell-view-mode">
                                                     @if ($isChecked)
-                                                        <i class="mdi mdi-check-circle text-primary font-20"></i>
+                                                        <div class="d-flex align-items-center justify-content-center">
+                                                            <span class="badge bg-primary-soft text-primary fw-bold font-12 px-2 py-1 rounded-pill d-inline-flex align-items-center gap-1">
+                                                                <i class="mdi mdi-check-circle font-14"></i>
+                                                                <span>{{ $formattedBobot !== null ? $formattedBobot . '%' : '' }}</span>
+                                                            </span>
+                                                        </div>
                                                     @else
                                                         <span class="text-muted opacity-25 font-16">-</span>
                                                     @endif
                                                 </div>
 
-                                                <!-- Edit Mode Toggle Input -->
-                                                <div class="cell-edit-mode d-none">
+                                                <!-- Edit Mode Inputs (Checkbox + Bobot Input) -->
+                                                <div class="cell-edit-mode d-none align-items-center justify-content-center gap-2">
                                                     <input type="checkbox"
-                                                           class="form-check-input matrix-checkbox border-slate cursor-pointer"
+                                                           class="form-check-input matrix-checkbox border-slate cursor-pointer m-0"
                                                            name="matrix[{{ $cpl->id }}][]"
                                                            value="{{ $profilLulusan->id }}"
                                                            {{ $isChecked ? 'checked' : '' }}
-                                                           style="width: 20px; height: 20px; cursor: pointer;">
+                                                           style="width: 18px; height: 18px; cursor: pointer;">
+                                                    
+                                                    <input type="number"
+                                                           class="form-control form-control-sm matrix-bobot-input text-center p-1"
+                                                           name="bobot[{{ $cpl->id }}][{{ $profilLulusan->id }}]"
+                                                           placeholder="%"
+                                                           step="any"
+                                                           min="0"
+                                                           max="100"
+                                                           value="{{ $isChecked && $formattedBobot !== null ? $formattedBobot : '' }}"
+                                                           {{ $isChecked ? '' : 'disabled' }}
+                                                           style="width: 65px; height: 30px; font-size: 12px;">
                                                 </div>
                                             </td>
                                         @endforeach
@@ -155,7 +178,20 @@
                             @if ($cpl->profilLulusan->isNotEmpty())
                                 <ul class="mb-0">
                                     @foreach ($cpl->profilLulusan as $profil)
-                                        <li>{{ $profil->kode }} - {{ $profil->deskripsi }}</li>
+                                        @php
+                                            $bRaw = $profil->pivot->bobot ?? null;
+                                            $bFmt = null;
+                                            if ($bRaw !== null && $bRaw !== '') {
+                                                $num = (float)$bRaw;
+                                                $bFmt = ($num == (int)$num) ? (int)$num : $num;
+                                            }
+                                        @endphp
+                                        <li>
+                                            {{ $profil->kode }} - {{ $profil->deskripsi }}
+                                            @if ($bFmt !== null)
+                                                <span class="badge bg-light text-primary border ms-1 font-11">Bobot: {{ $bFmt }}%</span>
+                                            @endif
+                                        </li>
                                     @endforeach
                                 </ul>
                             @else
@@ -257,7 +293,7 @@
 
         .cpl-pl-table .col-pl {
             width: auto;
-            min-width: 72px;
+            min-width: 110px;
         }
 
         .cpl-pl-table tbody td {
@@ -347,8 +383,9 @@
                 columnDefs: [
                     { targets: 0, className: 'text-center', width: '56px' },
                     { targets: 1, className: 'text-center', width: '110px' },
+                    { targets: 2, className: 'text-center', width: '110px' },
                     @if ($profilLulusans->count() > 0)
-                    { targets: [{{ implode(',', range(2, 1 + $profilLulusans->count())) }}], className: 'text-center', orderable: false }
+                    { targets: [{{ implode(',', range(3, 2 + $profilLulusans->count())) }}], className: 'text-center', orderable: false }
                     @endif
                 ]
             });
@@ -420,35 +457,33 @@
         $(document).on('click', '.matrix-cell', function (e) {
             if (!isEditMode) return;
 
+            // If user clicked inside the bobot input field, do not toggle checkbox
+            if ($(e.target).is('.matrix-bobot-input')) return;
+
             const checkbox = this.querySelector('.matrix-checkbox');
             if (checkbox && e.target !== checkbox) {
                 checkbox.checked = !checkbox.checked;
-            }
-
-            if (checkbox && checkbox.checked) {
-                this.classList.add('is-mapped');
-            } else {
-                this.classList.remove('is-mapped');
+                $(checkbox).trigger('change');
             }
         });
 
         $(document).on('change', '.matrix-checkbox', function () {
-            const cell = this.closest('.matrix-cell');
-            if (cell) {
-                if (this.checked) {
-                    cell.classList.add('is-mapped');
-                } else {
-                    cell.classList.remove('is-mapped');
-                }
+            const cell = $(this).closest('.matrix-cell');
+            const bobotInput = cell.find('.matrix-bobot-input');
+            if (this.checked) {
+                cell.addClass('is-mapped');
+                bobotInput.prop('disabled', false);
+            } else {
+                cell.removeClass('is-mapped');
+                bobotInput.prop('disabled', true).val('');
             }
         });
 
         // Form submit handler to collect input from all DataTables pages
         $('#form-matrix-edit').on('submit', function (e) {
             if (dataTableInst) {
-                // Collect checked checkboxes from hidden DataTables rows
                 const form = this;
-                dataTableInst.$('input[type="checkbox"]:checked').each(function () {
+                dataTableInst.$('input.matrix-checkbox:checked').each(function () {
                     if (!$.contains(document.body, this)) {
                         $(form).append(
                             $('<input>')
@@ -456,6 +491,17 @@
                                 .attr('name', this.name)
                                 .val(this.value)
                         );
+
+                        const cell = $(this).closest('.matrix-cell');
+                        const bobotInput = cell.find('.matrix-bobot-input');
+                        if (bobotInput.length && bobotInput.val() !== '') {
+                            $(form).append(
+                                $('<input>')
+                                    .attr('type', 'hidden')
+                                    .attr('name', bobotInput.attr('name'))
+                                    .val(bobotInput.val())
+                            );
+                        }
                     }
                 });
             }

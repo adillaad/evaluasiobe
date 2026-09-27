@@ -13,6 +13,63 @@
     cursor: pointer;
 }
 
+/* Clean View Mode Inputs & Labels (No Greyed-Out Text) */
+.form-check-input:disabled ~ .form-check-label,
+.form-check-input[disabled] ~ .form-check-label,
+.form-check-label,
+.cpmk-card,
+.cpmk-card *,
+.cpmk-card .badge,
+.cpmk-card span,
+.cpmk-card label {
+    opacity: 1 !important;
+    color: #0f172a !important;
+}
+
+.form-control:disabled, 
+.form-select:disabled,
+.form-check-input:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+.form-control[disabled],
+.form-select[disabled] {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: #0f172a !important;
+    -webkit-opacity: 1 !important;
+    cursor: default !important;
+}
+
+select:disabled option,
+.form-select:disabled option {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+}
+
+.form-select:disabled,
+select:disabled {
+    background-image: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+}
+
+.form-check-input:disabled:checked {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    opacity: 1 !important;
+}
+
+/* CPMK Card Modern clean white background */
+.cpmk-card {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+}
+
 /* Modern Modal Styles */
 .modal-content.modern-modal {
     border: none !important;
@@ -239,17 +296,35 @@
                     <h5 class="card-title mb-0 fs-6 fw-bold text-primary" id="form-mode-title">
                         <i class="mdi mdi-checkbox-marked-outline me-1"></i> Pilih Metode, Bobot, dan Pemetaan CPMK (Nilai Per Metode)
                     </h5>
-                    <button type="button" class="btn-add-metode btn btn-sm btn-outline-primary shadow-sm">
-                        <i class="mdi mdi-plus me-1"></i> Tambah Metode Penilaian
-                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                        @php
+                            $hasExisting = $existingMetodes->isNotEmpty();
+                        @endphp
+                        @if ($hasExisting)
+                            <button type="button" id="btn-edit-pemetaan" class="btn btn-sm btn-primary fw-bold shadow-sm">
+                                <i class="mdi mdi-pencil me-1"></i> Edit Pemetaan
+                            </button>
+                        @endif
+                        <button type="button" class="btn-add-metode btn btn-sm btn-outline-primary shadow-sm" style="{{ $hasExisting ? 'display: none !important;' : '' }}">
+                            <i class="mdi mdi-plus me-1"></i> Tambah Metode Penilaian
+                        </button>
+                    </div>
                 </div>
+
+                @if ($hasExisting)
+                    <div id="locked-pemetaan-notice" class="alert alert-info py-2 px-3 small mb-3 border-0 rounded-3 d-flex align-items-center justify-content-between shadow-sm">
+                        <div>
+                            <i class="mdi mdi-lock-outline me-1 fs-6"></i>
+                            <span>Pemetaan telah tersimpan. Klik <strong>Edit Pemetaan</strong> jika ingin mengubah metode, bobot, atau CPMK.</span>
+                        </div>
+                        <span class="badge bg-info text-white px-2 py-1">Tersimpan</span>
+                    </div>
+                @endif
+
                 <form id="form-metode-cpmk" action="{{ route('dosen.konversi-nilai.store-metode', $konversi->id) }}" method="POST">
                     @csrf
 
                     <div id="metode-container" class="mb-4">
-                        @php
-                            $hasExisting = $existingMetodes->isNotEmpty();
-                        @endphp
 
                         @if ($hasExisting)
                             @foreach ($existingMetodes as $existingKm)
@@ -262,7 +337,7 @@
                                      <div class="row align-items-center g-2">
                                          <div class="col-md-5">
                                              <label class="form-label small fw-bold mb-1">Metode Penilaian <span class="text-danger">*</span></label>
-                                             <select class="form-select form-select-sm metode-select" name="metode_ids[]" required>
+                                             <select class="form-select form-select-sm metode-select" name="metode_ids[]" required {{ $hasExisting ? 'disabled' : '' }}>
                                                  <option value="">-- Pilih Metode Penilaian --</option>
                                                  @foreach ($masterMetodes as $metode)
                                                      <option value="{{ $metode->id }}" {{ $metode->id == $metodeId ? 'selected' : '' }}>
@@ -275,10 +350,10 @@
                                          <div class="col-md-4">
                                              <label class="form-label small fw-bold mb-1">Bobot <span class="text-danger">*</span></label>
                                              <input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm metode-bobot-input"
-                                                    name="bobot[{{ $metodeId }}]" value="{{ $bobotVal }}" placeholder="0 - 100" required>
+                                                    name="bobot[{{ $metodeId }}]" value="{{ $bobotVal }}" placeholder="0 - 100" required {{ $hasExisting ? 'disabled' : '' }}>
                                          </div>
                                          <div class="col-md-3 d-flex align-items-center justify-content-end gap-2 pt-2 pt-md-0">
-                                             <button type="button" class="btn btn-sm btn-outline-danger remove-metode-btn py-1 px-2" title="Hapus Metode">
+                                             <button type="button" class="btn btn-sm btn-outline-danger remove-metode-btn py-1 px-2 {{ $hasExisting ? 'd-none' : '' }}" title="Hapus Metode" {{ $hasExisting ? 'disabled' : '' }}>
                                                  <i class="mdi mdi-trash-can-outline me-1"></i> Hapus
                                              </button>
                                              <button type="button" class="btn btn-sm text-secondary border-0 shadow-none toggle-cpmk-btn p-1 fs-5" title="Sembunyikan CPMK">
@@ -303,14 +378,15 @@
                                                     $isCpmkChecked = $existingCpmkMap->has($cpmk->id);
                                                 @endphp
                                                 <div class="col-md-6">
-                                                    <div class="border rounded p-2 bg-light h-100 cpmk-card" data-cpmk-id="{{ $cpmk->id }}">
+                                                    <div class="border rounded p-2 bg-white h-100 cpmk-card" data-cpmk-id="{{ $cpmk->id }}">
                                                         <div class="form-check mb-1 d-flex align-items-start ps-0">
-                                                            <input class="form-check-input form-check-input-lg cpmk-check me-2 ms-0 mt-1 flex-shrink-0" type="checkbox"
+                                                            <input class="form-check-input form-check-input-lg cpmk-check me-2 ms-0 mt-1 flex-shrink-0 {{ $hasExisting && !$isCpmkChecked ? 'd-none' : '' }}" type="checkbox"
                                                                    name="cpmk_mapping[{{ $metodeId }}][{{ $cpmk->id }}][]"
                                                                    value="0"
                                                                    data-cpmk-id="{{ $cpmk->id }}"
                                                                    id="cpmk_{{ $metodeId }}_{{ $cpmk->id }}"
-                                                                   {{ $isCpmkChecked ? 'checked' : '' }}>
+                                                                   {{ $isCpmkChecked ? 'checked' : '' }}
+                                                                   {{ $hasExisting ? 'disabled' : '' }}>
                                                             <label class="form-check-label fw-semibold text-dark small mb-0 ms-1 text-wrap" for="cpmk_{{ $metodeId }}_{{ $cpmk->id }}">
                                                                 <span class="badge bg-success me-1" style="font-size: 0.7rem; padding: 3px 6px;">{{ $cpmk->kode }}</span>
                                                                 <span style="font-size: 0.82rem;">{{ $cpmk->judul ?? $cpmk->kode }}</span>
@@ -323,7 +399,7 @@
                                                                 <span class="small fw-bold text-secondary" style="font-size: 0.75rem;">
                                                                     <i class="mdi mdi-format-list-numbered me-1"></i> Breakdown Soal
                                                                 </span>
-                                                                <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none btn-add-soal" style="font-size: 0.75rem;">
+                                                                <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none btn-add-soal {{ $hasExisting ? 'd-none' : '' }}" style="font-size: 0.75rem;" {{ $hasExisting ? 'disabled' : '' }}>
                                                                     <i class="mdi mdi-plus-circle me-1"></i> Tambah Soal
                                                                 </button>
                                                             </div>
@@ -347,14 +423,14 @@
                                                                         <div class="soal-item-row d-flex align-items-center gap-1 mb-1">
                                                                             <input type="text" class="form-control form-control-sm soal-nama-input"
                                                                                    name="cpmk_soal[{{ $metodeId }}][{{ $cpmk->id }}][{{ $sIdx }}][nama_soal]"
-                                                                                   value="{{ $exSoal->nama_soal }}" placeholder="Nama Soal (ex: Soal #1)" style="font-size: 0.75rem; height: 30px;">
-                                                                             <div class="input-group input-group-sm" style="max-width: 140px;">
-                                                                                 <input type="number" step="0.01" min="0.01" max="100" class="form-control form-control-sm soal-bobot-input px-2 text-end fw-semibold"
-                                                                                        name="cpmk_soal[{{ $metodeId }}][{{ $cpmk->id }}][{{ $sIdx }}][bobot_soal]"
-                                                                                        value="{{ $displayBobot }}" placeholder="Bobot" style="font-size: 0.8rem; height: 30px;">
-                                                                                 <span class="input-group-text px-2 bg-light text-dark fw-bold" style="font-size: 0.75rem;">%</span>
-                                                                             </div>
-                                                                            <button type="button" class="btn btn-sm text-danger p-0 border-0 remove-soal-btn"><i class="mdi mdi-close-circle fs-5"></i></button>
+                                                                                   value="{{ $exSoal->nama_soal }}" placeholder="Nama Soal (ex: Soal #1)" style="font-size: 0.75rem; height: 30px;" {{ $hasExisting ? 'disabled' : '' }}>
+                                                                              <div class="input-group input-group-sm" style="max-width: 140px;">
+                                                                                  <input type="number" step="0.01" min="0.01" max="100" class="form-control form-control-sm soal-bobot-input px-2 text-end fw-semibold"
+                                                                                         name="cpmk_soal[{{ $metodeId }}][{{ $cpmk->id }}][{{ $sIdx }}][bobot_soal]"
+                                                                                         value="{{ $displayBobot }}" placeholder="Bobot" style="font-size: 0.8rem; height: 30px;" {{ $hasExisting ? 'disabled' : '' }}>
+                                                                                  <span class="input-group-text px-2 bg-light text-dark fw-bold" style="font-size: 0.75rem;">%</span>
+                                                                              </div>
+                                                                            <button type="button" class="btn btn-sm text-danger p-0 border-0 remove-soal-btn {{ $hasExisting ? 'd-none' : '' }}" {{ $hasExisting ? 'disabled' : '' }}><i class="mdi mdi-close-circle fs-5"></i></button>
                                                                         </div>
                                                                     @endforeach
                                                                 @endif
@@ -371,12 +447,14 @@
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center border-top pt-3 flex-wrap gap-2">
-                        <button type="button" class="btn-add-metode btn btn-sm btn-outline-primary">
+                        <button type="button" class="btn-add-metode btn btn-sm btn-outline-primary" style="{{ $hasExisting ? 'display: none !important;' : '' }}">
                             <i class="mdi mdi-plus me-1"></i> Tambah Metode Penilaian
                         </button>
-                        <button type="submit" id="btn-submit-metode" class="btn btn-primary btn-sm px-4">
-                            <i class="mdi mdi-content-save me-1"></i> Simpan Metode & Pemetaan CPMK
-                        </button>
+                        <div class="d-flex align-items-center gap-2 ms-auto">
+                            <button type="submit" id="btn-submit-metode" class="btn btn-primary btn-sm px-4 {{ $hasExisting ? 'd-none' : '' }}" disabled>
+                                <i class="mdi mdi-content-save me-1"></i> Simpan Metode & Pemetaan CPMK
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -781,6 +859,92 @@
         const totalCpmkCount = {{ $totalCpmkCount }};
         let rowCounter = 0;
         let currentMode = 'AB'; // Default Mode A & B
+        let isLocked = {{ $hasExisting ? 'true' : 'false' }};
+
+        function applyLockState(locked) {
+            isLocked = locked;
+            let $form = $('#form-metode-cpmk');
+
+            if (locked) {
+                $form.find('input, select').prop('disabled', true);
+                $('.btn-add-metode').attr('style', 'display: none !important;').addClass('d-none');
+                $('.remove-metode-btn, .btn-add-soal, .remove-soal-btn').attr('style', 'display: none !important;').addClass('d-none').prop('disabled', true);
+                $('#btn-submit-metode').attr('style', 'display: none !important;').addClass('d-none');
+
+                // Tampilkan seluruh CPMK card. Hilangkan box checkbox kosong untuk CPMK yang TIDAK dipilih, dan pertahankan ceklis untuk CPMK yang dipilih.
+                $('.cpmk-card').each(function() {
+                    let $card = $(this);
+                    let $col = $card.closest('.col-md-6');
+                    let $check = $card.find('.cpmk-check');
+                    let isChecked = $check.is(':checked');
+
+                    $col.removeClass('d-none');
+                    $card.css({ 'opacity': '1', 'background-color': '#ffffff' });
+
+                    if (isChecked) {
+                        $check.removeClass('d-none');
+                    } else {
+                        $check.addClass('d-none');
+                    }
+                });
+
+                $('#btn-edit-pemetaan')
+                    .removeClass('btn-outline-secondary btn-warning')
+                    .addClass('btn-primary')
+                    .html('<i class="mdi mdi-pencil me-1"></i> Edit Pemetaan');
+
+                $('#locked-pemetaan-notice')
+                    .removeClass('alert-warning')
+                    .addClass('alert-info')
+                    .html(`
+                        <div>
+                            <i class="mdi mdi-lock-outline me-1 fs-6"></i>
+                            <span>Pemetaan telah tersimpan. Klik <strong>Edit Pemetaan</strong> jika ingin mengubah metode, bobot, atau CPMK.</span>
+                        </div>
+                        <span class="badge bg-info text-white px-2 py-1">Tersimpan</span>
+                    `)
+                    .removeClass('d-none');
+            } else {
+                $form.find('input, select').prop('disabled', false);
+                $('.btn-add-metode').attr('style', 'display: inline-flex !important;').removeClass('d-none');
+                $('.remove-metode-btn, .btn-add-soal, .remove-soal-btn').attr('style', '').removeClass('d-none').prop('disabled', false);
+                $('#btn-submit-metode').attr('style', '').removeClass('d-none');
+
+                // Tampilkan kembali seluruh CPMK cards dan seluruh box checkbox dalam mode edit
+                $('.cpmk-card').each(function() {
+                    let $card = $(this);
+                    let $col = $card.closest('.col-md-6');
+                    let $check = $card.find('.cpmk-check');
+                    $col.removeClass('d-none');
+                    $check.removeClass('d-none');
+                    $card.css({ 'opacity': '1', 'background-color': '#ffffff' });
+                });
+
+                $('#btn-edit-pemetaan')
+                    .removeClass('btn-primary btn-warning')
+                    .addClass('btn-outline-secondary')
+                    .html('<i class="mdi mdi-close-circle me-1"></i> Batal Edit');
+
+                $('#locked-pemetaan-notice')
+                    .removeClass('alert-info')
+                    .addClass('alert-warning')
+                    .html(`
+                        <div>
+                            <i class="mdi mdi-pencil-outline me-1 fs-6"></i>
+                            <span><strong>Mode Edit Aktif:</strong> Silakan ubah metode, bobot, atau pemetaan CPMK, lalu simpan perubahan.</span>
+                        </div>
+                        <span class="badge bg-warning text-dark px-2 py-1">Mode Edit</span>
+                    `)
+                    .removeClass('d-none');
+            }
+
+            recalculateStatus();
+        }
+
+        $(document).on('click', '#btn-edit-pemetaan', function(e) {
+            e.preventDefault();
+            applyLockState(!isLocked);
+        });
 
         $(document).on('change', 'input[type="radio"]', function() {
             let $modal = $(this).closest('.modal-body');
@@ -846,7 +1010,9 @@
                     if (optVal && optVal !== currentVal && selectedMetodeIds.includes(optVal)) {
                         $(this).prop('disabled', true);
                     } else {
-                        $(this).prop('disabled', false);
+                        if (!isLocked) {
+                            $(this).prop('disabled', false);
+                        }
                     }
                 });
             });
@@ -951,15 +1117,41 @@
                 $btnDownloadAB.removeClass('disabled btn-secondary').addClass('btn-success').removeAttr('style');
                 $btnDownloadC.removeClass('disabled btn-secondary').addClass('btn-outline-success').removeAttr('disabled');
                 $btnUpload.removeClass('disabled btn-secondary').addClass('btn-primary').removeAttr('disabled');
-                $btnSubmit.removeAttr('disabled');
             } else {
                 $btnDownloadAB.addClass('disabled btn-secondary').removeClass('btn-success');
                 $btnDownloadC.addClass('disabled btn-secondary').removeClass('btn-outline-success').attr('disabled', 'disabled');
                 $btnUpload.addClass('disabled btn-secondary').removeClass('btn-primary').attr('disabled', 'disabled');
-                if (!isAllSoalBreakdownValid) {
-                    $btnSubmit.attr('disabled', 'disabled');
+            }
+
+            // Tombol Simpan HANYA DITAMPILKAN & AKTIF pada mode edit (!isLocked)
+            if (isLocked) {
+                $btnSubmit.attr('style', 'display: none !important;').addClass('d-none');
+                $('.remove-metode-btn, .btn-add-soal, .remove-soal-btn').attr('style', 'display: none !important;').addClass('d-none');
+            } else {
+                $btnSubmit.attr('style', '').removeClass('d-none');
+                $('.remove-metode-btn, .btn-add-soal, .remove-soal-btn').attr('style', '').removeClass('d-none');
+                if (isFullyComplete) {
+                    $btnSubmit
+                        .prop('disabled', false)
+                        .removeClass('disabled btn-secondary')
+                        .addClass('btn-primary')
+                        .removeAttr('disabled')
+                        .css({ 'background-color': '', 'border-color': '', 'color': '', 'cursor': 'pointer', 'opacity': '1' });
+                    $btnSubmit.attr('title', 'Simpan Perubahan Metode & Pemetaan CPMK');
                 } else {
-                    $btnSubmit.removeAttr('disabled');
+                    $btnSubmit
+                        .prop('disabled', true)
+                        .removeClass('btn-primary')
+                        .addClass('disabled btn-secondary')
+                        .attr('disabled', 'disabled')
+                        .css({ 'background-color': '#6c757d', 'border-color': '#6c757d', 'color': '#ffffff', 'cursor': 'not-allowed', 'opacity': '0.65' });
+                    if (!isBobotValid) {
+                        $btnSubmit.attr('title', 'Total Bobot Metode harus 100%');
+                    } else if (!isCompletenessValid) {
+                        $btnSubmit.attr('title', 'Seluruh CPMK harus terpetakan');
+                    } else if (!isAllSoalBreakdownValid) {
+                        $btnSubmit.attr('title', 'Kontribusi bobot breakdown soal harus 100%');
+                    }
                 }
             }
 
@@ -1274,6 +1466,8 @@
             }
         });
 
+        // Terapkan state terkunci (read-only) atau terbuka sesuai status pemetaan
+        applyLockState(isLocked);
         // Terapkan Mode AB secara tegas saat pertama kali dimuat
         applyModeUI('AB');
     });
