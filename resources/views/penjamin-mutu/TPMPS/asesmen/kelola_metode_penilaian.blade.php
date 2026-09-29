@@ -220,15 +220,15 @@
                                     @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
                                         <td class="text-center">
                                             <div class="d-inline-flex gap-1">
-                                                <button type="button" class="btn btn-warning btn-sm py-1 px-2" data-bs-toggle="modal" data-bs-target="#editMetodeModal{{ $metode->id }}">
-                                                    <i class="mdi mdi-pencil me-1"></i> Edit
+                                                <button type="button" class="btn btn-outline-primary btn-icons" data-bs-toggle="modal" data-bs-target="#editMetodeModal{{ $metode->id }}" data-bs-placement="top" title="Edit">
+                                                    <i class="ti-pencil"></i>
                                                 </button>
                                                 <form action="{{ route($currentPrefix . 'asesmen.kelola-metode.destroy', $metode->id) }}" method="POST"
-                                                      onsubmit="return confirm('Yakin ingin menghapus metode {{ $metode->nama }}?')" class="d-inline">
+                                                      onsubmit="return confirm('Yakin ingin menghapus metode {{ $metode->nama }}?')" class="d-inline m-0 p-0">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm py-1 px-2">
-                                                        <i class="mdi mdi-delete me-1"></i> Hapus
+                                                    <button type="submit" class="btn btn-outline-danger btn-icons" data-bs-placement="top" title="Hapus">
+                                                        <i class="ti-trash"></i>
                                                     </button>
                                                 </form>
                                             </div>

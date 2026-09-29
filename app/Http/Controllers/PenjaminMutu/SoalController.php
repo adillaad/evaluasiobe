@@ -87,6 +87,8 @@ class SoalController extends Controller
 
     public function detail($kode_mk)
     {
+        /*
+        // ===== KODINGAN VERSIS SEBELUMNYA (DIJADIKAN KOMENTAR) =====
         $mk = DB::table('mks')
             ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
             ->where('mks.kode', $kode_mk)
@@ -115,7 +117,6 @@ class SoalController extends Controller
         $detailMetodes = $metodes->map(function ($metode) use ($kode_mk) {
             $totalBobotMetode = (float) $metode->total_bobot_metode;
 
-            // CPMK yang memang dikonfigurasi untuk metode penilaian ini di Asesmen
             $cpmkMkMetode = DB::table('cpl_mk_cpmk_penilaian as cmcp')
                 ->join('penilaian_metode as pm', 'pm.cpl_mk_cpmk_penilaian_id', '=', 'cmcp.id')
                 ->join('cpmks', 'cmcp.cpmk_id', '=', 'cpmks.id')
@@ -170,11 +171,9 @@ class SoalController extends Controller
                 ->orderBy('tanpa_soal.cpmk_id')
                 ->get();
 
-            // Hitung ulang bobotSoal jika di database bernilai 0 / null
             $totalSoalPerCpmk = $soals->groupBy('cpmk_id');
             $totalTanpaPerCpmk = $tanpaSoals->groupBy('cpmk_id');
 
-            // Sematkan bobot_cpmk dari cpmkMkMetode ke masing-masing item soal / tanpa_soal
             $soals->transform(function ($soal) use ($cpmkMkMetode, $totalSoalPerCpmk, $totalTanpaPerCpmk) {
                 $cpmkBobot = (float)($cpmkMkMetode->where('id', $soal->cpmk_id)->first()->bobot_cpmk_metode ?? 0);
                 $soal->bobot_cpmk = $cpmkBobot;
@@ -183,7 +182,6 @@ class SoalController extends Controller
                     if ((float)$soal->persentase_cpmk > 0) {
                         $soal->bobotSoal = round(($soal->persentase_cpmk / 100) * $cpmkBobot, 2);
                     } else {
-                        // Jika persentase_cpmk belum diisi, bagi rata bobot CPMK ke jumlah soal di CPMK tsb
                         $countSoal = isset($totalSoalPerCpmk[$soal->cpmk_id]) ? $totalSoalPerCpmk[$soal->cpmk_id]->count() : 0;
                         $countTanpa = isset($totalTanpaPerCpmk[$soal->cpmk_id]) ? $totalTanpaPerCpmk[$soal->cpmk_id]->count() : 0;
                         $totalItem = $countSoal + $countTanpa;
@@ -234,7 +232,6 @@ class SoalController extends Controller
                 $pctTanpa = $tanpaSoals->where('cpmk_id', $cpmk->id)->sum('persentase_cpmk');
                 $total    = $pctSoal + $pctTanpa;
 
-                // Jika persentase_cpmk belum terisi/0 tetapi bobotSoal sudah terisi
                 if ($total == 0 && (float)$cpmk->bobot_cpmk_metode > 0) {
                     $bobotSoal  = $soals->where('cpmk_id', $cpmk->id)->sum('bobotSoal');
                     $bobotTanpa = $tanpaSoals->where('cpmk_id', $cpmk->id)->sum('bobotSoal');
@@ -250,6 +247,216 @@ class SoalController extends Controller
                     'judul'     => $cpmk->judul,
                     'total_pct' => $total,
                     'lengkap'   => $total >= 100,
+                ];
+            });
+
+            $semuaCpmkLengkap = $cpmkKelengkapan->every(fn($c) => $c['lengkap']);
+            $bobotLengkap     = abs($totalBobotTerisi - $totalBobotMetode) < 0.01;
+
+            return [
+                'metode_id'          => $metode->metode_id,
+                'nama_metode'        => $metode->nama_metode,
+                'total_bobot_metode' => $totalBobotMetode,
+                'total_bobot_terisi' => round($totalBobotTerisi, 2),
+                'persen_kelengkapan' => $persenKelengkapan,
+                'bobot_lengkap'      => $bobotLengkap,
+                'cpmk_lengkap'       => $semuaCpmkLengkap,
+                'semua_lengkap'      => $bobotLengkap && $semuaCpmkLengkap,
+                'soals'              => $soals,
+                'tanpa_soals'        => $tanpaSoals,
+                'cpmk_kelengkapan'   => $cpmkKelengkapan,
+                'cpmk_belum'         => $cpmkBelum,
+            ];
+        });
+
+        $mkLengkap = $detailMetodes->every(fn($m) => $m['semua_lengkap']);
+
+        $statusSoal = DB::table('soals')
+            ->where('kode_mk', $kode_mk)
+            ->whereIn('status', ['Menunggu', 'Valid', 'Tolak'])
+            ->select('status', DB::raw('COUNT(*) as jumlah'))
+            ->groupBy('status')
+            ->pluck('jumlah', 'status');
+
+        return view('penjamin-mutu.soal.detail', compact(
+            'mk',
+            'detailMetodes',
+            'cpmkMk',
+            'mkLengkap',
+            'statusSoal',
+            'kode_mk'
+        ));
+        */
+
+        // ===== KODINGAN DARI SOALCONTROLLER2 (AKTIF DENGAN TAMPILAN SESUAI SCREENSHOT) =====
+        $mk = DB::table('mks')
+            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
+            ->where('mks.kode', $kode_mk)
+            ->select('mks.*', 'prodi.nama as nama_prodi')
+            ->first();
+
+        if (!$mk) {
+            return redirect()->back()->with('error', 'Mata Kuliah tidak ditemukan.');
+        }
+
+        $metodes = DB::table('cpl_mk_cpmk_penilaian as cmcp')
+            ->join('penilaian_metode as pm', 'pm.cpl_mk_cpmk_penilaian_id', '=', 'cmcp.id')
+            ->join('metode_penilaian as mp', 'mp.id', '=', 'pm.metode_id')
+            ->where('cmcp.mk_kode', $kode_mk)
+            ->select('mp.id as metode_id', 'mp.nama as nama_metode', DB::raw('SUM(pm.bobot) as total_bobot_metode'))
+            ->groupBy('mp.id', 'mp.nama')
+            ->orderBy('mp.nama')
+            ->get();
+
+        $cpmkMk = DB::table('cpmk_mk')
+            ->join('cpmks', 'cpmk_mk.cpmk_id', '=', 'cpmks.id')
+            ->where('cpmk_mk.mk_kode', $kode_mk)
+            ->select('cpmks.id', 'cpmks.kode', 'cpmks.judul')
+            ->get();
+
+        $detailMetodes = $metodes->map(function ($metode) use ($kode_mk, $cpmkMk) {
+            $totalBobotMetode = (float) $metode->total_bobot_metode;
+
+            $soals = DB::table('soals')
+                ->leftJoin('cpls', 'soals.cpl', '=', 'cpls.id')
+                ->leftJoin('cpmks', 'soals.cpmk', '=', 'cpmks.id')
+                ->where('soals.kode_mk', $kode_mk)
+                ->where('soals.jenis', $metode->metode_id)
+                ->whereIn('soals.status', ['Menunggu', 'Valid', 'Tolak'])
+                ->select(
+                    'soals.id',
+                    'soals.pertanyaan',
+                    'soals.bobotSoal',
+                    'soals.persentase_cpmk',
+                    'soals.status',
+                    'soals.komentar',
+                    'cpls.kode as kode_cpl',
+                    'cpmks.id as cpmk_id',
+                    'cpmks.kode as kode_cpmk',
+                    'cpmks.judul as judul_cpmk'
+                )
+                ->orderBy('soals.cpmk')->orderBy('soals.id')
+                ->get();
+
+            $tanpaSoals = DB::table('tanpa_soal')
+                ->leftJoin('cpls', 'tanpa_soal.cpl_id', '=', 'cpls.id')
+                ->leftJoin('cpmks', 'tanpa_soal.cpmk_id', '=', 'cpmks.id')
+                ->where('tanpa_soal.kode_mk', $kode_mk)
+                ->where('tanpa_soal.metode_id', $metode->metode_id)
+                ->whereIn('tanpa_soal.status', ['Menunggu Validasi', 'Valid', 'Ditolak'])
+                ->select(
+                    'tanpa_soal.id',
+                    'tanpa_soal.nama_instrumen',
+                    'tanpa_soal.bobot_TS as bobotSoal',
+                    'tanpa_soal.persentase_cpmk',
+                    'tanpa_soal.status',
+                    'cpls.kode as kode_cpl',
+                    'cpmks.id as cpmk_id',
+                    'cpmks.kode as kode_cpmk',
+                    'cpmks.judul as judul_cpmk'
+                )
+                ->orderBy('tanpa_soal.cpmk_id')
+                ->get();
+
+            // CPMK yang terikat dengan metode penilaian ini di Asesmen/RPS
+            $cpmkMkMetode = DB::table('cpl_mk_cpmk_penilaian as cmcp')
+                ->join('penilaian_metode as pm', 'pm.cpl_mk_cpmk_penilaian_id', '=', 'cmcp.id')
+                ->join('cpmks', 'cmcp.cpmk_id', '=', 'cpmks.id')
+                ->where('cmcp.mk_kode', $kode_mk)
+                ->where('pm.metode_id', $metode->metode_id)
+                ->select(
+                    'cpmks.id',
+                    'cpmks.kode',
+                    'cpmks.judul',
+                    DB::raw('SUM(pm.bobot) as bobot_cpmk_metode')
+                )
+                ->groupBy('cpmks.id', 'cpmks.kode', 'cpmks.judul')
+                ->get();
+
+            // Sematkan bobot dari Asesmen/RPS yang dibuat Penjamin Mutu ke masing-masing soal & instrumen
+            $totalSoalPerCpmk  = $soals->groupBy('cpmk_id');
+            $totalTanpaPerCpmk = $tanpaSoals->groupBy('cpmk_id');
+
+            $soals->transform(function ($soal) use ($cpmkMkMetode, $totalSoalPerCpmk, $totalTanpaPerCpmk) {
+                $cpmkBobot = (float)($cpmkMkMetode->where('id', $soal->cpmk_id)->first()->bobot_cpmk_metode ?? 0);
+                $soal->bobot_cpmk = $cpmkBobot;
+
+                if ((float)$soal->persentase_cpmk > 0) {
+                    $soal->bobotSoal = round(($soal->persentase_cpmk / 100) * $cpmkBobot, 2);
+                } else {
+                    $countSoal  = isset($totalSoalPerCpmk[$soal->cpmk_id]) ? $totalSoalPerCpmk[$soal->cpmk_id]->count() : 0;
+                    $countTanpa = isset($totalTanpaPerCpmk[$soal->cpmk_id]) ? $totalTanpaPerCpmk[$soal->cpmk_id]->count() : 0;
+                    $totalItem  = $countSoal + $countTanpa;
+                    if ($totalItem > 0 && $cpmkBobot > 0) {
+                        $soal->bobotSoal = round($cpmkBobot / $totalItem, 2);
+                        $soal->persentase_cpmk = round(100 / $totalItem, 1);
+                    } else {
+                        $soal->bobotSoal = $cpmkBobot;
+                    }
+                }
+                return $soal;
+            });
+
+            $tanpaSoals->transform(function ($ts) use ($cpmkMkMetode, $totalSoalPerCpmk, $totalTanpaPerCpmk) {
+                $cpmkBobot = (float)($cpmkMkMetode->where('id', $ts->cpmk_id)->first()->bobot_cpmk_metode ?? 0);
+                $ts->bobot_cpmk = $cpmkBobot;
+
+                if ((float)$ts->persentase_cpmk > 0) {
+                    $ts->bobotSoal = round(($ts->persentase_cpmk / 100) * $cpmkBobot, 2);
+                } else {
+                    $countSoal  = isset($totalSoalPerCpmk[$ts->cpmk_id]) ? $totalSoalPerCpmk[$ts->cpmk_id]->count() : 0;
+                    $countTanpa = isset($totalTanpaPerCpmk[$ts->cpmk_id]) ? $totalTanpaPerCpmk[$ts->cpmk_id]->count() : 0;
+                    $totalItem  = $countSoal + $countTanpa;
+                    if ($totalItem > 0 && $cpmkBobot > 0) {
+                        $ts->bobotSoal = round($cpmkBobot / $totalItem, 2);
+                        $ts->persentase_cpmk = round(100 / $totalItem, 1);
+                    } else {
+                        $ts->bobotSoal = $cpmkBobot;
+                    }
+                }
+                return $ts;
+            });
+
+            // Gunakan CPMK terikat jika ada, fallback ke seluruh CPMK MK jika belum dikonfigurasi di Asesmen
+            $cpmkTarget = $cpmkMkMetode->isNotEmpty() ? $cpmkMkMetode : $cpmkMk;
+
+            // Total Bobot Terisi hanya dihitung dari instrumen/soal yang statusnya VALID
+            $totalBobotSoalValid  = $soals->where('status', 'Valid')->sum('bobotSoal');
+            $totalBobotTanpaValid = $tanpaSoals->where('status', 'Valid')->sum('bobotSoal');
+            $totalBobotTerisi     = $totalBobotSoalValid + $totalBobotTanpaValid;
+
+            $persenKelengkapan = $totalBobotMetode > 0
+                ? round(($totalBobotTerisi / $totalBobotMetode) * 100, 1)
+                : 0;
+
+            $cpmkTerpetakan = collect($soals->pluck('cpmk_id'))
+                ->merge($tanpaSoals->pluck('cpmk_id'))
+                ->filter()->unique()->values();
+
+            $cpmkBelum = $cpmkTarget->filter(fn($c) => !$cpmkTerpetakan->contains($c->id))->values();
+
+            $cpmkKelengkapan = $cpmkTarget->map(function ($cpmk) use ($soals, $tanpaSoals) {
+                $pctSoalValid  = $soals->where('cpmk_id', $cpmk->id)->where('status', 'Valid')->sum('persentase_cpmk');
+                $pctTanpaValid = $tanpaSoals->where('cpmk_id', $cpmk->id)->where('status', 'Valid')->sum('persentase_cpmk');
+                $totalValid    = $pctSoalValid + $pctTanpaValid;
+
+                // Jika persentase belum terisi tapi bobot valid ada
+                $cpmkBobotTarget = (float)($cpmk->bobot_cpmk_metode ?? 0);
+                if ($totalValid == 0 && $cpmkBobotTarget > 0) {
+                    $bobotSoalValid  = $soals->where('cpmk_id', $cpmk->id)->where('status', 'Valid')->sum('bobotSoal');
+                    $bobotTanpaValid = $tanpaSoals->where('cpmk_id', $cpmk->id)->where('status', 'Valid')->sum('bobotSoal');
+                    $totalBobotValid = $bobotSoalValid + $bobotTanpaValid;
+                    if ($totalBobotValid > 0) {
+                        $totalValid = round(($totalBobotValid / $cpmkBobotTarget) * 100, 1);
+                    }
+                }
+
+                return [
+                    'id'        => $cpmk->id,
+                    'kode'      => $cpmk->kode,
+                    'judul'     => $cpmk->judul,
+                    'total_pct' => $totalValid,
+                    'lengkap'   => $totalValid >= 100,
                 ];
             });
 

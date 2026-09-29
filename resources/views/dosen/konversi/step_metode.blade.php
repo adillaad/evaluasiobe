@@ -26,6 +26,12 @@
     color: #0f172a !important;
 }
 
+/* KUNCI SOLUSI: Memaksa teks badge bg-success berwarna putih dan mengalahkan aturan di atas */
+.cpmk-card .badge.bg-success,
+.cpmk-card .badge.bg-success * {
+    color: #ffffff !important;
+}
+
 .form-control:disabled, 
 .form-select:disabled,
 .form-check-input:disabled,
@@ -247,6 +253,18 @@ select:disabled {
             </div>
         </div>
 
+        @if (!empty($hasImportedData))
+        <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-3 d-flex align-items-center gap-3 p-3" style="background-color: #fff8e6; border-left: 4px solid #ffb800 !important;">
+            <i class="mdi mdi-alert-circle-outline fs-2 text-warning"></i>
+            <div>
+                <strong class="d-block text-dark mb-1">Perhatian: Penilaian Ini Sudah Memiliki Data Nilai yang Di-import</strong>
+                <span class="small text-dark opacity-75">
+                    Jika Anda mengubah/menambah pemetaan CPMK atau rincian soal di bawah, harap <strong>unduh kembali template Excel terbaru</strong> dan <strong>upload ulang</strong> agar nilai mahasiswa otomatis ter-update mengikuti pemetaan baru.
+                </span>
+            </div>
+        </div>
+        @endif
+
         {{-- Status Progress Tracker --}}
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-3 bg-light rounded">
@@ -388,7 +406,7 @@ select:disabled {
                                                                    {{ $isCpmkChecked ? 'checked' : '' }}
                                                                    {{ $hasExisting ? 'disabled' : '' }}>
                                                             <label class="form-check-label fw-semibold text-dark small mb-0 ms-1 text-wrap" for="cpmk_{{ $metodeId }}_{{ $cpmk->id }}">
-                                                                <span class="badge bg-success me-1" style="font-size: 0.7rem; padding: 3px 6px;">{{ $cpmk->kode }}</span>
+                                                                <span class="badge bg-success text-white me-1" style="font-size: 0.7rem; padding: 3px 6px;">{{ $cpmk->kode }}</span>
                                                                 <span style="font-size: 0.82rem;">{{ $cpmk->judul ?? $cpmk->kode }}</span>
                                                             </label>
                                                         </div>
@@ -511,7 +529,7 @@ select:disabled {
                                        value="0"
                                        data-cpmk-id="{{ $cpmk->id }}">
                                 <label class="form-check-label fw-semibold text-dark small mb-0 ms-1 text-wrap cpmk-label">
-                                    <span class="badge bg-success me-1" style="font-size: 0.7rem; padding: 3px 6px;">{{ $cpmk->kode }}</span>
+                                    <span class="badge bg-success text-white me-1" style="font-size: 0.7rem; padding: 3px 6px;">{{ $cpmk->kode }}</span>
                                     <span style="font-size: 0.82rem;">{{ $cpmk->judul ?? $cpmk->kode }}</span>
                                 </label>
                             </div>

@@ -349,7 +349,11 @@ private function buildCompetencyData(Mahasiswa $mahasiswa, Prodi $prodi, ?array 
         $cplData = $this->buildCplData($records, $prodi, $allCplScores, $cpmkData);
 
         // --- Final Grade ---
-        $finalGrade = $prodi->is_aptikom
+        $hasSoalGabungan = $records->contains(function ($r) {
+            return ($r->sumber ?? '') !== 'konversi' && !empty($r->BobotSoal) && (float)$r->BobotSoal > 0;
+        });
+
+        $finalGrade = $hasSoalGabungan
             ? $this->calcFinalGradeAptikom($records, $courseKode)
             : $this->calcFinalGradeNonAptikom($records);
         //konversi nilai angka ke huruf mutu

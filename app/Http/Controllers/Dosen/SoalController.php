@@ -667,7 +667,7 @@ class SoalController extends Controller
             ]);
 
             $validation = new DataValidation();
-            $validation->setType(DataValidation::TYPE_WHOLE);
+            $validation->setType(DataValidation::TYPE_DECIMAL);
             $validation->setOperator(DataValidation::OPERATOR_BETWEEN);
             $validation->setAllowBlank(false);
 
@@ -774,7 +774,7 @@ class SoalController extends Controller
             $sheet->setCellValue("{$col}1", $headerText);
 
             $validation = new DataValidation();
-            $validation->setType(DataValidation::TYPE_WHOLE);
+            $validation->setType(DataValidation::TYPE_DECIMAL);
             $validation->setOperator(DataValidation::OPERATOR_BETWEEN);
             $validation->setAllowBlank(false);
             $validation->setShowInputMessage(true);
@@ -1856,7 +1856,7 @@ class SoalController extends Controller
     private function addCellValidation($sheet, string $col): void
     {
         $validation = new DataValidation();
-        $validation->setType(DataValidation::TYPE_WHOLE);
+        $validation->setType(DataValidation::TYPE_DECIMAL);
         $validation->setOperator(DataValidation::OPERATOR_BETWEEN);
         $validation->setAllowBlank(false);
         $validation->setShowInputMessage(true);

@@ -176,9 +176,16 @@ class Mahasiswa extends Model
         $records = $this->getCourseRecords($courseKode);
         if ($records->isEmpty()) return 0.0;
 
-        return $isAptikom
-            ? $this->calcFinalGradeAptikom($records, $courseKode)
-            : $this->calcFinalGradeNonAptikom($records);
+        // Cek apakah ada data dari jalur Soal Gabungan (memiliki BobotSoal > 0 dan sumber bukan konversi)
+        $hasSoalGabungan = $records->contains(function ($r) {
+            return ($r->sumber ?? '') !== 'konversi' && !empty($r->BobotSoal) && (float)$r->BobotSoal > 0;
+        });
+
+        if ($hasSoalGabungan) {
+            return $this->calcFinalGradeAptikom($records, $courseKode);
+        }
+
+        return $this->calcFinalGradeNonAptikom($records);
     }
     private function calcFinalGradeAptikom(
         \Illuminate\Support\Collection $records,

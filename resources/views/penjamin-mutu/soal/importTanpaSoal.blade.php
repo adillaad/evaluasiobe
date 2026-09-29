@@ -183,77 +183,19 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                                 ? ($first->ta_tahun . ($first->ta_semester ? ' - ' . $first->ta_semester : '')) 
                                                 : ($first->tahunAjaran?->tahun ? ($first->tahunAjaran->tahun . ' - ' . $first->tahunAjaran->jenis_semester) : ($first->tahun ?? '-'));
 
-                                            // Hitung Skor CPMK Mahasiswa untuk Mata Kuliah ini
-                                            $npmMhs = $first->npm ?? $first->NPM;
-                                            $courseKode = $first->Course;
-
-                                            // Ambil seluruh record mutus mahasiswa ini pada mata kuliah ini
-                                            $allMhsCourseMutus = \Illuminate\Support\Facades\DB::table('mutus')
-                                                ->where(function($q) use ($npmMhs) {
-                                                    $q->where('npm', $npmMhs)->orWhere('NPM', $npmMhs);
-                                                })
-                                                ->where('Course', $courseKode)
-                                                ->get();
-
-                                            $kmId = $first->konversi_metode_id;
-                                            $mappedCpmkIds = collect();
-                                            if ($kmId) {
-                                                $mappedCpmkIds = \Illuminate\Support\Facades\DB::table('konversi_cpmk_metode')
-                                                    ->where('konversi_metode_id', $kmId)
-                                                    ->pluck('cpmk_id')
-                                                    ->unique();
-                                            }
-
-                                            $cpmkScoresList = collect();
-                                            $mhsDummy = new \App\Models\Mahasiswa();
-
-                                            if ($mappedCpmkIds->isNotEmpty()) {
-                                                foreach ($mappedCpmkIds as $cId) {
-                                                    $cpmkDetail = \Illuminate\Support\Facades\DB::table('cpmks')->where('id', $cId)->first();
-                                                    
-                                                    // Dapatkan seluruh konversi_metode_id yang terikat ke CPMK ini pada MK ini
-                                                    $allKmIdsForCpmk = \Illuminate\Support\Facades\DB::table('konversi_cpmk_metode as kcm')
-                                                        ->join('konversi_metode as km', 'kcm.konversi_metode_id', '=', 'km.id')
-                                                        ->join('penilaian_konversi as pk', 'km.penilaian_konversi_id', '=', 'pk.id')
-                                                        ->where('pk.mk_kode', $courseKode)
-                                                        ->where(function($q) use ($first) {
-                                                            if (!empty($first->tahun_ajaran_id)) {
-                                                                $q->where('pk.tahun_ajaran_id', $first->tahun_ajaran_id);
-                                                            }
-                                                        })
-                                                        ->where('kcm.cpmk_id', $cId)
-                                                        ->pluck('km.id')
-                                                        ->unique();
-
-                                                    if ($allKmIdsForCpmk->isEmpty()) {
-                                                        $allKmIdsForCpmk = \Illuminate\Support\Facades\DB::table('konversi_cpmk_metode as kcm')
-                                                            ->join('konversi_metode as km', 'kcm.konversi_metode_id', '=', 'km.id')
-                                                            ->join('penilaian_konversi as pk', 'km.penilaian_konversi_id', '=', 'pk.id')
-                                                            ->where('pk.mk_kode', $courseKode)
-                                                            ->where('kcm.cpmk_id', $cId)
-                                                            ->pluck('km.id')
-                                                            ->unique();
-                                                    }
-
-                                                    if ($allKmIdsForCpmk->isEmpty()) {
-                                                        $allKmIdsForCpmk = collect([$kmId]);
-                                                    }
-
-                                                    // Filter seluruh record mutus mahasiswa ini yang masuk ke CPMK tersebut
-                                                    $matchingRecs = $allMhsCourseMutus->whereIn('konversi_metode_id', $allKmIdsForCpmk);
-
-                                                    if ($matchingRecs->isNotEmpty()) {
-                                                        $cpmkScore = $mhsDummy->calcWeightedScore($matchingRecs);
-                                                    } else {
-                                                        $cpmkScore = (float)$nilaiMetode;
-                                                    }
-
-                                                    $cpmkScoresList->push([
-                                                        'kode' => $cpmkDetail->kode ?? ('CPMK-' . $cId),
-                                                        'score' => $cpmkScore,
-                                                    ]);
+                                            // Daftar nilai per soal/CPMK langsung dari data $items metode ini
+                                            $soalList = $items->map(function($rec) {
+                                                $cpmkLabel = null;
+                                                if (!empty($rec->Cpmk)) {
+                                                    $cpmkRec = \Illuminate\Support\Facades\DB::table('cpmks')->where('id', $rec->Cpmk)->first();
+                                                    $cpmkLabel = $cpmkRec->kode ?? ('CPMK-' . $rec->Cpmk);
                                                 }
-                                            }
+                                                return [
+                                                    'soal'  => $rec->soal ?? null,
+                                                    'cpmk'  => $cpmkLabel,
+                                                    'nilai' => $rec->nilaiSoal,
+                                                ];
+                                            });
                                         @endphp
                                         {{-- Main Row Per Mahasiswa + Mata Kuliah + Metode + Tahun Ajaran --}}
                                         <tr class="table-light border-top">
@@ -278,35 +220,41 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                             </td>
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-outline-primary py-0 px-2 text-nowrap" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGroupTanpaSoal{{ $groupIndex }}" aria-expanded="false">
-                                                    <i class="mdi mdi-chevron-down me-1"></i> Detail ({{ $cpmkScoresList->count() }})
+                                                    <i class="mdi mdi-chevron-down me-1"></i> Detail ({{ $soalList->count() }})
                                                 </button>
                                             </td>
                                         </tr>
 
-                                         {{-- Collapsible Rows Per CPMK --}}
+                                         {{-- Collapsible Rows: Nilai Per Soal/CPMK di Metode Ini --}}
                                          <tr class="p-0 border-0">
                                              <td colspan="{{ $isUnivLevel ? 10 : ($isFacultyLevel ? 9 : 8) }}" class="p-0 border-0">
                                                  <div class="collapse" id="collapseGroupTanpaSoal{{ $groupIndex }}">
                                                      <div class="p-3 bg-light border-bottom border-secondary border-2">
-                                                         <div class="text-muted fw-semibold mb-2" style="font-size: 0.9rem;">Hasil Score CPMK</div>
+                                                         <div class="text-muted fw-semibold mb-2" style="font-size: 0.9rem;">Nilai Per Soal / CPMK</div>
                                                          <div class="d-flex justify-content-between align-items-center text-secondary fw-bold border-bottom pb-1 mb-2" style="font-size: 0.85rem;">
-                                                             <div>CPMK</div>
-                                                             <div class="pe-3">Score CPMK</div>
+                                                             <div>Soal / CPMK</div>
+                                                             <div class="pe-3">Nilai</div>
                                                          </div>
                                                          <div class="d-flex flex-column gap-2">
-                                                             @if ($cpmkScoresList->isEmpty())
-                                                                 <div class="text-muted small">Tidak ada CPMK yang dipetakan langsung untuk metode konversi ini.</div>
+                                                             @if ($soalList->isEmpty())
+                                                                 <div class="text-muted small">Tidak ada data soal/CPMK untuk metode ini.</div>
                                                              @else
-                                                                 @foreach ($cpmkScoresList as $cpmkItem)
-                                                                     @php
-                                                                         $cpmkLabel = $cpmkItem['kode'];
-                                                                     @endphp
+                                                                 @foreach ($soalList as $soalItem)
                                                                      <div class="d-flex justify-content-between align-items-center" style="font-size: 0.95rem;">
                                                                          <div>
-                                                                             <span class="fw-semibold text-dark">{{ $cpmkLabel }}</span>
+                                                                             @if ($soalItem['soal'] && $soalItem['cpmk'])
+                                                                                 <span class="fw-semibold text-dark">{{ $soalItem['soal'] }}</span>
+                                                                                 <span class="text-muted small ms-1">({{ $soalItem['cpmk'] }})</span>
+                                                                             @elseif ($soalItem['soal'])
+                                                                                 <span class="fw-semibold text-dark">{{ $soalItem['soal'] }}</span>
+                                                                             @elseif ($soalItem['cpmk'])
+                                                                                 <span class="fw-semibold text-dark">{{ $soalItem['cpmk'] }}</span>
+                                                                             @else
+                                                                                 <span class="text-muted small">&mdash;</span>
+                                                                             @endif
                                                                          </div>
                                                                          <div class="fw-bold text-dark pe-3" style="font-size: 0.95rem;">
-                                                                             {{ number_format((float)$cpmkItem['score'], 2) }}
+                                                                             {{ $soalItem['nilai'] !== null ? number_format((float)$soalItem['nilai'], 2) : '-' }}
                                                                          </div>
                                                                      </div>
                                                                  @endforeach

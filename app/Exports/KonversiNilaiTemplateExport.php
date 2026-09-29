@@ -7,6 +7,8 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class KonversiNilaiTemplateExport implements FromArray, WithHeadings, WithStyles, ShouldAutoSize
 {
@@ -54,7 +56,9 @@ class KonversiNilaiTemplateExport implements FromArray, WithHeadings, WithStyles
     public function styles(Worksheet $sheet)
     {
         $highestColumn = $sheet->getHighestColumn();
+        $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
 
+        // Header Styling
         $sheet->getStyle('A1:' . $highestColumn . '1')->applyFromArray([
             'font' => [
                 'bold' => true,
@@ -69,7 +73,33 @@ class KonversiNilaiTemplateExport implements FromArray, WithHeadings, WithStyles
             ],
         ]);
 
+        // Tambahkan Data Validation (hanya angka 0-100, boleh desimal) untuk kolom nilai (mulai kolom 6 / F)
+        if ($highestColumnIndex >= 6) {
+            for ($col = 6; $col <= $highestColumnIndex; $col++) {
+                $columnLetter = Coordinate::stringFromColumnIndex($col);
+
+                $validation = new DataValidation();
+                $validation->setType(DataValidation::TYPE_DECIMAL);
+                $validation->setOperator(DataValidation::OPERATOR_BETWEEN);
+                $validation->setAllowBlank(true);
+                $validation->setShowInputMessage(true);
+                $validation->setShowErrorMessage(true);
+                $validation->setErrorStyle(DataValidation::STYLE_STOP);
+                $validation->setFormula1(0);
+                $validation->setFormula2(100);
+
+                $validation->setErrorTitle('Input Tidak Valid!');
+                $validation->setError('Nilai harus berupa angka rentang 0 s/d 100 (boleh desimal, contoh: 85.5). Tidak boleh teks/huruf.');
+
+                $validation->setPromptTitle('Input Nilai');
+                $validation->setPrompt('Masukkan nilai angka 0 s/d 100 (boleh desimal, contoh: 85.5)');
+
+                $sheet->setDataValidation("{$columnLetter}2:{$columnLetter}1000", $validation);
+            }
+        }
+
         return [];
     }
 }
+
 

@@ -32,7 +32,6 @@ class Mutu extends Model
         'BobotSoal',
         'Cpl',
         'Cpmk',
-        'sub_cpmk_id',
         'sumber',
         'tahun_ajaran_id',
         'konversi_metode_id',

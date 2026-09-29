@@ -329,6 +329,9 @@ class KonversiNilaiController extends Controller
         $totalBobotSum = $konversi->konversiMetode->sum('bobot');
         $isComplete = ($totalBobotSum == 100) && ($mappedCpmkCount >= $totalCpmkCount) && ($totalCpmkCount > 0);
 
+        $kmIds = $konversi->konversiMetode->pluck('id')->toArray();
+        $hasImportedData = !empty($kmIds) && Mutu::whereIn('konversi_metode_id', $kmIds)->where('sumber', 'konversi')->exists();
+
         return view('dosen.konversi.step_metode', compact(
             'konversi',
             'masterMetodes',
@@ -338,7 +341,8 @@ class KonversiNilaiController extends Controller
             'mappedCpmkCount',
             'totalBobotSum',
             'isComplete',
-            'userOtoritas'
+            'userOtoritas',
+            'hasImportedData'
         ));
     }
 
@@ -493,6 +497,14 @@ class KonversiNilaiController extends Controller
             }
 
             DB::commit();
+
+            $kmIds = $konversi->konversiMetode->pluck('id')->toArray();
+            $hasImportedData = !empty($kmIds) && Mutu::whereIn('konversi_metode_id', $kmIds)->where('sumber', 'konversi')->exists();
+
+            if ($hasImportedData) {
+                return redirect()->back()->with('success', 'Metode & Pemetaan CPMK berhasil disimpan. Pengingat: Karena Anda mengubah pemetaan pada penilaian yang sudah memiliki data import, silakan unduh template Excel terbaru dan upload ulang agar nilai mahasiswa diperbarui.');
+            }
+
             return redirect()->back()->with('success', 'Metode & Pemetaan CPMK berhasil disimpan. Anda sekarang dapat mengunduh template Excel.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1155,7 +1167,6 @@ class KonversiNilaiController extends Controller
                                 'namaCourse' => $konversi->mk?->nama ?? '',
                                 'Jenis' => $metodeNama,
                                 'Cpl' => $cplId,
-                                'sub_cpmk_id' => $cm->sub_cpmk_id,
                                 'Nilai' => $finalNilaiMetode,  // Nilai Akhir Metode
                                 'nilaiSoal' => $scoreVal,       // Nilai per soal CPMK
                                 'BobotSoal' => ($cm->bobot_soal > 0) ? $cm->bobot_soal : $km->bobot,
@@ -1197,7 +1208,6 @@ class KonversiNilaiController extends Controller
                                     'namaCourse' => $konversi->mk?->nama ?? '',
                                     'Jenis' => $metodeNama,
                                     'Cpl' => $cplId,
-                                    'sub_cpmk_id' => $cm->sub_cpmk_id,
                                     'Nilai' => $finalNilaiMetode,  // Nilai Akhir Metode murni dari kolom Nilai Metode
                                     'nilaiSoal' => $scoreVal,       // Nilai per CPMK
                                     'BobotSoal' => ($cm->bobot_soal > 0) ? $cm->bobot_soal : $km->bobot,
@@ -1235,7 +1245,6 @@ class KonversiNilaiController extends Controller
                                         'namaCourse' => $konversi->mk?->nama ?? '',
                                         'Jenis' => $metodeNama,
                                         'Cpl' => $cplId,
-                                        'sub_cpmk_id' => $cm->sub_cpmk_id,
                                         'Nilai' => $scoreVal,
                                         'nilaiSoal' => $scoreVal,
                                         'BobotSoal' => ($cm->bobot_soal > 0) ? $cm->bobot_soal : $km->bobot,
@@ -1261,8 +1270,6 @@ class KonversiNilaiController extends Controller
                                     'id_prodi' => $prodiId,
                                     'namaCourse' => $konversi->mk?->nama ?? '',
                                     'Jenis' => $metodeNama,
-                                    'Cpmk' => null,
-                                    'sub_cpmk_id' => null,
                                     'soal' => null,
                                     'Nilai' => $scoreVal,
                                     'nilaiSoal' => $scoreVal,
