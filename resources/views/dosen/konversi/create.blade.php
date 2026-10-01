@@ -1,3 +1,9 @@
+@php
+    $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
+    $currentPrefix = $userOtoritas
+        ? str_replace(' ', '-', strtolower($userOtoritas)) . '.'
+        : 'dosen.';
+@endphp
 @extends('dosen.template')
 
 @section('content')
@@ -6,14 +12,14 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="d-flex align-items-center mb-3">
-                    <a href="{{ route('dosen.konversi-nilai.index') }}" class="btn btn-outline-secondary btn-sm me-3">
+                    <a href="{{ route($currentPrefix . 'konversi-nilai.index') }}" class="btn btn-outline-secondary btn-sm me-3">
                         <i class="mdi mdi-arrow-left me-1"></i> Kembali
                     </a>
                     <h4 class="card-title mb-0">Setup Konversi Nilai</h4>
                 </div>
                 <p class="text-muted small mb-4">Pilih Mata Kuliah, Tahun Ajaran, dan Kurikulum yang sesuai.</p>
 
-                <form action="{{ route('dosen.konversi-nilai.store-setup') }}" method="POST">
+                <form action="{{ route($currentPrefix . 'konversi-nilai.store-setup') }}" method="POST">
                     @csrf
 
                     <!-- 1. Select Kurikulum -->
@@ -56,7 +62,7 @@
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 border-top pt-3">
-                        <a href="{{ route('dosen.konversi-nilai.index') }}" class="btn btn-secondary btn-sm">Batal</a>
+                        <a href="{{ route($currentPrefix . 'konversi-nilai.index') }}" class="btn btn-secondary btn-sm">Batal</a>
                         <button type="submit" class="btn btn-primary btn-sm px-4">
                             Simpan <i class="mdi mdi-arrow-right ms-1"></i>
                         </button>
@@ -83,7 +89,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         $mkSelect.html('<option value="" disabled selected>Mengambil data mata kuliah...</option>').prop('disabled', true);
         
-        let url = "{{ route('dosen.konversi-nilai.get-mks-by-kurikulum', ':id') }}".replace(':id', kurikulumId);
+        let url = "{{ route($currentPrefix . 'konversi-nilai.get-mks-by-kurikulum', ':id') }}".replace(':id', kurikulumId);
 
         $.ajax({
             url: url,

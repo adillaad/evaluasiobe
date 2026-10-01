@@ -151,13 +151,30 @@ class KonversiNilaiController extends Controller
         }
     }
 
+    private function getKonversiQuery($user)
+    {
+        $userOtoritas = $user->otoritas->otoritas ?? '';
+        if ($userOtoritas === 'Penjamin Mutu Program Studi') {
+            return PenilaianKonversi::whereHas('mk', function ($q) use ($user) {
+                $q->where('id_prodi', $user->id_prodiUser);
+            });
+        }
+        return PenilaianKonversi::where('dosen_id', $user->id);
+    }
+
+    private function getRoutePrefix($user)
+    {
+        $otoritas = $user->otoritas->otoritas ?? 'Dosen';
+        return str_replace(' ', '-', strtolower($otoritas)) . '.';
+    }
+
     // Daftar Konversi Nilai Dosen
     public function index()
     {
         $user = auth()->user();
         $userOtoritas = $user->otoritas->otoritas ?? 'Dosen';
 
-        $konversis = PenilaianKonversi::where('dosen_id', $user->id)
+        $konversis = $this->getKonversiQuery($user)
             ->with(['mk', 'tahunAjaran', 'kurikulum', 'konversiMetode.metodePenilaian'])
             ->orderBy('id', 'desc')
             ->paginate(10);
@@ -223,25 +240,6 @@ class KonversiNilaiController extends Controller
     {
         $user = auth()->user();
 
-        // Validasi pembatasan jalur import dinonaktifkan sementara (dihapus/di-bypass)
-        /*
-        $hasRegulerImport = Mutu::where('Course', $request->mk_kode)
-            ->where(function ($q) use ($request) {
-                $q->where('tahun_ajaran_id', $request->tahun_ajaran_id)
-                  ->orWhere('tahun', function ($sub) use ($request) {
-                      $sub->select('tahun')->from('tahun_ajaran')->where('id', $request->tahun_ajaran_id);
-                  });
-            })
-            ->where(function ($q) {
-                $q->whereNull('sumber')->orWhere('sumber', '!=', 'konversi');
-            })
-            ->exists();
-
-        if ($hasRegulerImport) {
-            return redirect()->back()->withInput()->with('error', 'Gagal membuat setup konversi! Mata Kuliah dan Tahun Ajaran ini sudah memiliki data penilaian dari jalur Normal (Per Soal). Satu kombinasi MK dan Tahun Ajaran hanya boleh memilih SATU jalur import.');
-        }
-        */
-
         $konversi = PenilaianKonversi::create([
             'dosen_id' => $user->id,
             'mk_kode' => $request->mk_kode,
@@ -249,7 +247,7 @@ class KonversiNilaiController extends Controller
             'kurikulum_id' => $request->kurikulum_id,
         ]);
 
-        return redirect()->route('dosen.konversi-nilai.step-metode', $konversi->id)
+        return redirect()->route($this->getRoutePrefix($user) . 'konversi-nilai.step-metode', $konversi->id)
             ->with('success', 'Setup konversi berhasil disimpan. Silakan lanjutkan ke pemilihan metode & pemetaan CPMK.');
     }
 
@@ -258,7 +256,7 @@ class KonversiNilaiController extends Controller
     {
         $user = auth()->user();
 
-        $konversi = PenilaianKonversi::where('dosen_id', $user->id)->findOrFail($id);
+        $konversi = $this->getKonversiQuery($user)->findOrFail($id);
 
         $request->validate([
             'tahun_ajaran_id' => 'required|integer|exists:tahun_ajaran,id',
@@ -351,8 +349,8 @@ class KonversiNilaiController extends Controller
     {
         $user = auth()->user();
 
-        $konversi = PenilaianKonversi::with('mk')
-            ->where('dosen_id', $user->id)
+        $konversi = $this->getKonversiQuery($user)
+            ->with('mk')
             ->findOrFail($id);
 
         $request->validate([
@@ -517,8 +515,8 @@ class KonversiNilaiController extends Controller
     {
         $user = auth()->user();
 
-        $konversi = PenilaianKonversi::with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->where('dosen_id', $user->id)
+        $konversi = $this->getKonversiQuery($user)
+            ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
             ->findOrFail($id);
 
         if ($konversi->konversiMetode->isEmpty()) {
@@ -615,8 +613,8 @@ class KonversiNilaiController extends Controller
     {
         $user = auth()->user();
 
-        $konversi = PenilaianKonversi::with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->where('dosen_id', $user->id)
+        $konversi = $this->getKonversiQuery($user)
+            ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
             ->findOrFail($id);
 
         $actionOption = $request->input('action_option');
@@ -699,59 +697,70 @@ class KonversiNilaiController extends Controller
             $columnMap = []; // [colIndex => ['type' => ..., 'km' => ..., 'cm_list' => ..., 'cm' => ...]]
             $tempMetodeMapSession = []; // serializable array for session
 
-            /* 
-            // --- Auto-detect Format Type dari Header Excel (Disimpan untuk pengembangan selanjutnya) ---
-            $inputFormat = $request->input('format_type');
-            if (empty($inputFormat) || $inputFormat === 'auto') {
-                $hasSoalHeader = false;
-                $hasCpmkHeader = false;
-                $hasMetodeHeader = false;
+            // --- Pengecekan Validasi Kategori Format File Excel vs Pilihan User ---
+            $hasSoalHeader = false;
+            $hasCpmkHeader = false;
+            $hasMetodeHeader = false;
 
-                $configuredSoalNames = [];
-                foreach ($konversi->konversiMetode as $km) {
-                    foreach ($km->cpmkMetode as $cm) {
-                        if (!empty($cm->nama_soal)) {
-                            $configuredSoalNames[] = strtolower(trim($cm->nama_soal));
-                        }
+            $configuredSoalNames = [];
+            foreach ($konversi->konversiMetode as $km) {
+                foreach ($km->cpmkMetode as $cm) {
+                    if (!empty($cm->nama_soal)) {
+                        $configuredSoalNames[] = strtolower(trim($cm->nama_soal));
                     }
-                }
-
-                foreach ($headerRow as $colIdx => $colName) {
-                    if ($colIdx < 5) continue;
-                    $colNameLower = strtolower(trim((string)$colName));
-
-                    if (strpos($colNameLower, 'soal') !== false) {
-                        $hasSoalHeader = true;
-                    }
-                    foreach ($configuredSoalNames as $soalName) {
-                        if (!empty($soalName) && strpos($colNameLower, $soalName) !== false) {
-                            $hasSoalHeader = true;
-                        }
-                    }
-
-                    if (strpos($colNameLower, 'cpmk') !== false || strpos($colNameLower, 'nilai metode') !== false) {
-                        $hasCpmkHeader = true;
-                    }
-
-                    foreach ($konversi->konversiMetode as $km) {
-                        $mNama = strtolower(trim($km->metodePenilaian->nama ?? ''));
-                        if (!empty($mNama) && strpos($colNameLower, $mNama) !== false) {
-                            $hasMetodeHeader = true;
-                        }
-                    }
-                }
-
-                if ($hasSoalHeader) {
-                    $formatType = 'breakdown_soal';
-                } else if ($hasCpmkHeader) {
-                    $formatType = 'metode_cpmk';
-                } else if ($hasMetodeHeader) {
-                    $formatType = 'standar';
-                } else {
-                    $formatType = 'standar';
                 }
             }
-            */
+
+            foreach ($headerRow as $colIdx => $colName) {
+                if ($colIdx < 5) continue;
+                $colNameLower = strtolower(trim((string)$colName));
+
+                if (strpos($colNameLower, 'soal') !== false) {
+                    $hasSoalHeader = true;
+                }
+                foreach ($configuredSoalNames as $soalName) {
+                    if (!empty($soalName) && strpos($colNameLower, $soalName) !== false) {
+                        $hasSoalHeader = true;
+                    }
+                }
+
+                if (strpos($colNameLower, 'cpmk') !== false) {
+                    $hasCpmkHeader = true;
+                }
+
+                foreach ($konversi->konversiMetode as $km) {
+                    $mNama = strtolower(trim($km->metodePenilaian->nama ?? ''));
+                    $mKode = strtolower(trim($km->metodePenilaian->kode ?? ''));
+                    if (!empty($mNama) && strpos($colNameLower, $mNama) !== false) {
+                        $hasMetodeHeader = true;
+                    }
+                    if (!empty($mKode) && strpos($colNameLower, $mKode) !== false) {
+                        $hasMetodeHeader = true;
+                    }
+                }
+            }
+
+            $detectedFormat = null;
+            if ($hasSoalHeader) {
+                $detectedFormat = 'breakdown_soal';
+            } else if ($hasCpmkHeader) {
+                $detectedFormat = 'metode_cpmk';
+            } else if ($hasMetodeHeader) {
+                $detectedFormat = 'standar';
+            }
+
+            $formatLabels = [
+                'standar' => 'Nilai Akhir Per Metode Penilaian',
+                'metode_cpmk' => 'Nilai Akhir Per Metode & CPMK',
+                'breakdown_soal' => 'Nilai Per Soal',
+            ];
+
+            if ($detectedFormat && $detectedFormat !== $formatType) {
+                $selectedLabel = $formatLabels[$formatType] ?? $formatType;
+                $detectedLabel = $formatLabels[$detectedFormat] ?? $detectedFormat;
+
+                return redirect()->back()->with('error', "Format file Excel tidak sesuai! Anda memilih kategori '{$selectedLabel}', tetapi file Excel yang diunggah terdeteksi berformat '{$detectedLabel}'. Silakan sesuaikan pilihan kategori format atau unggah file template yang sesuai.");
+            }
 
             // --- Logika Pemetaan Kolom berdasarkan Format Type ---
             if ($formatType === 'breakdown_soal') {
@@ -993,7 +1002,8 @@ class KonversiNilaiController extends Controller
             }
 
             if (empty($columnMap)) {
-                return redirect()->back()->with('error', 'Kolom nilai pada file Excel tidak cocok dengan metode / CPMK yang telah dikonfigurasi.');
+                $selectedLabel = $formatLabels[$formatType] ?? $formatType;
+                return redirect()->back()->with('error', "Kolom nilai pada file Excel tidak cocok dengan kategori '{$selectedLabel}' atau konfigurasi metode/CPMK mata kuliah ini.");
             }
 
             // Kumpulkan data per NPM dari file

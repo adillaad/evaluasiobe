@@ -160,12 +160,14 @@ class UserController extends Controller
             }
 
             // BARU: Handle multiple prodi, mirip seperti otoritas
-            $prodiArray = $request->prodi;
+            $prodiArray = array_unique($request->prodi);
+            $prodiSyncData = [];
             $isFirstProdi = true;
             foreach ($prodiArray as $prodiId) {
-                $user->prodis()->attach($prodiId, ['active' => $isFirstProdi]);
+                $prodiSyncData[$prodiId] = ['active' => $isFirstProdi];
                 $isFirstProdi = false;
             }
+            $user->prodis()->sync($prodiSyncData);
         });
 
         event(new Registered($user));

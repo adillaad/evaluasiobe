@@ -50,20 +50,8 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                 </a>
             </li>
 
-            {{-- Soal Pages --}}
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#soal" aria-expanded="false" aria-controls="soal">
-                    <i class="menu-icon mdi mdi-comment-question-outline"></i>
-                    <span class="menu-title">Soal Pages</span>
-                    <i class="menu-arrow"></i>
-                </a>
-                <div class="collapse" id="soal">
-                    <ul class="nav flex-column sub-menu">
-                        <li class="nav-item"><a class="nav-link" href="{{ route($currentPrefix . 'list-soal') }}">List
-                                Soal</a></li>
-                    </ul>
-                </div>
-            </li>
+            {{-- Soal --}}
+            
 
             {{-- Profil Lulusan --}}
             <li class="nav-item">
@@ -268,8 +256,18 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                 </a>
                 <div class="collapse" id="rps">
                     <ul class="nav flex-column sub-menu">
-                        @if (in_array($userOtoritas, [
-                                'Kepala Program Studi',
+                        @if ($userOtoritas == 'Kepala Program Studi')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route($currentPrefix . 'rps-list') }}">Tambah RPS</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route($currentPrefix . 'rps.list') }}">Daftar RPS</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link"
+                                    href="{{ route('kepala-program-studi.rps.validation.list') }}">Validasi RPS</a>
+                            </li>
+                        @elseif (in_array($userOtoritas, [
                                 'Penjamin Mutu Program Studi',
                                 'Penjamin Mutu Fakultas',
                                 'Penjamin Mutu Universitas',
@@ -278,13 +276,37 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                 <a class="nav-link" href="{{ route($currentPrefix . 'rps.list') }}">Daftar RPS</a>
                             </li>
                         @endif
+                    </ul>
+                </div>
+            </li>
 
-                        @if ($userOtoritas == 'Kepala Program Studi')
+            {{-- Soal Management --}}
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#soal" aria-expanded="false" aria-controls="soal">
+                    <i class="menu-icon mdi mdi-comment-question-outline"></i>
+                    <span class="menu-title">Soal</span>
+                    <i class="menu-arrow"></i>
+                </a>
+                <div class="collapse" id="soal">
+                    <ul class="nav flex-column sub-menu">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route($currentPrefix . 'list-soal') }}">Validasi Soal</a>
+                        </li>
+                        
+                        @if (in_array($userOtoritas, ['Kepala Program Studi', 'Dosen']))
                             <li class="nav-item">
-                                <a class="nav-link"
-                                    href="{{ route('kepala-program-studi.rps.validation.list') }}">Validasi RPS</a>
+                                <a class="nav-link" href="{{ route($currentPrefix . 'soal-addRaw') }}">Tambah Soal</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route($currentPrefix . 'addRawTS') }}">Tambah Instrumen Tanpa Soal</a>
                             </li>
                         @endif
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route($currentPrefix . 'soal-list') }}">Daftar Soal</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route($currentPrefix . 'tanpa-soal-list') }}">Daftar Instrumen Tanpa Soal</a>
+                        </li>
                     </ul>
                 </div>
             </li>
@@ -299,6 +321,17 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                 </a>
                 <div class="collapse" id="penilaian">
                     <ul class="nav flex-column sub-menu">
+                        @if ($userOtoritas == 'Kepala Program Studi')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route($currentPrefix . 'add-mutu') }}">Download Template Soal</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route($currentPrefix . 'import-mutu') }}">Import Nilai Soal</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route($currentPrefix . 'konversi-nilai.index') }}">Import Nilai Konversi</a>
+                            </li>
+                        @endif
                         <li class="nav-item"><a class="nav-link"
                                 href="{{ route($currentPrefix . 'penilaian.penilaian-dengan-soal') }}">Data
                                 Nilai Soal</a>

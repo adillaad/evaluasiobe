@@ -1,8 +1,9 @@
-{{-- @php
-    $currentPrefix = auth()->user()->otoritas->otoritas
-        ? str_replace(' ', '-', strtolower(auth()->user()->otoritas->otoritas)) . '.'
-        : 'admin.';
-@endphp --}}
+@php
+    $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
+    $currentPrefix = $userOtoritas
+        ? str_replace(' ', '-', strtolower($userOtoritas)) . '.'
+        : 'dosen.';
+@endphp
 @extends('dosen.template')
 @section('content')
     <style>
@@ -108,7 +109,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('dosen.rawSoal-store') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route($currentPrefix . 'rawSoal-store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div id="templatePenilaian">
 
@@ -384,7 +385,7 @@
                 var cplSelect = $('#cpls');
                 cplSelect.html('<option>Loading...</option>').prop('disabled', true);
 
-                $.get("{{ route('dosen.getCPLBykode_mk') }}", {
+                $.get("{{ route($currentPrefix . 'getCPLBykode_mk') }}", {
                         kode_mk: kode_mk
                     })
                     .done(function(data) {

@@ -47,10 +47,15 @@ class SoalController extends Controller
     use UniversityFilterTrait;
     public function Add()
     {
-        $cpls = CPL::orderBy('judul', 'asc')->get();
-        $rpss = RPS::where('pengembang', auth()->user()->name)
+        $user = auth()->user();
+        $isKaprodi = ($user->otoritas->otoritas ?? '') == 'Kepala Program Studi';
+        $rpss = RPS::where('id_prodi', $user->id_prodiUser)
+            ->where('pengembang', $user->name)
             ->whereHas('mk')
-            ->get();
+            ->get()
+            ->unique('kode_mk');
+
+        $cpls = CPL::orderBy('judul', 'asc')->get();
         $rps_id = $rpss->pluck('id');
         $kurikulum = Kurikulum::all();
         $metodePenilaians = MetodePenilaian::where('id_prodi', auth()->user()->id_prodiUser)->get();
@@ -71,16 +76,19 @@ class SoalController extends Controller
 
     public function addRaw()
     {
+        $user = auth()->user();
+        $isKaprodi = ($user->otoritas->otoritas ?? '') == 'Kepala Program Studi';
+
         $kurikulum = Kurikulum::query()
-            ->where('id_prodi', auth()->user()->id_prodiUser)
+            ->where('id_prodi', $user->id_prodiUser)
             ->select('kurikulums.*')->get();
 
         $cpls = CPL::orderBy('judul', 'asc')->get();
-        $rpss = RPS::where('pengembang', auth()->user()->name)
-            ->where('id_prodi', auth()->user()->id_prodiUser)
+        $rpss = RPS::where('id_prodi', $user->id_prodiUser)
+            ->where('pengembang', $user->name)
             ->whereHas('mk')
-            ->get();
-        $rps_id = $rpss->pluck('id');
+            ->get()
+            ->unique('kode_mk');
         $komponen = Komponen::groupBy('jenis')->get();
         $prodi = Prodi::where('id', auth()->user()->id_prodiUser)->get();
         $latestData = Soal::latest()->first();
@@ -185,11 +193,17 @@ class SoalController extends Controller
 
     public function New(Request $request)
     {
-        $universitas = Universitas::where('id', auth()->user()->id_universitasUser)->get();
-        $prodi = Prodi::where('id', auth()->user()->id_prodiUser)->get();
-        $rpss = RPS::where('pengembang', auth()->user()->name)
+        $user = auth()->user();
+        $isKaprodi = ($user->otoritas->otoritas ?? '') == 'Kepala Program Studi';
+
+        $universitas = Universitas::where('id', $user->id_universitasUser)->get();
+        $prodi = Prodi::where('id', $user->id_prodiUser)->get();
+        
+        $rpss = RPS::where('id_prodi', $user->id_prodiUser)
+            ->where('pengembang', $user->name)
             ->whereHas('mk')
-            ->get();
+            ->get()
+            ->unique('kode_mk');
         $rps_id = $rpss->pluck('id');
         $soals = Soal::all();
         $cpls = CPLMK::all();
@@ -272,12 +286,17 @@ class SoalController extends Controller
     }
     public function addRawTS(Request $request)
     {
-        $universitas = Universitas::where('id', auth()->user()->id_universitasUser)->get();
-        $prodi = Prodi::where('id', auth()->user()->id_prodiUser)->get();
-        $rpss = RPS::where('pengembang', auth()->user()->name)
-            ->where('id_prodi', auth()->user()->id_prodiUser)
+        $user = auth()->user();
+        $isKaprodi = ($user->otoritas->otoritas ?? '') == 'Kepala Program Studi';
+
+        $universitas = Universitas::where('id', $user->id_universitasUser)->get();
+        $prodi = Prodi::where('id', $user->id_prodiUser)->get();
+
+        $rpss = RPS::where('id_prodi', $user->id_prodiUser)
+            ->where('pengembang', $user->name)
             ->whereHas('mk')
-            ->get();
+            ->get()
+            ->unique('kode_mk');
         $komponen = Komponen::groupBy('jenis')->get();
         $kurikulum = Kurikulum::query()
             ->where('id_prodi', auth()->user()->id_prodiUser)

@@ -1,3 +1,9 @@
+@php
+    $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
+    $currentPrefix = $userOtoritas
+        ? str_replace(' ', '-', strtolower($userOtoritas)) . '.'
+        : 'dosen.';
+@endphp
 @extends('dosen.template')
 @section('content')
     <div class="col-lg-12 grid-margin stretch-card">
@@ -11,7 +17,7 @@
                             Buat instrumen, lalu <strong>ajukan</strong> agar dapat ditinjau oleh Penjamin Mutu.
                         </p>
                     </div>
-                    <a href="{{ route('dosen.addRawTS') }}" class="btn btn-primary btn-sm fw-semibold px-3">
+                    <a href="{{ route($currentPrefix . 'addRawTS') }}" class="btn btn-primary btn-sm fw-semibold px-3">
                         <i class="ti-plus me-1"></i> Tambah Instrumen
                     </a>
                 </div>
@@ -119,13 +125,13 @@
                                                     <i class="ti-trash"></i>
                                                 </button>
                                             @elseif (in_array($item->status, ['Draft', 'Ditolak']))
-                                                <a href="{{ route('dosen.tanpa-soal.edit', $item->id) }}"
+                                                <a href="{{ route($currentPrefix . 'tanpa-soal.edit', $item->id) }}"
                                                     class="btn btn-outline-primary btn-sm p-1" data-bs-toggle="tooltip"
                                                     title="Edit Instrumen">
                                                     <i class="ti-pencil"></i>
                                                 </a>
 
-                                                <form action="{{ route('dosen.tanpa-soal-ajukan', $item->id) }}"
+                                                <form action="{{ route($currentPrefix . 'tanpa-soal-ajukan', $item->id) }}"
                                                     method="POST" class="d-inline"
                                                     onsubmit="return confirm('Ajukan instrumen ini ke Penjamin Mutu?')">
                                                     @csrf
@@ -135,7 +141,7 @@
                                                     </button>
                                                 </form>
 
-                                                <form action="{{ route('dosen.tanpa-soal.delete', $item->id) }}"
+                                                <form action="{{ route($currentPrefix . 'tanpa-soal.delete', $item->id) }}"
                                                     method="POST" class="d-inline"
                                                     onsubmit="return confirm('Hapus instrumen ini?')">
                                                     @csrf

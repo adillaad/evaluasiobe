@@ -1,3 +1,9 @@
+@php
+    $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
+    $currentPrefix = $userOtoritas
+        ? str_replace(' ', '-', strtolower($userOtoritas)) . '.'
+        : 'dosen.';
+@endphp
 @extends('dosen.template')
 @section('content')
     <div class="col-lg-12 grid-margin stretch-card">
@@ -11,7 +17,7 @@
                             Buat soal, lalu <strong>ajukan</strong> agar dapat ditinjau oleh Penjamin Mutu.
                         </p>
                     </div>
-                    <a href="{{ route('dosen.soal-addRaw') }}" class="btn btn-primary btn-sm fw-semibold px-3">
+                    <a href="{{ route($currentPrefix . 'soal-addRaw') }}" class="btn btn-primary btn-sm fw-semibold px-3">
                         <i class="ti-plus me-1"></i> Tambah Soal
                     </a>
                 </div>
@@ -26,7 +32,7 @@
                 </div>
 
                 {{-- Filter Bar (Mata Kuliah & Metode Penilaian) --}}
-                <form method="GET" action="{{ route('dosen.soal-list') }}" class="card bg-light border-0 rounded-3 p-3 mb-4">
+                <form method="GET" action="{{ route($currentPrefix . 'soal-list') }}" class="card bg-light border-0 rounded-3 p-3 mb-4">
                     <div class="row g-2 align-items-end">
                         {{-- Filter Mata Kuliah --}}
                         <div class="col-md-5">
@@ -60,7 +66,7 @@
                                 <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold d-inline-flex align-items-center justify-content-center gap-1" style="height: 38px;">
                                     <i class="ti-filter"></i> Filter
                                 </button>
-                                <a href="{{ route('dosen.soal-list') }}" class="btn btn-outline-secondary btn-sm w-100 fw-semibold d-inline-flex align-items-center justify-content-center gap-1" style="height: 38px;">
+                                <a href="{{ route($currentPrefix . 'soal-list') }}" class="btn btn-outline-secondary btn-sm w-100 fw-semibold d-inline-flex align-items-center justify-content-center gap-1" style="height: 38px;">
                                     <i class="ti-reload"></i> Reset
                                 </a>
                             </div>
@@ -198,7 +204,7 @@
                                                     <i class="ti-pencil"></i>
                                                 </a>
 
-                                                <form action="{{ route('dosen.soal-ajukan', $soal->id) }}" method="POST"
+                                                <form action="{{ route($currentPrefix . 'soal-ajukan', $soal->id) }}" method="POST"
                                                     class="d-inline"
                                                     onsubmit="return confirm('Ajukan soal ini ke Penjamin Mutu?')">
                                                     @csrf

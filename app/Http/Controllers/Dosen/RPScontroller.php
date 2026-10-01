@@ -61,9 +61,7 @@ class RPScontroller extends Controller
             $query->whereHas('prodi', function ($q) use ($user) {
                 $q->where('id_fakultas', $user->id_fakultasUser);
             });
-        } elseif ($otoritas == 'Kepala Program Studi') {
-            $query->where('id_prodi', $user->id_prodiUser);
-        } elseif ($otoritas == 'Dosen') {
+        } elseif (in_array($otoritas, ['Kepala Program Studi', 'Dosen'])) {
             $query->where('id_prodi', $user->id_prodiUser)
                   ->where('pengembang', $user->name);
         }

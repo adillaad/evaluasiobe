@@ -16,10 +16,17 @@ class CekRole
      */
     public function handle(Request $request, Closure $next, ...$otoritas)
     {
-        // dd($otoritas);
-        if (in_array($request->user()->otoritas->otoritas, $otoritas)) {
+        $userOtoritas = $request->user()->otoritas->otoritas ?? '';
+
+        if (in_array($userOtoritas, $otoritas)) {
             return $next($request);
         }
+
+        // Kaprodi (Kepala Program Studi) memiliki semua hak akses fitur Dosen
+        if (in_array('Dosen', $otoritas) && $userOtoritas === 'Kepala Program Studi') {
+            return $next($request);
+        }
+
         return redirect('/');
     }
 }

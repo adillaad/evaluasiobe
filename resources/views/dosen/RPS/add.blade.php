@@ -1,3 +1,9 @@
+@php
+    $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
+    $currentPrefix = $userOtoritas
+        ? str_replace(' ', '-', strtolower($userOtoritas)) . '.'
+        : 'dosen.';
+@endphp
 @extends('dosen.template')
 @section('content')
     <div class="container-fluid">
@@ -17,7 +23,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <form method="POST" action="/dosen/rps/add-rpsStep1" enctype="multipart/form-data">
+                <form method="POST" action="{{ url(str_replace('.', '/', $currentPrefix) . 'rps/add-rpsStep1') }}" enctype="multipart/form-data">
                     @csrf
 
                     <div class="form-floating mb-3">

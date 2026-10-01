@@ -461,7 +461,7 @@ Route::middleware(['auth'])->group(function () {
     
                         Route::post('rps/add-rps', 'Store')->name('rps-store'); 
                         Route::put('rps/edit-rps/{id}', 'Update')->name('rps-update');
-                        Route::delete('rps/delete-rps/{id}', 'Delete');
+                        Route::delete('rps/delete-rps/{id}', 'Delete')->name('rps-delete');
                         Route::get('rps/pustaka', 'getPustaka')->name('pustaka-get');
                         Route::post('rps/submit-validation/{id}', 'submitValidation')->name('rps-submit-validation');
                     });
@@ -868,10 +868,77 @@ Route::middleware(['auth'])->group(function () {
             });
         }
 
-        Route::middleware('cekrole:Kepala Program Studi')->group(function () {
+        Route::middleware('cekrole:Kepala Program Studi')->group(function () use ($academicCommonRoutes) {
             $role = 'Kepala Program Studi';
             $prefix = strtolower(str_replace(' ', '-', $role));
-            Route::prefix($prefix)->name("$prefix.")->group(function () use ($prefix) {
+            Route::prefix($prefix)->name("$prefix.")->group(function () use ($academicCommonRoutes, $prefix) {
+                $academicCommonRoutes();
+
+                Route::controller(RPSdosen::class)->group(function () {
+                    Route::get('rps/add-rps', 'Add')->name('rps-add');
+                    Route::post('rps/add-rpsStep1', 'StoreRpsStep1');
+                    Route::get('rps/addRpsStep2', 'AddRpsStep2')->name('addRpsStep2');
+                    Route::post('rps/add-rpsStep2', 'StoreRpsStep2');
+                    Route::get('rps/addRpsStep3', 'AddRpsStep3')->name('addRpsStep3');
+                    Route::post('rps/add-rpsStep3', 'StoreRpsStep3');
+                    Route::get('rps/addRpsStep4', 'AddRpsStep4')->name('addRpsStep4');
+                    Route::post('rps/add-rpsStep4', 'StoreRpsStep4');
+
+                    Route::post('rps/add-rps', 'Store')->name('rps-store'); 
+                    Route::put('rps/edit-rps/{id}', 'Update')->name('rps-update');
+                    Route::delete('rps/delete-rps/{id}', 'Delete')->name('rps-delete');
+                    Route::get('rps/pustaka', 'getPustaka')->name('pustaka-get');
+                    Route::post('rps/submit-validation/{id}', 'submitValidation')->name('rps-submit-validation');
+                });
+
+                Route::controller(ActivitiesController::class)->group(function () {
+                    Route::get('rps/list-rps/detail/{id}', 'listByRps')->name('rps-detail');
+                    Route::get('activities/add-activity', 'Add')->name('activities-add');
+                    Route::post('activities/add-activity', 'Store')->name('activities-store');
+                    Route::post('activities/add-activity-wfile', 'create_wfile')->name('activities-wfile');
+                    Route::get('activities/edit-activity/{id}', 'Edit')->name('activity-edit');
+                    Route::put('activities/edit-activity/{id}', 'Update')->name('activity-update');
+                    Route::delete('activities/delete-activity/{id}', 'Delete')->name('activity-delete');
+                    Route::get('/activities-data', 'getActivitiesData')->name('activities-data');
+                    Route::get('/sub-cpmk-by-cpmk/{cpmkId}', 'getSubCpmkByCpmk')->name('subcpmk-by-cpmk');
+                });
+
+                Route::controller(soalDosen::class)->group(function () {
+                    Route::get('soal/add-soal', 'Add')->name('soal-add');
+                    Route::get('soal/addRaw-soal', 'addRaw')->name('soal-addRaw');
+                    Route::post('soal/addRaw-soal', 'Store')->name('rawSoal-store');
+                    Route::get('soal/edit-soal/{id}', 'Edit');
+                    Route::put('soal/edit-soal/{id}', 'Update');
+                    Route::delete('soal/delete-soal/{id}', 'Delete')->name('soal-delete');
+                    Route::post('soal/ajukan/{id}', 'ajukanSoal')->name('soal-ajukan');
+                    Route::post('tanpa-soal/ajukan/{id}', 'ajukanTanpaSoal')->name('tanpa-soal-ajukan');
+
+                    Route::get('add-mutu', 'New')->name('add-mutu');
+                    Route::get('/add-raw-tanpa-soal', [App\Http\Controllers\Dosen\SoalController::class, 'addRawTS'])->name('addRawTS');
+                    Route::get('getMaxBobotMKJenis/{mk}', 'getMaxKriteriaBobotMKJenis')->name('getMaxBobotMKJenis');
+                    Route::get('getCPMKBykode_mk/{cpl}', 'getCPMKBykode_mk')->name('getCPMKBykode_mk');
+                    Route::get('getJenisKriteria/{cpl}', 'getJenisKriteria')->name('getJenisKriteria');
+                    Route::get('getJenisSoalByKriteria/{jenis}', 'getJenisSoalByKriteria')->name('getJenisSoalByKriteria');
+                    Route::get('getJenisSoalByMk/{mk}', 'getJenisSoalByMk')->name('getJenisSoalByMk');
+
+                    Route::get('tanpa-soal/edit/{id}', 'editTanpaSoal')->name('tanpa-soal.edit');
+                    Route::put('tanpa-soal/update/{id}', 'updateTanpaSoal')->name('tanpa-soal.update');
+                    Route::delete('tanpa-soal/delete/{id}', 'deleteTanpaSoal')->name('tanpa-soal.delete');
+                    Route::post('/store-raw-tanpa-soal', [App\Http\Controllers\Dosen\SoalController::class, 'storeRawTS'])->name('storeRawTS');
+                    Route::get('addMutuTanpaSoal', 'TanpaSoal')->name('addMutuTanpaSoal');
+                    Route::get('getMetodeByMk', 'getMetodeByMk')->name('getMetodeByMk');
+                    Route::get('getCPMKByMetode', 'getCPMKByMetode')->name('getCPMKByMetode');
+                    Route::get('/getBobotByCpmk', [SoalController::class, 'getBobotByCpmk'])->name('getBobotByCpmk');
+                    Route::get('/tanpa-soal', [App\Http\Controllers\Dosen\SoalController::class, 'listTanpaSoal'])->name('tanpa-soal-list');
+                    Route::get('/getPersentaseCpmk', [App\Http\Controllers\Dosen\SoalController::class, 'getPersentaseCpmk'])->name('dosen.getPersentaseCpmk');
+                    Route::get('getJenisByMk/{mk?}', 'getJenisByMk')->name('getJenisByMk');
+                    Route::get('getSoalByMkJenis', [App\Http\Controllers\Dosen\SoalController::class, 'getSoalByMkJenis'])->name('getSoalByMkJenis');
+                    Route::get('getGabunganByMkJenis', 'getGabunganByMkJenis')->name('getGabunganByMkJenis');
+                    Route::get('excelGabungan', 'ExcelGabungan')->name('excelGabungan');
+                    Route::get('getInstrumenTanpaSoal', 'getInstrumenTanpaSoal')->name('getInstrumenTanpaSoal');
+                    Route::get('ExcelTanpaSoal', 'ExcelTanpaSoal')->name('ExcelTanpaSoal');
+                });
+
                 Route::resource('mahasiswa', MahasiswaController::class);
 
                 // Dashboard

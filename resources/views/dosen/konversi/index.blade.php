@@ -1,3 +1,9 @@
+@php
+    $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
+    $currentPrefix = $userOtoritas
+        ? str_replace(' ', '-', strtolower($userOtoritas)) . '.'
+        : 'dosen.';
+@endphp
 @extends('dosen.template')
 
 @section('content')
@@ -8,7 +14,7 @@
             <h6 class="fw-bold mb-0">
                 <i class="ti ti-history me-2 text-primary"></i>Riwayat Konversi Nilai
             </h6>
-            <a href="{{ route('dosen.konversi-nilai.create') }}" class="btn btn-primary btn-sm fw-semibold">
+            <a href="{{ route($currentPrefix . 'konversi-nilai.create') }}" class="btn btn-primary btn-sm fw-semibold">
                 <i class="ti ti-plus me-1"></i> Buat Konversi Baru
             </a>
         </div>
@@ -50,13 +56,13 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-inline-flex gap-1 justify-content-center">
-                                        <a href="{{ route('dosen.konversi-nilai.step-metode', $konversi->id) }}" class="btn btn-sm btn-info text-white px-2 py-1" title="Lihat Detail MK">
+                                        <a href="{{ route($currentPrefix . 'konversi-nilai.step-metode', $konversi->id) }}" class="btn btn-sm btn-info text-white px-2 py-1" title="Lihat Detail MK">
                                             <i class="ti ti-eye"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-primary px-2 py-1" data-bs-toggle="modal" data-bs-target="#editSetupModal{{ $konversi->id }}" title="Edit Setup MK Kurikulum">
                                             <i class="ti ti-settings"></i>
                                         </button>
-                                        <form action="{{ route('dosen.konversi-nilai.destroy', $konversi->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data konversi untuk MK {{ $konversi->mk_kode }} ini? Seluruh data nilai konversi mahasiswa terkait akan ikut terhapus.')">
+                                        <form action="{{ route($currentPrefix . 'konversi-nilai.destroy', $konversi->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data konversi untuk MK {{ $konversi->mk_kode }} ini? Seluruh data nilai konversi mahasiswa terkait akan ikut terhapus.')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1" title="Hapus Konversi">
@@ -69,7 +75,7 @@
                                     <div class="modal fade" id="editSetupModal{{ $konversi->id }}" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content border-0 shadow-sm rounded-3">
-                                                <form action="{{ route('dosen.konversi-nilai.update-setup', $konversi->id) }}" method="POST">
+                                                <form action="{{ route($currentPrefix . 'konversi-nilai.update-setup', $konversi->id) }}" method="POST">
                                                     @csrf
                                                     <div class="modal-header py-3 px-4 bg-light border-bottom text-start">
                                                         <div class="d-flex align-items-center gap-2">

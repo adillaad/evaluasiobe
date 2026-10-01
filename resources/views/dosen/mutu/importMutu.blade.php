@@ -3,6 +3,12 @@
      File: resources/views/dosen/mutu/importMutu.blade.php
      Masalah: import terpisah jadi dua form, seharusnya satu tampilan
      ========================================================================= --}}
+@php
+    $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
+    $currentPrefix = $userOtoritas
+        ? str_replace(' ', '-', strtolower($userOtoritas)) . '.'
+        : 'dosen.';
+@endphp
 @extends('dosen.template')
 @section('content')
 
@@ -31,7 +37,7 @@
                 menu <em>Download Template Penilaian</em> dan sudah diisi lengkap.
             </div>
 
-            <form action="{{ route('dosen.importmutu') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route($currentPrefix . 'importmutu') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="row g-3 align-items-end">
                     <div class="col-md-6">
@@ -58,7 +64,7 @@
         </div>
         <div class="card-body p-4">
 
-            <form id="dosenFilterForm" action="{{ route('dosen.filter') }}" method="GET" class="mb-3">
+            <form id="dosenFilterForm" action="{{ route($currentPrefix . 'filter') }}" method="GET" class="mb-3">
                 @csrf
                 <div class="d-flex flex-column gap-3">
                     <div class="d-flex align-items-end flex-wrap gap-2">
@@ -77,7 +83,7 @@
                         @endif
                         @if (request('course') || request('mk_kode'))
                             <div>
-                                <a href="{{ route('dosen.import-mutu') }}" class="btn btn-secondary btn-sm px-4 fw-semibold d-flex align-items-center justify-content-center" style="height: 38px;">
+                                <a href="{{ route($currentPrefix . 'import-mutu') }}" class="btn btn-secondary btn-sm px-4 fw-semibold d-flex align-items-center justify-content-center" style="height: 38px;">
                                     <i class="ti ti-refresh me-1"></i> Reset
                                 </a>
                             </div>
@@ -157,7 +163,7 @@
         <div class="modal fade show" id="unregisteredModal" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);" aria-modal="true" role="dialog">
             <div class="modal-dialog modal-dialog-centered" style="max-width: 580px;">
                 <div class="modal-content border-0 shadow">
-                    <form action="{{ route('dosen.importmutu') }}" method="POST">
+                    <form action="{{ route($currentPrefix . 'importmutu') }}" method="POST">
                         @csrf
                         <input type="hidden" name="parsed_rows_data" value="{{ json_encode($tempParsedRows) }}">
                         <input type="hidden" name="headers_data" value="{{ json_encode($tempHeaders) }}">
