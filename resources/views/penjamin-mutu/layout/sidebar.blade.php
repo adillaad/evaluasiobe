@@ -289,9 +289,11 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                 </a>
                 <div class="collapse" id="soal">
                     <ul class="nav flex-column sub-menu">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route($currentPrefix . 'list-soal') }}">Validasi Soal</a>
-                        </li>
+                        @if (\Illuminate\Support\Facades\Route::has($currentPrefix . 'list-soal'))
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route($currentPrefix . 'list-soal') }}">Validasi Soal</a>
+                            </li>
+                        @endif
                         
                         @if (in_array($userOtoritas, ['Kepala Program Studi', 'Dosen']))
                             <li class="nav-item">
@@ -300,13 +302,17 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route($currentPrefix . 'addRawTS') }}">Tambah Instrumen Tanpa Soal</a>
                             </li>
+                            @if (\Illuminate\Support\Facades\Route::has($currentPrefix . 'soal-list'))
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route($currentPrefix . 'soal-list') }}">Daftar Soal</a>
+                                </li>
+                            @endif
+                            @if (\Illuminate\Support\Facades\Route::has($currentPrefix . 'tanpa-soal-list'))
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route($currentPrefix . 'tanpa-soal-list') }}">Daftar Instrumen Tanpa Soal</a>
+                                </li>
+                            @endif
                         @endif
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route($currentPrefix . 'soal-list') }}">Daftar Soal</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route($currentPrefix . 'tanpa-soal-list') }}">Daftar Instrumen Tanpa Soal</a>
-                        </li>
                     </ul>
                 </div>
             </li>

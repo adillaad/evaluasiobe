@@ -45,4 +45,9 @@ class CPL extends Model
     public function bk(){
         return $this->belongsToMany(BK::class,'bk_cpl','cpl_id','bk_id');
     }
+
+    public function subCpmks()
+    {
+        return $this->hasManyThrough(SubCpmk::class, CPMK::class, 'cpl_id', 'cpmk_id', 'id', 'id');
+    }
 }

@@ -81,6 +81,19 @@ trait UniversityFilterTrait
                 });
             }
 
+            if ($mainTable === 'mks') {
+                $prodiId = $request->prodi_id;
+                return $q->where(function($subQ) use ($prodiId) {
+                    $subQ->where('mks.id_prodi', $prodiId)
+                         ->orWhereExists(function($pivotQ) use ($prodiId) {
+                             $pivotQ->select(\DB::raw(1))
+                                    ->from('mk_kurikulum')
+                                    ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                                    ->where('mk_kurikulum.id_prodi', $prodiId);
+                         });
+                });
+            }
+
             if (Schema::hasColumn($mainTable, 'id_prodi')) {
                 return $q->where($mainTable . '.id_prodi', $request->prodi_id);
             }
@@ -98,12 +111,26 @@ trait UniversityFilterTrait
         });
 
         // Filter by Kurikulum
-        $query->when($request->filled('kurikulum_id'), function ($q) use ($request, $mainTable) {
+        $query->when($request->filled('kurikulum_id') || $request->filled('id_kurikulum'), function ($q) use ($request, $mainTable) {
+            $kurId = $request->input('kurikulum_id') ?: $request->input('id_kurikulum');
+
+            if ($mainTable === 'mks') {
+                return $q->where(function($subQ) use ($kurId) {
+                    $subQ->where('mks.id_kurikulum', $kurId)
+                         ->orWhereExists(function($pivotQ) use ($kurId) {
+                             $pivotQ->select(\DB::raw(1))
+                                    ->from('mk_kurikulum')
+                                    ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                                    ->where('mk_kurikulum.id_kurikulum', $kurId);
+                         });
+                });
+            }
+
             if (Schema::hasColumn($mainTable, 'kurikulum_id')) {
-                return $q->where($mainTable . '.kurikulum_id', $request->kurikulum_id);
+                return $q->where($mainTable . '.kurikulum_id', $kurId);
             }
             if (Schema::hasColumn($mainTable, 'id_kurikulum')) {
-                return $q->where($mainTable . '.id_kurikulum', $request->kurikulum_id);
+                return $q->where($mainTable . '.id_kurikulum', $kurId);
             }
 
             $joins = $q->getQuery()->joins ?? [];
@@ -115,7 +142,7 @@ trait UniversityFilterTrait
                 }
             }
             if ($hasKurikulumJoin) {
-                return $q->where('kurikulums.id', $request->kurikulum_id);
+                return $q->where('kurikulums.id', $kurId);
             }
             
             return $q;

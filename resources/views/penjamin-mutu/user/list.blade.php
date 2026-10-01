@@ -301,19 +301,22 @@
                                 <i class="ti-info-alt me-1"></i> Pilih dosen dari daftar seluruh dosen yang tersedia untuk ditambahkan ke daftar dosen pengampu prodi <strong>{{ auth()->user()->prodi?->nama }}</strong>.
                             </div>
                             <div class="mb-3">
-                                <label for="select_dosen_user_id" class="form-label font-weight-bold">Pilih Dosen <span class="text-danger">*</span></label>
-                                <select class="form-select" id="select_dosen_user_id" name="user_id" required>
-                                    <option value="">-- Pilih Dosen --</option>
+                                <label for="search_dosen_input" class="form-label font-weight-bold">Pilih Dosen Pengampu <span class="text-danger">*</span></label>
+                                <input type="text" id="search_dosen_input" class="form-control form-control-sm mb-2" placeholder="Cari Dosen...">
+                                <div id="dosen_list_container" class="border rounded-3 p-3 bg-light" style="max-height: 250px; overflow-y: auto;">
                                     @if (isset($availableDosen) && count($availableDosen) > 0)
                                         @foreach ($availableDosen as $dosenOpt)
-                                            <option value="{{ $dosenOpt->id }}">
-                                                {{ $dosenOpt->name }} ({{ $dosenOpt->email }}) {{ $dosenOpt->prodi ? '- Prodi Utama: ' . $dosenOpt->prodi->nama : '' }}
-                                            </option>
+                                            <div class="form-check mb-2 p-2 border rounded bg-white">
+                                                <input class="form-check-input ms-1 me-2" type="radio" name="user_id" value="{{ $dosenOpt->id }}" id="dosen_radio_{{ $dosenOpt->id }}" required>
+                                                <label class="form-check-label text-wrap mb-0" for="dosen_radio_{{ $dosenOpt->id }}">
+                                                    <strong>{{ $dosenOpt->name }}</strong> ({{ $dosenOpt->email }}) {{ $dosenOpt->prodi ? '- Prodi Utama: ' . $dosenOpt->prodi->nama : '' }}
+                                                </label>
+                                            </div>
                                         @endforeach
                                     @else
-                                        <option value="" disabled>Semua dosen di sistem sudah terdaftar di prodi ini.</option>
+                                        <span class="text-muted small italic">Semua dosen di sistem sudah terdaftar di prodi ini.</span>
                                     @endif
-                                </select>
+                                </div>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -328,3 +331,21 @@
         </div>
     @endif
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $(document).on('input', '#search_dosen_input', function() {
+            let val = $(this).val().toLowerCase();
+            $('#dosen_list_container .form-check').each(function() {
+                let text = $(this).text().toLowerCase();
+                $(this).toggle(text.includes(val));
+            });
+        });
+
+        $('#assignDosenModal').on('shown.bs.modal', function () {
+            $('#search_dosen_input').val('').trigger('input').focus();
+        });
+    });
+</script>
+@endpush

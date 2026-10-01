@@ -139,6 +139,45 @@
                         </div>
                         @endif
 
+                        @if(isset($mksUniv) && count($mksUniv) > 0)
+                        <div class="card bg-light border-primary border-opacity-25 mb-4 p-3 rounded-3 shadow-sm">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary text-white p-2 rounded-2"><i class="ti-layers fs-6"></i></span>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">Pilih / Adopsi Mata Kuliah Universitas</h6>
+                                        <small class="text-muted">Pilih dari MK Universitas yang disiapkan Admin Univ jika ingin memasukkannya ke Kurikulum Prodi Anda.</small>
+                                    </div>
+                                </div>
+                                <button type="button" id="btn-reset-mk-univ" class="btn btn-outline-secondary btn-sm" style="display:none;">
+                                    <i class="ti-reload me-1"></i> Reset / Buat MK Baru
+                                </button>
+                            </div>
+
+                            <select id="select-mk-univ-dropdown" class="form-select border-primary fw-semibold text-dark">
+                                <option value="">-- Pilih MK Universitas yang Ingin Diadopsi (Atau Biarkan Kosong Untuk Membuat MK Baru) --</option>
+                                @foreach($mksUniv as $uMk)
+                                    <option value="{{ $uMk->kode }}" 
+                                        data-kode="{{ $uMk->kode }}"
+                                        data-nama="{{ $uMk->nama }}"
+                                        data-nama_eng="{{ $uMk->nama_eng }}"
+                                        data-rumpun="{{ $uMk->rumpun }}"
+                                        data-bobot_teori="{{ $uMk->bobot_teori }}"
+                                        data-bobot_praktikum="{{ $uMk->bobot_praktikum }}"
+                                        data-batas_mhs="{{ $uMk->batas_kelulusan_mhs }}"
+                                        data-batas_mk="{{ $uMk->batas_kelulusan_mk }}"
+                                        data-deskripsi="{{ $uMk->deskripsi }}"
+                                        data-semester="{{ $uMk->semester }}">
+                                        [{{ $uMk->kode }}] {{ $uMk->nama }} ({{ ($uMk->bobot_teori ?? 0) + ($uMk->bobot_praktikum ?? 0) }} SKS - {{ $uMk->rumpun }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div id="mk-univ-badge-notice" class="mt-2 text-success small fw-bold d-none">
+                                <i class="ti-check-box me-1"></i> MK Universitas berhasil dipilih! Semua data MK telah terisi otomatis. Silakan tentukan <strong>Tahun Kurikulum</strong> dan <strong>Semester</strong> untuk Prodi Anda, lalu klik Simpan.
+                            </div>
+                        </div>
+                        @endif
+
                         <div class="form-group">
                             <label>Tahun kurikulum <span class="text-danger">*</span></label>
                             <select class="form-control" name="id_kurikulum" id="kurikulum-select" required>
@@ -162,20 +201,8 @@
 
                         <div class="form-group position-relative">
                             <label>Kode MK <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="kode" id="kode-mk-prodi-input" placeholder="Ketik Kode MK baru atau pilih MK Universitas..." value="{{ old('kode') }}" autocomplete="off" required>
-                            @if(isset($mksUniv) && count($mksUniv) > 0)
-                            <div id="mk-univ-dropdown-menu" class="dropdown-menu w-100 shadow" style="display: none; max-height: 220px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1050;">
-                                @foreach($mksUniv as $uMk)
-                                    <a href="#" class="dropdown-item py-2 border-bottom mk-univ-item d-flex justify-content-between align-items-center" data-kode="{{ $uMk->kode }}">
-                                        <div>
-                                            <strong class="text-primary">{{ $uMk->kode }}</strong> - {{ $uMk->nama }}
-                                        </div>
-                                        <span class="badge bg-secondary text-white ms-2" style="font-size: 10px;">MK Universitas</span>
-                                    </a>
-                                @endforeach
-                            </div>
-                            @endif
-                            <small class="text-muted">Ketik Kode MK baru langsung di kolom ini, atau pilih dari daftar MK Universitas jika ingin mengadopsinya.</small>
+                            <input type="text" class="form-control" name="kode" id="kode-mk-prodi-input" placeholder="Ketik Kode MK baru atau pilih MK Universitas di atas..." value="{{ old('kode') }}" autocomplete="off" required>
+                            <small class="text-muted">Ketik Kode MK baru langsung di kolom ini, atau pilih dari daftar <strong>Pilih / Adopsi Mata Kuliah Universitas</strong> di atas.</small>
                             @error('kode') <div class="alert alert-danger">{{ $message }}</div> @enderror
                         </div>
                         <div class="form-group">
@@ -259,80 +286,69 @@ $(document).ready(function() {
         $(target).addClass('show active');
     });
 
-    if ($.fn.select2) {
-        $('.select2-tags').select2({
-            tags: true,
-            placeholder: "Ketik Kode MK baru atau pilih MK Universitas...",
-            allowClear: true,
-            width: '100%'
-        });
-    }
-
     const mksUnivData = @json($mksUniv ?? []);
-    const $input = $('#kode-mk-prodi-input');
-    const $dropdown = $('#mk-univ-dropdown-menu');
 
-    function filterAndShowDropdown() {
-        if (!$dropdown.length) return;
-        const query = $input.val().toUpperCase().trim();
-        let hasMatches = false;
+    $('#select-mk-univ-dropdown').on('change', function() {
+        const selectedOpt = $(this).find('option:selected');
+        const kode = selectedOpt.data('kode');
 
-        $dropdown.find('.mk-univ-item').each(function() {
-            const itemKode = ($(this).data('kode') || '').toString().toUpperCase();
-            const itemText = $(this).text().toUpperCase();
-            if (!query || itemKode.includes(query) || itemText.includes(query)) {
-                $(this).show();
-                hasMatches = true;
-            } else {
-                $(this).hide();
+        if (kode) {
+            $('#kode-mk-prodi-input').val(kode);
+            $('#mk-prodi input[name="nama"]').val(selectedOpt.data('nama') || '');
+            $('#mk-prodi input[name="nama_eng"]').val(selectedOpt.data('nama_eng') || selectedOpt.data('nama') || '');
+            
+            const rumpun = selectedOpt.data('rumpun');
+            if (rumpun) {
+                $(`#mk-prodi input[name="rumpun"][value="${rumpun}"]`).prop('checked', true);
             }
-        });
 
-        if (hasMatches && mksUnivData.length > 0) {
-            $dropdown.addClass('show').show();
+            const bt = selectedOpt.data('bobot_teori');
+            if (bt !== undefined && bt !== null) $('#mk-prodi input[name="bobot_teori"]').val(bt);
+
+            const bp = selectedOpt.data('bobot_praktikum');
+            if (bp !== undefined && bp !== null) $('#mk-prodi input[name="bobot_praktikum"]').val(bp);
+
+            const bm = selectedOpt.data('batas_mhs');
+            if (bm !== undefined && bm !== null) $('#mk-prodi input[name="batas_kelulusan_mhs"]').val(bm);
+
+            const bmk = selectedOpt.data('batas_mk');
+            if (bmk !== undefined && bmk !== null) $('#mk-prodi input[name="batas_kelulusan_mk"]').val(bmk);
+
+            const desk = selectedOpt.data('deskripsi');
+            if (desk) $('#mk-prodi textarea[name="deskripsi"]').val(desk);
+
+            const semStr = (selectedOpt.data('semester') || '').toString();
+            if (semStr) {
+                const semArr = semStr.split(',').map(s => s.trim());
+                $('#mk-prodi input[name="semester[]"]').each(function() {
+                    $(this).prop('checked', semArr.includes($(this).val()));
+                });
+            }
+
+            $('#mk-univ-badge-notice').removeClass('d-none');
+            $('#btn-reset-mk-univ').show();
         } else {
-            $dropdown.removeClass('show').hide();
-        }
-    }
-
-    $input.on('focus input', function() {
-        filterAndShowDropdown();
-    });
-
-    $(document).on('click', function(e) {
-        if (!$(e.target).closest('.position-relative').length) {
-            $dropdown.removeClass('show').hide();
+            resetMkUnivSelection();
         }
     });
 
-    $dropdown.on('click', '.mk-univ-item', function(e) {
-        e.preventDefault();
-        const kode = $(this).data('kode');
-        $input.val(kode);
-        $dropdown.removeClass('show').hide();
-        triggerAutoFill(kode);
+    $('#btn-reset-mk-univ').on('click', function() {
+        $('#select-mk-univ-dropdown').val('').trigger('change');
     });
 
-    $input.on('input change', function() {
-        const kode = $input.val().toUpperCase().trim();
-        triggerAutoFill(kode);
-    });
-
-    function triggerAutoFill(kode) {
-        if (!kode) return;
-        const found = mksUnivData.find(item => item.kode.toUpperCase() === kode.toUpperCase());
-        if (found) {
-            $('#mk-prodi input[name="nama"]').val(found.nama);
-            $('#mk-prodi input[name="nama_eng"]').val(found.nama_eng || found.nama);
-            if (found.rumpun) {
-                $(`#mk-prodi input[name="rumpun"][value="${found.rumpun}"]`).prop('checked', true);
-            }
-            if (found.bobot_teori !== undefined) $('#mk-prodi input[name="bobot_teori"]').val(found.bobot_teori);
-            if (found.bobot_praktikum !== undefined) $('#mk-prodi input[name="bobot_praktikum"]').val(found.bobot_praktikum);
-            if (found.batas_kelulusan_mhs !== undefined) $('#mk-prodi input[name="batas_kelulusan_mhs"]').val(found.batas_kelulusan_mhs);
-            if (found.batas_kelulusan_mk !== undefined) $('#mk-prodi input[name="batas_kelulusan_mk"]').val(found.batas_kelulusan_mk);
-            if (found.deskripsi) $('#mk-prodi textarea[name="deskripsi"]').val(found.deskripsi);
-        }
+    function resetMkUnivSelection() {
+        $('#kode-mk-prodi-input').val('');
+        $('#mk-prodi input[name="nama"]').val('');
+        $('#mk-prodi input[name="nama_eng"]').val('');
+        $('#mk-prodi input[name="rumpun"]').prop('checked', false);
+        $('#mk-prodi input[name="bobot_teori"]').val('');
+        $('#mk-prodi input[name="bobot_praktikum"]').val('');
+        $('#mk-prodi input[name="batas_kelulusan_mhs"]').val('');
+        $('#mk-prodi input[name="batas_kelulusan_mk"]').val('');
+        $('#mk-prodi textarea[name="deskripsi"]').val('');
+        $('#mk-prodi input[name="semester[]"]').prop('checked', false);
+        $('#mk-univ-badge-notice').addClass('d-none');
+        $('#btn-reset-mk-univ').hide();
     }
 });
 </script>

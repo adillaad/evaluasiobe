@@ -545,20 +545,45 @@ class ProfilController extends Controller
         $user     = auth()->user();
         $otoritas = $user->otoritas->otoritas;
 
+        $userProdiId = $user->id_prodiUser;
         $mks = DB::table('mks')
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
             ->when(
                 $otoritas === 'Penjamin Mutu Universitas',
-                fn($q) => $q->where('fakultas.id_universitas', $user->id_universitasUser)
+                fn($q) => $q->where(function($sub) use ($user) {
+                    $sub->where('mks.id_universitas', $user->id_universitasUser)
+                        ->orWhereExists(function($pivot) use ($user) {
+                            $pivot->select(DB::raw(1))
+                                  ->from('mk_kurikulum')
+                                  ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                                  ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                                  ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                                  ->where('fakultas.id_universitas', $user->id_universitasUser);
+                        });
+                })
             )
             ->when(
                 $otoritas === 'Penjamin Mutu Fakultas',
-                fn($q) => $q->where('fakultas.id', $user->id_fakultasUser)
+                fn($q) => $q->where(function($sub) use ($user) {
+                    $sub->whereExists(function($pivot) use ($user) {
+                        $pivot->select(DB::raw(1))
+                              ->from('mk_kurikulum')
+                              ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                              ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                              ->where('prodi.id_fakultas', $user->id_fakultasUser);
+                    });
+                })
             )
             ->when(
                 in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']),
-                fn($q) => $q->where('prodi.id', $user->id_prodiUser)
+                fn($q) => $q->where(function($sub) use ($userProdiId) {
+                    $sub->where('mks.id_prodi', $userProdiId)
+                        ->orWhereExists(function($pivot) use ($userProdiId) {
+                            $pivot->select(DB::raw(1))
+                                  ->from('mk_kurikulum')
+                                  ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                                  ->where('mk_kurikulum.id_prodi', $userProdiId);
+                        });
+                })
             )
             ->select('mks.kode', 'mks.nama')
             ->orderBy('kode')

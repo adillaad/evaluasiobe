@@ -1,3 +1,44 @@
+@php
+    $selectedProdiId = request('prodi_id');
+    if (!$selectedProdiId && request('kurikulum_id')) {
+        $selectedProdiId = \Illuminate\Support\Facades\DB::table('kurikulums')->where('id', request('kurikulum_id'))->value('id_prodi');
+    }
+    if (!$selectedProdiId && auth()->check()) {
+        $selectedProdiId = auth()->user()->id_prodiUser ?? (auth()->user()->prodi ? auth()->user()->prodi->id : null);
+    }
+    if ($selectedProdiId) {
+        $isAptikom = (bool) \Illuminate\Support\Facades\DB::table('prodi')->where('id', $selectedProdiId)->value('is_aptikom');
+    } else {
+        $isAptikom = auth()->check() && auth()->user()->prodi ? (bool) auth()->user()->prodi->is_aptikom : true;
+    }
+
+    $allBkItemsCollection = isset($allBkItems) ? $allBkItems : collect();
+    $kurikulumMap = collect();
+    foreach ($kurikulums as $k) {
+        $kurikulumMap->put($k->id, (object)[
+            'id' => $k->id,
+            'tahun' => $k->tahun,
+            'nama' => 'Kurikulum ' . $k->tahun
+        ]);
+    }
+
+    foreach ($allBkItemsCollection as $bkItem) {
+        if ($bkItem->kurikulum_id && !$kurikulumMap->has($bkItem->kurikulum_id)) {
+            $tahun = $bkItem->kurikulum->tahun ?? 'N/A';
+            $kurikulumMap->put($bkItem->kurikulum_id, (object)[
+                'id' => $bkItem->kurikulum_id,
+                'tahun' => $tahun,
+                'nama' => 'Kurikulum ' . $tahun
+            ]);
+        }
+    }
+
+    $tabKurikulums = $kurikulumMap->sortByDesc('tahun')->values();
+    $uncategorizedBks = $allBkItemsCollection->filter(function($b) {
+        return empty($b->kurikulum_id);
+    });
+@endphp
+
 @extends($userOtoritas === 'Dosen' ? 'dosen.template' : 'penjamin-mutu.template')
 @section('content')
 
@@ -35,6 +76,62 @@
             color: #ffffff !important;
         }
         .btn-outline-danger:hover i, .btn-outline-danger:focus i, .btn-outline-danger:active i {
+            color: #ffffff !important;
+        }
+
+        .kur-tabs-wrapper {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 14px 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e2e8f0;
+        }
+        .kur-nav-pills {
+            gap: 8px;
+        }
+        .kur-nav-pills .nav-link {
+            color: #475569 !important;
+            background-color: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            padding: 8px 16px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            transition: all 0.2s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            white-space: nowrap !important;
+        }
+        .kur-nav-pills .nav-link:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+        @if ($isAptikom)
+            .kur-nav-pills .nav-link.active {
+                background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
+                color: #ffffff !important;
+                border-color: #006199 !important;
+                box-shadow: 0 4px 12px rgba(0, 97, 153, 0.28) !important;
+            }
+        @else
+            .kur-nav-pills .nav-link.active {
+                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
+                color: #ffffff !important;
+                border-color: #76C0EC !important;
+                box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
+            }
+        @endif
+        .badge-bk-count {
+            background-color: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            border-radius: 6px;
+            padding: 2px 6px;
+            margin-left: 6px;
+            font-weight: 700;
+        }
+        .kur-nav-pills .nav-link.active .badge-bk-count {
+            background-color: rgba(255, 255, 255, 0.25) !important;
             color: #ffffff !important;
         }
     </style>
@@ -121,20 +218,17 @@
                         <p class="text-muted small mb-0">Daftar Bahan Kajian (BK) dikelompokkan berdasarkan Rumpun.</p>
                     </div>
 
-                    <div class="d-flex align-items-center gap-2">
-                        <form method="GET" action="{{ route($currentPrefix . 'bk.index') }}" class="d-flex align-items-center">
-                            <select name="kurikulum_id" class="form-select rounded-3 font-13 ps-3 py-2 border-primary fw-medium" style="min-width: 260px; width: auto; padding-right: 2.75rem !important; background-position: right 0.85rem center;" onchange="this.form.submit()">
-                                <option value="">Filter Semua Kurikulum</option>
-                                @foreach ($kurikulums as $kurikulum)
-                                    <option value="{{ $kurikulum->id }}"
-                                        {{ request('kurikulum_id') == $kurikulum->id ? 'selected' : '' }}>
-                                        Kurikulum {{ $kurikulum->tahun }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </form>
-                    </div>
+                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-success text-white btn-icon-text" data-bs-toggle="modal" data-bs-target="#importBkModal">
+                                <i class="ti-upload me-1"></i>
+                                <span>Import Bahan Kajian</span>
+                            </button>
+                        </div>
+                    @endif
                 </div>
+
+                <x-filter-form :showKurikulum="true" :kurikulums="$kurikulums" />
 
                 <div class="table-responsive mt-3">
                     <table class="table table-bordered table-hover align-middle w-100 bk-table mb-0">
@@ -266,6 +360,64 @@
         </div>
     </div>
 
+    {{-- Modal Import Bahan Kajian --}}
+    @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+        <div class="modal fade" id="importBkModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-sm rounded-3">
+                    <form action="{{ route($currentPrefix . 'bk.import-excel') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="modal-header py-3 px-4 bg-light border-bottom text-start">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-success bg-opacity-10 text-success p-2 rounded-2">
+                                    <i class="ti-upload fs-5"></i>
+                                </div>
+                                <div>
+                                    <h5 class="modal-title fs-6 fw-bold mb-0 text-dark">Import Bahan Kajian</h5>
+                                    <span class="text-muted small">Impor data Bahan Kajian dari file Excel</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4 text-start">
+                            <div class="alert alert-info p-3 small border-0 bg-info bg-opacity-10 text-info-emphasis rounded-3 mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div>
+                                    <i class="ti-info-alt me-1"></i> Format data Bahan Kajian harus sesuai dengan template Excel.
+                                </div>
+                                <a href="{{ route($currentPrefix . 'bk.download-template') }}" class="btn btn-sm btn-outline-success btn-icon-text text-nowrap">
+                                    <i class="ti-download me-1"></i>
+                                    <span>Download Template Excel</span>
+                                </a>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_kurikulum_import" class="form-label small fw-bold text-dark mb-1">Kurikulum (Opsional)</label>
+                                <select name="id_kurikulum" id="id_kurikulum_import" class="form-select form-select-sm">
+                                    <option value="">-- Otomatis Deteksi dari Excel / Gunakan Kurikulum Terkini --</option>
+                                    @foreach ($kurikulums as $k)
+                                        <option value="{{ $k->id }}">Kurikulum {{ $k->tahun }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted" style="font-size: 0.75rem;"><i class="ti-info-circle me-1"></i> Jika kolom <i>Tahun Kurikulum</i> di file Excel terisi, sistem akan otomatis menggunakan tahun tersebut.</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="excel_file" class="form-label small fw-bold text-dark mb-1">Pilih File Excel (.xlsx, .xls, .csv) <span class="text-danger">*</span></label>
+                                <input type="file" class="form-control form-control-sm" id="excel_file" name="excel_file" accept=".xlsx,.xls,.csv" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer py-2 px-4 bg-light border-top justify-content-between">
+                            <button type="button" class="btn btn-light btn-sm text-secondary px-3" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-success text-white btn-sm px-4 fw-bold shadow-sm">
+                                <i class="ti-upload me-1"></i> Upload & Import
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <style>
         .bk-table {
             border-collapse: separate !important;
@@ -354,5 +506,20 @@
             $('#editBkModal').modal('show');
         });
     });
+
+    function switchKurikulumTab(targetId) {
+        var tabBtn = document.getElementById(targetId + '-tab');
+        if (tabBtn) {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+                var tab = bootstrap.Tab.getOrCreateInstance(tabBtn);
+                tab.show();
+            } else if (typeof $ !== 'undefined' && $.fn.tab) {
+                $(tabBtn).tab('show');
+            } else {
+                tabBtn.click();
+            }
+        }
+    }
 </script>
 @endpush
+

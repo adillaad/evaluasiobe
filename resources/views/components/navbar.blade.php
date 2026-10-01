@@ -38,6 +38,20 @@
 
     // --- Warna badge otoritas ---
     $otoritasBadgeBg = $isAptikom ? 'rgba(0, 97, 153, 0.1)' : 'rgba(118, 192, 236, 0.18)';
+
+    // --- Profile image URL with fallback ---
+    $rawImg = auth()->check() ? trim(auth()->user()->img ?? '') : '';
+    $defaultImgUrl = asset('assets/img/pp/User-Profile.png');
+    $profileImgUrl = $defaultImgUrl;
+    if ($rawImg !== '') {
+        $cleanImg = ltrim($rawImg, '/\\');
+        $basename = basename($cleanImg);
+        if (is_file(public_path('assets/img/pp/' . $basename))) {
+            $profileImgUrl = asset('assets/img/pp/' . $basename);
+        } elseif (is_file(public_path($cleanImg))) {
+            $profileImgUrl = asset($cleanImg);
+        }
+    }
     $otoritasBadgeColor = $isAptikom ? '#006199' : '#2b7fb3';
     $otoritasBadgeBorder = $isAptikom ? 'rgba(0, 97, 153, 0.3)' : 'rgba(118, 192, 236, 0.5)';
 
@@ -962,13 +976,13 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
             {{-- User dropdown untuk desktop --}}
             <li class="nav-item dropdown d-none d-lg-block user-dropdown">
                 <a class="nav-link" id="UserDropdown" href="#" aria-expanded="false">
-                    <img class="img-xs rounded-circle" src="{{ asset('/assets/img/pp/' . auth()->user()->img) }}"
-                        alt="Profile image">
+                    <img class="img-xs rounded-circle" src="{{ $profileImgUrl }}" onerror="this.onerror=null;this.src='{{ asset('assets/img/pp/User-Profile.png') }}';"
+                        alt="Profile" style="object-fit: cover;">
                 </a>
                 <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="UserDropdown">
                     <div class="dropdown-header text-center">
-                        <img class="img-md rounded-circle" src="{{ asset('/assets/img/pp/' . auth()->user()->img) }}"
-                            alt="Profile image" style="width:41px; height:40px;">
+                        <img class="img-md rounded-circle" src="{{ $profileImgUrl }}" onerror="this.onerror=null;this.src='{{ asset('assets/img/pp/User-Profile.png') }}';"
+                            alt="Profile" style="width:41px; height:40px; object-fit: cover;">
                         <div class="mt-2 mb-1">
                             <span class="badge" style="background-color: {{ $otoritasBadgeBg }}; color: {{ $otoritasBadgeColor }}; border: 1px solid {{ $otoritasBadgeBorder }}; font-weight: 500; font-size: 11px; padding: 4px 10px; border-radius: 12px; display: inline-block; white-space: normal; max-width: 100%;">
                                 {{ $displayOtoritas }}
@@ -1022,13 +1036,13 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
             {{-- User dropdown untuk mobile --}}
             <li class="nav-item dropdown d-block d-lg-none user-dropdown-mobile">
                 <a class="nav-link" id="UserDropdownMobile" href="#" aria-expanded="false">
-                    <img class="img-xs rounded-circle" src="{{ asset('/assets/img/pp/' . auth()->user()->img) }}"
-                        alt="Profile image">
+                    <img class="img-xs rounded-circle" src="{{ $profileImgUrl }}" onerror="this.onerror=null;this.src='{{ asset('assets/img/pp/User-Profile.png') }}';"
+                        alt="Profile" style="object-fit: cover;">
                 </a>
                 <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="UserDropdownMobile">
                     <div class="dropdown-header text-center">
-                        <img class="img-md rounded-circle" src="{{ asset('/assets/img/pp/' . auth()->user()->img) }}"
-                            alt="Profile image" style="width:41px; height:40px;">
+                        <img class="img-md rounded-circle" src="{{ $profileImgUrl }}" onerror="this.onerror=null;this.src='{{ asset('assets/img/pp/User-Profile.png') }}';"
+                            alt="Profile" style="width:41px; height:40px; object-fit: cover;">
                         <div class="mt-2 mb-1">
                             <span class="badge" style="background-color: {{ $otoritasBadgeBg }}; color: {{ $otoritasBadgeColor }}; border: 1px solid {{ $otoritasBadgeBorder }}; font-weight: 500; font-size: 11px; padding: 4px 10px; border-radius: 12px; display: inline-block; white-space: normal; max-width: 100%;">
                                 {{ $displayOtoritas }}

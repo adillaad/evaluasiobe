@@ -426,25 +426,67 @@ class CPLController extends Controller
             ->select('cpls.id', 'cpls.kode', 'cpls.judul', 'cpls.id_kurikulum')
             ->with('kurikulum');
 
-        $queryMks = MK::query()
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')->with(['cpl', 'kurikulum'])
-            ->select('mks.*');
+        $user = auth()->user();
+        $userProdiId = $user->id_prodiUser;
 
-        if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
-            $queryCpl->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-            $queryMks->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
-            $queryCpl->where('fakultas.id', auth()->user()->id_fakultasUser);
-            $queryMks->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $queryCpl->where('prodi.id', auth()->user()->id_prodiUser);
-            $queryMks->where('prodi.id', auth()->user()->id_prodiUser);
+        $queryMks = MK::query()->with(['cpl', 'kurikulum']);
+
+        if ($user->otoritas->otoritas === 'Penjamin Mutu Universitas') {
+            $queryCpl->where('fakultas.id_universitas', $user->id_universitasUser);
+            $univId = $user->id_universitasUser;
+            $queryMks->where(function($q) use ($univId) {
+                $q->where('mks.id_universitas', $univId)
+                  ->orWhereHas('prodi.fakultas', function($f) use ($univId) {
+                      $f->where('id_universitas', $univId);
+                  })->orWhereExists(function($sub) use ($univId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                          ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('fakultas.id_universitas', $univId);
+                  });
+            });
+        } else if ($user->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
+            $queryCpl->where('fakultas.id', $user->id_fakultasUser);
+            $fakId = $user->id_fakultasUser;
+            $queryMks->where(function($q) use ($fakId) {
+                $q->whereHas('prodi', function($p) use ($fakId) {
+                    $p->where('id_fakultas', $fakId);
+                })->orWhereExists(function($sub) use ($fakId) {
+                    $sub->select(DB::raw(1))
+                        ->from('mk_kurikulum')
+                        ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                        ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                        ->where('prodi.id_fakultas', $fakId);
+                });
+            });
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $queryCpl->where('prodi.id', $userProdiId);
+            $queryMks->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            });
         }
 
         if ($request->filled('kurikulum_id')) {
-            $queryCpl->where('cpls.id_kurikulum', $request->kurikulum_id);
-            $queryMks->where('mks.id_kurikulum', $request->kurikulum_id);
+            $kurId = $request->kurikulum_id;
+            $queryCpl->where('cpls.id_kurikulum', $kurId);
+            $queryMks->where(function($q) use ($kurId) {
+                $q->where('mks.id_kurikulum', $kurId)
+                  ->orWhere('mks.kurikulum', $kurId)
+                  ->orWhereExists(function($sub) use ($kurId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_kurikulum', $kurId);
+                  });
+            });
         }
 
         $cpls = $queryCpl->get();
@@ -456,6 +498,9 @@ class CPLController extends Controller
 
     public function indexCPLBKMK(Request $request)
     {
+        $user = auth()->user();
+        $userProdiId = $user->id_prodiUser;
+
         $queryCpl = CPL::query()
             ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
@@ -469,31 +514,69 @@ class CPLController extends Controller
             ->select('bks.*')
             ->with(['mk.cpl', 'cpl', 'kurikulum']);
 
-        $queryMk = MK::query()
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->select('mks.*')
-            ->with(['cpl', 'kurikulum']);
+        $queryMk = MK::query()->with(['cpl', 'kurikulum']);
 
         // Filter berdasarkan otoritas pengguna
-        if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
-            $queryCpl->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-            $queryBk->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-            $queryMk->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } elseif (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
-            $queryCpl->where('fakultas.id', auth()->user()->id_fakultasUser);
-            $queryBk->where('prodi.id_fakultas', auth()->user()->id_fakultasUser);
-            $queryMk->where('prodi.id_fakultas', auth()->user()->id_fakultasUser);
-        } elseif (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $queryCpl->where('prodi.id', auth()->user()->id_prodiUser);
-            $queryBk->where('prodi.id', auth()->user()->id_prodiUser);
-            $queryMk->where('prodi.id', auth()->user()->id_prodiUser);
+        if ($user->otoritas->otoritas === 'Penjamin Mutu Universitas') {
+            $queryCpl->where('fakultas.id_universitas', $user->id_universitasUser);
+            $queryBk->where('fakultas.id_universitas', $user->id_universitasUser);
+            $univId = $user->id_universitasUser;
+            $queryMk->where(function($q) use ($univId) {
+                $q->where('mks.id_universitas', $univId)
+                  ->orWhereHas('prodi.fakultas', function($f) use ($univId) {
+                      $f->where('id_universitas', $univId);
+                  })->orWhereExists(function($sub) use ($univId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                          ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('fakultas.id_universitas', $univId);
+                  });
+            });
+        } elseif ($user->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
+            $queryCpl->where('fakultas.id', $user->id_fakultasUser);
+            $queryBk->where('prodi.id_fakultas', $user->id_fakultasUser);
+            $fakId = $user->id_fakultasUser;
+            $queryMk->where(function($q) use ($fakId) {
+                $q->whereHas('prodi', function($p) use ($fakId) {
+                    $p->where('id_fakultas', $fakId);
+                })->orWhereExists(function($sub) use ($fakId) {
+                    $sub->select(DB::raw(1))
+                        ->from('mk_kurikulum')
+                        ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                        ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                        ->where('prodi.id_fakultas', $fakId);
+                });
+            });
+        } elseif (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $queryCpl->where('prodi.id', $userProdiId);
+            $queryBk->where('prodi.id', $userProdiId);
+            $queryMk->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            });
         }
 
         if ($request->filled('kurikulum_id')) {
-            $queryCpl->where('cpls.id_kurikulum', $request->kurikulum_id);
-            $queryBk->where('bks.kurikulum_id', $request->kurikulum_id);
-            $queryMk->where('mks.id_kurikulum', $request->kurikulum_id);
+            $kurId = $request->kurikulum_id;
+            $queryCpl->where('cpls.id_kurikulum', $kurId);
+            $queryBk->where('bks.kurikulum_id', $kurId);
+            $queryMk->where(function($q) use ($kurId) {
+                $q->where('mks.id_kurikulum', $kurId)
+                  ->orWhere('mks.kurikulum', $kurId)
+                  ->orWhereExists(function($sub) use ($kurId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_kurikulum', $kurId);
+                  });
+            });
         }
 
         // Eksekusi query
@@ -629,7 +712,15 @@ class CPLController extends Controller
         $cplsQuery = CPL::query();
 
         if ($idProdi) {
-            $mksQuery->where('id_prodi', $idProdi);
+            $mksQuery->where(function($q) use ($idProdi) {
+                $q->where('id_prodi', $idProdi)
+                  ->orWhereExists(function($sub) use ($idProdi) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $idProdi);
+                  });
+            });
             $cplsQuery->where('id_prodi', $idProdi);
         }
 
@@ -663,14 +754,28 @@ class CPLController extends Controller
             $cpls = $cplQuery->select('id', 'kode', 'judul')->get();
         }
 
-        // Fetch MKs - check both id_kurikulum and kurikulum columns, select kode & nama
+        // Fetch MKs - check both id_kurikulum, kurikulum columns, and mk_kurikulum pivot
         $mkQuery = MK::where(function($q) use ($kurikulumId) {
             $q->where('id_kurikulum', $kurikulumId)
-              ->orWhere('kurikulum', $kurikulumId);
+              ->orWhere('kurikulum', $kurikulumId)
+              ->orWhereExists(function($sub) use ($kurikulumId) {
+                  $sub->select(DB::raw(1))
+                      ->from('mk_kurikulum')
+                      ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                      ->where('mk_kurikulum.id_kurikulum', $kurikulumId);
+              });
         });
 
         if ($idProdi) {
-            $mks = (clone $mkQuery)->where('id_prodi', $idProdi)->select('kode', 'nama')->get();
+            $mks = (clone $mkQuery)->where(function($q) use ($idProdi) {
+                $q->where('id_prodi', $idProdi)
+                  ->orWhereExists(function($sub) use ($idProdi) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $idProdi);
+                  });
+            })->select('kode', 'nama')->get();
             if ($mks->isEmpty()) {
                 $mks = $mkQuery->select('kode', 'nama')->get();
             }
@@ -736,35 +841,75 @@ class CPLController extends Controller
     public function updateMatrixCPLMK(Request $request)
     {
         $user = auth()->user();
+        $userProdiId = $user->id_prodiUser;
         $otoritas = $user->otoritas->otoritas;
 
-        $queryMks = MK::query()
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->select('mks.*');
+        $queryMks = MK::query();
 
         if ($otoritas === 'Penjamin Mutu Universitas') {
-            $queryMks->where('fakultas.id_universitas', $user->id_universitasUser);
+            $univId = $user->id_universitasUser;
+            $queryMks->where(function($q) use ($univId) {
+                $q->where('mks.id_universitas', $univId)
+                  ->orWhereHas('prodi.fakultas', function($f) use ($univId) {
+                      $f->where('id_universitas', $univId);
+                  })->orWhereExists(function($sub) use ($univId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                          ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('fakultas.id_universitas', $univId);
+                  });
+            });
         } else if ($otoritas === 'Penjamin Mutu Fakultas') {
-            $queryMks->where('fakultas.id', $user->id_fakultasUser);
+            $fakId = $user->id_fakultasUser;
+            $queryMks->where(function($q) use ($fakId) {
+                $q->whereHas('prodi', function($p) use ($fakId) {
+                    $p->where('id_fakultas', $fakId);
+                })->orWhereExists(function($sub) use ($fakId) {
+                    $sub->select(DB::raw(1))
+                        ->from('mk_kurikulum')
+                        ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                        ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                        ->where('prodi.id_fakultas', $fakId);
+                });
+            });
         } else if (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $queryMks->where('prodi.id', $user->id_prodiUser);
+            $queryMks->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            });
         }
 
         if ($request->filled('kurikulum_id')) {
-            $queryMks->where('mks.id_kurikulum', $request->kurikulum_id);
+            $kurId = $request->kurikulum_id;
+            $queryMks->where(function($q) use ($kurId) {
+                $q->where('mks.id_kurikulum', $kurId)
+                  ->orWhere('mks.kurikulum', $kurId)
+                  ->orWhereExists(function($sub) use ($kurId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_kurikulum', $kurId);
+                  });
+            });
         }
 
         $mks = $queryMks->get();
         $matrix = $request->input('matrix', []);
 
-        DB::transaction(function () use ($mks, $matrix) {
+        DB::transaction(function () use ($mks, $matrix, $userProdiId) {
             foreach ($mks as $mk) {
                 $selectedCplIds = isset($matrix[$mk->kode]) ? array_map('intval', (array)$matrix[$mk->kode]) : [];
                 
                 $syncData = [];
                 foreach ($selectedCplIds as $cplId) {
-                    $syncData[$cplId] = ['id_prodi' => $mk->id_prodi];
+                    $syncData[$cplId] = ['id_prodi' => $mk->id_prodi ?: $userProdiId];
                 }
                 $mk->cpl()->sync($syncData);
             }
@@ -896,6 +1041,7 @@ class CPLController extends Controller
     public function updateMatrixCPLBKMK(Request $request)
     {
         $user = auth()->user();
+        $userProdiId = $user->id_prodiUser;
         $otoritas = $user->otoritas->otoritas;
 
         $queryBk = BK::query()
@@ -908,29 +1054,68 @@ class CPLController extends Controller
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
             ->select('cpls.id', 'cpls.kode', 'cpls.judul');
 
-        $queryMk = MK::query()
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->select('mks.*');
+        $queryMk = MK::query();
 
         if ($otoritas === 'Penjamin Mutu Universitas') {
             $queryBk->where('fakultas.id_universitas', $user->id_universitasUser);
             $queryCpl->where('fakultas.id_universitas', $user->id_universitasUser);
-            $queryMk->where('fakultas.id_universitas', $user->id_universitasUser);
+            $univId = $user->id_universitasUser;
+            $queryMk->where(function($q) use ($univId) {
+                $q->where('mks.id_universitas', $univId)
+                  ->orWhereHas('prodi.fakultas', function($f) use ($univId) {
+                      $f->where('id_universitas', $univId);
+                  })->orWhereExists(function($sub) use ($univId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                          ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('fakultas.id_universitas', $univId);
+                  });
+            });
         } else if ($otoritas === 'Penjamin Mutu Fakultas') {
             $queryBk->where('prodi.id_fakultas', $user->id_fakultasUser);
             $queryCpl->where('fakultas.id', $user->id_fakultasUser);
-            $queryMk->where('prodi.id_fakultas', $user->id_fakultasUser);
+            $fakId = $user->id_fakultasUser;
+            $queryMk->where(function($q) use ($fakId) {
+                $q->whereHas('prodi', function($p) use ($fakId) {
+                    $p->where('id_fakultas', $fakId);
+                })->orWhereExists(function($sub) use ($fakId) {
+                    $sub->select(DB::raw(1))
+                        ->from('mk_kurikulum')
+                        ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                        ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                        ->where('prodi.id_fakultas', $fakId);
+                });
+            });
         } else if (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $queryBk->where('prodi.id', $user->id_prodiUser);
-            $queryCpl->where('prodi.id', $user->id_prodiUser);
-            $queryMk->where('prodi.id', $user->id_prodiUser);
+            $queryBk->where('prodi.id', $userProdiId);
+            $queryCpl->where('prodi.id', $userProdiId);
+            $queryMk->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            });
         }
 
         if ($request->filled('kurikulum_id')) {
-            $queryBk->where('bks.kurikulum_id', $request->kurikulum_id);
-            $queryCpl->where('cpls.id_kurikulum', $request->kurikulum_id);
-            $queryMk->where('mks.id_kurikulum', $request->kurikulum_id);
+            $kurId = $request->kurikulum_id;
+            $queryBk->where('bks.kurikulum_id', $kurId);
+            $queryCpl->where('cpls.id_kurikulum', $kurId);
+            $queryMk->where(function($q) use ($kurId) {
+                $q->where('mks.id_kurikulum', $kurId)
+                  ->orWhere('mks.kurikulum', $kurId)
+                  ->orWhereExists(function($sub) use ($kurId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_kurikulum', $kurId);
+                  });
+            });
         }
 
         $bks = $queryBk->get();

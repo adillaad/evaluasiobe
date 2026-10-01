@@ -56,7 +56,7 @@
             border-bottom: 2px solid #e2e8f0;
             gap: 10px;
             padding-bottom: 10px;
-            margin-bottom: 20px !important;
+            margin-bottom: 10px !important;
             display: flex !important;
             flex-wrap: nowrap !important;
             overflow-x: auto !important;
@@ -324,7 +324,7 @@
                          role="tabpanel"
                          aria-labelledby="tab-gabungan-tab">
                         @foreach ($groupedByKurikulum as $namaKurikulum => $grouped)
-                            <div class="d-flex align-items-center mb-3 mt-4 text-dark fw-bold border-bottom pb-2">
+                            <div class="d-flex align-items-center mb-3 {{ $loop->first ? 'mt-1' : 'mt-4' }} text-dark fw-bold border-bottom pb-2">
                                 <i class="mdi mdi-bookmark-check text-theme-accent me-2 fs-5"></i>
                                 <span class="fs-6 me-2">{{ $namaKurikulum }}</span>
                                 <span class="badge bg-light text-dark border rounded-pill px-2 py-1" style="font-size: 11px;">

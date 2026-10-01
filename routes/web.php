@@ -711,6 +711,8 @@ Route::middleware(['auth'])->group(function () {
                     // BK Pages
                     Route::prefix('bk')->name('bk.')->group(function () {
                         Route::get('bahan-kajian', [BKPM::class, 'index'])->name('index');
+                        Route::get('download-template', [BKPM::class, 'downloadTemplateBK'])->name('download-template');
+                        Route::post('import-excel', [BKPM::class, 'importExcelBK'])->name('import-excel');
                         Route::get('pemetaan-bk-mk', [BKPM::class, 'indexBKMK'])->name('bk-mk');
                         Route::post('update-matrix-bk-mk', [BKPM::class, 'updateMatrixBKMK'])->name('bk-mk-matrix-update');
                         Route::get('add-bk-mk', [BKPM::class, 'addBKMK'])->name('bk-mk-add');
@@ -725,6 +727,8 @@ Route::middleware(['auth'])->group(function () {
                     // MK Pages
                     Route::prefix('mk')->name('mk.')->group(function () {
                         Route::get('susunan-mk', [MKPM::class, 'susunanMK'])->name('susunan-mk');
+                        Route::get('download-template', [MKPM::class, 'downloadTemplateMK'])->name('download-template');
+                        Route::post('import-excel', [MKPM::class, 'importExcelMK'])->name('import-excel');
                         Route::get('add-mk', [MKPM::class, 'create'])->name('create');
                         Route::post('add-mk', [MKPM::class, 'store'])->name('store');
                         Route::get('edit-mk/{kode}', [MKPM::class, 'edit'])->name('edit');
@@ -760,6 +764,8 @@ Route::middleware(['auth'])->group(function () {
                         Route::get('get-cpmk-by-kurikulum/{kurikulum_id}', [CPLCPMKPM::class, 'getCpmkByKurikulum'])->name('cpmk-by-kurikulum');
                         Route::get('get-cpl-by-kurikulum/{kurikulum_id}', [CPLCPMKPM::class, 'getCplByKurikulum'])->name('cpl-by-kurikulum');
                         Route::get('get-cpmk-by-cpl/{cpl_id}', [CPLCPMKPM::class, 'getCpmkByCpl'])->name('cpmk-by-cpl');
+                        Route::get('download-template', [CPLCPMKPM::class, 'downloadTemplateSubCpmk'])->name('download-template');
+                        Route::post('import-excel', [CPLCPMKPM::class, 'importExcelSubCpmk'])->name('import-excel');
                         Route::get('kelola-subcpmk', [CPLCPMKPM::class, 'indexKelolaSubCpmk'])->name('subcpmk-kelola');
                         Route::post('add-subcpmk', [CPLCPMKPM::class, 'storeSubCpmk'])->name('subCpmk-store');
                         Route::put('update-subcpmk/{id}', [CPLCPMKPM::class, 'updateSubCpmk'])->name('subCpmk-update');
@@ -1097,6 +1103,8 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                 // BK Pages
                 Route::prefix('bk')->name('bk.')->group(function () {
                     Route::get('bahan-kajian', [BKPM::class, 'index'])->name('index');
+                    Route::get('download-template', [BKPM::class, 'downloadTemplateBK'])->name('download-template');
+                    Route::post('import-excel', [BKPM::class, 'importExcelBK'])->name('import-excel');
                     Route::get('bk-add', [BKPM::class, 'addBK'])->name('bk-add');
                     Route::post('bk-store', [BKPM::class, 'storeBK'])->name('bk-store');
                     Route::put('bk-update/{id}', [BKPM::class, 'updateBK'])->name('bk-update');
@@ -1111,6 +1119,8 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                 // MK Pages
                 Route::prefix('mk')->name('mk.')->group(function () {
                     Route::get('susunan-mk', [MKPM::class, 'susunanMK'])->name('susunan-mk');
+                    Route::get('download-template', [MKPM::class, 'downloadTemplateMK'])->name('download-template');
+                    Route::post('import-excel', [MKPM::class, 'importExcelMK'])->name('import-excel');
                     Route::get('add-mk', [MKPM::class, 'create'])->name('create');
                     Route::post('add-mk', [MKPM::class, 'store'])->name('store');
                     Route::get('edit-mk/{kode}', [MKPM::class, 'edit'])->name('edit');
@@ -1146,6 +1156,8 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                     Route::get('get-cpmk-by-kurikulum/{kurikulum_id}', [CPLCPMKPM::class, 'getCpmkByKurikulum'])->name('cpmk-by-kurikulum');
                     Route::get('get-cpl-by-kurikulum/{kurikulum_id}', [CPLCPMKPM::class, 'getCplByKurikulum'])->name('cpl-by-kurikulum');
                     Route::get('get-cpmk-by-cpl/{cpl_id}', [CPLCPMKPM::class, 'getCpmkByCpl'])->name('cpmk-by-cpl');
+                    Route::get('download-template', [CPLCPMKPM::class, 'downloadTemplateSubCpmk'])->name('download-template');
+                    Route::post('import-excel', [CPLCPMKPM::class, 'importExcelSubCpmk'])->name('import-excel');
                     Route::get('kelola-subcpmk', [CPLCPMKPM::class, 'indexKelolaSubCpmk'])->name('subcpmk-kelola');
                     Route::post('add-subcpmk', [CPLCPMKPM::class, 'storeSubCpmk'])->name('subCpmk-store');
                     Route::put('update-subcpmk/{id}', [CPLCPMKPM::class, 'updateSubCpmk'])->name('subCpmk-update');

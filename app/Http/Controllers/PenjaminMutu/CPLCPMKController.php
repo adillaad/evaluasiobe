@@ -58,10 +58,17 @@ class CPLCPMKController extends Controller
         $cpls = $query->get();
         $kurikulums = $this->getKurikulumsForUser();
 
+        $userProdiId = auth()->user()->id_prodiUser;
         $mks = MK::query()
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->where('prodi.id', auth()->user()->id_prodiUser)
+            ->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            })
             ->orderBy('mks.nama', 'asc')
             ->select('mks.*')->get();
 
@@ -90,10 +97,17 @@ class CPLCPMKController extends Controller
         $cpls = $query->select('cpls.*')->get();
         $semesters = MK::select('semester')->whereNotNull('semester')->where('semester', '!=', 0)->distinct()->orderBy('semester')->get();
         
+        $userProdiId = auth()->user()->id_prodiUser;
         $mks = MK::query()
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->where('prodi.id', auth()->user()->id_prodiUser)
+            ->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            })
             ->whereNotNull('mks.semester')
             ->where('mks.semester', '!=', 0)
             ->orderBy('mks.semester', 'asc')
@@ -114,27 +128,67 @@ class CPLCPMKController extends Controller
             ->select('cpls.*')
             ->with(['cpmk', 'kurikulum']);
 
-        $queryMks = MK::query()
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->select('mks.*')
-            ->with(['cpmks.cpl', 'cpl', 'kurikulum']);
+        $user = auth()->user();
+        $userProdiId = $user->id_prodiUser;
 
-        // Filtering berdasarkan otoritas pengguna
-        if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
-            $queryCpl->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-            $queryMks->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
-            $queryCpl->where('fakultas.id', auth()->user()->id_fakultasUser);
-            $queryMks->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $queryCpl->where('prodi.id', auth()->user()->id_prodiUser);
-            $queryMks->where('prodi.id', auth()->user()->id_prodiUser);
+        $queryMks = MK::query()->with(['cpmks.cpl', 'cpl', 'kurikulum']);
+
+        if ($user->otoritas->otoritas === 'Penjamin Mutu Universitas') {
+            $queryCpl->where('fakultas.id_universitas', $user->id_universitasUser);
+            $univId = $user->id_universitasUser;
+            $queryMks->where(function($q) use ($univId) {
+                $q->where('mks.id_universitas', $univId)
+                  ->orWhereHas('prodi.fakultas', function($f) use ($univId) {
+                      $f->where('id_universitas', $univId);
+                  })->orWhereExists(function($sub) use ($univId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                          ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('fakultas.id_universitas', $univId);
+                  });
+            });
+        } else if ($user->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
+            $queryCpl->where('fakultas.id', $user->id_fakultasUser);
+            $fakId = $user->id_fakultasUser;
+            $queryMks->where(function($q) use ($fakId) {
+                $q->whereHas('prodi', function($p) use ($fakId) {
+                    $p->where('id_fakultas', $fakId);
+                })->orWhereExists(function($sub) use ($fakId) {
+                    $sub->select(DB::raw(1))
+                        ->from('mk_kurikulum')
+                        ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                        ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                        ->where('prodi.id_fakultas', $fakId);
+                });
+            });
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $queryCpl->where('prodi.id', $userProdiId);
+            $queryMks->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            });
         }
 
         if ($request->filled('kurikulum_id')) {
-            $queryCpl->where('cpls.id_kurikulum', $request->kurikulum_id);
-            $queryMks->where('mks.id_kurikulum', $request->kurikulum_id);
+            $kurId = $request->kurikulum_id;
+            $queryCpl->where('cpls.id_kurikulum', $kurId);
+            $queryMks->where(function($q) use ($kurId) {
+                $q->where('mks.id_kurikulum', $kurId)
+                  ->orWhere('mks.kurikulum', $kurId)
+                  ->orWhereExists(function($sub) use ($kurId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_kurikulum', $kurId);
+                  });
+            });
         }
 
         $cpls = $queryCpl->get();
@@ -148,17 +202,36 @@ class CPLCPMKController extends Controller
     {
         $matrix = $request->input('matrix', []); // Key 1: mk_kode, Key 2: cpl_id, Value: array of cpmk_ids
         $kurikulumId = $request->input('kurikulum_id');
+        $user = auth()->user();
+        $userProdiId = $user->id_prodiUser;
 
         $queryMks = MK::query();
-        if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $queryMks->where('id_prodi', auth()->user()->id_prodiUser);
+        if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $queryMks->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            });
         }
         if ($kurikulumId) {
-            $queryMks->where('id_kurikulum', $kurikulumId);
+            $queryMks->where(function($q) use ($kurikulumId) {
+                $q->where('mks.id_kurikulum', $kurikulumId)
+                  ->orWhere('mks.kurikulum', $kurikulumId)
+                  ->orWhereExists(function($sub) use ($kurikulumId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_kurikulum', $kurikulumId);
+                  });
+            });
         }
         $mks = $queryMks->get();
 
-        DB::transaction(function () use ($mks, $matrix) {
+        DB::transaction(function () use ($mks, $matrix, $userProdiId) {
             foreach ($mks as $mk) {
                 $allSelectedCpmkIds = [];
                 $allSelectedCplIds = [];
@@ -184,7 +257,7 @@ class CPLCPMKController extends Controller
                 // Sync CPL-MK relationship
                 $cplSyncData = [];
                 foreach ($allSelectedCplIds as $cplId) {
-                    $cplSyncData[$cplId] = ['id_prodi' => $mk->id_prodi];
+                    $cplSyncData[$cplId] = ['id_prodi' => $mk->id_prodi ?: $userProdiId];
                 }
                 $mk->cpl()->sync($cplSyncData);
             }
@@ -196,25 +269,67 @@ class CPLCPMKController extends Controller
     public function indexMKCPMKSubCPMK(Request $request)
     {
         $kurikulums = $this->getKurikulumsForUser();
+        $user = auth()->user();
+        $userProdiId = $user->id_prodiUser;
 
-        $query = MK::with(['cpmks.subCpmks.mks', 'cpmks.cpl', 'cpl', 'sub_cpmk.cpmk.cpl'])
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id');
+        $query = MK::with(['cpmks.subCpmks.mks', 'cpmks.cpl', 'cpl', 'sub_cpmk.cpmk.cpl']);
 
         // Filtering berdasarkan otoritas pengguna
-        if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Universitas') {
-            $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
-            $query->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $query->where('prodi.id', auth()->user()->id_prodiUser);
+        if ($user->otoritas->otoritas === 'Penjamin Mutu Universitas') {
+            $univId = $user->id_universitasUser;
+            $query->where(function($q) use ($univId) {
+                $q->where('mks.id_universitas', $univId)
+                  ->orWhereHas('prodi.fakultas', function($f) use ($univId) {
+                      $f->where('id_universitas', $univId);
+                  })->orWhereExists(function($sub) use ($univId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                          ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('fakultas.id_universitas', $univId);
+                  });
+            });
+        } else if ($user->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
+            $fakId = $user->id_fakultasUser;
+            $query->where(function($q) use ($fakId) {
+                $q->whereHas('prodi', function($p) use ($fakId) {
+                    $p->where('id_fakultas', $fakId);
+                })->orWhereExists(function($sub) use ($fakId) {
+                    $sub->select(DB::raw(1))
+                        ->from('mk_kurikulum')
+                        ->join('prodi', 'mk_kurikulum.id_prodi', '=', 'prodi.id')
+                        ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                        ->where('prodi.id_fakultas', $fakId);
+                });
+            });
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $query->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            });
         }
 
         if ($request->filled('kurikulum_id')) {
-            $query->where('mks.id_kurikulum', $request->kurikulum_id);
+            $kurId = $request->kurikulum_id;
+            $query->where(function($q) use ($kurId) {
+                $q->where('mks.id_kurikulum', $kurId)
+                  ->orWhere('mks.kurikulum', $kurId)
+                  ->orWhereExists(function($sub) use ($kurId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_kurikulum', $kurId);
+                  });
+            });
         }
 
-        $mks = $query->select('mks.*')->get();
+        $mks = $query->get();
 
         return view('penjamin-mutu.cpl-cpmk.pemetaan_mk_cpmk_subcpmk', compact('mks','kurikulums'));
     }
@@ -225,13 +340,32 @@ class CPLCPMKController extends Controller
         $uraianInputs = $request->input('uraian', []); // uraian[sub_cpmk_id] = "new description"
         $kodeInputs = $request->input('kode', []); // kode[sub_cpmk_id] = "new code"
         $kurikulumId = $request->input('kurikulum_id');
+        $user = auth()->user();
+        $userProdiId = $user->id_prodiUser;
 
         $queryMks = MK::query();
-        if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $queryMks->where('id_prodi', auth()->user()->id_prodiUser);
+        if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+            $queryMks->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            });
         }
         if ($kurikulumId) {
-            $queryMks->where('id_kurikulum', $kurikulumId);
+            $queryMks->where(function($q) use ($kurikulumId) {
+                $q->where('mks.id_kurikulum', $kurikulumId)
+                  ->orWhere('mks.kurikulum', $kurikulumId)
+                  ->orWhereExists(function($sub) use ($kurikulumId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_kurikulum', $kurikulumId);
+                  });
+            });
         }
         $mks = $queryMks->get();
 
@@ -301,10 +435,17 @@ class CPLCPMKController extends Controller
 
     public function addCPLCPMKMK()
     {
+        $userProdiId = auth()->user()->id_prodiUser;
         $mks = MK::query()
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->where('prodi.id', auth()->user()->id_prodiUser)
+            ->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            })
             ->orderBy('mks.nama', 'asc')
             ->select('mks.*')->get();
 
@@ -334,15 +475,31 @@ class CPLCPMKController extends Controller
             });
         }
 
+        $userProdiId = auth()->user()->id_prodiUser;
         $query = MK::with(['cpmks.cpl'])
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->where('prodi.id', auth()->user()->id_prodiUser)
-            ->orderBy('mks.nama', 'asc')
-            ->select('mks.*');
+            ->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            })
+            ->orderBy('mks.nama', 'asc');
 
         if ($request->filled('kurikulum_id')) {
-            $query->where('mks.id_kurikulum', $request->kurikulum_id);
+            $kurId = $request->kurikulum_id;
+            $query->where(function($q) use ($kurId) {
+                $q->where('mks.id_kurikulum', $kurId)
+                  ->orWhere('mks.kurikulum', $kurId)
+                  ->orWhereExists(function($sub) use ($kurId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_kurikulum', $kurId);
+                  });
+            });
         }
 
         $mks = $query->get();
@@ -476,10 +633,17 @@ class CPLCPMKController extends Controller
 
     public function addCPMKMKSUBCPMK()
     {
+        $userProdiId = auth()->user()->id_prodiUser;
         $mks = MK::query()
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->where('prodi.id', auth()->user()->id_prodiUser)
+            ->where(function($q) use ($userProdiId) {
+                $q->where('mks.id_prodi', $userProdiId)
+                  ->orWhereExists(function($sub) use ($userProdiId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_prodi', $userProdiId);
+                  });
+            })
             ->select('mks.*')->get();
         return view('penjamin-mutu.cpl-cpmk.add_cpmk_mk_subcpmk', compact('mks'));
     }
@@ -644,7 +808,7 @@ public function indexKelolaSubCpmk(Request $request)
     if ($request->filled('kurikulum_id')) {
         $cplQuery->where('id_kurikulum', $request->kurikulum_id);
     }
-    $cpls = $cplQuery->orderBy('kode', 'asc')->get();
+    $cpls = $cplQuery->withCount('subCpmks')->orderBy('kode', 'asc')->get();
 
     $query = SubCpmk::with(['cpmk.cpl', 'mks'])
         ->join('cpmks', 'sub_cpmk.cpmk_id', '=', 'cpmks.id')
@@ -694,22 +858,216 @@ public function updateSubCpmk(Request $request, $id)
     }
 }
 
-public function destroySubCpmk($id)
-{
-    try {
-        $subCpmk = SubCpmk::findOrFail($id);
-        $kodeSub = $subCpmk->kode;
-        if (method_exists($subCpmk, 'mks')) {
-            $subCpmk->mks()->detach();
+    public function destroySubCpmk($id)
+    {
+        try {
+            $subCpmk = SubCpmk::findOrFail($id);
+            $kodeSub = $subCpmk->kode;
+            if (method_exists($subCpmk, 'mks')) {
+                $subCpmk->mks()->detach();
+            }
+            $subCpmk->delete();
+
+            return redirect()->back()->with('success', "Sub CPMK $kodeSub berhasil dihapus.");
+        } catch (\Exception $e) {
+            Log::error('Error delete Sub CPMK: ' . $e->getMessage());
+            return redirect()->back()->with('failed', 'Gagal menghapus Sub CPMK.');
         }
-        $subCpmk->delete();
-
-        return redirect()->back()->with('success', "Sub CPMK $kodeSub berhasil dihapus.");
-    } catch (\Exception $e) {
-        Log::error('Error delete Sub CPMK: ' . $e->getMessage());
-        return redirect()->back()->with('failed', 'Gagal menghapus Sub CPMK.');
     }
-}
 
+    public function downloadTemplateSubCpmk()
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template Import Sub CPMK');
+
+        // Header
+        $headers = [
+            'A1' => 'Tahun Kurikulum',
+            'B1' => 'Kode MK (Opsional)',
+            'C1' => 'Kode CPMK',
+            'D1' => 'Uraian Sub CPMK',
+        ];
+
+        foreach ($headers as $cell => $value) {
+            $sheet->setCellValue($cell, $value);
+        }
+
+        // Style Header
+        $sheet->getStyle('A1:D1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:D1')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFE0E0E0');
+
+        // Sample Data Row 1
+        $sheet->setCellValue('A2', '2024');
+        $sheet->setCellValue('B2', 'INF101');
+        $sheet->setCellValue('C2', 'CPMK01');
+        $sheet->setCellValue('D2', 'Mampu menjelaskan konsep dasar pemrograman berorientasi objek.');
+
+        // Sample Data Row 2
+        $sheet->setCellValue('A3', '2024');
+        $sheet->setCellValue('B3', 'INF101');
+        $sheet->setCellValue('C3', 'CPMK01');
+        $sheet->setCellValue('D3', 'Mampu menerapkan prinsip enkapsulasi dan pewarisan.');
+
+        foreach (range('A', 'D') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'Template_Import_Sub_CPMK.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function importExcelSubCpmk(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        $user = auth()->user();
+        $id_prodi_user = $user->id_prodiUser ?? ($user->prodi ? $user->prodi->id : null);
+
+        $file = $request->file('excel_file');
+        if (!$file || !$file->isValid()) {
+            return redirect()->back()->with('failed', 'File Excel tidak valid.');
+        }
+
+        try {
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $dataRows = $worksheet->toArray();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('failed', 'Gagal membaca file Excel: ' . $e->getMessage());
+        }
+
+        if (count($dataRows) <= 1) {
+            return redirect()->back()->with('failed', 'File Excel kosong atau hanya berisi header.');
+        }
+
+        $createdCount = 0;
+        $updatedCount = 0;
+        $failedCount = 0;
+
+        DB::beginTransaction();
+        try {
+            for ($i = 1; $i < count($dataRows); $i++) {
+                $row = $dataRows[$i];
+                $tahunKurikulum = trim($row[0] ?? '');
+                $kodeMk = trim($row[1] ?? '');
+                $kodeCpmk = trim($row[2] ?? '');
+                $uraian = trim($row[3] ?? '');
+
+                // Minimal butuh Kode CPMK dan Uraian
+                if (empty($kodeCpmk) || empty($uraian)) {
+                    continue;
+                }
+
+                // Cari Kurikulum jika diisi
+                $kurikulumId = null;
+                if (!empty($tahunKurikulum)) {
+                    $kurQuery = Kurikulum::where('tahun', $tahunKurikulum);
+                    if ($id_prodi_user) {
+                        $kurQuery->where('id_prodi', $id_prodi_user);
+                    }
+                    $kurikulum = $kurQuery->first();
+                    if ($kurikulum) {
+                        $kurikulumId = $kurikulum->id;
+                    }
+                }
+
+                // Cari CPMK berdasarkan kode
+                $cpmkQuery = CPMK::query();
+                if ($id_prodi_user) {
+                    $cpmkQuery->where('id_prodi', $id_prodi_user);
+                }
+                $cpmkQuery->where('kode', $kodeCpmk);
+                if ($kurikulumId) {
+                    $cpmkQuery->whereHas('cpl', function ($q) use ($kurikulumId) {
+                        $q->where('id_kurikulum', $kurikulumId);
+                    });
+                }
+                $cpmk = $cpmkQuery->first();
+
+                // Fallback pencarian CPMK jika kurikulum mismatch
+                if (!$cpmk) {
+                    $cpmk = CPMK::when($id_prodi_user, function ($q) use ($id_prodi_user) {
+                        $q->where('id_prodi', $id_prodi_user);
+                    })->where('kode', $kodeCpmk)->first();
+                }
+
+                if (!$cpmk) {
+                    $failedCount++;
+                    continue;
+                }
+
+                // Cari apakah Sub CPMK dengan Uraian persis ini sudah ada untuk CPMK tersebut
+                $existingSub = SubCpmk::where('cpmk_id', $cpmk->id)
+                    ->where('uraian', $uraian)
+                    ->first();
+
+                if ($existingSub) {
+                    $existingSub->update([
+                        'uraian' => $uraian,
+                        'id_prodi' => $id_prodi_user ?? $existingSub->id_prodi,
+                    ]);
+                    $subCpmkObj = $existingSub;
+                    $updatedCount++;
+                } else {
+                    // Auto-generate kode unik Sub CPMK
+                    $subCount = SubCpmk::where('cpmk_id', $cpmk->id)->count() + 1;
+                    do {
+                        $genKode = 'Sub-' . $cpmk->kode . $subCount;
+                        $existsKode = SubCpmk::where('cpmk_id', $cpmk->id)->where('kode', $genKode)->exists();
+                        if ($existsKode) {
+                            $subCount++;
+                        }
+                    } while ($existsKode);
+
+                    $subCpmkObj = SubCpmk::create([
+                        'kode' => $genKode,
+                        'uraian' => $uraian,
+                        'cpmk_id' => $cpmk->id,
+                        'id_prodi' => $id_prodi_user,
+                    ]);
+                    $createdCount++;
+                }
+
+                // Hubungkan ke MK jika kode_mk diisi
+                if (!empty($kodeMk) && $subCpmkObj) {
+                    $mkQuery = MK::where('kode', $kodeMk);
+                    if ($id_prodi_user) {
+                        $mkQuery->where('id_prodi', $id_prodi_user);
+                    }
+                    $mk = $mkQuery->first();
+                    if ($mk) {
+                        if (!$subCpmkObj->mks()->where('mks.kode', $mk->kode)->exists()) {
+                            $subCpmkObj->mks()->attach($mk->kode);
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+
+            $msg = "Proses import selesai. $createdCount Sub CPMK baru ditambahkan, $updatedCount diperbarui.";
+            if ($failedCount > 0) {
+                $msg .= " ($failedCount baris dilewati/CPMK tidak ditemukan).";
+            }
+
+            return redirect()->back()->with('success', $msg);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error import Sub CPMK: ' . $e->getMessage());
+            return redirect()->back()->with('failed', 'Gagal mengimpor Sub CPMK: ' . $e->getMessage());
+        }
+    }
 }
 

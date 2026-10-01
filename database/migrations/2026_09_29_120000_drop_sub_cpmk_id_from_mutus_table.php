@@ -9,13 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::hasTable('mutus') && Schema::hasColumn('mutus', 'sub_cpmk_id')) {
+            try {
+                \Illuminate\Support\Facades\DB::statement("ALTER TABLE mutus DROP FOREIGN KEY mutus_sub_cpmk_id_foreign");
+            } catch (\Throwable $e) {
+                // Ignore if foreign key does not exist
+            }
             Schema::table('mutus', function (Blueprint $table) {
-                // Drop foreign key dulu sebelum drop kolom
-                try {
-                    $table->dropForeign('mutus_sub_cpmk_id_foreign');
-                } catch (\Exception $e) {
-                    // FK mungkin tidak ada, lanjut
-                }
                 $table->dropColumn('sub_cpmk_id');
             });
         }

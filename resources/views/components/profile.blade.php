@@ -65,9 +65,22 @@
                                 id="img">
                         </form>
                         <div class="profile-pic" onclick="document.getElementById('img').click()">
+                            @php
+                                $uImg = trim($user->img ?? '');
+                                $uImgUrl = asset('assets/img/pp/User-Profile.png');
+                                if ($uImg !== '') {
+                                    $uClean = ltrim($uImg, '/\\');
+                                    $uBase = basename($uClean);
+                                    if (is_file(public_path('assets/img/pp/' . $uBase))) {
+                                        $uImgUrl = asset('assets/img/pp/' . $uBase);
+                                    } elseif (is_file(public_path($uClean))) {
+                                        $uImgUrl = asset($uClean);
+                                    }
+                                }
+                            @endphp
                             <img class="image p-3 mt-3"
                                 style="width:200px; height:200px; object-fit:cover; border-radius:50%; border: 1px solid grey"
-                                src="{{ asset('/assets/img/pp/' . $user->img) }}" alt="">
+                                src="{{ $uImgUrl }}" onerror="this.onerror=null;this.src='{{ asset('assets/img/pp/User-Profile.png') }}';" alt="Profile Picture">
                             <div class="middle"><i class="icon mdi mdi-camera icon-lg"></i></div>
                         </div>
                     </center>

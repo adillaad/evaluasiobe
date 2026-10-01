@@ -121,256 +121,60 @@
                     }
                 </style>
 
-                @php
-                    $kurikulumMap = collect();
-
-                    foreach ($kurikulums as $k) {
-                        $kurikulumMap->put($k->id, (object)[
-                            'id' => $k->id,
-                            'tahun' => $k->tahun,
-                            'nama' => 'Kurikulum ' . $k->tahun
-                        ]);
-                    }
-
-                    foreach ($cpls as $cpl) {
-                        if ($cpl->id_kurikulum && !$kurikulumMap->has($cpl->id_kurikulum)) {
-                            $tahun = $cpl->kurikulum_tahun ?? ($cpl->kurikulum->tahun ?? 'N/A');
-                            $kurikulumMap->put($cpl->id_kurikulum, (object)[
-                                'id' => $cpl->id_kurikulum,
-                                'tahun' => $tahun,
-                                'nama' => 'Kurikulum ' . $tahun
-                            ]);
-                        }
-                    }
-
-                    $tabKurikulums = $kurikulumMap->sortByDesc('tahun')->values();
-                    $uncategorizedCpls = $cpls->filter(function($c) {
-                        return empty($c->id_kurikulum);
-                    });
-                @endphp
-
-                {{-- Kurikulum Navigation Container --}}
-                <div class="kur-tabs-wrapper mt-3 mb-3">
-                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-                        <span class="fw-bold text-secondary text-uppercase small" style="letter-spacing: 0.5px;">
-                            <i class="mdi mdi-filter-variant me-1"></i> PILIH KURIKULUM:
-                        </span>
-                        <span class="text-muted small">Klik tab Kurikulum untuk memfilter data CPL</span>
-                    </div>
-                    <ul class="nav nav-pills kur-nav-pills overflow-auto flex-nowrap pb-1" id="kurTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="tab-all-tab" data-bs-toggle="tab" data-toggle="tab" data-bs-target="#tab-all" data-target="#tab-all" type="button" role="tab" aria-controls="tab-all" aria-selected="true">
-                                <i class="mdi mdi-grid me-1"></i> Semua Kurikulum
-                                <span class="badge-cpl-count">{{ $cpls->count() }}</span>
-                            </button>
-                        </li>
-                        @foreach ($tabKurikulums as $kur)
-                            @php
-                                $cplInKur = $cpls->where('id_kurikulum', $kur->id);
-                            @endphp
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="tab-kur-{{ $kur->id }}-tab" data-bs-toggle="tab" data-toggle="tab" data-bs-target="#tab-kur-{{ $kur->id }}" data-target="#tab-kur-{{ $kur->id }}" type="button" role="tab" aria-controls="tab-kur-{{ $kur->id }}" aria-selected="false">
-                                    Kurikulum {{ $kur->tahun }}
-                                    <span class="badge-cpl-count">{{ $cplInKur->count() }}</span>
-                                </button>
-                            </li>
-                        @endforeach
-                        @if ($uncategorizedCpls->count() > 0)
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="tab-kur-uncategorized-tab" data-bs-toggle="tab" data-toggle="tab" data-bs-target="#tab-kur-uncategorized" data-target="#tab-kur-uncategorized" type="button" role="tab" aria-controls="tab-kur-uncategorized" aria-selected="false">
-                                    Tanpa Kurikulum
-                                    <span class="badge-cpl-count">{{ $uncategorizedCpls->count() }}</span>
-                                </button>
-                            </li>
-                        @endif
-                    </ul>
-                </div>
-
-                {{-- Tab Content Panes --}}
-                <div class="tab-content" id="kurTabContent">
-                    {{-- TAB ALL KURIKULUM --}}
-                    <div class="tab-pane fade show active" id="tab-all" role="tabpanel" aria-labelledby="tab-all-tab">
-                        <div class="table-responsive">
-                            <table class="table table-hover dataTable table-cpl-prodi align-middle">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th style="width: 50px;">No</th>
-                                        <th style="width: 120px;">Kode CPL</th>
-                                        <th style="min-width: 300px; max-width: 550px;">Deskripsi CPL</th>
-                                        @if ($userOtoritas != 'Penjamin Mutu Program Studi')
-                                            <th style="width: 200px;">Prodi</th>
-                                        @endif
-                                        @if (!in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi']))
-                                            <th style="width: 200px;">Fakultas</th>
-                                        @endif
-                                        @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
-                                            <th style="width: 100px;">Action</th>
-                                        @endif
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($cpls as $cpl)
-                                        <tr>
-                                            <td class="fw-semibold text-secondary">{{ $loop->iteration }}</td>
-                                            <td><span class="badge-cpl-kode">{{ $cpl->kode }}</span></td>
-                                            <td style="line-height: 1.5; color: #334155;">{{ $cpl->judul }}</td>
-                                            @if ($userOtoritas != 'Penjamin Mutu Program Studi')
-                                                <td>{{ $cpl->prodi->nama }}</td>
-                                            @endif
-                                            @if (!in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi']))
-                                                <td>{{ $cpl->prodi->fakultas->nama }}</td>
-                                            @endif
-                                            @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
-                                                <td>
-                                                    <div class="d-flex align-items-center gap-1">
-                                                        <a href="{{ route($currentPrefix . 'cpl.edit', encrypt($cpl->id)) }}"
-                                                            class="btn btn-outline-primary btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
-                                                            <i class="ti-pencil"></i>
-                                                        </a>
-                                                        <form action="{{ route($currentPrefix . 'cpl.delete', encrypt($cpl->id)) }}"
-                                                            method="post" class="d-inline m-0 p-0">
-                                                            @csrf
-                                                            @method('delete')
-                                                            <button type="submit" class="btn btn-outline-danger btn-icons"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
-                                                                onclick="return confirm('Hapus CPL {{ $cpl->kode }}?')">
-                                                                <i class="ti-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
-                                            @endif
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {{-- PER KURIKULUM TABS --}}
-                    @foreach ($tabKurikulums as $kur)
-                        @php
-                            $cplsInTab = $cpls->where('id_kurikulum', $kur->id);
-                        @endphp
-                        <div class="tab-pane fade" id="tab-kur-{{ $kur->id }}" role="tabpanel" aria-labelledby="tab-kur-{{ $kur->id }}-tab">
-                            <div class="table-responsive">
-                                <table class="table table-hover dataTable table-cpl-prodi align-middle">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th style="width: 50px;">No</th>
-                                            <th style="width: 120px;">Kode CPL</th>
-                                            <th style="min-width: 300px; max-width: 550px;">Deskripsi CPL</th>
-                                            @if ($userOtoritas != 'Penjamin Mutu Program Studi')
-                                                <th style="width: 200px;">Prodi</th>
-                                            @endif
-                                            @if (!in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi']))
-                                                <th style="width: 200px;">Fakultas</th>
-                                            @endif
-                                            @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
-                                                <th style="width: 100px;">Action</th>
-                                            @endif
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($cplsInTab as $cpl)
-                                            <tr>
-                                                <td class="fw-semibold text-secondary">{{ $loop->iteration }}</td>
-                                                <td><span class="badge-cpl-kode">{{ $cpl->kode }}</span></td>
-                                                <td style="line-height: 1.5; color: #334155;">{{ $cpl->judul }}</td>
-                                                @if ($userOtoritas != 'Penjamin Mutu Program Studi')
-                                                    <td>{{ $cpl->prodi->nama }}</td>
-                                                @endif
-                                                @if (!in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi']))
-                                                    <td>{{ $cpl->prodi->fakultas->nama }}</td>
-                                                @endif
-                                                @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
-                                                    <td>
-                                                        <div class="d-flex align-items-center gap-1">
-                                                            <a href="{{ route($currentPrefix . 'cpl.edit', encrypt($cpl->id)) }}"
-                                                                class="btn btn-outline-primary btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
-                                                                <i class="ti-pencil"></i>
-                                                            </a>
-                                                            <form action="{{ route($currentPrefix . 'cpl.delete', encrypt($cpl->id)) }}"
-                                                                method="post" class="d-inline m-0 p-0">
-                                                                @csrf
-                                                                @method('delete')
-                                                                <button type="submit" class="btn btn-outline-danger btn-icons"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
-                                                                    onclick="return confirm('Hapus CPL {{ $cpl->kode }}?')">
-                                                                    <i class="ti-trash"></i>
-                                                                </button>
-                                                            </form>
-                                                        </div>
-                                                    </td>
-                                                @endif
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    @endforeach
-
-                    {{-- TAB UNCATEGORIZED --}}
-                    @if ($uncategorizedCpls->count() > 0)
-                        <div class="tab-pane fade" id="tab-kur-uncategorized" role="tabpanel" aria-labelledby="tab-kur-uncategorized-tab">
-                            <div class="table-responsive">
-                                <table class="table table-hover dataTable table-cpl-prodi align-middle">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th style="width: 50px;">No</th>
-                                            <th style="width: 120px;">Kode CPL</th>
-                                            <th style="min-width: 300px; max-width: 550px;">Deskripsi CPL</th>
-                                            @if ($userOtoritas != 'Penjamin Mutu Program Studi')
-                                                <th style="width: 200px;">Prodi</th>
-                                            @endif
-                                            @if (!in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi']))
-                                                <th style="width: 200px;">Fakultas</th>
-                                            @endif
-                                            @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
-                                                <th style="width: 100px;">Action</th>
-                                            @endif
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($uncategorizedCpls as $cpl)
-                                            <tr>
-                                                <td class="fw-semibold text-secondary">{{ $loop->iteration }}</td>
-                                                <td><span class="badge-cpl-kode">{{ $cpl->kode }}</span></td>
-                                                <td style="line-height: 1.5; color: #334155;">{{ $cpl->judul }}</td>
-                                                @if ($userOtoritas != 'Penjamin Mutu Program Studi')
-                                                    <td>{{ $cpl->prodi->nama }}</td>
-                                                @endif
-                                                @if (!in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi']))
-                                                    <td>{{ $cpl->prodi->fakultas->nama }}</td>
-                                                @endif
-                                                @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
-                                                    <td>
-                                                        <div class="d-flex align-items-center gap-1">
-                                                            <a href="{{ route($currentPrefix . 'cpl.edit', encrypt($cpl->id)) }}"
-                                                                class="btn btn-outline-primary btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
-                                                                <i class="ti-pencil"></i>
-                                                            </a>
-                                                            <form action="{{ route($currentPrefix . 'cpl.delete', encrypt($cpl->id)) }}"
-                                                                method="post" class="d-inline m-0 p-0">
-                                                                @csrf
-                                                                @method('delete')
-                                                                <button type="submit" class="btn btn-outline-danger btn-icons"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
-                                                                    onclick="return confirm('Hapus CPL {{ $cpl->kode }}?')">
-                                                                    <i class="ti-trash"></i>
-                                                                </button>
-                                                            </form>
-                                                        </div>
-                                                    </td>
-                                                @endif
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    @endif
+                <div class="table-responsive mt-3">
+                    <table class="table table-hover dataTable table-cpl-prodi align-middle">
+                        <thead class="bg-light">
+                            <tr>
+                                <th style="width: 50px;">No</th>
+                                <th style="width: 120px;">Kode CPL</th>
+                                <th style="min-width: 300px; max-width: 550px;">Deskripsi CPL</th>
+                                @if ($userOtoritas != 'Penjamin Mutu Program Studi')
+                                    <th style="width: 200px;">Prodi</th>
+                                @endif
+                                @if (!in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi']))
+                                    <th style="width: 200px;">Fakultas</th>
+                                @endif
+                                @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+                                    <th style="width: 100px;">Action</th>
+                                @endif
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($cpls as $cpl)
+                                <tr>
+                                    <td class="fw-semibold text-secondary">{{ $loop->iteration }}</td>
+                                    <td><span class="badge-cpl-kode">{{ $cpl->kode }}</span></td>
+                                    <td style="line-height: 1.5; color: #334155;">{{ $cpl->judul }}</td>
+                                    @if ($userOtoritas != 'Penjamin Mutu Program Studi')
+                                        <td>{{ $cpl->prodi->nama }}</td>
+                                    @endif
+                                    @if (!in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi']))
+                                        <td>{{ $cpl->prodi->fakultas->nama }}</td>
+                                    @endif
+                                    @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+                                        <td>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <a href="{{ route($currentPrefix . 'cpl.edit', encrypt($cpl->id)) }}"
+                                                    class="btn btn-outline-primary btn-icons" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                                    <i class="ti-pencil"></i>
+                                                </a>
+                                                <form action="{{ route($currentPrefix . 'cpl.delete', encrypt($cpl->id)) }}"
+                                                    method="post" class="d-inline m-0 p-0">
+                                                    @csrf
+                                                    @method('delete')
+                                                    <button type="submit" class="btn btn-outline-danger btn-icons"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
+                                                        onclick="return confirm('Hapus CPL {{ $cpl->kode }}?')">
+                                                        <i class="ti-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    @endif
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
 
             </div>
@@ -436,15 +240,4 @@
     @endif
 
     <script src="{{ asset('assets/js/dynamic-filters.js') }}"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            if (typeof jQuery !== 'undefined') {
-                jQuery(document).on('shown.bs.tab', 'button[data-bs-toggle="tab"], a[data-bs-toggle="tab"]', function (e) {
-                    if (typeof jQuery.fn.dataTable !== 'undefined') {
-                        jQuery.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
-                    }
-                });
-            }
-        });
-    </script>
 @endsection

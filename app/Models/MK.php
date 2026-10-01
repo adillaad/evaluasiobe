@@ -41,6 +41,46 @@ class MK extends Model
         return $this->belongsTo(Kurikulum::class, 'id_kurikulum','id');
     }
 
+    public function getKurikulumAttribute()
+    {
+        if ($this->relationLoaded('kurikulum')) {
+            $relation = $this->getRelation('kurikulum');
+            if ($relation !== null) {
+                return $relation;
+            }
+        }
+
+        if ($this->id_kurikulum) {
+            $kur = Kurikulum::find($this->id_kurikulum);
+            if ($kur) {
+                $this->setRelation('kurikulum', $kur);
+                return $kur;
+            }
+        }
+
+        // Fallback untuk MK Universitas yang diadopsi prodi via mk_kurikulum
+        $userProdiId = auth()->user()->id_prodiUser ?? null;
+        $filterKurId = request('kurikulum_id') ?: request('id_kurikulum');
+
+        $pivotQuery = \DB::table('mk_kurikulum')->where('mk_kode', $this->kode);
+        if ($filterKurId) {
+            $pivotQuery->where('id_kurikulum', $filterKurId);
+        } elseif ($userProdiId) {
+            $pivotQuery->where('id_prodi', $userProdiId);
+        }
+
+        $pivotRec = $pivotQuery->first();
+        if ($pivotRec && $pivotRec->id_kurikulum) {
+            $kur = Kurikulum::find($pivotRec->id_kurikulum);
+            if ($kur) {
+                $this->setRelation('kurikulum', $kur);
+                return $kur;
+            }
+        }
+
+        return null;
+    }
+
     public function kurikulums()
     {
         return $this->belongsToMany(Kurikulum::class, 'mk_kurikulum', 'mk_kode', 'id_kurikulum')

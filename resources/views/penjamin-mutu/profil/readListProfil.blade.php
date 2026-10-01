@@ -132,233 +132,53 @@
     }
 </style>
 
-@php
-    $kurikulumMap = collect();
-
-    if (isset($kurikulums)) {
-        foreach ($kurikulums as $k) {
-            $kurikulumMap->put($k->id, (object)[
-                'id' => $k->id,
-                'tahun' => $k->tahun,
-                'nama' => 'Kurikulum ' . $k->tahun
-            ]);
-        }
-    }
-
-    foreach ($listProfil as $pl) {
-        if ($pl->kurikulum_id && !$kurikulumMap->has($pl->kurikulum_id)) {
-            $tahun = $pl->kurikulum->tahun ?? 'N/A';
-            $kurikulumMap->put($pl->kurikulum_id, (object)[
-                'id' => $pl->kurikulum_id,
-                'tahun' => $tahun,
-                'nama' => 'Kurikulum ' . $tahun
-            ]);
-        }
-    }
-
-    $tabKurikulums = $kurikulumMap->sortByDesc('tahun')->values();
-    $uncategorizedPls = $listProfil->filter(function($p) {
-        return empty($p->kurikulum_id);
-    });
-@endphp
-
-{{-- Kurikulum Navigation Container --}}
-<div class="kur-tabs-wrapper mb-3">
-    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-        <span class="fw-bold text-secondary text-uppercase small" style="letter-spacing: 0.5px;">
-            <i class="mdi mdi-filter-variant me-1"></i> PILIH KURIKULUM:
-        </span>
-        <span class="text-muted small">Klik tab Kurikulum untuk memfilter data Profil Lulusan</span>
-    </div>
-    <ul class="nav nav-pills kur-nav-pills overflow-auto flex-nowrap pb-1" id="plKurTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="tab-pl-all-tab" data-bs-toggle="tab" data-toggle="tab" data-bs-target="#tab-pl-all" data-target="#tab-pl-all" type="button" role="tab" aria-controls="tab-pl-all" aria-selected="true">
-                <i class="mdi mdi-grid me-1"></i> Semua Kurikulum
-                <span class="badge-pl-count">{{ $listProfil->count() }}</span>
-            </button>
-        </li>
-        @foreach ($tabKurikulums as $kur)
-            @php
-                $plInKur = $listProfil->where('kurikulum_id', $kur->id);
-            @endphp
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-pl-kur-{{ $kur->id }}-tab" data-bs-toggle="tab" data-toggle="tab" data-bs-target="#tab-pl-kur-{{ $kur->id }}" data-target="#tab-pl-kur-{{ $kur->id }}" type="button" role="tab" aria-controls="tab-pl-kur-{{ $kur->id }}" aria-selected="false">
-                    Kurikulum {{ $kur->tahun }}
-                    <span class="badge-pl-count">{{ $plInKur->count() }}</span>
-                </button>
-            </li>
-        @endforeach
-        @if ($uncategorizedPls->count() > 0)
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-pl-kur-uncategorized-tab" data-bs-toggle="tab" data-toggle="tab" data-bs-target="#tab-pl-kur-uncategorized" data-target="#tab-pl-kur-uncategorized" type="button" role="tab" aria-controls="tab-pl-kur-uncategorized" aria-selected="false">
-                    Tanpa Kurikulum
-                    <span class="badge-pl-count">{{ $uncategorizedPls->count() }}</span>
-                </button>
-            </li>
-        @endif
-    </ul>
-</div>
-
-{{-- Tab Content Panes --}}
-<div class="tab-content" id="plKurTabContent">
-    {{-- TAB ALL KURIKULUM --}}
-    <div class="tab-pane fade show active" id="tab-pl-all" role="tabpanel" aria-labelledby="tab-pl-all-tab">
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle dataTable">
-                <thead class="table-light">
+<div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle dataTable">
+        <thead class="table-light">
+            <tr>
+                <th width="5%" class="text-center">No</th>
+                <th width="12%">Kode PL</th>
+                <th width="28%">Profil Karir</th>
+                <th>Graduate Profile</th>
+                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                    <th width="12%" class="text-center">Action</th>
+                @endif
+            </tr>
+        </thead>
+        <tbody>
+            @if ($listProfil->isEmpty())
+                <tr>
+                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="text-center text-muted py-4">
+                        Tidak ada data
+                    </td>
+                </tr>
+            @else
+                @foreach ($listProfil as $key => $profil)
                     <tr>
-                        <th width="5%" class="text-center">No</th>
-                        <th width="12%">Kode PL</th>
-                        <th width="28%">Profil Karir</th>
-                        <th>Graduate Profile</th>
+                        <td class="text-center fw-semibold text-secondary">{{ $key + 1 }}</td>
+                        <td><span class="badge-pl-kode">{{ $profil->kode ?: 'PL-'.($key+1) }}</span></td>
+                        <td class="profil-karir-col">
+                            <span class="fw-bold text-dark">{{ $profil->namaProfil ?: ($profil->jenis ?: '-') }}</span>
+                        </td>
+                        <td class="wrap-content">{{ ucfirst($profil->deskripsi) }}</td>
+
                         @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                            <th width="12%" class="text-center">Action</th>
+                            <td class="text-center">
+                                <div class="d-flex align-items-center justify-content-center gap-1">
+                                    <button type="button" class="btn btn-outline-primary btn-icons"
+                                        onclick="showProfil({{ $profil->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                        <i class="ti-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-icons" onclick="deleteProfil({{ $profil->id }})"
+                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus">
+                                        <i class="ti-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
                         @endif
                     </tr>
-                </thead>
-                <tbody>
-                    @if ($listProfil->isEmpty())
-                        <tr>
-                            <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="text-center text-muted py-4">
-                                Tidak ada data
-                            </td>
-                        </tr>
-                    @else
-                        @foreach ($listProfil as $key => $profil)
-                            <tr>
-                                <td class="text-center fw-semibold text-secondary">{{ $key + 1 }}</td>
-                                <td><span class="badge-pl-kode">{{ $profil->kode ?: 'PL-'.($key+1) }}</span></td>
-                                <td class="profil-karir-col">
-                                    <span class="fw-bold text-dark">{{ $profil->namaProfil ?: ($profil->jenis ?: '-') }}</span>
-                                </td>
-                                <td class="wrap-content">{{ ucfirst($profil->deskripsi) }}</td>
-
-                                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                                    <td class="text-center">
-                                        <div class="d-flex align-items-center justify-content-center gap-1">
-                                            <button type="button" class="btn btn-outline-primary btn-icons"
-                                                onclick="showProfil({{ $profil->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
-                                                <i class="ti-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger btn-icons" onclick="deleteProfil({{ $profil->id }})"
-                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus">
-                                                <i class="ti-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                @endif
-                            </tr>
-                        @endforeach
-                    @endif
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {{-- PER KURIKULUM TABS --}}
-    @foreach ($tabKurikulums as $kur)
-        @php
-            $plsInTab = $listProfil->where('kurikulum_id', $kur->id);
-        @endphp
-        <div class="tab-pane fade" id="tab-pl-kur-{{ $kur->id }}" role="tabpanel" aria-labelledby="tab-pl-kur-{{ $kur->id }}-tab">
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle dataTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th width="5%" class="text-center">No</th>
-                            <th width="12%">Kode PL</th>
-                            <th width="28%">Profil Karir</th>
-                            <th>Graduate Profile</th>
-                            @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                                <th width="12%" class="text-center">Action</th>
-                            @endif
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if ($plsInTab->isEmpty())
-                            <tr>
-                                <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="text-center text-muted py-4">
-                                    Tidak ada data untuk Kurikulum {{ $kur->tahun }}
-                                </td>
-                            </tr>
-                        @else
-                            @foreach ($plsInTab->values() as $key => $profil)
-                                <tr>
-                                    <td class="text-center fw-semibold text-secondary">{{ $key + 1 }}</td>
-                                    <td><span class="badge-pl-kode">{{ $profil->kode ?: 'PL-'.($key+1) }}</span></td>
-                                    <td class="profil-karir-col">
-                                        <span class="fw-bold text-dark">{{ $profil->namaProfil ?: ($profil->jenis ?: '-') }}</span>
-                                    </td>
-                                    <td class="wrap-content">{{ ucfirst($profil->deskripsi) }}</td>
-
-                                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                                        <td class="text-center">
-                                            <div class="d-flex align-items-center justify-content-center gap-1">
-                                                <button type="button" class="btn btn-outline-primary btn-icons"
-                                                    onclick="showProfil({{ $profil->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
-                                                    <i class="ti-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-outline-danger btn-icons" onclick="deleteProfil({{ $profil->id }})"
-                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus">
-                                                    <i class="ti-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    @endif
-                                </tr>
-                            @endforeach
-                        @endif
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    @endforeach
-
-    {{-- TAB UNCATEGORIZED --}}
-    @if ($uncategorizedPls->count() > 0)
-        <div class="tab-pane fade" id="tab-pl-kur-uncategorized" role="tabpanel" aria-labelledby="tab-pl-kur-uncategorized-tab">
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle dataTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th width="5%" class="text-center">No</th>
-                            <th width="12%">Kode PL</th>
-                            <th width="28%">Profil Karir</th>
-                            <th>Graduate Profile</th>
-                            @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                                <th width="12%" class="text-center">Action</th>
-                            @endif
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($uncategorizedPls->values() as $key => $profil)
-                            <tr>
-                                <td class="text-center fw-semibold text-secondary">{{ $key + 1 }}</td>
-                                <td><span class="badge-pl-kode">{{ $profil->kode ?: 'PL-'.($key+1) }}</span></td>
-                                <td class="profil-karir-col">
-                                    <span class="fw-bold text-dark">{{ $profil->namaProfil ?: ($profil->jenis ?: '-') }}</span>
-                                </td>
-                                <td class="wrap-content">{{ ucfirst($profil->deskripsi) }}</td>
-
-                                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                                    <td class="text-center">
-                                        <div class="d-flex align-items-center justify-content-center gap-1">
-                                            <button type="button" class="btn btn-outline-primary btn-icons"
-                                                onclick="showProfil({{ $profil->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
-                                                <i class="ti-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger btn-icons" onclick="deleteProfil({{ $profil->id }})"
-                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus">
-                                                <i class="ti-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                @endif
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    @endif
+                @endforeach
+            @endif
+        </tbody>
+    </table>
 </div>

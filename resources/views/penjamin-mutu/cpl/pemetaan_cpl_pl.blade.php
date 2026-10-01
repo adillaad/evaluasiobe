@@ -54,13 +54,57 @@
                 </div>
 
                 <p class="text-muted small mb-3">
-                    <strong>Profil Lulusan:</strong>
-                    @forelse ($profilLulusans as $profilLulusan)
-                        <span class="badge bg-light text-dark border ms-1 mb-1">{{ $profilLulusan->namaProfil ?: ($profilLulusan->kode ?: 'Profil Lulusan') }}</span>
+                    <strong>Daftar CPL:</strong>
+                    @forelse ($cpls as $cplItem)
+                        <span class="badge bg-light text-dark border ms-1 mb-1">{{ $cplItem->kode }} ({{ $cplItem->kurikulum->tahun ?? '-' }})</span>
                     @empty
                         <span class="text-muted">— belum ada data</span>
                     @endforelse
                 </p>
+
+                @php
+                    $unmetPls = [];
+                    foreach ($profilLulusans as $plCheck) {
+                        $sumBobot = 0;
+                        foreach ($cpls as $cplCheck) {
+                            $mapped = $cplCheck->profilLulusan->firstWhere('id', $plCheck->id);
+                            if ($mapped && $mapped->pivot->bobot !== null) {
+                                $sumBobot += (float)$mapped->pivot->bobot;
+                            }
+                        }
+                        $sumBobotFmt = round($sumBobot, 2);
+                        if ($sumBobotFmt < 100) {
+                            $unmetPls[] = [
+                                'nama' => $plCheck->namaProfil ?: ($plCheck->kode ?: 'Profil Lulusan'),
+                                'total' => $sumBobotFmt == (int)$sumBobotFmt ? (int)$sumBobotFmt : $sumBobotFmt,
+                                'kurang' => round(100 - $sumBobotFmt, 2)
+                            ];
+                        }
+                    }
+                @endphp
+
+                @if(count($unmetPls) > 0)
+                    <div class="alert alert-info border-0 shadow-sm rounded-4 mb-3 p-3 d-flex align-items-center gap-3" style="background-color: #f0f7ff; border-left: 4px solid #0284c7 !important;">
+                        <div class="badge bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center">
+                            <i class="mdi mdi-information-outline font-20"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1 text-primary">Informasi: Total Bobot {{ count($unmetPls) }} Profil Lulusan Belum Mencapai 100%</h6>
+                            <div class="small text-secondary">
+                                @foreach($unmetPls as $unmet)
+                                    <span class="badge bg-white text-dark border me-1 mb-1">
+                                        <strong>{{ $unmet['nama'] }}</strong>: Total <strong>{{ $unmet['total'] }}%</strong> (Kurang <strong>{{ $unmet['kurang'] }}%</strong>)
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="alert alert-success border-0 shadow-sm rounded-4 mb-3 p-3 d-flex align-items-center gap-2" style="background-color: #f0fdf4;">
+                        <i class="mdi mdi-check-circle text-success font-20"></i>
+                        <span class="text-success small fw-semibold">Semua Profil Lulusan telah memiliki total bobot pas 100%.</span>
+                    </div>
+                @endif
 
                 <form id="form-matrix-edit" action="{{ route($currentPrefix . 'cpl.cpl-pl-matrix-update') }}" method="POST">
                     @csrf
@@ -70,29 +114,40 @@
                         <table id="cplPlTable" class="table table-bordered table-hover align-middle w-100 cpl-pl-table mb-0">
                             <thead class="bg-light">
                                 <tr>
-                                    <th class="text-center col-no" style="width: 60px;">No</th>
-                                    <th class="text-center col-kode" style="width: 100px;">Kode CPL</th>
-                                    <th class="text-center col-kurikulum" style="width: 110px;">Kurikulum</th>
-                                    @forelse ($profilLulusans as $profilLulusan)
-                                        <th class="text-center col-pl" title="{{ $profilLulusan->deskripsi }}" style="white-space: normal; word-wrap: break-word; font-size: 12px; line-height: 1.3;">
-                                            {{ $profilLulusan->namaProfil ?: ($profilLulusan->kode ?: 'Profil Lulusan') }}
+                                    <th class="text-center col-no" style="width: 50px;">No</th>
+                                    <th class="text-start col-pl" style="min-width: 180px;">Profil Lulusan (PL)</th>
+                                    @forelse ($cpls as $cpl)
+                                        <th class="text-center col-cpl" title="{{ $cpl->judul }}" style="width: 100px; white-space: normal; font-size: 12px; line-height: 1.3;">
+                                            <div class="fw-bold">{{ $cpl->kode }}</div>
+                                            <div class="text-muted font-11 fw-normal">{{ $cpl->kurikulum->tahun ?? '' }}</div>
                                         </th>
                                     @empty
-                                        <th class="text-center col-pl">-</th>
+                                        <th class="text-center col-cpl">-</th>
                                     @endforelse
+                                    <th class="text-center col-total" style="width: 175px; min-width: 175px;">Total Bobot</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($cpls as $index => $cpl)
+                                @forelse ($profilLulusans as $index => $profilLulusan)
+                                    @php
+                                        $totalBobotPL = 0;
+                                        foreach ($cpls as $cpl) {
+                                            $mappedProfil = $cpl->profilLulusan->firstWhere('id', $profilLulusan->id);
+                                            if ($mappedProfil && $mappedProfil->pivot->bobot !== null) {
+                                                $totalBobotPL += (float)$mappedProfil->pivot->bobot;
+                                            }
+                                        }
+                                        $totalBobotPL = round($totalBobotPL, 2);
+                                        $formattedTotal = ($totalBobotPL == (int)$totalBobotPL) ? (int)$totalBobotPL : $totalBobotPL;
+                                        $isLessThan100 = ($totalBobotPL < 100);
+                                        $isExact100 = (abs($totalBobotPL - 100) < 0.01);
+                                    @endphp
                                     <tr>
                                         <td class="text-center">{{ $index + 1 }}</td>
-                                        <td class="text-center fw-semibold">{{ $cpl->kode }}</td>
-                                        <td class="text-center">
-                                            <span class="badge bg-light text-dark border px-2 py-1 font-12 fw-semibold">
-                                                {{ $cpl->kurikulum->tahun ?? '-' }}
-                                            </span>
+                                        <td class="text-start">
+                                            <div class="fw-bold text-dark">{{ $profilLulusan->namaProfil ?: ($profilLulusan->kode ?: 'Profil Lulusan') }}</div>
                                         </td>
-                                        @foreach ($profilLulusans as $profilLulusan)
+                                        @foreach ($cpls as $cpl)
                                             @php
                                                 $mappedProfil = $cpl->profilLulusan->firstWhere('id', $profilLulusan->id);
                                                 $isChecked = !is_null($mappedProfil);
@@ -139,15 +194,33 @@
                                                            max="100"
                                                            value="{{ $isChecked && $formattedBobot !== null ? $formattedBobot : '' }}"
                                                            {{ $isChecked ? '' : 'disabled' }}
-                                                           style="width: 65px; height: 30px; font-size: 12px;">
+                                                           style="width: 60px; height: 30px; font-size: 12px;">
                                                 </div>
                                             </td>
                                         @endforeach
+                                        <td class="text-center align-middle">
+                                            <div class="total-bobot-badge d-flex justify-content-center align-items-center">
+                                                @if ($isExact100)
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1.5 rounded-pill font-11 fw-bold d-inline-flex align-items-center gap-1 text-nowrap">
+                                                        <i class="mdi mdi-check-decagram"></i> 100% (Sesuai)
+                                                    </span>
+                                                @elseif ($isLessThan100)
+                                                    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1.5 rounded-pill font-11 fw-bold d-inline-flex align-items-center gap-1 text-nowrap"
+                                                          title="Total bobot belum mencapai 100%">
+                                                        <i class="mdi mdi-information-outline"></i> {{ $formattedTotal }}% (Kurang {{ round(100 - $formattedTotal, 2) }}%)
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1.5 rounded-pill font-11 fw-bold d-inline-flex align-items-center gap-1 text-nowrap">
+                                                        <i class="mdi mdi-alert-octagon"></i> {{ $formattedTotal }}% (Lebih {{ round($formattedTotal - 100, 2) }}%)
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="{{ 2 + max($profilLulusans->count(), 1) }}" class="text-center text-muted py-4">
-                                            Belum ada data CPL.
+                                        <td colspan="{{ 3 + max($cpls->count(), 1) }}" class="text-center text-muted py-4">
+                                            Belum ada data Profil Lulusan.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -169,17 +242,21 @@
 
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden mt-4">
             <div class="card-body p-4">
-                <h4 class="card-title fw-bold mb-3">Deskripsi</h4>
+                <h4 class="card-title fw-bold mb-3">Deskripsi Profil Lulusan</h4>
                 <div class="scrollable-descriptions pe-2" style="max-height: 400px; overflow-y: auto;">
-                    @foreach ($cpls as $cpl)
+                    @foreach ($profilLulusans as $profil)
                         <div class="mb-3">
-                            <p class="mb-1"><strong>{{ $cpl->kode }} :</strong> {{ $cpl->judul }}</p>
-                            <p class="mb-1"><strong>Profil Lulusan:</strong></p>
-                            @if ($cpl->profilLulusan->isNotEmpty())
+                            <p class="mb-1"><strong>{{ $profil->namaProfil ?: ($profil->kode ?: 'Profil Lulusan') }} :</strong> {{ $profil->deskripsi }}</p>
+                            <p class="mb-1"><strong>Pemetaan CPL:</strong></p>
+                            @php
+                                $mappedCpls = $cpls->filter(fn($c) => $c->profilLulusan->contains('id', $profil->id));
+                            @endphp
+                            @if ($mappedCpls->isNotEmpty())
                                 <ul class="mb-0">
-                                    @foreach ($cpl->profilLulusan as $profil)
+                                    @foreach ($mappedCpls as $cplItem)
                                         @php
-                                            $bRaw = $profil->pivot->bobot ?? null;
+                                            $pItem = $cplItem->profilLulusan->firstWhere('id', $profil->id);
+                                            $bRaw = $pItem ? $pItem->pivot->bobot : null;
                                             $bFmt = null;
                                             if ($bRaw !== null && $bRaw !== '') {
                                                 $num = (float)$bRaw;
@@ -187,7 +264,7 @@
                                             }
                                         @endphp
                                         <li>
-                                            {{ $profil->kode }} - {{ $profil->deskripsi }}
+                                            {{ $cplItem->kode }} - {{ $cplItem->judul }}
                                             @if ($bFmt !== null)
                                                 <span class="badge bg-light text-primary border ms-1 font-11">Bobot: {{ $bFmt }}%</span>
                                             @endif
@@ -195,7 +272,7 @@
                                     @endforeach
                                 </ul>
                             @else
-                                <em>Tidak ada profil lulusan terkait.</em>
+                                <em>Tidak ada CPL terkait.</em>
                             @endif
                             <hr class="mt-3 mb-0">
                         </div>
@@ -284,16 +361,21 @@
         }
 
         .cpl-pl-table .col-no {
-            width: 56px;
-        }
-
-        .cpl-pl-table .col-kode {
-            width: 110px;
+            width: 50px;
         }
 
         .cpl-pl-table .col-pl {
+            width: 220px;
+        }
+
+        .cpl-pl-table .col-cpl {
             width: auto;
-            min-width: 110px;
+            min-width: 90px;
+        }
+
+        .cpl-pl-table .col-total {
+            width: 175px !important;
+            min-width: 175px !important;
         }
 
         .cpl-pl-table tbody td {
@@ -301,6 +383,7 @@
         }
 
         .cpl-pl-table tbody td:nth-child(2) {
+            text-align: left;
             font-weight: 600;
         }
 
@@ -381,12 +464,12 @@
                     zeroRecords: 'Data tidak ditemukan'
                 },
                 columnDefs: [
-                    { targets: 0, className: 'text-center', width: '56px' },
-                    { targets: 1, className: 'text-center', width: '110px' },
-                    { targets: 2, className: 'text-center', width: '110px' },
-                    @if ($profilLulusans->count() > 0)
-                    { targets: [{{ implode(',', range(3, 2 + $profilLulusans->count())) }}], className: 'text-center', orderable: false }
+                    { targets: 0, className: 'text-center', width: '50px' },
+                    { targets: 1, className: 'text-start', width: '220px' },
+                    @if ($cpls->count() > 0)
+                    { targets: [{{ implode(',', range(2, 1 + $cpls->count())) }}], className: 'text-center', orderable: false },
                     @endif
+                    { targets: {{ 2 + $cpls->count() }}, className: 'text-center', width: '175px', orderable: false }
                 ]
             });
         }
@@ -452,6 +535,32 @@
 
         if (btnCancelBanner) btnCancelBanner.addEventListener('click', disableEditMode);
         if (btnCancelBottom) btnCancelBottom.addEventListener('click', disableEditMode);
+
+        function updateRowTotal(tr) {
+            let total = 0;
+            $(tr).find('.matrix-checkbox:checked').each(function() {
+                let cell = $(this).closest('.matrix-cell');
+                let val = parseFloat(cell.find('.matrix-bobot-input').val()) || 0;
+                total += val;
+            });
+            total = Math.round(total * 100) / 100;
+            let badgeEl = $(tr).find('.total-bobot-badge');
+            
+            if (Math.abs(total - 100) < 0.01) {
+                badgeEl.html('<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1.5 rounded-pill font-12 fw-bold d-inline-flex align-items-center gap-1"><i class="mdi mdi-check-decagram"></i> 100% (Sesuai)</span>');
+            } else if (total < 100) {
+                let kurang = Math.round((100 - total) * 100) / 100;
+                badgeEl.html('<span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1.5 rounded-pill font-12 fw-bold d-inline-flex align-items-center gap-1" title="Total bobot belum mencapai 100%"><i class="mdi mdi-information-outline"></i> ' + total + '% (Kurang ' + kurang + '%)</span>');
+            } else {
+                let lebih = Math.round((total - 100) * 100) / 100;
+                badgeEl.html('<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1.5 rounded-pill font-12 fw-bold d-inline-flex align-items-center gap-1"><i class="mdi mdi-alert-octagon"></i> ' + total + '% (Lebih ' + lebih + '%)</span>');
+            }
+        }
+
+        // Live calculation when inputs/checkboxes change
+        $(document).on('input change', '.matrix-bobot-input, .matrix-checkbox', function() {
+            updateRowTotal($(this).closest('tr'));
+        });
 
         // Click cell in edit mode using event delegation
         $(document).on('click', '.matrix-cell', function (e) {

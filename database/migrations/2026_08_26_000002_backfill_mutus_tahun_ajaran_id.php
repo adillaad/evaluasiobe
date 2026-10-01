@@ -23,7 +23,7 @@ return new class extends Migration
             }
 
             // 2. Populasikan mutus.tahun_ajaran_id dari mutus.tahun jika masih NULL
-            if (Schema::hasColumn('mutus', 'tahun')) {
+            if (Schema::hasColumn('mutus', 'tahun') && Schema::hasTable('tahun_ajaran')) {
                 $nullMutus = DB::table('mutus')->whereNull('tahun_ajaran_id')->whereNotNull('tahun')->get(['id', 'tahun']);
                 foreach ($nullMutus as $row) {
                     $rawTahun = trim((string)$row->tahun);

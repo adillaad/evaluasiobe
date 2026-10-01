@@ -167,10 +167,14 @@
         {{-- Form Tambah Sub CPMK Baru --}}
         @if(in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
             <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-white py-3">
+                <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
                     <h5 class="card-title fw-bold mb-0 text-primary">
                         <i class="ti-plus me-1"></i> Tambah Sub CPMK Baru
                     </h5>
+                    <button type="button" class="btn btn-success text-white font-weight-bold d-inline-flex align-items-center gap-1 shadow-sm" style="background-color: #10ac84 !important; border-color: #10ac84 !important; color: #ffffff !important;" data-bs-toggle="modal" data-bs-target="#importSubCpmkModal">
+                        <i class="ti-import me-1 text-white"></i>
+                        <span style="color: #ffffff !important;">Import Sub CPMK</span>
+                    </button>
                 </div>
                 <div class="card-body">
                     <form action="{{ route($currentPrefix . 'cpl-cpmk.subCpmk-store') }}" method="POST">
@@ -249,6 +253,7 @@
                                 <a class="nav-link {{ !request('cpl_id') ? 'active' : '' }}" 
                                    href="{{ request()->fullUrlWithQuery(['cpl_id' => null, 'page' => null]) }}">
                                    <i class="mdi mdi-grid me-1"></i> Semua CPL
+                                   <span class="badge-cpmk-count">{{ $subCpmks->total() }}</span>
                                 </a>
                             </li>
                             @foreach ($cpls as $cplItem)
@@ -256,9 +261,7 @@
                                     <a class="nav-link {{ request('cpl_id') == $cplItem->id ? 'active' : '' }}" 
                                        href="{{ request()->fullUrlWithQuery(['cpl_id' => $cplItem->id, 'page' => null]) }}">
                                        {{ $cplItem->kode }}
-                                       @if(isset($cplItem->cpmk))
-                                           <span class="badge-cpmk-count">{{ $cplItem->cpmk->count() }}</span>
-                                       @endif
+                                       <span class="badge-cpmk-count">{{ $cplItem->sub_cpmks_count ?? 0 }}</span>
                                     </a>
                                 </li>
                             @endforeach
@@ -282,8 +285,8 @@
                             @forelse ($subCpmks as $index => $sub)
                                 <tr>
                                     <td class="text-center fw-bold text-muted">{{ $subCpmks->firstItem() + $index }}</td>
-                                    <td>
-                                        <span class="code-pink">{{ $sub->kode }}</span>
+                                    <td class="align-middle">
+                                        <span class="text-dark" style="font-size: 0.85rem;">{{ $sub->kode }}</span>
                                     </td>
                                     <td style="word-wrap:break-word; white-space:normal;">
                                         {{ $sub->uraian }}
@@ -482,4 +485,39 @@
             editModal.show();
         }
     </script>
+
+    <!-- Modal Import Sub CPMK -->
+    <div class="modal fade" id="importSubCpmkModal" tabindex="-1" aria-labelledby="importSubCpmkModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="importSubCpmkModalLabel">
+                        <i class="ti-import me-1 text-success"></i> Import Sub CPMK dari Excel
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route($currentPrefix . 'cpl-cpmk.import-excel') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="alert alert-info py-2 small mb-3">
+                            <i class="ti-info-alt me-1"></i> Gunakan template Excel resmi agar format kolom sesuai (Tahun Kurikulum, Kode MK, Kode CPMK, Uraian Sub CPMK). Kode Sub CPMK akan disesuaikan otomatis oleh sistem.
+                        </div>
+                        <div class="mb-3">
+                            <label for="excel_file_subcpmk" class="form-label fw-bold">Pilih File Excel (.xlsx, .xls, .csv):</label>
+                            <input type="file" class="form-control" id="excel_file_subcpmk" name="excel_file" accept=".xlsx,.xls,.csv" required>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                            <a href="{{ route($currentPrefix . 'cpl-cpmk.download-template') }}" class="btn btn-sm btn-outline-primary">
+                                <i class="ti-download me-1"></i> Download Template Excel
+                            </a>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success btn-sm"><i class="ti-upload me-1"></i> Upload & Import</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
