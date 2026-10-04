@@ -2,7 +2,7 @@
     use App\Support\AptikomTheme;
     $isAptikomHeader = auth()->check() && auth()->user()->prodi ? (bool) auth()->user()->prodi->is_aptikom : true;
     $themeHeaderColor = AptikomTheme::resolve(auth()->user(), $themeColor ?? null);
-    $themeHeaderHoverColor = $isAptikomHeader ? '#004c78' : '#5bb0e5';
+    $themeHeaderHoverColor = $isAptikomHeader ? '#004c78' : '#1d52cc';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">

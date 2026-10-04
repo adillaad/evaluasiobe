@@ -466,10 +466,16 @@
             </div>
 
             {{-- Toolbar Tombol Aksi --}}
+            @php
+                $isFromMatakuliah = ($from ?? '') === 'matakuliah';
+                $kembaliUrl = $isFromMatakuliah
+                    ? route($currentPrefix . 'visual-mahasiswaMataKuliah') . '?course=' . urlencode($courseKode) . '&angkatan=' . urlencode($angkatan) . '&prodi=' . urlencode($prodi) . '&universitasCPMK=' . urlencode($universitas) . '&universitasImg=' . urlencode($universitasImg)
+                    : route($currentPrefix . 'visual-mahasiswa') . '?npm=' . urlencode($npm) . '&nama=' . urlencode($nama) . '&angkatan=' . urlencode($angkatan) . '&prodi=' . urlencode($prodi) . '&universitasCPMK=' . urlencode($universitas) . '&universitasImg=' . urlencode($universitasImg);
+            @endphp
             <div class="d-flex align-items-center flex-wrap gap-2">
-                <button type="button" class="modern-btn-outline" onclick="window.history.back();" title="Kembali ke halaman sebelumnya">
+                <a href="{{ $kembaliUrl }}" class="modern-btn-outline text-decoration-none d-inline-flex align-items-center gap-1" title="Kembali ke halaman sebelumnya">
                     <i class="bi bi-arrow-left"></i> Kembali
-                </button>
+                </a>
                 <button id="btnPrintPdf" type="button" class="modern-btn-primary">
                     <i class="bi bi-file-earmark-pdf"></i> Unduh PDF
                 </button>
@@ -498,8 +504,8 @@
                         <li><strong>Bentuk Jaring (Radar):</strong> Setiap sudut mewakili satu <strong>CPMK (Capaian Pembelajaran Mata Kuliah)</strong>.</li>
                         <li><span class="badge" style="background-color: #1F3BB3; color:#fff;">CPMK (Mahasiswa)</span>: Nilai capaian CPMK mahasiswa yang bersangkutan (skala 0 - 100).</li>
                         <li><span class="badge" style="background-color: #c06e4b; color:#fff;">CPMK Avg (Batch)</span>: Rata-rata nilai capaian CPMK mahasiswa seangkatan pada mata kuliah ini.</li>
-                        <li><span class="badge" style="background-color: #21d85f; color:#fff;">CPMK Max (Batch)</span>: Nilai capaian CPMK tertinggi di angkatan tersebut.</li>
-                        <li><span class="badge" style="background-color: #d82121; color:#fff;">CPMK Min (Batch)</span>: Nilai capaian CPMK terendah di angkatan tersebut.</li>
+                        <li><span class="badge" style="background-color: #ef4444; color:#fff;">CPMK Min (Batch)</span>: Nilai capaian CPMK terendah di angkatan tersebut.</li>
+                        <li><span class="badge" style="background-color: #10b981; color:#fff;">CPMK Max (Batch)</span>: Nilai capaian CPMK tertinggi di angkatan tersebut.</li>
                     </ul>
                 </div>
             </div>
@@ -530,7 +536,7 @@
             <div class="row g-4 align-items-center mb-4">
                 <div class="col-lg-6 col-md-12">
                     <div class="d-flex justify-content-center align-items-center p-2">
-                        <div style="width: 100%; max-width: 540px;">
+                        <div style="width: 100%; max-width: 300px; margin: 0 auto;">
                             <canvas id="radarChart"></canvas>
                         </div>
                     </div>
@@ -668,6 +674,7 @@
                     <p class="text-muted small mb-3">Pilih mahasiswa lain di angkatan <strong>{{ $angkatan }}</strong> untuk melihat evaluasi CPMK:</p>
                     <form id="visualCpmkMahasiswa" method="POST" action="hasilvisualcpmk-mahasiswa" enctype="multipart/form-data">
                         @csrf
+                        <input type="hidden" name="from" value="{{ $from ?? 'mahasiswa' }}">
                         <input type="hidden" name="allNpm" value="{{ json_encode($allNpm) }}">
                         <input type="hidden" name="course" value="{{ $completeCourseFormat }}">
                         <input type="hidden" name="nama" id="formHiddenNama" value="{{ $nama }}">
@@ -1170,9 +1177,8 @@
                                     color: '#1e293b'
                                 },
                                 min: 0,
-                                max: 100,
+                                suggestedMax: 100,
                                 ticks: {
-                                    stepSize: 20,
                                     backdropColor: 'transparent',
                                     font: {
                                         size: 10
@@ -1182,14 +1188,16 @@
                         },
                         plugins: {
                             legend: {
-                                position: 'bottom',
+                                position: 'top',
                                 labels: {
-                                    usePointStyle: true,
-                                    padding: 16,
+                                    boxWidth: 20,
+                                    boxHeight: 8,
+                                    padding: 12,
                                     font: {
-                                        size: 12,
+                                        size: 11,
                                         weight: '500'
-                                    }
+                                    },
+                                    color: '#475569'
                                 }
                             },
                             tooltip: {

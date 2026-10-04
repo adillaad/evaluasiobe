@@ -31,13 +31,13 @@
     $themeColor = AptikomTheme::resolve(auth()->user(), $themeColor ?? null);
     $navbarLogoDark = AptikomTheme::isColorDark($themeColor);
 
-    // --- Warna highlight menu aktif di sidebar (Aptikom #006199 / Non-Aptikom #76C0EC) ---
-    $themeHoverColor = $isAptikom ? '#004c78' : '#5bb0e5';
+    // --- Warna highlight menu aktif di sidebar (Aptikom #006199 / Non-Aptikom #2664F5) ---
+    $themeHoverColor = $isAptikom ? '#004c78' : '#1d52cc';
     $sidebarActiveColor = $themeColor;
-    $sidebarActiveBg = $isAptikom ? 'rgba(0, 97, 153, 0.12)' : 'rgba(118, 192, 236, 0.18)';
+    $sidebarActiveBg = $isAptikom ? 'rgba(0, 97, 153, 0.12)' : 'rgba(38, 100, 245, 0.15)';
 
     // --- Warna badge otoritas ---
-    $otoritasBadgeBg = $isAptikom ? 'rgba(0, 97, 153, 0.1)' : 'rgba(118, 192, 236, 0.18)';
+    $otoritasBadgeBg = $isAptikom ? 'rgba(0, 97, 153, 0.1)' : 'rgba(38, 100, 245, 0.15)';
 
     // --- Profile image URL with fallback ---
     $rawImg = auth()->check() ? trim(auth()->user()->img ?? '') : '';
@@ -52,8 +52,8 @@
             $profileImgUrl = asset($cleanImg);
         }
     }
-    $otoritasBadgeColor = $isAptikom ? '#006199' : '#2b7fb3';
-    $otoritasBadgeBorder = $isAptikom ? 'rgba(0, 97, 153, 0.3)' : 'rgba(118, 192, 236, 0.5)';
+    $otoritasBadgeColor = $isAptikom ? '#006199' : '#2664F5';
+    $otoritasBadgeBorder = $isAptikom ? 'rgba(0, 97, 153, 0.3)' : 'rgba(38, 100, 245, 0.4)';
 
     // --- Warna badge prodi di header navbar ---
     $prodiHeaderBadgeBg = 'rgba(255, 255, 255, 0.25)';
@@ -404,7 +404,7 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
         .select2-container--open .select2-selection--single,
         .select2-container--open .select2-selection--multiple {
             border-color: {{ $themeColor }} !important;
-            box-shadow: 0 0 0 3px {{ $isAptikom ? 'rgba(0, 97, 153, 0.2)' : 'rgba(118, 192, 236, 0.3)' }} !important;
+            box-shadow: 0 0 0 3px {{ $isAptikom ? 'rgba(0, 97, 153, 0.2)' : 'rgba(38, 100, 245, 0.25)' }} !important;
             outline: 0 !important;
         }
 
@@ -445,7 +445,7 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
             border-color: {{ $themeColor }} !important;
             color: #ffffff !important;
             font-weight: 600 !important;
-            box-shadow: 0 2px 6px {{ $isAptikom ? 'rgba(0, 97, 153, 0.3)' : 'rgba(118, 192, 236, 0.4)' }} !important;
+            box-shadow: 0 2px 6px {{ $isAptikom ? 'rgba(0, 97, 153, 0.3)' : 'rgba(38, 100, 245, 0.35)' }} !important;
         }
         .pagination .page-item.disabled .page-link,
         .page-link.disabled {

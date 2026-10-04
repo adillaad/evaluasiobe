@@ -107,6 +107,13 @@ class VisualisasiController extends Controller
         $universitas = $request->input('universitas');
         $prodiId = $request->input('prodi');
 
+        if (!empty($prodiId) && !is_numeric($prodiId)) {
+            $prodiId = Prodi::where('nama', $prodiId)->value('id');
+        }
+        if (!empty($universitas) && !is_numeric($universitas)) {
+            $universitas = DB::table('universitas')->where('nama', $universitas)->value('id') ?? $universitas;
+        }
+
         // 1. Ambil mahasiswa dari tabel mahasiswa
         $mhsQuery = DB::table('mahasiswa')
             ->join('prodi', 'mahasiswa.id_prodi', '=', 'prodi.id')
@@ -431,6 +438,7 @@ class VisualisasiController extends Controller
                 $universitasNama = Universitas::where('id', $universitas)->value('nama');
             } else {
                 $universitasNama = Universitas::where('nama', $universitas)->value('nama') ?? $universitas;
+                $universitas = Universitas::where('nama', $universitas)->value('id') ?? $universitas;
             }
         }
         if (empty($universitasNama)) {
@@ -460,7 +468,22 @@ class VisualisasiController extends Controller
 
         $nama = $mhsData->nama_mhs ?? $dataMutus->nama_mhs ?? 'N/A';
         $prodiNama = $mhsData->prodiNama ?? $dataMutus->prodiNama ?? '';
-        $prodiId = $request->input('prodi') ?? $mhsData->prodiId ?? $dataMutus->prodiId ?? auth()->user()->id_prodiUser;
+        
+        $rawProdi = $request->input('prodi');
+        $prodiId = null;
+        if (!empty($rawProdi)) {
+            if (is_numeric($rawProdi)) {
+                $prodiId = (int)$rawProdi;
+            } else {
+                $prodiId = Prodi::where('nama', $rawProdi)->value('id');
+            }
+        }
+        if (empty($prodiId)) {
+            $prodiId = $mhsData->prodiId ?? $dataMutus->prodiId ?? auth()->user()->id_prodiUser;
+        }
+        if (empty($prodiNama) && !empty($prodiId)) {
+            $prodiNama = Prodi::where('id', $prodiId)->value('nama') ?? '';
+        }
 
         // Subquery to get the max year and semester for each course
         $subQuery = DB::table('mutus')
@@ -1842,11 +1865,32 @@ class VisualisasiController extends Controller
         $originalReqCourse = $request->course;
         $tahun = $request->tahun;
         $semester = $request->semester;
+        $from = $request->input('from');
+        if (empty($from)) {
+            $referer = request()->header('referer', '');
+            if (str_contains(strtolower($referer), 'matakuliah')) {
+                $from = 'matakuliah';
+            } else {
+                $from = 'mahasiswa';
+            }
+        }
 
         $hasYearFilter = ($tahun && $tahun !== 'all');
         $hasSemFilter = ($semester && $semester !== 'all');
 
-        list($course, $namaCourse) = explode('-', $originalReqCourse);
+        $originalReqCourse = $request->course ?? $request->input('course');
+        $course = $originalReqCourse;
+        $namaCourse = '';
+        if (strpos($originalReqCourse, '-') !== false) {
+            $parts = explode('-', $originalReqCourse, 2);
+            $course = trim($parts[0]);
+            $namaCourse = trim($parts[1] ?? '');
+        }
+        if (empty($namaCourse)) {
+            $namaCourse = DB::table('mks')->where('kode', $course)->value('nama') 
+                ?? DB::table('mutus')->where('Course', $course)->value('Course') 
+                ?? $course;
+        }
         
         $prodiId = Prodi::where('nama', $prodi)->value('id');
         if (!$prodiId && is_numeric($prodi)) {
@@ -2276,6 +2320,7 @@ class VisualisasiController extends Controller
             'maxCpmk' => $maxCpmk,
             'kodeMinCpmk' => $kodeMinCpmk,
             'minCpmk' => $minCpmk,
+            'from' => $from,
         ]);
     }
 
@@ -2302,7 +2347,28 @@ class VisualisasiController extends Controller
 
         $prodi = $prodiQuery->get();
 
-        return view('penjamin-mutu.visualisasi.indexVisualisasiAngkatan', compact('universitas', 'prodi'));
+        $userProdiId = auth()->user()->id_prodiUser;
+        $angkatanList = [];
+        if ($userProdiId) {
+            $angkatanMutus = DB::table('mutus')
+                ->where('id_prodi', $userProdiId)
+                ->where('universitas_id', $userUniversitasId)
+                ->whereNotNull('angkatan')
+                ->distinct()
+                ->pluck('angkatan')
+                ->toArray();
+            $angkatanMhs = DB::table('mahasiswa')
+                ->where('id_prodi', $userProdiId)
+                ->whereNotNull('angkatan')
+                ->distinct()
+                ->pluck('angkatan')
+                ->toArray();
+            $merged = array_unique(array_filter(array_merge($angkatanMutus, $angkatanMhs)));
+            rsort($merged);
+            $angkatanList = array_values($merged);
+        }
+
+        return view('penjamin-mutu.visualisasi.indexVisualisasiAngkatan', compact('universitas', 'prodi', 'angkatanList'));
     }
 
     private function getAvailablePeriodsForAngkatan($angkatan, $prodiId, $universitas)
@@ -2378,11 +2444,36 @@ class VisualisasiController extends Controller
     public function hasilVisualMahasiswaAngkatan(Request $request)
     {
         $otoritas = auth()->user()->otoritas->otoritas;
-        $prodiId = $request->input('prodi') ?? auth()->user()->id_prodiUser;
+        $rawProdi = $request->input('prodi');
+        $prodiId = null;
+        if (!empty($rawProdi)) {
+            if (is_numeric($rawProdi)) {
+                $prodiId = (int)$rawProdi;
+            } else {
+                $prodiId = Prodi::where('nama', $rawProdi)->value('id');
+            }
+        }
+        if (empty($prodiId)) {
+            $prodiId = auth()->user()->id_prodiUser;
+        }
         $prodi = Prodi::where('id', $prodiId)->get();
         $angkatan = $request->input('angkatan');
-        $universitas = $request->input('universitas');
-        $univNama = Universitas::where('id', $universitas)->value('nama');
+        $rawUniv = $request->input('universitas') ?? $request->input('universitasCPMK');
+        $universitas = null;
+        $univNama = null;
+        if (!empty($rawUniv)) {
+            if (is_numeric($rawUniv)) {
+                $universitas = (int)$rawUniv;
+                $univNama = Universitas::where('id', $universitas)->value('nama');
+            } else {
+                $univNama = $rawUniv;
+                $universitas = Universitas::where('nama', $rawUniv)->value('id');
+            }
+        }
+        if (empty($universitas)) {
+            $universitas = auth()->user()->id_universitasUser;
+            $univNama = auth()->user()->universitas->nama ?? Universitas::where('id', $universitas)->value('nama');
+        }
         $imgSrc = $request->input('imgSrc');
         $rawTahun = $request->input('tahun'); // 'all', '2022', '2022/2023', '1'
         $rawSemester = $request->input('semester'); // 'all', '1'..'8'
@@ -3181,11 +3272,28 @@ class VisualisasiController extends Controller
             $ketercapaianCplYearlyAvg[$yr] = $avgPct;
         }
 
-        $allCoursesInProdi = DB::table('mks')
+        $coursesFromMks = DB::table('mks')
             ->where('id_prodi', $prodiId)
-            ->orderBy('nama')
-            ->pluck('nama', 'kode')
-            ->toArray();
+            ->select('kode', 'nama')
+            ->get();
+
+        $coursesFromMutus = DB::table('mutus')
+            ->leftJoin('mks', 'mutus.Course', '=', 'mks.kode')
+            ->where('mutus.id_prodi', $prodiId)
+            ->where(function($q) use ($universitas) {
+                if ($universitas) $q->where('mutus.universitas_id', $universitas);
+            })
+            ->select('mutus.Course as kode', DB::raw('COALESCE(mks.nama, mutus.Course) as nama'))
+            ->distinct()
+            ->get();
+
+        $combinedCoursesList = $coursesFromMks->concat($coursesFromMutus)
+            ->unique('kode')
+            ->sortBy('nama')
+            ->values();
+
+        $allCoursesInProdi = $combinedCoursesList->pluck('nama', 'kode')->toArray();
+        $coursesInAngkatan = $allCoursesInProdi;
 
         $defaultYear = !empty($activeYearsList) ? end($activeYearsList) : (!empty($yearsList) ? end($yearsList) : null);
         $hasData = (count($gabunganAkhirMk) > 0) && ($allCplPerAngkatan['count'] > 0);
@@ -3203,6 +3311,7 @@ class VisualisasiController extends Controller
                 'soalTerendah' => $soalTerendah,
                 'allCplPerAngkatan' => $allCplPerAngkatan,
                 'gabunganAkhirMk' => $gabunganAkhirMk,
+                'coursesInAngkatan' => $coursesInAngkatan,
                 'allCourses' => $allCoursesInProdi,
                 'cplResultsAll' => $cplResultsAll,
                 'availablePeriods' => $availablePeriods,
@@ -3569,6 +3678,26 @@ class VisualisasiController extends Controller
             $rataRataAngkatan = $countAvg > 0 ? round($sumAvg / $countAvg, 2) : 0;
         }
 
+        $coursesFromMks = DB::table('mks')
+            ->where('id_prodi', $prodiId)
+            ->select('kode', 'nama')
+            ->get();
+
+        $coursesFromMutus = DB::table('mutus')
+            ->leftJoin('mks', 'mutus.Course', '=', 'mks.kode')
+            ->where(function($q) use ($prodiId, $universitasId) {
+                if ($prodiId) $q->where('mutus.id_prodi', $prodiId);
+                if ($universitasId) $q->where('mutus.universitas_id', $universitasId);
+            })
+            ->select('mutus.Course as kode', DB::raw('COALESCE(mks.nama, mutus.Course) as nama'))
+            ->distinct()
+            ->get();
+
+        $coursesInAngkatan = $coursesFromMks->concat($coursesFromMutus)
+            ->unique('kode')
+            ->sortBy('nama')
+            ->values();
+
         return view('penjamin-mutu.visualisasi.hasilVisualisasiCpmkAngkatan', [
             'prodi' => $prodi,
             'angkatan' => $angkatan,
@@ -3578,6 +3707,7 @@ class VisualisasiController extends Controller
             'soalTerendah' => $soalTerendah,
             'course' => $course,
             'allAngkatan' => $allAngkatan,
+            'coursesInAngkatan' => $coursesInAngkatan,
             'cpmkTmp' => $cpmkTmp,
             'cpmkResultAll' => $cpmkResultAll,
             'cpmkTableList' => $cpmkTableList,
@@ -3597,7 +3727,18 @@ class VisualisasiController extends Controller
         $courseRequest = $request->input('course');
         $prodi = $request->input('prodi');
         $universitas = $request->input('universitas');
-        list($course, $namaCourse) = explode('-', $courseRequest);
+        $course = $courseRequest;
+        $namaCourse = '';
+        if (strpos($courseRequest, '-') !== false) {
+            $parts = explode('-', $courseRequest, 2);
+            $course = trim($parts[0]);
+            $namaCourse = trim($parts[1] ?? '');
+        }
+        if (empty($namaCourse)) {
+            $namaCourse = DB::table('mks')->where('kode', $course)->value('nama') 
+                ?? DB::table('mutus')->where('Course', $course)->value('Course') 
+                ?? $course;
+        }
         // return $course;
         $allAngkatan =  DB::table('mutus')
             ->select('angkatan')
@@ -3707,14 +3848,54 @@ class VisualisasiController extends Controller
     {
         $otoritas = auth()->user()->otoritas->otoritas;
         // return $request;
-        $prodiId = $request->input('prodi');
-        $prodi = Prodi::where('id', $prodiId)->value('nama');
+        $rawProdi = $request->input('prodi');
+        $prodiId = null;
+        $prodi = null;
+        if (!empty($rawProdi)) {
+            if (is_numeric($rawProdi)) {
+                $prodiId = (int)$rawProdi;
+                $prodi = Prodi::where('id', $prodiId)->value('nama');
+            } else {
+                $prodi = $rawProdi;
+                $prodiId = Prodi::where('nama', $rawProdi)->value('id');
+            }
+        }
+        if (empty($prodiId)) {
+            $prodiId = auth()->user()->id_prodiUser;
+            $prodi = auth()->user()->prodi->nama ?? Prodi::where('id', $prodiId)->value('nama');
+        }
+
         $angkatan = $request->input('angkatan');
-        $universitas = $request->input('universitas');
-        $univNama = Universitas::where('id', $universitas)->value('nama');
+        $rawUniv = $request->input('universitas') ?? $request->input('universitasCPMK');
+        $universitas = null;
+        $univNama = null;
+        if (!empty($rawUniv)) {
+            if (is_numeric($rawUniv)) {
+                $universitas = (int)$rawUniv;
+                $univNama = Universitas::where('id', $universitas)->value('nama');
+            } else {
+                $univNama = $rawUniv;
+                $universitas = Universitas::where('nama', $rawUniv)->value('id');
+            }
+        }
+        if (empty($universitas)) {
+            $universitas = auth()->user()->id_universitasUser;
+            $univNama = auth()->user()->universitas->nama ?? Universitas::where('id', $universitas)->value('nama');
+        }
         $imgSrc = $request->input('imgSrc');
-        $originalReqCourse = $request->course;
-        list($course, $namaCourse) = explode('-', $originalReqCourse);
+        $originalReqCourse = $request->course ?? $request->input('course');
+        $course = $originalReqCourse;
+        $namaCourse = '';
+        if (strpos($originalReqCourse, '-') !== false) {
+            $parts = explode('-', $originalReqCourse, 2);
+            $course = trim($parts[0]);
+            $namaCourse = trim($parts[1] ?? '');
+        }
+        if (empty($namaCourse)) {
+            $namaCourse = DB::table('mks')->where('kode', $course)->value('nama') 
+                ?? DB::table('mutus')->where('Course', $course)->value('Course') 
+                ?? $course;
+        }
 
         $allNpm = DB::table('mutus')
             ->select('npm', 'nama_mhs')
@@ -4014,7 +4195,7 @@ class VisualisasiController extends Controller
             'result' => [
                 'prodi' => $prodi,
                 'angkatan' => $angkatan,
-                'completeCourseFormat' => $originalReqCourse,
+                'completeCourseFormat' => (!empty($namaCourse) && $namaCourse !== $course) ? ($course . ' - ' . $namaCourse) : $course,
                 'soalTerendah' => $soalTerendah,
                 'allNpm' => $allNpm,
                 'universitas' => $univNama,

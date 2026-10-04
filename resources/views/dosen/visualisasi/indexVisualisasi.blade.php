@@ -978,6 +978,7 @@
             <div class="card-body p-4">
                 <form id="hasilvisualcpmk-mahasiswa" method="POST" action="hasilvisualcpmk-mahasiswa" enctype="multipart/form-data">
                     @csrf
+                    <input type="hidden" name="from" value="mahasiswa">
                     <input type="text" name="npm" class="visually-hidden" value="">
                     <input type="text" name="nama" class="visually-hidden" value="">
                     <input type="text" name="angkatan" class="visually-hidden" value="">
@@ -1847,7 +1848,7 @@
                 }
             });
 
-            function onAngkatanSelected(angkatan, autoOpenNpm) {
+            function onAngkatanSelected(angkatan, autoOpenNpm, preserveNpmVal) {
                 var universitas = $('#universitas').val();
                 var prodi = $('#prodiForm').val() || "{{ auth()->user()->id_prodiUser ?? '' }}";
                 
@@ -1862,6 +1863,7 @@
 
                 if (currentLoadedAngkatan === angkatan && studentOptionsData.length > 0 && !isStudentLoading) {
                     renderNpmOptions($('#npmDisplayInput').val().trim());
+                    syncNavbarStudentOptions();
                     if (autoOpenNpm || $('#npmDisplayInput').is(':focus') || $('#npmComboboxWrapper').hasClass('is-open')) {
                         $('#npmComboboxWrapper').addClass('is-open');
                         $('#npmDropdownMenu').show();
@@ -1875,8 +1877,10 @@
 
                 currentLoadedAngkatan = angkatan;
                 isStudentLoading = true;
-                $('#npm').val('');
-                $('#npmDisplayInput').val('');
+                if (!preserveNpmVal) {
+                    $('#npm').val('');
+                    $('#npmDisplayInput').val('');
+                }
                 studentOptionsData = [];
 
                 $('#npmOptionsList').html('<div class="combobox-empty-state"><span class="spinner-border spinner-border-sm me-2 text-primary"></span>Memuat daftar mahasiswa...</div>');
@@ -1892,6 +1896,15 @@
                     success: function(data) {
                         isStudentLoading = false;
                         studentOptionsData = parseStudentOptionsFromHtml(data);
+                        if (preserveNpmVal) {
+                            var found = studentOptionsData.find(function(s) { return s.value === preserveNpmVal; });
+                            if (found) {
+                                $('#npm').val(found.value);
+                                $('#npmDisplayInput').val(found.text);
+                                $('#navNpmValue').val(found.value);
+                                $('#navNpmDisplayInput').val(found.text);
+                            }
+                        }
                         renderNpmOptions($('#npmDisplayInput').val().trim());
                         syncNavbarStudentOptions();
                         if (autoOpenNpm || $('#npmDisplayInput').is(':focus') || $('#npmComboboxWrapper').hasClass('is-open')) {
@@ -2288,6 +2301,7 @@
             var savedNpm = urlParams.get('npm');
             var savedAngkatan = urlParams.get('angkatan');
             var savedProdi = urlParams.get('prodi') || $('#prodiForm').val() || "{{ auth()->user()->id_prodiUser ?? '' }}";
+            var savedNama = urlParams.get('nama');
 
             if (savedNpm && savedAngkatan) {
                 $('#tugas').hide();
@@ -2296,10 +2310,18 @@
                 if (savedAngkatan) {
                     $('#angkatanForm').val(savedAngkatan);
                     $('#angkatanDisplayInput').val(savedAngkatan);
+                    $('#navAngkatanValue').val(savedAngkatan);
+                    $('#navAngkatanDisplayInput').val(savedAngkatan);
                 }
                 if (savedNpm) {
                     $('#npm').val(savedNpm);
+                    var displayText = savedNama ? (savedNpm + ' - ' + savedNama) : savedNpm;
+                    $('#npmDisplayInput').val(displayText);
+                    $('#navNpmValue').val(savedNpm);
+                    $('#navNpmDisplayInput').val(displayText);
                 }
+                loadAngkatan(savedProdi, $('#universitas').val());
+                onAngkatanSelected(savedAngkatan, false, savedNpm);
                 fetchAndRenderMahasiswa(savedProdi, savedAngkatan, savedNpm, true);
             } else {
                 $('#antiFlickerStyle').remove();

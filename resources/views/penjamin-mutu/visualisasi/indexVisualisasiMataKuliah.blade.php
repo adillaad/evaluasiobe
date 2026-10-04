@@ -840,6 +840,7 @@
                             <p class="text-muted small mb-3">Pilih mahasiswa untuk menampilkan visualisasi capaian CPMK individu pada mata kuliah ini:</p>
                             <form id="hasilvisualcpmk-mahasiswa" method="POST" action="hasilvisualcpmk-mahasiswa" enctype="multipart/form-data">
                                 @csrf
+                                <input type="hidden" name="from" value="matakuliah">
                                 <input type="text" name="nama" class="visually-hidden" value="">
                                 <input type="text" name="angkatan" class="visually-hidden" value="">
                                 <input type="text" name="prodi" class="visually-hidden" value="">
@@ -1987,9 +1988,11 @@
                             mountNavbarControls();
                             $('#navAngkatanValue').val(angkatan);
                             $('#navAngkatanDisplayInput').val(angkatan);
+                            var courseDisplay = response.result.completeCourseFormat || course;
                             $('#navCourseValue').val(course);
-                            if ($('#courseDisplayInput').val()) {
-                                $('#navCourseDisplayInput').val($('#courseDisplayInput').val());
+                            $('#navCourseDisplayInput').val(courseDisplay);
+                            if (!$('#courseDisplayInput').val()) {
+                                $('#courseDisplayInput').val(courseDisplay);
                             }
 
                             if (!isAutoLoad) {
@@ -2052,8 +2055,12 @@
                     if (course) {
                         $('#courseSelect').val(course);
                         enableCourseCombobox();
-                        var selectedCourseObj = courseOptionsData.find(function(c) { return String(c.value).trim() === String(course).trim(); });
+                        var selectedCourseObj = courseOptionsData.find(function(c) {
+                            return String(c.value).trim() === String(course).trim() ||
+                                   String(c.value).split('-')[0].trim() === String(course).trim();
+                        });
                         if (selectedCourseObj) {
+                            $('#courseSelect').val(selectedCourseObj.value);
                             $('#courseDisplayInput').val(selectedCourseObj.text);
                         }
                     }
@@ -2066,11 +2073,18 @@
                             }
                             loadCourses(prodi, angkatan, universitas, function() {
                                 if (course) {
-                                    $('#courseSelect').val(course);
                                     enableCourseCombobox();
-                                    var selectedCourseObj = courseOptionsData.find(function(c) { return String(c.value).trim() === String(course).trim(); });
+                                    var selectedCourseObj = courseOptionsData.find(function(c) {
+                                        return String(c.value).trim() === String(course).trim() ||
+                                               String(c.value).split('-')[0].trim() === String(course).trim();
+                                    });
                                     if (selectedCourseObj) {
+                                        $('#courseSelect').val(selectedCourseObj.value);
                                         $('#courseDisplayInput').val(selectedCourseObj.text);
+                                        if ($('#navCourseDisplayInput').length) {
+                                            $('#navCourseValue').val(selectedCourseObj.value);
+                                            $('#navCourseDisplayInput').val(selectedCourseObj.text);
+                                        }
                                     }
                                 }
                             }, true);

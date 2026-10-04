@@ -618,9 +618,9 @@
                         <img id="universitas-img" src="{{ asset($universitas->img) }}" style="display: none;" />
                     @endif
 
-                    <input type="hidden" id="prodiForm" name="prodi" value="{{ auth()->user()->id_prodiUser }}">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <input type="hidden" id="prodiForm" name="prodi" value="{{ auth()->user()->id_prodiUser }}">
+                        <div class="col-md-6 col-lg-5">
                             <label class="modern-label">
                                 <i class="bi bi-calendar3 text-primary me-1"></i> Angkatan <span class="text-danger">*</span>
                             </label>
@@ -630,6 +630,7 @@
                                            id="angkatanDisplayInput" 
                                            class="form-control modern-select combobox-input" 
                                            placeholder="Pilih Angkatan" 
+                                           value=""
                                            autocomplete="off">
                                     <input type="hidden" id="angkatanForm" name="angkatan" value="">
                                     <button type="button" class="combobox-toggle-btn" tabindex="-1" id="angkatanToggleBtn" title="Tampilkan daftar angkatan">
@@ -638,7 +639,13 @@
                                 </div>
                                 <div class="combobox-dropdown-menu" id="angkatanDropdownMenu" style="display: none;">
                                     <div class="combobox-options-list" id="angkatanOptionsList">
-                                        <div class="combobox-empty-state">Memuat data angkatan...</div>
+                                        @if(!empty($angkatanList) && count($angkatanList) > 0)
+                                            @foreach ($angkatanList as $idx => $a)
+                                                <div class="combobox-option" data-value="{{ $a }}" data-text="{{ $a }}" data-index="{{ $idx }}">{{ $a }}</div>
+                                            @endforeach
+                                        @else
+                                            <div class="combobox-empty-state">Memuat data angkatan...</div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -1021,7 +1028,7 @@
             window.currentBatchPage = 1;
             window.currentBatchPageSize = 25;
 
-            var angkatanOptionsData = [];
+            var angkatanOptionsData = @json(array_map(function($a) { return ['value' => (string)$a, 'text' => (string)$a]; }, $angkatanList ?? []));
             var activeAngkatanIndex = -1;
 
             var courseOptionsData = [];
@@ -1041,8 +1048,11 @@
                 var filtered = angkatanOptionsData;
                 if (filterText && filterText.trim() !== '') {
                     var lower = filterText.trim().toLowerCase();
+                    var cleanLower = lower.replace(/^angkatan\s+/i, '').trim();
                     filtered = angkatanOptionsData.filter(function(item) {
-                        return item.text.toLowerCase().indexOf(lower) !== -1 || item.value.toLowerCase().indexOf(lower) !== -1;
+                        return item.text.toLowerCase().indexOf(lower) !== -1 || 
+                               item.value.toLowerCase().indexOf(lower) !== -1 ||
+                               (cleanLower && item.value.toLowerCase().indexOf(cleanLower) !== -1);
                     });
                 }
 
@@ -1053,14 +1063,15 @@
 
                 var currentSelected = $('#angkatanForm').val();
                 filtered.forEach(function(item, idx) {
-                    var isSelected = (item.value === currentSelected);
+                    var isSelected = (String(item.value).trim() === String(currentSelected).trim());
                     var $opt = $('<div></div>')
                         .addClass('combobox-option' + (isSelected ? ' is-selected' : ''))
                         .attr('data-value', item.value)
+                        .attr('data-text', item.text)
                         .attr('data-index', idx)
                         .text(item.text);
 
-                    $opt.on('mousedown', function(e) {
+                    $opt.on('mousedown click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         selectAngkatanItem(item.value, item.text);
@@ -1070,9 +1081,23 @@
                 });
             }
 
+            // Delegated click handler for any rendered options
+            $(document).on('mousedown click', '#angkatanOptionsList .combobox-option', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var val = $(this).attr('data-value');
+                var text = $(this).attr('data-text') || $(this).text().trim();
+                selectAngkatanItem(val, text);
+            });
+
+            if (angkatanOptionsData && angkatanOptionsData.length > 0) {
+                renderAngkatanOptions('');
+            }
+
             function selectAngkatanItem(val, text) {
+                var displayText = text || val;
                 $('#angkatanForm').val(val);
-                $('#angkatanDisplayInput').val(text);
+                $('#angkatanDisplayInput').val(displayText);
                 $('#angkatanDropdownMenu').hide();
                 $('#angkatanComboboxWrapper').removeClass('is-open');
                 activeAngkatanIndex = -1;
@@ -1105,13 +1130,16 @@
                     return;
                 }
 
+                var cleanQuery = currentText.replace(/^Angkatan\s+/i, '').trim();
+
                 var match = angkatanOptionsData.find(function(s) { 
                     return s.value.toLowerCase() === currentText.toLowerCase() || 
-                           s.text.toLowerCase() === currentText.toLowerCase(); 
+                           s.text.toLowerCase() === currentText.toLowerCase() ||
+                           s.value.toLowerCase() === cleanQuery.toLowerCase(); 
                 });
 
-                if (!match && /^\d{4}$/.test(currentText)) {
-                    match = { value: currentText, text: currentText };
+                if (!match && /^\d{4}$/.test(cleanQuery)) {
+                    match = { value: cleanQuery, text: cleanQuery };
                 }
 
                 if (match) {
@@ -1121,6 +1149,8 @@
                     var prevFound = angkatanOptionsData.find(function(s) { return s.value === currentVal; });
                     if (prevFound) {
                         $('#angkatanDisplayInput').val(prevFound.text);
+                    } else {
+                        $('#angkatanDisplayInput').val(currentVal);
                     }
                 } else {
                     $('#angkatanDisplayInput').val('');
@@ -1148,14 +1178,19 @@
                     return;
                 }
 
+                var cleanQuery = query.replace(/^Angkatan\s+/i, '').trim();
+
                 var exactMatch = angkatanOptionsData.find(function(item) {
-                    return item.value.toLowerCase() === query.toLowerCase() || item.text.toLowerCase() === query.toLowerCase();
+                    return item.value.toLowerCase() === query.toLowerCase() || 
+                           item.text.toLowerCase() === query.toLowerCase() ||
+                           item.value.toLowerCase() === cleanQuery.toLowerCase() ||
+                           item.text.toLowerCase() === ('angkatan ' + cleanQuery).toLowerCase();
                 });
 
                 if (exactMatch) {
                     $('#angkatanForm').val(exactMatch.value);
-                } else if (/^\d{4}$/.test(query)) {
-                    $('#angkatanForm').val(query);
+                } else if (/^\d{4}$/.test(cleanQuery)) {
+                    $('#angkatanForm').val(cleanQuery);
                 }
             });
 
@@ -1413,7 +1448,9 @@
             });
 
             function loadAngkatan(prodi, universitas) {
-                $('#angkatanOptionsList').html('<div class="combobox-empty-state"><span class="spinner-border spinner-border-sm me-2 text-primary"></span>Memuat angkatan...</div>');
+                if (!angkatanOptionsData || angkatanOptionsData.length === 0) {
+                    $('#angkatanOptionsList').html('<div class="combobox-empty-state"><span class="spinner-border spinner-border-sm me-2 text-primary"></span>Memuat angkatan...</div>');
+                }
                 $.ajax({
                     url: "{{ route($currentPrefix . 'getAngkatanByProdiUniversitas') }}",
                     method: 'GET',
@@ -1426,21 +1463,31 @@
                         var $temp = $('<div></div>').html(data);
                         $temp.find('option').each(function() {
                             var val = $(this).val();
-                            var txt = $(this).text();
+                            var txt = $(this).text().trim();
                             if (val && val !== '') {
-                                angkatanOptionsData.push({ value: val, text: txt });
+                                angkatanOptionsData.push({ value: String(val).trim(), text: String(txt || val).trim() });
                             }
                         });
 
                         if (angkatanOptionsData.length > 0) {
-                            renderAngkatanOptions('');
+                            renderAngkatanOptions($('#angkatanDisplayInput').val().trim());
                             syncNavbarAngkatanOptions();
+
+                            var currentVal = $('#angkatanForm').val();
+                            if (currentVal) {
+                                var found = angkatanOptionsData.find(function(s) { return s.value === currentVal; });
+                                if (found) {
+                                    selectAngkatanItem(found.value, found.text);
+                                }
+                            }
                         } else {
                             $('#angkatanOptionsList').html('<div class="combobox-empty-state">Tidak ada data angkatan</div>');
                         }
                     },
                     error: function() {
-                        $('#angkatanOptionsList').html('<div class="combobox-empty-state text-danger">Gagal memuat angkatan</div>');
+                        if (!angkatanOptionsData || angkatanOptionsData.length === 0) {
+                            $('#angkatanOptionsList').html('<div class="combobox-empty-state text-danger">Gagal memuat angkatan</div>');
+                        }
                     }
                 });
             }
@@ -1472,7 +1519,10 @@
                     var currentText = $('#angkatanDisplayInput').val() || $('#navAngkatanDisplayInput').val();
                     if (currentVal) {
                         $('#navAngkatanValue').val(currentVal);
-                        if (currentText) $('#navAngkatanDisplayInput').val(currentText);
+                        if (!currentText) {
+                            currentText = currentVal;
+                        }
+                        if (currentText) $('#navAngkatanDisplayInput').val(currentText).attr('title', currentText);
                     }
                     renderNavAngkatanOptions('');
                 }
@@ -1486,9 +1536,12 @@
                     return;
                 }
                 var query = (filterText || '').toLowerCase().trim();
+                var cleanQuery = query.replace(/^angkatan\s+/i, '').trim();
                 var filtered = angkatanOptionsData.filter(function(item) {
                     if (!query) return true;
-                    return item.text.toLowerCase().indexOf(query) !== -1 || item.value.toLowerCase().indexOf(query) !== -1;
+                    return item.text.toLowerCase().indexOf(query) !== -1 || 
+                           item.value.toLowerCase().indexOf(query) !== -1 ||
+                           (cleanQuery && item.value.toLowerCase().indexOf(cleanQuery) !== -1);
                 });
                 if (filtered.length === 0) {
                     $list.html('<div class="combobox-empty-state">Tidak cocok</div>');
@@ -1500,6 +1553,7 @@
                     var $opt = $('<div>')
                         .addClass('nav-combobox-option' + (isSelected ? ' is-selected' : ''))
                         .attr('data-value', item.value)
+                        .attr('title', item.text)
                         .text(item.text);
                     $opt.on('mousedown', function(e) {
                         e.preventDefault();
@@ -1511,10 +1565,11 @@
             }
 
             function selectNavAngkatanItem(val, text) {
+                var displayText = text || val;
                 $('#navAngkatanValue').val(val);
-                $('#navAngkatanDisplayInput').val(text);
+                $('#navAngkatanDisplayInput').val(displayText).attr('title', displayText);
                 $('#angkatanForm').val(val);
-                $('#angkatanDisplayInput').val(text);
+                $('#angkatanDisplayInput').val(displayText);
                 $('#navAngkatanDropdownMenu').hide();
 
                 var prodi = $('#prodiForm').val() || "{{ auth()->user()->id_prodiUser ?? '' }}";
@@ -1637,7 +1692,13 @@
             $('#hasilVisual').on('submit', function(event) {
                 event.preventDefault();
                 var prodi = $('#prodiForm').val() || "{{ auth()->user()->id_prodiUser ?? '' }}";
-                var angkatan = $('#angkatanForm').val();
+                var angkatan = $('#angkatanForm').val() || $('#angkatanDisplayInput').val().trim();
+
+                if (!angkatan || angkatan === 'Pilih Angkatan') {
+                    alert('Mohon pilih Angkatan terlebih dahulu!');
+                    openAngkatanCombobox();
+                    return;
+                }
                 fetchAndRenderAngkatan(prodi, angkatan, false);
             });
 
@@ -1892,7 +1953,7 @@
                 // Mount & Sync Navbar Combobox
                 mountNavbarControls();
                 $('#navAngkatanValue').val(angkatan);
-                $('#navAngkatanDisplayInput').val(angkatan);
+                $('#navAngkatanDisplayInput').val(angkatan).attr('title', angkatan);
 
                 // Header Info
                 var prodiNama = (prodi && prodi[0] && prodi[0].nama) ? prodi[0].nama : (prodi || '-');
@@ -2120,17 +2181,23 @@
                     olElement.append('<li class="text-muted">Tidak ada mata kuliah terkait pada angkatan ini.</li>');
                 }
 
-                // Course selection list for CPMK form (menampilkan semua MK di program studi)
-                var allCourseList = response.result.allCourses || gabunganAkhirMk;
+                // Course selection list for CPMK form (menampilkan mata kuliah yang ada di angkatan tersebut)
+                var courseSource = (response.result.coursesInAngkatan && Object.keys(response.result.coursesInAngkatan).length > 0)
+                    ? response.result.coursesInAngkatan
+                    : (gabunganAkhirMk && Object.keys(gabunganAkhirMk).length > 0 ? gabunganAkhirMk : {});
+
                 courseOptionsData = [];
-                for (var courseCode in allCourseList) {
+                for (var courseCode in courseSource) {
                     courseOptionsData.push({
                         code: courseCode,
-                        name: allCourseList[courseCode],
+                        name: courseSource[courseCode],
                         value: courseCode,
-                        text: courseCode + ' - ' + allCourseList[courseCode]
+                        text: courseCode + ' - ' + courseSource[courseCode]
                     });
                 }
+                courseOptionsData.sort(function(a, b) {
+                    return a.code.localeCompare(b.code);
+                });
                 $('#courseSelect').val('');
                 $('#courseDisplayInput').val('');
                 renderCourseOptions('');

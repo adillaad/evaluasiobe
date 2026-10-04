@@ -371,6 +371,23 @@
     {{-- Hidden data attributes for PDF export --}}
     <input type="hidden" id="title" data-course="{{ $completeCourseFormat }}">
 
+    <form id="switchCourseForm" method="POST" action="hasilvisualcpmk-angkatan" style="display: none;">
+        @csrf
+        <input type="hidden" name="course" id="switchCourseValue" value="{{ $course }}">
+        <input type="hidden" name="angkatan" value="{{ $angkatan }}">
+        <input type="hidden" name="prodi" value="{{ $prodi }}">
+        <input type="hidden" name="universitasCPMK" value="{{ $universitas }}">
+        <input type="hidden" name="universitasImg" value="{{ $universitasImg }}">
+    </form>
+
+    <div id="courseOptionsSource" style="display: none;">
+        @if(!empty($coursesInAngkatan))
+            @foreach ($coursesInAngkatan as $c)
+                <div class="course-source-option" data-code="{{ $c->kode }}" data-name="{{ $c->nama }}" data-value="{{ $c->kode }}" data-text="{{ $c->kode }} - {{ $c->nama }}"></div>
+            @endforeach
+        @endif
+    </div>
+
     {{-- ========================================================================= --}}
     {{-- 1. HERO COURSE PROFILE CARD --}}
     {{-- ========================================================================= --}}
@@ -399,9 +416,9 @@
 
             {{-- Action Buttons --}}
             <div class="d-flex align-items-center flex-wrap gap-2">
-                <button type="button" class="modern-btn-outline" onclick="window.history.back();" title="Kembali ke halaman sebelumnya">
+                <a href="{{ route($currentPrefix . 'visual-mahasiswaAngkatan') }}?angkatan={{ urlencode($angkatan) }}&prodi={{ urlencode($prodi) }}&universitasCPMK={{ urlencode($universitas) }}&universitasImg={{ urlencode($universitasImg) }}" class="modern-btn-outline text-decoration-none d-inline-flex align-items-center gap-1" title="Kembali ke halaman visualisasi per angkatan">
                     <i class="bi bi-arrow-left"></i> Kembali
-                </button>
+                </a>
                 <button id="btnPrintPdf" type="button" class="modern-btn-primary">
                     <i class="bi bi-file-earmark-pdf"></i> Unduh PDF
                 </button>
@@ -428,9 +445,9 @@
                     <h6 class="fw-bold text-primary mb-1"><i class="bi bi-compass me-1"></i> Panduan Membaca Diagram Radar CPMK Angkatan:</h6>
                     <ul class="mb-0 ps-3 text-muted">
                         <li><strong>Bentuk Jaring (Radar):</strong> Setiap sudut mewakili satu <strong>CPMK (Capaian Pembelajaran Mata Kuliah)</strong>.</li>
-                        <li><span class="badge" style="background-color: #c06e4b; color:#fff;">Average CPMK</span>: Rata-rata nilai capaian CPMK seluruh mahasiswa di angkatan tersebut (skala 0 - 100).</li>
-                        <li><span class="badge" style="background-color: #21d85f; color:#fff;">Max CPMK</span>: Capaian CPMK tertinggi di angkatan tersebut.</li>
-                        <li><span class="badge" style="background-color: #d82121; color:#fff;">Min CPMK</span>: Capaian CPMK terendah di angkatan tersebut.</li>
+                        <li><span class="badge" style="background-color: #c06e4b; color:#fff;">CPMK Avg (Batch)</span>: Rata-rata nilai capaian CPMK seluruh mahasiswa di angkatan tersebut (skala 0 - 100).</li>
+                        <li><span class="badge" style="background-color: #ef4444; color:#fff;">CPMK Min (Batch)</span>: Capaian CPMK terendah di angkatan tersebut.</li>
+                        <li><span class="badge" style="background-color: #10b981; color:#fff;">CPMK Max (Batch)</span>: Capaian CPMK tertinggi di angkatan tersebut.</li>
                     </ul>
                 </div>
             </div>
@@ -471,7 +488,7 @@
             <div class="row g-4 align-items-center mb-4">
                 <div class="col-lg-6 col-md-12">
                     <div class="d-flex justify-content-center align-items-center p-2">
-                        <div style="width: 100%; max-width: 540px;">
+                        <div style="width: 100%; max-width: 300px; margin: 0 auto;">
                             <canvas id="radarChartAngkatan"></canvas>
                         </div>
                     </div>
@@ -630,7 +647,7 @@
                                            id="angkatanDisplayInput" 
                                            class="form-control modern-select combobox-input" 
                                            placeholder="Pilih / Ketik Angkatan..." 
-                                           value="{{ $angkatan ? 'Angkatan ' . $angkatan : '' }}"
+                                           value="{{ $angkatan ? $angkatan : '' }}"
                                            autocomplete="off">
                                     <input type="hidden" id="angkatan" name="angkatan" value="{{ $angkatan }}">
                                     <button type="button" class="combobox-toggle-btn" tabindex="-1" id="angkatanToggleBtn" title="Tampilkan daftar angkatan">
@@ -644,8 +661,8 @@
                                                 $angkatanVal = is_object($a) ? ($a->angkatan ?? '') : (is_array($a) ? ($a['angkatan'] ?? '') : $a);
                                             @endphp
                                             @if (!empty($angkatanVal))
-                                                <div class="combobox-option {{ (string)$angkatanVal === (string)$angkatan ? 'is-selected' : '' }}" data-value="{{ $angkatanVal }}" data-text="Angkatan {{ $angkatanVal }}">
-                                                    Angkatan {{ $angkatanVal }}
+                                                <div class="combobox-option {{ (string)$angkatanVal === (string)$angkatan ? 'is-selected' : '' }}" data-value="{{ $angkatanVal }}" data-text="{{ $angkatanVal }}">
+                                                    {{ $angkatanVal }}
                                                 </div>
                                             @endif
                                         @endforeach
@@ -874,113 +891,121 @@
                 }
             });
 
-            // ---------------- NAVBAR COMBOBOX CONTROL & SYNC ----------------
+            // ---------------- NAVBAR COMBOBOX CONTROL (Mata Kuliah) ----------------
+            var courseOptionsData = [];
+            $('#courseOptionsSource .course-source-option').each(function() {
+                var code = $(this).data('code');
+                var name = $(this).data('name');
+                var val = $(this).data('value');
+                var text = $(this).data('text');
+                if (val) {
+                    courseOptionsData.push({ code: code, name: name, value: String(val).trim(), text: text });
+                }
+            });
+            courseOptionsData.sort(function(a, b) {
+                return (a.code || a.value).localeCompare(b.code || b.value);
+            });
+
             function mountNavbarControls() {
                 if ($('#navVisualisasiSlot').length && !$('#navbarVisualisasiControls').length) {
+                    var currentCourseText = @json($completeCourseFormat ?? $course ?? '');
+                    var currentCourseVal = @json($course ?? '');
                     var html = '' +
                         '<div class="d-flex align-items-center gap-2" id="navbarVisualisasiControls">' +
-                        '    <div class="nav-combobox-wrapper" id="navAngkatanComboboxWrapper" style="width: 150px;">' +
-                        '        <input type="text" id="navAngkatanDisplayInput" class="form-control nav-combobox-input" placeholder="Angkatan" autocomplete="off" title="Pilih / Ketik Angkatan">' +
-                        '        <input type="hidden" id="navAngkatanValue" value="">' +
-                        '        <button type="button" class="nav-combobox-toggle-btn" tabindex="-1" id="navAngkatanToggleBtn" title="Daftar Angkatan"><i class="bi bi-chevron-down"></i></button>' +
-                        '        <div class="nav-combobox-dropdown-menu" id="navAngkatanDropdownMenu" style="display: none;"><div class="nav-combobox-options-list" id="navAngkatanOptionsList"></div></div>' +
+                        '    <div class="nav-combobox-wrapper" id="navCourseComboboxWrapper" style="width: 290px;">' +
+                        '        <input type="text" id="navCourseDisplayInput" class="form-control nav-combobox-input" placeholder="Cari Mata Kuliah..." autocomplete="off" title="' + currentCourseText + '" value="' + currentCourseText + '">' +
+                        '        <input type="hidden" id="navCourseValue" value="' + currentCourseVal + '">' +
+                        '        <button type="button" class="nav-combobox-toggle-btn" tabindex="-1" id="navCourseToggleBtn" title="Daftar Mata Kuliah"><i class="bi bi-chevron-down"></i></button>' +
+                        '        <div class="nav-combobox-dropdown-menu" id="navCourseDropdownMenu" style="display: none;"><div class="nav-combobox-options-list" id="navCourseOptionsList"></div></div>' +
                         '    </div>' +
                         '</div>';
                     $('#navVisualisasiSlot').html(html);
-                    syncNavbarAngkatanOptions();
+                    renderNavCourseOptions('');
                 }
             }
 
-            function syncNavbarAngkatanOptions() {
-                if ($('#navAngkatanDisplayInput').length) {
-                    var currentVal = $('#angkatan').val() || $('#navAngkatanValue').val();
-                    var currentText = $('#angkatanDisplayInput').val() || $('#navAngkatanDisplayInput').val();
-                    if (currentVal) {
-                        $('#navAngkatanValue').val(currentVal);
-                        if (currentText) $('#navAngkatanDisplayInput').val(currentText).attr('title', currentText);
-                    }
-                    renderNavAngkatanOptions('');
-                }
-            }
-
-            function renderNavAngkatanOptions(filterText) {
-                var $list = $('#navAngkatanOptionsList');
+            function renderNavCourseOptions(filterText) {
+                var $list = $('#navCourseOptionsList');
                 $list.empty();
-                if (!angkatanOptionsData || angkatanOptionsData.length === 0) {
-                    $list.html('<div class="combobox-empty-state">Tidak ada data angkatan</div>');
+                if (!courseOptionsData || courseOptionsData.length === 0) {
+                    $list.html('<div class="combobox-empty-state">Tidak ada data mata kuliah</div>');
                     return;
                 }
                 var query = (filterText || '').toLowerCase().trim();
-                var filtered = angkatanOptionsData.filter(function(item) {
+                var filtered = courseOptionsData.filter(function(item) {
                     if (!query) return true;
-                    return (item.text && item.text.toLowerCase().indexOf(query) !== -1) ||
-                           (item.value && item.value.toLowerCase().indexOf(query) !== -1);
+                    return (item.code && item.code.toLowerCase().indexOf(query) !== -1) ||
+                           (item.name && item.name.toLowerCase().indexOf(query) !== -1) ||
+                           (item.text && item.text.toLowerCase().indexOf(query) !== -1);
                 });
                 if (filtered.length === 0) {
                     $list.html('<div class="combobox-empty-state">Tidak ada yang cocok</div>');
                     return;
                 }
-                var currentVal = $('#navAngkatanValue').val() || $('#angkatan').val();
+                var currentVal = $('#navCourseValue').val();
                 filtered.forEach(function(item) {
                     var isSelected = (String(item.value).trim() === String(currentVal).trim());
+                    var itemCode = item.code || (item.text && item.text.indexOf('-') !== -1 ? item.text.split('-')[0].trim() : item.value);
+                    var itemName = item.name || (item.text && item.text.indexOf('-') !== -1 ? item.text.split('-').slice(1).join('-').trim() : item.text);
                     var $opt = $('<div>')
                         .addClass('nav-combobox-option' + (isSelected ? ' is-selected' : ''))
                         .attr('data-value', item.value)
                         .attr('title', item.text)
-                        .text(item.text);
+                        .html('<span class="font-monospace fw-semibold me-2">' + itemCode + '</span><span class="text-secondary">-</span> <span class="ms-1">' + itemName + '</span>');
                     $opt.on('mousedown', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        selectNavAngkatanItem(item.value, item.text);
+                        selectNavCourseItem(item.value, item.text);
                     });
                     $list.append($opt);
                 });
             }
 
-            function selectNavAngkatanItem(val, text) {
-                $('#navAngkatanValue').val(val);
-                $('#navAngkatanDisplayInput').val(text).attr('title', text);
-                selectAngkatanOption(val, text);
-                $('#navAngkatanDropdownMenu').hide();
-                $('#visualCpmkAngkatan').submit();
+            function selectNavCourseItem(val, text) {
+                $('#navCourseValue').val(val);
+                $('#navCourseDisplayInput').val(text).attr('title', text);
+                $('#navCourseDropdownMenu').hide();
+                $('#switchCourseValue').val(val);
+                $('#switchCourseForm').submit();
             }
 
             mountNavbarControls();
 
-            $(document).on('focus click', '#navAngkatanDisplayInput', function() {
+            $(document).on('focus click', '#navCourseDisplayInput', function() {
                 var q = $(this).val().trim();
-                var currentVal = $('#navAngkatanValue').val();
-                var match = angkatanOptionsData.find(function(s) { return String(s.value).trim() === String(currentVal).trim(); });
+                var currentVal = $('#navCourseValue').val();
+                var match = courseOptionsData.find(function(s) { return String(s.value).trim() === String(currentVal).trim(); });
                 if (match && (match.text === q || match.value === q)) {
-                    renderNavAngkatanOptions('');
+                    renderNavCourseOptions('');
                 } else {
-                    renderNavAngkatanOptions(q);
+                    renderNavCourseOptions(q);
                 }
-                $('#navAngkatanDropdownMenu').show();
+                $('#navCourseDropdownMenu').show();
             });
 
-            $(document).on('input keyup', '#navAngkatanDisplayInput', function(e) {
+            $(document).on('input keyup', '#navCourseDisplayInput', function(e) {
                 if (e.key === 'Enter' || e.key === 'Escape') return;
                 var q = $(this).val();
-                renderNavAngkatanOptions(q);
-                $('#navAngkatanDropdownMenu').show();
+                renderNavCourseOptions(q);
+                $('#navCourseDropdownMenu').show();
             });
 
-            $(document).on('click', '#navAngkatanToggleBtn', function(e) {
+            $(document).on('click', '#navCourseToggleBtn', function(e) {
                 e.stopPropagation();
                 e.preventDefault();
-                var $menu = $('#navAngkatanDropdownMenu');
+                var $menu = $('#navCourseDropdownMenu');
                 if ($menu.is(':visible')) {
                     $menu.hide();
                 } else {
-                    renderNavAngkatanOptions('');
+                    renderNavCourseOptions('');
                     $menu.show();
+                    $('#navCourseDisplayInput').focus();
                 }
             });
 
             $(document).on('click', function(e) {
-                if (!$(e.target).closest('#navAngkatanComboboxWrapper').length) {
-                    $('#navAngkatanDropdownMenu').hide();
+                if (!$(e.target).closest('#navCourseComboboxWrapper').length) {
+                    $('#navCourseDropdownMenu').hide();
                 }
             });
         });
@@ -1003,20 +1028,17 @@
                 labels: labelsCapaianCpmk,
                 datasets: [
                     {
-                        label: 'Average CPMK',
+                        label: 'CPMK Avg (Batch)',
                         data: dataCapaianCpmkAvg,
-                        backgroundColor: 'rgba(31, 59, 179, 0.15)',
-                        borderColor: '#1f3bb3',
-                        borderWidth: 2.5,
-                        pointBackgroundColor: '#1f3bb3',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: '#1f3bb3',
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        backgroundColor: 'rgba(192, 110, 75, 0.05)',
+                        borderColor: 'rgba(192, 110, 75, 0.9)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(192, 110, 75, 1)',
+                        pointRadius: 3,
+                        pointHoverRadius: 5
                     },
                     {
-                        label: 'Min CPMK',
+                        label: 'CPMK Min (Batch)',
                         data: dataCapaianCpmkMin,
                         backgroundColor: 'rgba(239, 68, 68, 0.05)',
                         borderColor: '#ef4444',
@@ -1027,7 +1049,7 @@
                         pointHoverRadius: 5
                     },
                     {
-                        label: 'Max CPMK',
+                        label: 'CPMK Max (Batch)',
                         data: dataCapaianCpmkMax,
                         backgroundColor: 'rgba(16, 185, 129, 0.05)',
                         borderColor: '#10b981',
@@ -1036,7 +1058,7 @@
                         pointBackgroundColor: '#10b981',
                         pointRadius: 3,
                         pointHoverRadius: 5
-                    },
+                    }
                 ]
             },
             options: {
@@ -1057,10 +1079,9 @@
                             },
                             color: '#1e293b'
                         },
-                        min: 0,
-                        max: 100,
+                        suggestedMin: 0,
+                        suggestedMax: 100,
                         ticks: {
-                            stepSize: 20,
                             backdropColor: 'transparent',
                             font: {
                                 size: 10
@@ -1070,14 +1091,16 @@
                 },
                 plugins: {
                     legend: {
-                        position: 'bottom',
+                        position: 'top',
                         labels: {
-                            usePointStyle: true,
-                            padding: 16,
+                            boxWidth: 20,
+                            boxHeight: 8,
+                            padding: 12,
                             font: {
-                                size: 12,
+                                size: 11,
                                 weight: '500'
-                            }
+                            },
+                            color: '#475569'
                         }
                     },
                     tooltip: {
