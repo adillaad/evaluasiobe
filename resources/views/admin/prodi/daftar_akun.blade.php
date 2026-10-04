@@ -62,16 +62,16 @@
         box-shadow: 0 16px 32px rgba(0, 97, 153, 0.35) !important;
     }
 
-    /* NON-APTIKOM Card Styling (Sky Blue Theme) */
+    /* NON-APTIKOM Card Styling (Royal Blue Theme) */
     .prodi-card-box.non-aptikom-card {
-        background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
+        background: linear-gradient(135deg, #2664F5 0%, #1d52cc 100%) !important;
         color: #ffffff !important;
-        box-shadow: 0 8px 24px rgba(118, 192, 236, 0.22) !important;
+        box-shadow: 0 8px 24px rgba(38, 100, 245, 0.22) !important;
     }
 
     .prodi-card-box.non-aptikom-card:hover {
         transform: translateY(-5px) scale(1.01) !important;
-        box-shadow: 0 16px 32px rgba(118, 192, 236, 0.35) !important;
+        box-shadow: 0 16px 32px rgba(38, 100, 245, 0.35) !important;
     }
 
     .prodi-card-box {
@@ -129,12 +129,12 @@
 
     .badge-aptikom-blue {
         background: #ffffff !important;
-        color: #1d4ed8 !important;
+        color: #006199 !important;
     }
 
     .badge-aptikom-yellow {
-        background: #1e293b !important;
-        color: #0ea5e9 !important;
+        background: #ffffff !important;
+        color: #2664F5 !important;
     }
 
     .prodi-actions-row {

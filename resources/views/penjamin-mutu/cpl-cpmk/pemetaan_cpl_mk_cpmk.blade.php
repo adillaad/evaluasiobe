@@ -118,34 +118,34 @@
                 color: #006199 !important;
             }
         @else
-            /* ── NON-APTIKOM Theme (Sky Blue #76C0EC Accent) ── */
+            /* ── NON-APTIKOM Theme (Royal Blue #2664F5 Accent) ── */
             .cpl-nav-pills .nav-link:hover {
-                color: #76C0EC !important;
+                color: #2664F5 !important;
                 background-color: #f0f9ff !important;
-                border-color: #76C0EC !important;
+                border-color: #2664F5 !important;
             }
             .cpl-nav-pills .nav-link.active {
                 color: #ffffff !important;
-                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
-                border-color: #76C0EC !important;
-                box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
+                background: linear-gradient(135deg, #2664F5 0%, #1d52cc 100%) !important;
+                border-color: #2664F5 !important;
+                box-shadow: 0 4px 12px rgba(38, 100, 245, 0.28) !important;
             }
             .bg-primary-soft {
-                background-color: rgba(118, 192, 236, 0.18) !important;
-                color: #76C0EC !important;
+                background-color: rgba(38, 100, 245, 0.18) !important;
+                color: #2664F5 !important;
             }
             .cpl-card-header {
                 background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-                border-left: 4px solid #76C0EC;
+                border-left: 4px solid #2664F5;
                 border-radius: 8px;
                 padding: 16px;
             }
             .badge.bg-primary, .cell-view-mode .badge.bg-primary, .cell-view-mode .badge {
-                background-color: #76C0EC !important;
+                background-color: #2664F5 !important;
                 color: #ffffff !important;
             }
             .double-table-head-data-top-right, .text-primary {
-                color: #76C0EC !important;
+                color: #2664F5 !important;
             }
         @endif
 

@@ -25,10 +25,14 @@
             font-weight: 500;
         }
         .badge-system-outline {
-            background-color: rgba(0, 97, 153, 0.12) !important;
+            background-color: #f0f9ff !important;
             color: #006199 !important;
-            border: 1px solid rgba(0, 97, 153, 0.3) !important;
-            font-weight: 600;
+            border: 1px solid #bae6fd !important;
+            font-weight: 700 !important;
+            padding: 4px 12px !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
+            display: inline-block !important;
         }
         .btn-outline-primary {
             color: #006199 !important;
@@ -43,29 +47,33 @@
             box-shadow: 0 4px 12px rgba(0, 97, 153, 0.28) !important;
         }
     @else
-        /* ── NON-APTIKOM Theme (Sky Blue #76C0EC Accent) ── */
+        /* ── NON-APTIKOM Theme (Royal Blue #2664F5 Accent) ── */
         .badge-system {
-            background: linear-gradient(135deg, #76C0EC 0%, #5bb0e5 100%) !important;
+            background: linear-gradient(135deg, #2664F5 0%, #1d52cc 100%) !important;
             color: #ffffff !important;
             font-weight: 500;
         }
         .badge-system-outline {
-            background-color: rgba(118, 192, 236, 0.18) !important;
-            color: #76C0EC !important;
-            border: 1px solid rgba(118, 192, 236, 0.4) !important;
-            font-weight: 600;
+            background-color: #f0f9ff !important;
+            color: #2664F5 !important;
+            border: 1px solid #bae6fd !important;
+            font-weight: 700 !important;
+            padding: 4px 12px !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
+            display: inline-block !important;
         }
         .btn-outline-primary {
-            color: #76C0EC !important;
+            color: #2664F5 !important;
             background-color: #ffffff !important;
-            border-color: #76C0EC !important;
+            border-color: #2664F5 !important;
             transition: all 0.2s ease-in-out !important;
         }
         .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active {
             color: #ffffff !important;
-            background: linear-gradient(135deg, #76C0EC 0%, #5bb0e5 100%) !important;
-            border-color: #76C0EC !important;
-            box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
+            background: linear-gradient(135deg, #2664F5 0%, #1d52cc 100%) !important;
+            border-color: #2664F5 !important;
+            box-shadow: 0 4px 12px rgba(38, 100, 245, 0.28) !important;
         }
     @endif
     .btn-outline-danger {
@@ -84,63 +92,20 @@
     <div class="col-md-12">
         <div class="card mb-4">
             <div class="card-body">
-                <h4 class="card-title mb-1">Daftar Asesmen per Mata Kuliah</h4>
-        
+                <h4 class="card-title mb-3">Daftar Asesmen per Mata Kuliah</h4>
 
                 {{-- Filter Form --}}
-                <form method="GET" action="{{ url()->current() }}" class="row g-3 bg-light p-3 rounded mb-4">
-                    @if ($userOtoritas === 'Penjamin Mutu Universitas')
-                        <div class="col-md-4">
-                            <label for="fakultas_id" class="form-label fw-bold">Fakultas</label>
-                            <select name="fakultas_id" id="fakultas_id" class="form-control" onchange="this.form.submit()">
-                                <option value="">-- Semua Fakultas --</option>
-                                @foreach ($fakultasOptions as $f)
-                                    <option value="{{ $f->id }}" {{ $selectedFakultasId == $f->id ? 'selected' : '' }}>
-                                        {{ $f->nama }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
-
-                    @if (in_array($userOtoritas, ['Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
-                        <div class="col-md-4">
-                            <label for="prodi_id" class="form-label fw-bold">Program Studi</label>
-                            <select name="prodi_id" id="prodi_id" class="form-control" onchange="this.form.submit()">
-                                <option value="">-- Semua Prodi --</option>
-                                @foreach ($prodiOptions as $p)
-                                    <option value="{{ $p->id }}" {{ $selectedProdiId == $p->id ? 'selected' : '' }}>
-                                        {{ $p->nama }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
-
-                    <div class="col-md-4">
-                        <label for="kurikulum_id" class="form-label fw-bold">Kurikulum</label>
-                        <select name="kurikulum_id" id="kurikulum_id" class="form-control" onchange="this.form.submit()">
-                            <option value="">-- Semua Kurikulum --</option>
-                            @foreach ($kurikulumOptions as $k)
-                                <option value="{{ $k->id }}" {{ $selectedKurikulumId == $k->id ? 'selected' : '' }}>
-                                    Tahun {{ $k->tahun }} - {{ $k->nama ?? 'Kurikulum' }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-4 d-flex align-items-end">
-                        <a href="{{ url()->current() }}" class="btn btn-outline-secondary w-100">
-                            <i class="mdi mdi-refresh me-1"></i> Reset Filter
-                        </a>
-                    </div>
-                </form>
-
-
+                <x-filter-form
+                    :universities="$universities"
+                    :faculties="$faculties"
+                    :programs="$programs"
+                    :kurikulums="$kurikulums"
+                    :showKurikulum="true"
+                />
 
                 {{-- Tabel MK --}}
-                <div class="table-responsive">
-                    <table class="table table-hover table-bordered align-middle">
+                <div class="table-responsive mt-3">
+                    <table class="table table-hover table-bordered dataTable align-middle" id="asesmenTable">
                         <thead class="table-light">
                             <tr>
                                 <th style="width:5%" class="text-center">No</th>
@@ -155,7 +120,7 @@
                             @forelse ($mks as $i => $mk)
                                 <tr>
                                     <td class="text-center">{{ ($mks->currentPage() - 1) * $mks->perPage() + $i + 1 }}</td>
-                                    <td><span class="badge badge-system">{{ $mk->kode }}</span></td>
+                                    <td><span class="badge-system-outline">{{ $mk->kode }}</span></td>
                                     <td>
                                         <strong>{{ $mk->nama }}</strong>
                                         @if ($mk->nama_eng)
@@ -170,7 +135,7 @@
                                     </td>
                                     <td class="text-center">
                                         @if ($mk->kurikulum)
-                                            <span class="badge badge-system-outline">{{ $mk->kurikulum->tahun }}</span>
+                                            <span class="text-dark">{{ $mk->kurikulum->tahun }}</span>
                                         @else
                                             <span class="text-muted">-</span>
                                         @endif
@@ -218,4 +183,24 @@
         </div>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        if (typeof $.fn.DataTable !== 'undefined') {
+            if ($.fn.DataTable.isDataTable('#asesmenTable')) {
+                $('#asesmenTable').DataTable().destroy();
+            }
+            $('#asesmenTable').DataTable({
+                "aaSorting": [],
+                "retrieve": true,
+                "paging": false,
+                "info": false,
+                "language": {
+                    "search": "Search:"
+                }
+            });
+        }
+    });
+</script>
 @endsection

@@ -40,15 +40,15 @@
                 color: #006199 !important;
             }
         @else
-            /* ── NON-APTIKOM Theme (Sky Blue #76C0EC Accent) ── */
+            /* ── NON-APTIKOM Theme (Royal Blue #2664F5 Accent) ── */
             .cpl-nav-pills .nav-link.active {
-                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
+                background: linear-gradient(135deg, #2664F5 0%, #1d52cc 100%) !important;
                 color: #ffffff !important;
-                border-color: #76C0EC !important;
-                box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
+                border-color: #2664F5 !important;
+                box-shadow: 0 4px 12px rgba(38, 100, 245, 0.28) !important;
             }
             .text-primary-accent {
-                color: #76C0EC !important;
+                color: #2664F5 !important;
             }
         @endif
         .cpl-tabs-wrapper {

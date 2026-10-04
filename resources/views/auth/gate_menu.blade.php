@@ -48,8 +48,8 @@
         }
 
         .gate-header-bar {
-            background-color: #006199;
-            background: linear-gradient(90deg, #006199 0%, #004c78 100%);
+            background-color: #2664F5;
+            background: linear-gradient(90deg, #2664F5 0%, #1d52cc 100%);
             color: #ffffff;
             padding: 18px 28px;
             display: flex;
@@ -155,11 +155,11 @@
             color: #ffffff;
         }
 
-        /* NON-APTIKOM Card (SOLID SKY BLUE #76C0EC) */
+        /* NON-APTIKOM Card (SOLID ROYAL BLUE #2664F5) */
         .prodi-card.non-aptikom-yellow {
-            background-color: #76C0EC;
-            background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%);
-            border: 1px solid #4faae5;
+            background-color: #2664F5;
+            background: linear-gradient(135deg, #2664F5 0%, #1d52cc 100%);
+            border: 1px solid #1d52cc;
             color: #ffffff;
         }
 
@@ -233,7 +233,7 @@
         }
 
         .non-aptikom-yellow .btn-select-modul {
-            color: #004c78;
+            color: #2664F5;
         }
 
         .btn-select-modul:hover {

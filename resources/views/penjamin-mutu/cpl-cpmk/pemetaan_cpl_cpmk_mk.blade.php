@@ -64,41 +64,41 @@
                 color: #006199 !important;
             }
         @else
-            /* ── NON-APTIKOM Theme (Sky Blue #76C0EC Accent) ── */
+            /* ── NON-APTIKOM Theme (Royal Blue #2664F5 Accent) ── */
             .btn-primary {
-                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
-                border-color: #76C0EC !important;
+                background: linear-gradient(135deg, #2664F5 0%, #1d52cc 100%) !important;
+                border-color: #2664F5 !important;
                 color: #ffffff !important;
             }
             .btn-primary:hover, .btn-primary:focus {
-                background: #4faae5 !important;
-                border-color: #4faae5 !important;
+                background: #1d52cc !important;
+                border-color: #1d52cc !important;
                 color: #ffffff !important;
             }
             .btn-outline-primary {
-                color: #76C0EC !important;
-                border-color: #76C0EC !important;
+                color: #2664F5 !important;
+                border-color: #2664F5 !important;
                 background-color: #ffffff !important;
             }
             .btn-outline-primary:hover, .btn-outline-primary.active, .btn-outline-primary:focus {
-                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
+                background: linear-gradient(135deg, #2664F5 0%, #1d52cc 100%) !important;
                 color: #ffffff !important;
-                border-color: #76C0EC !important;
-                box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
+                border-color: #2664F5 !important;
+                box-shadow: 0 4px 12px rgba(38, 100, 245, 0.28) !important;
             }
             .badge-mk {
-                color: #76C0EC !important;
+                color: #2664F5 !important;
                 background-color: #f0f9ff !important;
                 border: 1px solid #bae6fd !important;
             }
             .cpl-nav-pills .nav-link.active {
-                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
+                background: linear-gradient(135deg, #2664F5 0%, #1d52cc 100%) !important;
                 color: #ffffff !important;
-                border-color: #76C0EC !important;
-                box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
+                border-color: #2664F5 !important;
+                box-shadow: 0 4px 12px rgba(38, 100, 245, 0.28) !important;
             }
             .text-primary {
-                color: #76C0EC !important;
+                color: #2664F5 !important;
             }
         @endif
         .table-pemetaan {

@@ -131,20 +131,20 @@
                 display: inline-block;
             }
         @else
-            /* ── NON-APTIKOM Theme (Sky Blue #76C0EC Accent) ── */
+            /* ── NON-APTIKOM Theme (Royal Blue #2664F5 Accent) ── */
             .cpl-nav-pills .nav-link:hover {
-                color: #76C0EC !important;
+                color: #2664F5 !important;
                 background-color: #f0f9ff !important;
-                border-color: #76C0EC !important;
+                border-color: #2664F5 !important;
             }
             .cpl-nav-pills .nav-link.active {
                 color: #ffffff !important;
-                background: linear-gradient(135deg, #76C0EC 0%, #4faae5 100%) !important;
-                border-color: #76C0EC !important;
-                box-shadow: 0 4px 12px rgba(118, 192, 236, 0.28) !important;
+                background: linear-gradient(135deg, #2664F5 0%, #1d52cc 100%) !important;
+                border-color: #2664F5 !important;
+                box-shadow: 0 4px 12px rgba(38, 100, 245, 0.28) !important;
             }
             .smt-nav-tabs .nav-link {
-                color: #76C0EC !important;
+                color: #2664F5 !important;
                 border: none !important;
                 border-bottom: 2px solid transparent !important;
                 padding: 10px 18px !important;
@@ -154,18 +154,18 @@
                 transition: all 0.2s ease !important;
             }
             .smt-nav-tabs .nav-link:hover {
-                color: #4faae5 !important;
-                border-bottom: 2px solid #76C0EC !important;
+                color: #1d52cc !important;
+                border-bottom: 2px solid #2664F5 !important;
             }
             .smt-nav-tabs .nav-link.active {
-                color: #76C0EC !important;
+                color: #2664F5 !important;
                 font-weight: 700 !important;
                 border: none !important;
-                border-bottom: 3px solid #76C0EC !important;
+                border-bottom: 3px solid #2664F5 !important;
                 background: transparent !important;
             }
             .badge-code-cpmk {
-                color: #0284c7 !important;
+                color: #2664F5 !important;
                 background-color: #f0f9ff !important;
                 border: 1px solid #bae6fd !important;
                 font-weight: 700;
@@ -176,7 +176,7 @@
             }
             .badge-code-cpl {
                 background-color: #f0f9ff !important;
-                color: #0284c7 !important;
+                color: #2664F5 !important;
                 border: 1px solid #bae6fd !important;
                 font-weight: 700;
                 padding: 4px 10px;

@@ -87,12 +87,21 @@ class DaftarAsesmenMkController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $universities = \App\Models\Universitas::all();
+        $faculties = $fakultasOptions;
+        $programs = $prodiOptions;
+        $kurikulums = $kurikulumOptions;
+
         return view('penjamin-mutu.asesmen.daftar_asesmen_mk', compact(
             'userOtoritas',
             'mks',
             'fakultasOptions',
             'prodiOptions',
             'kurikulumOptions',
+            'universities',
+            'faculties',
+            'programs',
+            'kurikulums',
             'selectedFakultasId',
             'selectedProdiId',
             'selectedKurikulumId'
