@@ -770,6 +770,237 @@ span[class*="fa-"], i[class*="fa-"], span[class*="fa"], i[class*="fa"], .fa { fo
     left: 0.65rem !important;
 }
 
+/* Global Table Font Size Adjustment (Matches Sidebar Font Size ~12px) */
+table,
+.table,
+.table-responsive table,
+.dataTable,
+table.dataTable,
+.card-body table {
+    font-size: 12px !important;
+}
+
+table th,
+.table th,
+.table-responsive table th,
+.dataTable th,
+table.dataTable th,
+.card-body table th {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+}
+
+table td,
+.table td,
+.table-responsive table td,
+.dataTable td,
+table.dataTable td,
+.card-body table td {
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+    font-size: 12px !important;
+}
+
+/* VISUALISASI & CARDS FONT SIZE ADJUSTMENT (MATCHES SIDEBAR ~12px) */
+.section-title,
+.card-title,
+.modern-card-header .section-title,
+.modern-card-header h4,
+.modern-card-header h5 {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+}
+
+.section-title i,
+.card-title i {
+    font-size: 14px !important;
+}
+
+.section-subtitle,
+.card-subtitle,
+.modern-card p,
+.modern-card .text-muted {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+}
+
+.form-label,
+.modern-card label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.form-control,
+.form-select,
+.modern-select,
+.combobox-input,
+.combobox-options-list,
+.combobox-option-item,
+.combobox-empty-state,
+.modern-label,
+.select2-container,
+.select2-selection,
+.select2-selection__rendered,
+.select2-search__field,
+.select2-results__option {
+    font-size: 12px !important;
+}
+
+.modern-select,
+input.modern-select,
+.combobox-input {
+    font-size: 12px !important;
+    height: 36px !important;
+    padding: 6px 12px !important;
+}
+
+input::placeholder,
+.form-control::placeholder,
+.modern-select::placeholder,
+.combobox-input::placeholder {
+    font-size: 12px !important;
+    opacity: 0.8 !important;
+}
+
+/* ALL BUTTONS GLOBAL FONT SIZE & COMPACT PADDING (MATCHES SIDEBAR ~11.5px) */
+.btn,
+a.btn,
+button.btn,
+input[type="submit"].btn,
+input[type="button"].btn,
+button[type="submit"],
+.btn:not(.btn-icons),
+a.btn:not(.btn-icons),
+button.btn:not(.btn-icons),
+.btn-icon-text,
+.btn-primary,
+.btn-success,
+.btn-info,
+.btn-warning,
+.btn-danger,
+.btn-light,
+.btn-dark,
+.btn-secondary,
+.btn-outline-primary,
+.btn-outline-success,
+.btn-outline-info,
+.btn-outline-warning,
+.btn-outline-danger,
+.btn-outline-light,
+.btn-outline-dark,
+.btn-outline-secondary,
+.modern-btn-primary,
+.modern-btn-outline,
+.btn-submit-visual {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    height: 35px !important;
+    min-height: 35px !important;
+    max-height: 35px !important;
+    padding: 0 14px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+}
+
+/* Ensure inner spans, icons, and text inside ALL buttons use 11.5px / 12px */
+.btn *,
+a.btn *,
+button.btn *,
+.btn span,
+a.btn span,
+button.btn span,
+.btn i,
+a.btn i,
+button.btn i,
+.btn svg,
+a.btn svg,
+button.btn svg,
+.btn .btn-icon-prepend,
+.btn .btn-icon-append {
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    vertical-align: middle !important;
+}
+
+.btn i,
+a.btn i,
+button.btn i,
+.btn svg,
+a.btn svg,
+button.btn svg {
+    font-size: 12px !important;
+}
+
+/* Small Buttons & Action Icon Buttons in Tables/Actions */
+.btn-sm,
+a.btn-sm,
+button.btn-sm,
+.btn-icons,
+a.btn-icons,
+button.btn-icons,
+.btn-xs {
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+    padding: 0 10px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    border-radius: 5px !important;
+}
+
+.btn-sm *,
+a.btn-sm *,
+button.btn-sm *,
+.btn-icons * {
+    font-size: 11.5px !important;
+}
+
+.btn-sm i,
+a.btn-sm i,
+button.btn-sm i,
+.btn-icons i,
+a.btn-icons i,
+button.btn-icons i {
+    font-size: 12px !important;
+}
+
+/* Square Icon Buttons (like Edit, Delete in tables) */
+.btn-icons,
+a.btn-icons,
+button.btn-icons {
+    width: 30px !important;
+    min-width: 30px !important;
+    padding: 0 !important;
+}
+
+.select2-container--bootstrap-5 .select2-selection--single,
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered,
+.select2-container--bootstrap-5 .select2-results__option,
+.select2-container--bootstrap4 .select2-selection--single,
+.select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered,
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+}
+
 /* MODERN NAVBAR & USER DROPDOWN SYSTEM */
 .navbar.default-layout {
     box-shadow: 0 4px 25px -4px rgba(15, 23, 42, 0.08) !important;

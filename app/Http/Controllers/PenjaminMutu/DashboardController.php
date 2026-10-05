@@ -127,6 +127,39 @@ class DashboardController extends Controller
         )";
     }
 
+    private function buildBestAttemptSubquery($npm = null, $semestersToFilter = [])
+    {
+        $yearSemExpr = $this->getYearSemSqlExpr('m2', 'ta2');
+
+        $subQueryBest = DB::table('mutus as m2')
+            ->join('mks as mks2', 'm2.Course', '=', 'mks2.kode')
+            ->leftJoin('tahun_ajaran as ta2', 'm2.tahun_ajaran_id', '=', 'ta2.id')
+            ->select(
+                'm2.npm',
+                'm2.Course',
+                'm2.tahun as best_tahun',
+                DB::raw("ROW_NUMBER() OVER (
+                    PARTITION BY m2.npm, m2.Course 
+                    ORDER BY SUM(m2.examWeight / 100 * m2.Nilai) DESC, MAX({$yearSemExpr}) DESC
+                ) as rn")
+            );
+
+        if (!empty($npm)) {
+            $subQueryBest->where('m2.NPM', $npm);
+        }
+
+        if (!empty($semestersToFilter)) {
+            $subQueryBest->whereIn('mks2.semester', $semestersToFilter);
+        }
+
+        $subQueryBest->groupBy('m2.npm', 'm2.Course', 'm2.tahun', 'm2.tahun_ajaran_id');
+
+        return DB::table(DB::raw("({$subQueryBest->toSql()}) as t_sub"))
+            ->mergeBindings($subQueryBest)
+            ->where('t_sub.rn', 1)
+            ->select('t_sub.npm', 't_sub.Course', 't_sub.best_tahun');
+    }
+
     public function getFakultasCplAnalytics($fakultasId, $tahun = 'all', $semester = 'all')
     {
         $fakultas = Fakultas::find($fakultasId);
@@ -225,23 +258,14 @@ class DashboardController extends Controller
             }
 
             foreach ($allNpm as $npm) {
-                $subQuery = DB::table('mutus')
-                    ->join('mks', 'mutus.Course', '=', 'mks.kode')
-                    ->leftJoin('tahun_ajaran as ta', 'mutus.tahun_ajaran_id', '=', 'ta.id')
-                    ->select('mutus.Course', DB::raw("MAX({$yearSemExprMutus}) AS max_year_semester"))
-                    ->where('mutus.NPM', $npm);
-
-                if (!empty($semestersToFilter)) {
-                    $subQuery->whereIn('mks.semester', $semestersToFilter);
-                }
-                $subQuery->groupBy('mutus.Course');
+                $subQuery = $this->buildBestAttemptSubquery($npm, $semestersToFilter);
 
                 $subQueryMutus = DB::table('mutus as m')
                     ->join('mks', 'm.Course', '=', 'mks.kode')
-                    ->leftJoin('tahun_ajaran as ta', 'm.tahun_ajaran_id', '=', 'ta.id')
-                    ->joinSub($subQuery, 't', function ($join) use ($yearSemExprM) {
-                        $join->on('m.Course', '=', 't.Course')
-                            ->on(DB::raw($yearSemExprM), '=', 't.max_year_semester');
+                    ->joinSub($subQuery, 't', function ($join) {
+                        $join->on('m.npm', '=', 't.npm')
+                            ->on('m.Course', '=', 't.Course')
+                            ->on('m.tahun', '=', 't.best_tahun');
                     })
                     ->where('m.NPM', $npm);
 

@@ -80,13 +80,21 @@ class EvaluasiSyncService
             JOIN mks ON m.Course = mks.kode
             LEFT JOIN tahun_ajaran ta ON m.tahun_ajaran_id = ta.id
             JOIN (
-                SELECT m2.Course, MAX($yearExprQ2) AS max_year_semester
-                FROM mutus m2
-                JOIN mks mks2 ON m2.Course = mks2.kode
-                LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
-                WHERE m2.npm = :npm1 {$semConditionQ2}
-                GROUP BY m2.Course
-            ) t ON m.Course = t.Course AND $yearExprQ1 = t.max_year_semester
+                SELECT t_sub.Course, t_sub.best_tahun
+                FROM (
+                    SELECT m2.Course, m2.tahun as best_tahun,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY m2.Course 
+                               ORDER BY SUM(m2.examWeight / 100 * m2.Nilai) DESC, MAX($yearExprQ2) DESC
+                           ) as rn
+                    FROM mutus m2
+                    JOIN mks mks2 ON m2.Course = mks2.kode
+                    LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
+                    WHERE m2.npm = :npm1 {$semConditionQ2}
+                    GROUP BY m2.Course, m2.tahun, m2.tahun_ajaran_id
+                ) t_sub
+                WHERE t_sub.rn = 1
+            ) t ON m.Course = t.Course AND m.tahun = t.best_tahun
             JOIN (
                 SELECT Cpmk, Jenis, tahun, SUM(BobotSoal) AS BobotJenisCPMK
                 FROM mutus
@@ -153,12 +161,20 @@ class EvaluasiSyncService
             LEFT JOIN cpmks ON m.cpmk = cpmks.id
             LEFT JOIN tahun_ajaran ta ON m.tahun_ajaran_id = ta.id
             INNER JOIN (
-                SELECT Course, MAX($yearExprCpmkM2) AS max_year_semester
-                FROM mutus m2
-                LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
-                WHERE m2.NPM = :npm1
-                GROUP BY Course
-            ) t ON m.Course = t.Course AND $yearExprCpmkM = t.max_year_semester
+                SELECT t_sub.Course, t_sub.best_tahun
+                FROM (
+                    SELECT m2.Course, m2.tahun as best_tahun,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY m2.Course 
+                               ORDER BY SUM(m2.examWeight / 100 * m2.Nilai) DESC, MAX($yearExprCpmkM2) DESC
+                           ) as rn
+                    FROM mutus m2
+                    LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
+                    WHERE m2.NPM = :npm1
+                    GROUP BY m2.Course, m2.tahun, m2.tahun_ajaran_id
+                ) t_sub
+                WHERE t_sub.rn = 1
+            ) t ON m.Course = t.Course AND m.tahun = t.best_tahun
             JOIN (
                 SELECT Cpmk, Jenis, tahun, SUM(BobotSoal) AS BobotJenisCPMK
                 FROM mutus
@@ -213,8 +229,14 @@ class EvaluasiSyncService
             $sks = $mkRow ? (int)$mkRow->bobot_teori + (int)$mkRow->bobot_praktikum : 3;
             $totalSks += $sks;
 
-            // Simple avg NA
-            $na = DB::table('mutus')->where('npm', $npm)->where('Course', $ck)->avg('Nilai') ?? 0;
+            // Highest attempt NA
+            $attemptScores = DB::table('mutus')
+                ->where('npm', $npm)
+                ->where('Course', $ck)
+                ->select('tahun', DB::raw('SUM(examWeight / 100 * Nilai) as total_score'))
+                ->groupBy('tahun', 'tahun_ajaran_id')
+                ->pluck('total_score');
+            $na = $attemptScores->max() ?? 0;
             $na = round($na, 2);
 
             $huruf = 'E';

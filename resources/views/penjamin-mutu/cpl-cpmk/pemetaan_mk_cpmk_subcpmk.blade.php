@@ -177,6 +177,7 @@
     </style>
 
     <div class="container-fluid mb-4">
+
         {{-- Form Tambah Sub CPMK jika authorized --}}
         @if(in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
             <div class="card mb-4 shadow-sm">
@@ -833,7 +834,7 @@
                     @csrf
                     <div class="modal-body">
                         <div class="alert alert-info py-2 small mb-3">
-                            <i class="ti-info-alt me-1"></i> Gunakan template Excel resmi agar format kolom sesuai (Tahun Kurikulum, Kode MK, Kode CPMK, Uraian Sub CPMK). Kode Sub CPMK akan disesuaikan otomatis oleh sistem.
+                            <i class="ti-info-alt me-1"></i> Gunakan template Excel resmi agar format kolom sesuai (Tahun Kurikulum, Kode MK, Kode CPMK, Kode Sub CPMK [Opsional], Uraian Sub CPMK). Keterangan kode opsional.
                         </div>
                         <div class="mb-3">
                             <label for="excel_file_subcpmk" class="form-label fw-bold">Pilih File Excel (.xlsx, .xls, .csv):</label>

@@ -28,4 +28,15 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     </div>
+@elseif(session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <i class="mdi mdi-alert me-2 font-20"></i>
+                <div>{{ session('warning') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
 @endif
+

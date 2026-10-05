@@ -776,8 +776,14 @@ public function storeSubCpmk(Request $request)
     try {
         $id_prodi = auth()->user()->id_prodiUser;
         $parentCpmk = CPMK::findOrFail($validated['cpmk_id']);
-        $subCpmkCount = SubCpmk::where('cpmk_id', $validated['cpmk_id'])->count();
-        $newKode = 'Sub-' . $parentCpmk->kode . ($subCpmkCount + 1);
+        $subCpmkCount = SubCpmk::where('cpmk_id', $validated['cpmk_id'])->count() + 1;
+        do {
+            $newKode = 'Sub-' . $parentCpmk->kode . $subCpmkCount;
+            $existsKode = SubCpmk::where('cpmk_id', $validated['cpmk_id'])->where('kode', $newKode)->exists();
+            if ($existsKode) {
+                $subCpmkCount++;
+            }
+        } while ($existsKode);
 
         // 2. Siapkan data yang bersih untuk disimpan
         $dataToCreate = [
@@ -881,12 +887,13 @@ public function updateSubCpmk(Request $request, $id)
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Template Import Sub CPMK');
 
-        // Header
+        // Header (Col A: Kurikulum, Col B: MK, Col C: CPMK, Col D: Kode Sub CPMK, Col E: Uraian)
         $headers = [
             'A1' => 'Tahun Kurikulum',
             'B1' => 'Kode MK (Opsional)',
             'C1' => 'Kode CPMK',
-            'D1' => 'Uraian Sub CPMK',
+            'D1' => 'Kode Sub CPMK (Opsional)',
+            'E1' => 'Uraian Sub CPMK',
         ];
 
         foreach ($headers as $cell => $value) {
@@ -894,8 +901,8 @@ public function updateSubCpmk(Request $request, $id)
         }
 
         // Style Header
-        $sheet->getStyle('A1:D1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:D1')->getFill()
+        $sheet->getStyle('A1:E1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:E1')->getFill()
             ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
             ->getStartColor()->setARGB('FFE0E0E0');
 
@@ -903,15 +910,17 @@ public function updateSubCpmk(Request $request, $id)
         $sheet->setCellValue('A2', '2024');
         $sheet->setCellValue('B2', 'INF101');
         $sheet->setCellValue('C2', 'CPMK01');
-        $sheet->setCellValue('D2', 'Mampu menjelaskan konsep dasar pemrograman berorientasi objek.');
+        $sheet->setCellValue('D2', 'Sub-CPMK011');
+        $sheet->setCellValue('E2', 'Mampu menjelaskan konsep dasar pemrograman berorientasi objek.');
 
         // Sample Data Row 2
         $sheet->setCellValue('A3', '2024');
         $sheet->setCellValue('B3', 'INF101');
         $sheet->setCellValue('C3', 'CPMK01');
-        $sheet->setCellValue('D3', 'Mampu menerapkan prinsip enkapsulasi dan pewarisan.');
+        $sheet->setCellValue('D3', 'Sub-CPMK012');
+        $sheet->setCellValue('E3', 'Mampu menerapkan prinsip enkapsulasi dan pewarisan.');
 
-        foreach (range('A', 'D') as $col) {
+        foreach (range('A', 'E') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -955,6 +964,8 @@ public function updateSubCpmk(Request $request, $id)
         $createdCount = 0;
         $updatedCount = 0;
         $failedCount = 0;
+        $duplicateWarnings = [];
+        $userCodesInFile = [];
 
         DB::beginTransaction();
         try {
@@ -963,7 +974,19 @@ public function updateSubCpmk(Request $request, $id)
                 $tahunKurikulum = trim($row[0] ?? '');
                 $kodeMk = trim($row[1] ?? '');
                 $kodeCpmk = trim($row[2] ?? '');
-                $uraian = trim($row[3] ?? '');
+
+                $col3 = trim($row[3] ?? '');
+                $col4 = trim($row[4] ?? '');
+
+                // Dukungan template 5 kolom (Col D = Kode Sub CPMK, Col E = Uraian)
+                // dan fallback 4 kolom lama (Col D = Uraian)
+                if (!empty($col4)) {
+                    $inputKodeSubCpmk = $col3;
+                    $uraian = $col4;
+                } else {
+                    $inputKodeSubCpmk = '';
+                    $uraian = $col3;
+                }
 
                 // Minimal butuh Kode CPMK dan Uraian
                 if (empty($kodeCpmk) || empty($uraian)) {
@@ -1008,36 +1031,89 @@ public function updateSubCpmk(Request $request, $id)
                     continue;
                 }
 
-                // Cari apakah Sub CPMK dengan Uraian persis ini sudah ada untuk CPMK tersebut
-                $existingSub = SubCpmk::where('cpmk_id', $cpmk->id)
-                    ->where('uraian', $uraian)
-                    ->first();
+                $subCpmkObj = null;
 
-                if ($existingSub) {
-                    $existingSub->update([
-                        'uraian' => $uraian,
-                        'id_prodi' => $id_prodi_user ?? $existingSub->id_prodi,
-                    ]);
-                    $subCpmkObj = $existingSub;
-                    $updatedCount++;
-                } else {
-                    // Auto-generate kode unik Sub CPMK
-                    $subCount = SubCpmk::where('cpmk_id', $cpmk->id)->count() + 1;
-                    do {
-                        $genKode = 'Sub-' . $cpmk->kode . $subCount;
-                        $existsKode = SubCpmk::where('cpmk_id', $cpmk->id)->where('kode', $genKode)->exists();
-                        if ($existsKode) {
-                            $subCount++;
+                // Jika user mengisi Kode Sub CPMK sendiri secara manual di Excel
+                if (!empty($inputKodeSubCpmk)) {
+                    $rowNum = $i + 1;
+
+                    // 1. Cek duplikasi di dalam file Excel yang diunggah
+                    if (in_array($inputKodeSubCpmk, $userCodesInFile)) {
+                        $duplicateWarnings[] = "'$inputKodeSubCpmk'";
+                    } else {
+                        $userCodesInFile[] = $inputKodeSubCpmk;
+                    }
+
+                    // 2. Cek apakah Kode Sub CPMK ini sudah ada di database untuk CPMK ini
+                    $existingSubByKode = SubCpmk::where('cpmk_id', $cpmk->id)
+                        ->where('kode', $inputKodeSubCpmk)
+                        ->first();
+
+                    if ($existingSubByKode) {
+                        $duplicateWarnings[] = "'$inputKodeSubCpmk'";
+                        $existingSubByKode->update([
+                            'uraian' => $uraian,
+                            'id_prodi' => $id_prodi_user ?? $existingSubByKode->id_prodi,
+                        ]);
+                        $subCpmkObj = $existingSubByKode;
+                        $updatedCount++;
+                    } else {
+                        // Cek apakah uraian persis sama sudah ada
+                        $existingSubByUraian = SubCpmk::where('cpmk_id', $cpmk->id)
+                            ->where('uraian', $uraian)
+                            ->first();
+
+                        if ($existingSubByUraian) {
+                            $duplicateWarnings[] = "'{$existingSubByUraian->kode}'";
+                            $existingSubByUraian->update([
+                                'kode' => $inputKodeSubCpmk,
+                                'id_prodi' => $id_prodi_user ?? $existingSubByUraian->id_prodi,
+                            ]);
+                            $subCpmkObj = $existingSubByUraian;
+                            $updatedCount++;
+                        } else {
+                            $subCpmkObj = SubCpmk::create([
+                                'kode' => $inputKodeSubCpmk,
+                                'uraian' => $uraian,
+                                'cpmk_id' => $cpmk->id,
+                                'id_prodi' => $id_prodi_user,
+                            ]);
+                            $createdCount++;
                         }
-                    } while ($existsKode);
+                    }
+                } else {
+                    // Tanpa kode manual (Auto-generate unik)
+                    $rowNum = $i + 1;
+                    $existingSub = SubCpmk::where('cpmk_id', $cpmk->id)
+                        ->where('uraian', $uraian)
+                        ->first();
 
-                    $subCpmkObj = SubCpmk::create([
-                        'kode' => $genKode,
-                        'uraian' => $uraian,
-                        'cpmk_id' => $cpmk->id,
-                        'id_prodi' => $id_prodi_user,
-                    ]);
-                    $createdCount++;
+                    if ($existingSub) {
+                        $duplicateWarnings[] = "'{$existingSub->kode}'";
+                        $existingSub->update([
+                            'uraian' => $uraian,
+                            'id_prodi' => $id_prodi_user ?? $existingSub->id_prodi,
+                        ]);
+                        $subCpmkObj = $existingSub;
+                        $updatedCount++;
+                    } else {
+                        $subCount = SubCpmk::where('cpmk_id', $cpmk->id)->count() + 1;
+                        do {
+                            $genKode = 'Sub-' . $cpmk->kode . $subCount;
+                            $existsKode = SubCpmk::where('cpmk_id', $cpmk->id)->where('kode', $genKode)->exists();
+                            if ($existsKode) {
+                                $subCount++;
+                            }
+                        } while ($existsKode);
+
+                        $subCpmkObj = SubCpmk::create([
+                            'kode' => $genKode,
+                            'uraian' => $uraian,
+                            'cpmk_id' => $cpmk->id,
+                            'id_prodi' => $id_prodi_user,
+                        ]);
+                        $createdCount++;
+                    }
                 }
 
                 // Hubungkan ke MK jika kode_mk diisi
@@ -1057,9 +1133,25 @@ public function updateSubCpmk(Request $request, $id)
 
             DB::commit();
 
+            if (!empty($duplicateWarnings)) {
+                $uniqueDupes = array_values(array_unique($duplicateWarnings));
+                $countDupes = count($uniqueDupes);
+                $sliceDupes = array_slice($uniqueDupes, 0, 5);
+                $dupeListStr = implode(', ', $sliceDupes);
+                if ($countDupes > 5) {
+                    $dupeListStr .= " (dan " . ($countDupes - 5) . " data lainnya)";
+                }
+                $warnText = "Peringatan Duplikasi: Sub CPMK $dupeListStr sudah ada di database (data diperbarui).";
+                return redirect()->back()->with('failed', $warnText);
+            }
+
             $msg = "Proses import selesai. $createdCount Sub CPMK baru ditambahkan, $updatedCount diperbarui.";
             if ($failedCount > 0) {
                 $msg .= " ($failedCount baris dilewati/CPMK tidak ditemukan).";
+            }
+
+            if ($createdCount == 0 && $updatedCount > 0) {
+                return redirect()->back()->with('failed', "Peringatan Duplikasi: Data Sub CPMK tersebut sudah ada di database ($updatedCount data diperbarui, 0 data baru ditambahkan).");
             }
 
             return redirect()->back()->with('success', $msg);

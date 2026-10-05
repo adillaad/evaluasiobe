@@ -53,9 +53,10 @@
 
         /* Regular Buttons (e.g., Primary Add, Submit, Filter) */
         .btn:not(.btn-sm):not(.btn-xs):not(.btn-icons) {
-            height: 38px !important;
-            padding: 8px 16px !important;
-            font-size: 14px !important;
+            height: 35px !important;
+            padding: 0 14px !important;
+            font-size: 11.5px !important;
+            font-weight: 500 !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
@@ -66,8 +67,9 @@
         /* Small Buttons (.btn-sm) */
         .btn-sm {
             height: 32px !important;
-            padding: 6px 12px !important;
-            font-size: 13px !important;
+            padding: 0 10px !important;
+            font-size: 11px !important;
+            font-weight: 500 !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
@@ -231,19 +233,19 @@
 
         /* Icon Text Buttons (.btn-icon-text) */
         .btn-icon-text {
-            height: 38px !important;
-            padding: 8px 16px !important;
-            font-size: 14px !important;
+            height: 35px !important;
+            padding: 0 14px !important;
+            font-size: 11.5px !important;
             font-weight: 500 !important;
-            border-radius: 8px !important;
+            border-radius: 6px !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            gap: 8px !important;
+            gap: 6px !important;
             line-height: 1 !important;
         }
         .btn-icon-text i, .btn-icon-text .btn-icon-prepend {
-            font-size: 15px !important;
+            font-size: 12.5px !important;
             margin-right: 2px !important;
             line-height: 1 !important;
         }

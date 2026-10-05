@@ -46,7 +46,7 @@
                     }
                     .table-cpl-prodi th {
                         font-weight: 600 !important;
-                        font-size: 13px !important;
+                        font-size: 12px !important;
                     }
                     .table-cpl-prodi td {
                         vertical-align: middle !important;

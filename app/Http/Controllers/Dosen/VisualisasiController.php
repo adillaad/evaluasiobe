@@ -255,6 +255,51 @@ class VisualisasiController extends Controller
         )";
     }
 
+    private function buildBestAttemptSubquery($npm = null, $semestersToFilter = [], $prodiId = null, $otoritas = null)
+    {
+        $yearSemExpr = $this->getYearSemSqlExpr('m2', 'ta2');
+
+        $subQueryBest = DB::table('mutus as m2')
+            ->join('mks as mks2', 'm2.Course', '=', 'mks2.kode')
+            ->join('prodi as prodi2', 'm2.id_prodi', '=', 'prodi2.id')
+            ->join('fakultas as fak2', 'prodi2.id_fakultas', '=', 'fak2.id')
+            ->leftJoin('tahun_ajaran as ta2', 'm2.tahun_ajaran_id', '=', 'ta2.id')
+            ->select(
+                'm2.npm',
+                'm2.Course',
+                'm2.tahun as best_tahun',
+                DB::raw("ROW_NUMBER() OVER (
+                    PARTITION BY m2.npm, m2.Course 
+                    ORDER BY SUM(m2.examWeight / 100 * m2.Nilai) DESC, MAX({$yearSemExpr}) DESC
+                ) as rn")
+            );
+
+        if (!empty($npm)) {
+            $subQueryBest->where('m2.NPM', $npm);
+        }
+
+        if (!empty($semestersToFilter)) {
+            $subQueryBest->whereIn('mks2.semester', $semestersToFilter);
+        }
+
+        if (!empty($prodiId)) {
+            $subQueryBest->where('prodi2.id', $prodiId);
+        } elseif ($otoritas && in_array($otoritas, ['Penjamin Mutu Universitas', 'Wakil Rektor'])) {
+            $subQueryBest->where('fak2.id_universitas', auth()->user()->id_universitasUser);
+        } elseif ($otoritas && in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
+            $subQueryBest->where('fak2.id', auth()->user()->id_fakultasUser);
+        } elseif ($otoritas && in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+            $subQueryBest->where('prodi2.id', auth()->user()->id_prodiUser);
+        }
+
+        $subQueryBest->groupBy('m2.npm', 'm2.Course', 'm2.tahun', 'm2.tahun_ajaran_id');
+
+        return DB::table(DB::raw("({$subQueryBest->toSql()}) as t_sub"))
+            ->mergeBindings($subQueryBest)
+            ->where('t_sub.rn', 1)
+            ->select('t_sub.npm', 't_sub.Course', 't_sub.best_tahun');
+    }
+
     private function getAvailablePeriodsForStudent($npm, $angkatan, $prodiParam = null)
     {
         $baseAngkatan = (int)$angkatan > 1900 ? (int)$angkatan : (int)substr($npm, 0, 2) + 2000;
@@ -485,38 +530,16 @@ class VisualisasiController extends Controller
             $prodiNama = Prodi::where('id', $prodiId)->value('nama') ?? '';
         }
 
-        // Subquery to get the max year and semester for each course
-        $subQuery = DB::table('mutus')
-            ->join('mks', 'mutus.Course', '=', 'mks.kode')
-            ->join('prodi', 'mutus.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->leftJoin('tahun_ajaran as ta', 'mutus.tahun_ajaran_id', '=', 'ta.id')
-            ->select('mutus.Course', DB::raw("MAX(" . $this->getYearSemSqlExpr('mutus', 'ta') . ") AS max_year_semester"))
-            ->where('mutus.NPM', $npm);
+        // Subquery to get the best attempt (highest score) for each course
+        $subQuery = $this->buildBestAttemptSubquery($npm, $semestersToFilter, $prodiId, $otoritas);
 
-        if (!empty($semestersToFilter)) {
-            $subQuery->whereIn('mks.semester', $semestersToFilter);
-        }
-
-        if (!empty($prodiId)) {
-            $subQuery->where('prodi.id', $prodiId);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Universitas', 'Wakil Rektor'])) {
-            $subQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
-            $subQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
-            $subQuery->where('prodi.id', auth()->user()->id_prodiUser);
-        }
-
-        $subQuery->groupBy('mutus.Course');
-
-        // Main query to get the records with the max year and semester
+        // Main query to get the records for the best attempt
         $subQueryMutus = DB::table('mutus as m')
             ->join('mks', 'm.Course', '=', 'mks.kode')
-            ->leftJoin('tahun_ajaran as ta', 'm.tahun_ajaran_id', '=', 'ta.id')
             ->joinSub($subQuery, 't', function ($join) {
-                $join->on('m.Course', '=', 't.Course')
-                    ->on(DB::raw($this->getYearSemSqlExpr('m', 'ta')), '=', 't.max_year_semester');
+                $join->on('m.npm', '=', 't.npm')
+                    ->on('m.Course', '=', 't.Course')
+                    ->on('m.tahun', '=', 't.best_tahun');
             })
             ->where('m.NPM', $npm);
 
@@ -684,13 +707,21 @@ class VisualisasiController extends Controller
                             FROM mutus m 
                             LEFT JOIN tahun_ajaran ta ON m.tahun_ajaran_id = ta.id
                             JOIN (
-                                SELECT Course, MAX($yearExprQ2) AS max_year_semester 
-                                FROM mutus m2
-                                LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
-                                WHERE m2.NPM = :npm1 {$cplConditionSub}
-                                GROUP BY Course 
+                                SELECT t_sub.Course, t_sub.best_tahun
+                                FROM (
+                                    SELECT m2.Course, m2.tahun as best_tahun,
+                                           ROW_NUMBER() OVER (
+                                               PARTITION BY m2.Course 
+                                               ORDER BY SUM(m2.examWeight / 100 * m2.Nilai) DESC, MAX($yearExprQ2) DESC
+                                           ) as rn
+                                    FROM mutus m2
+                                    LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
+                                    WHERE m2.NPM = :npm1 {$cplConditionSub}
+                                    GROUP BY m2.Course, m2.tahun, m2.tahun_ajaran_id
+                                ) t_sub
+                                WHERE t_sub.rn = 1
                             ) t 
-                            ON m.Course = t.Course AND $yearExprQ1 = t.max_year_semester 
+                            ON m.Course = t.Course AND m.tahun = t.best_tahun 
                             WHERE m.NPM = :npm2 {$cplConditionMain}
                         ) q1 
                         JOIN (
@@ -814,35 +845,15 @@ class VisualisasiController extends Controller
         $gabunganMkAngkatan = [];
         foreach ($allNpm as $npmItem) {
             // Sama seperti perhitungan persentaseTotalCplCapaian sebelumnya untuk setiap npm
-            $subQuery = DB::table('mutus')
-                ->join('mks', 'mutus.Course', '=', 'mks.kode')
-                ->join('prodi', 'mutus.id_prodi', '=', 'prodi.id')
-                ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-                ->leftJoin('tahun_ajaran as ta', 'mutus.tahun_ajaran_id', '=', 'ta.id')
-                ->select('Course', DB::raw("MAX(" . $this->getYearSemSqlExpr('mutus', 'ta') . ") AS max_year_semester"))
-                ->where('mutus.NPM', $npmItem);
+            $subQuery = $this->buildBestAttemptSubquery($npmItem, $semestersToFilter, $prodiId, $otoritas);
 
-            if (!empty($semestersToFilter)) {
-                $subQuery->whereIn('mks.semester', $semestersToFilter);
-            }
-
-            if (in_array($otoritas, ['Penjamin Mutu Universitas', 'Wakil Rektor'])) {
-                $subQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-            } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
-                $subQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-            } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
-                $subQuery->where('prodi.id', auth()->user()->id_prodiUser);
-            }
-
-            $subQuery->groupBy('mutus.Course');
-
-            // Main query to get the records with the max year and semester
+            // Main query to get the records for the best attempt
             $subQueryMutus = DB::table('mutus as m')
                 ->join('mks', 'm.Course', '=', 'mks.kode')
-                ->leftJoin('tahun_ajaran as ta', 'm.tahun_ajaran_id', '=', 'ta.id')
                 ->joinSub($subQuery, 't', function ($join) {
-                    $join->on('m.Course', '=', 't.Course')
-                        ->on(DB::raw($this->getYearSemSqlExpr('m', 'ta')), '=', 't.max_year_semester');
+                    $join->on('m.npm', '=', 't.npm')
+                        ->on('m.Course', '=', 't.Course')
+                        ->on('m.tahun', '=', 't.best_tahun');
                 })
                 ->where('m.NPM', $npmItem);
 
@@ -1423,13 +1434,21 @@ class VisualisasiController extends Controller
                             FROM mutus m 
                             LEFT JOIN tahun_ajaran ta ON m.tahun_ajaran_id = ta.id
                             JOIN (
-                                SELECT Course, MAX($yearExprQ2) AS max_year_semester 
-                                FROM mutus m2
-                                LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
-                                WHERE m2.NPM = :npm1 {$cplConditionSubYr}
-                                GROUP BY Course 
+                                SELECT t_sub.Course, t_sub.best_tahun
+                                FROM (
+                                    SELECT m2.Course, m2.tahun as best_tahun,
+                                           ROW_NUMBER() OVER (
+                                               PARTITION BY m2.Course 
+                                               ORDER BY SUM(m2.examWeight / 100 * m2.Nilai) DESC, MAX($yearExprQ2) DESC
+                                           ) as rn
+                                    FROM mutus m2
+                                    LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
+                                    WHERE m2.NPM = :npm1 {$cplConditionSubYr}
+                                    GROUP BY m2.Course, m2.tahun, m2.tahun_ajaran_id
+                                ) t_sub
+                                WHERE t_sub.rn = 1
                             ) t 
-                            ON m.Course = t.Course AND $yearExprQ1 = t.max_year_semester 
+                            ON m.Course = t.Course AND m.tahun = t.best_tahun 
                             WHERE m.NPM = :npm2 {$cplConditionMainYr}
                         ) q1 
                         JOIN (
@@ -1890,14 +1909,21 @@ class VisualisasiController extends Controller
                 FROM mutus m
                 LEFT JOIN tahun_ajaran ta ON m.tahun_ajaran_id = ta.id
                 INNER JOIN (
-                    SELECT Course, 
-                        MAX($yearExprCpmkM2) AS max_year_semester
-                    FROM mutus m2
-                    LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
-                    WHERE m2.NPM = :npm1 AND m2.Course = :course1
-                    GROUP BY Course
+                    SELECT t_sub.Course, t_sub.best_tahun
+                    FROM (
+                        SELECT m2.Course, m2.tahun as best_tahun,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY m2.Course 
+                                   ORDER BY SUM(m2.examWeight / 100 * m2.Nilai) DESC, MAX($yearExprCpmkM2) DESC
+                               ) as rn
+                        FROM mutus m2
+                        LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
+                        WHERE m2.NPM = :npm1 AND m2.Course = :course1
+                        GROUP BY m2.Course, m2.tahun, m2.tahun_ajaran_id
+                    ) t_sub
+                    WHERE t_sub.rn = 1
                 ) t ON m.Course = t.Course 
-                AND $yearExprCpmkM = t.max_year_semester
+                AND m.tahun = t.best_tahun
                 JOIN (
                     SELECT Cpmk, Jenis, tahun, SUM(BobotSoal) AS BobotJenisCPMK
                     FROM mutus
@@ -1950,19 +1976,22 @@ class VisualisasiController extends Controller
                         mutus m 
                     LEFT JOIN tahun_ajaran ta ON m.tahun_ajaran_id = ta.id
                     JOIN 
-                        (SELECT 
-                            ly2.NPM, 
-                            MAX($yearExprLy2) AS max_year_semester
-                        FROM 
-                            mutus ly2
-                        LEFT JOIN tahun_ajaran ta2 ON ly2.tahun_ajaran_id = ta2.id
-                        WHERE 
-                            ly2.Course = :course1 AND ly2.angkatan = :angkatan1
-                        GROUP BY 
-                            ly2.NPM
+                        (SELECT t_sub.NPM, t_sub.best_tahun
+                         FROM (
+                             SELECT ly2.NPM, ly2.tahun as best_tahun,
+                                    ROW_NUMBER() OVER (
+                                        PARTITION BY ly2.NPM 
+                                        ORDER BY SUM(ly2.examWeight / 100 * ly2.Nilai) DESC, MAX($yearExprLy2) DESC
+                                    ) as rn
+                             FROM mutus ly2
+                             LEFT JOIN tahun_ajaran ta2 ON ly2.tahun_ajaran_id = ta2.id
+                             WHERE ly2.Course = :course1 AND ly2.angkatan = :angkatan1
+                             GROUP BY ly2.NPM, ly2.tahun, ly2.tahun_ajaran_id
+                         ) t_sub
+                         WHERE t_sub.rn = 1
                         ) AS ly
                         ON m.NPM = ly.NPM
-                        AND $yearExprCpmkM = ly.max_year_semester
+                        AND m.tahun = ly.best_tahun
                     JOIN 
                         (SELECT 
                             NPM, 
@@ -3004,13 +3033,21 @@ class VisualisasiController extends Controller
                                 FROM mutus m 
                                 LEFT JOIN tahun_ajaran ta ON m.tahun_ajaran_id = ta.id
                                 JOIN (
-                                    SELECT Course, MAX($yearExprQ2) AS max_year_semester 
-                                    FROM mutus m2
-                                    LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
-                                    WHERE m2.NPM = :npm1 {$cplConditionSubYr}
-                                    GROUP BY Course 
+                                    SELECT t_sub.Course, t_sub.best_tahun
+                                    FROM (
+                                        SELECT m2.Course, m2.tahun as best_tahun,
+                                               ROW_NUMBER() OVER (
+                                                   PARTITION BY m2.Course 
+                                                   ORDER BY SUM(m2.examWeight / 100 * m2.Nilai) DESC, MAX($yearExprQ2) DESC
+                                               ) as rn
+                                        FROM mutus m2
+                                        LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
+                                        WHERE m2.NPM = :npm1 {$cplConditionSubYr}
+                                        GROUP BY m2.Course, m2.tahun, m2.tahun_ajaran_id
+                                    ) t_sub
+                                    WHERE t_sub.rn = 1
                                 ) t 
-                                ON m.Course = t.Course AND $yearExprQ1 = t.max_year_semester 
+                                ON m.Course = t.Course AND m.tahun = t.best_tahun 
                                 WHERE m.NPM = :npm2 {$cplConditionMainYr}
                             ) q1 
                             JOIN (

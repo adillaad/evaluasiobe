@@ -137,19 +137,6 @@
     </style>
 
     <div class="container-fluid mb-4">
-        {{-- Flash Messages --}}
-        @if (session()->has('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="ti-check-box me-1"></i> {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-        @if (session()->has('failed'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="ti-alert me-1"></i> {{ session('failed') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
 
         {{-- Top Navigation & Header --}}
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
@@ -500,7 +487,7 @@
                     @csrf
                     <div class="modal-body">
                         <div class="alert alert-info py-2 small mb-3">
-                            <i class="ti-info-alt me-1"></i> Gunakan template Excel resmi agar format kolom sesuai (Tahun Kurikulum, Kode MK, Kode CPMK, Uraian Sub CPMK). Kode Sub CPMK akan disesuaikan otomatis oleh sistem.
+                            <i class="ti-info-alt me-1"></i> Gunakan template Excel resmi agar format kolom sesuai (Tahun Kurikulum, Kode MK, Kode CPMK, Kode Sub CPMK [Opsional], Uraian Sub CPMK). Keterangan kode opsional.
                         </div>
                         <div class="mb-3">
                             <label for="excel_file_subcpmk" class="form-label fw-bold">Pilih File Excel (.xlsx, .xls, .csv):</label>
