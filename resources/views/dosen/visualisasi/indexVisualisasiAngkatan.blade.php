@@ -50,24 +50,39 @@
             min-height: 60px;
         }
 
-        /* Section Titles with Icon and Modern Typography */
+        /* Section Titles & Subtitles with Consistent Typography */
         .section-title {
-            font-size: 1.15rem;
-            font-weight: 700;
+            font-size: 1.0rem !important;
+            font-weight: 700 !important;
             color: #1F3BB3;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             letter-spacing: -0.01em;
             margin-bottom: 0;
         }
 
         .section-title i {
-            font-size: 1.25rem;
+            font-size: 1.1rem !important;
             color: #1F3BB3;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .section-subtitle {
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            color: #1e293b;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: -0.01em;
+            margin-bottom: 0;
+        }
+
+        .section-subtitle i {
+            font-size: 1.0rem !important;
         }
 
         /* Ensure layout allows sticky scrolling & sticky footer */
@@ -779,7 +794,7 @@
                 <div class="mt-4 pt-3 border-top">
                     {{-- Tabel Rincian Capaian CPL Angkatan --}}
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                        <h6 class="fw-bold text-dark mb-0"><i class="bi bi-table text-primary me-2"></i> Rincian Ketercapaian CPL:</h6>
+                        <h6 class="section-subtitle mb-0"><i class="bi bi-table text-primary me-2"></i> Rincian Ketercapaian CPL:</h6>
                     </div>
                     <div class="modern-table-container mb-4">
                         <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
@@ -800,7 +815,7 @@
                     </div>
 
                     {{-- Pemetaan CPL ke Mata Kuliah --}}
-                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-diagram-2 text-primary me-2"></i> Pemetaan CPL ke Mata Kuliah :</h6>
+                    <h6 class="section-subtitle mb-2"><i class="bi bi-diagram-2 text-primary me-2"></i> Pemetaan CPL ke Mata Kuliah :</h6>
                     <div class="modern-guide-box mb-4">
                         <div class="row align-items-center g-3 mb-3">
                             <div class="col-md-4 col-sm-6">

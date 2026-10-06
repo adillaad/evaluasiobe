@@ -49,12 +49,11 @@
 
     <div class="container-fluid">
         <div class="card">
-            <div class="card-header">
-                <div class="fw-bold">
-                    <h3>Tambah Instrumen Penilaian Tanpa Soal</h3>
+            <div class="card-header bg-white py-3">
+                <div class="fw-bold d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0 fw-bold text-dark" style="font-size: 1.25rem;">Tambah Instrumen Penilaian Tanpa Soal</h4>
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="tooltip" data-bs-placement="left"
-                        title="Form ini digunakan untuk membuat instrumen penilaian non-soal (Presentasi, Laporan, Praktikum, dll)"
-                        style="float:right;">
+                        title="Form ini digunakan untuk membuat instrumen penilaian non-soal (Presentasi, Laporan, Praktikum, dll)">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                             class="bi bi-info-circle-fill" viewBox="0 0 16 16">
                             <path
@@ -189,12 +188,11 @@
 
         <!-- Tabel Preview Instrumen yang Sudah Disimpan -->
         <div class="card mt-4">
-            <div class="card-header">
-                <div class="fw-bold">
-                    <h3 class="mt-3">Data Instrumen Tanpa Soal yang Sudah Disimpan</h3>
+            <div class="card-header bg-white py-3">
+                <div class="fw-bold d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0 fw-bold text-dark" style="font-size: 1.25rem;">Data Instrumen Tanpa Soal yang Sudah Disimpan</h4>
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="tooltip"
-                        data-bs-placement="left" title="Bagian ini menampilkan instrumen tanpa soal yang sudah disimpan"
-                        style="float:right;">
+                        data-bs-placement="left" title="Bagian ini menampilkan instrumen tanpa soal yang sudah disimpan">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                             class="bi bi-info-circle-fill" viewBox="0 0 16 16">
                             <path

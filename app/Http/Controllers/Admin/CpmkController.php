@@ -7,9 +7,11 @@ use App\Models\CPL;
 use App\Models\CPMK;
 use App\Models\Kurikulum;
 use App\Traits\UniversityFilterTrait;
+use App\Models\SubCpmk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CpmkController extends Controller
 {
@@ -121,7 +123,8 @@ class CpmkController extends Controller
             ->join('cpls', 'cpmks.cpl_id', '=', 'cpls.id')
             ->join('kurikulums', 'cpls.id_kurikulum', '=', 'kurikulums.id')
             ->whereNotNull('cpmks.cpl_id')
-            ->select('cpmks.*');
+            ->select('cpmks.*')
+            ->with(['subCpmks', 'cpl.kurikulum', 'prodi.fakultas']);
 
         // Logika filter berdasarkan peran pengguna
         if ($userOtoritas === 'Admin Universitas') {
@@ -144,30 +147,62 @@ class CpmkController extends Controller
 
         // Gunakan method dari trait untuk filter tambahan dari request (jika ada)
         $cpmks = $this->getFilteredQuery($cpmks, $request);
-        $cpmks = $cpmks->orderBy('kode', 'asc')->get();
+        $cpmks = $cpmks->orderBy('cpls.kode', 'asc')->orderBy('cpmks.kode', 'asc')->get();
 
         // Gunakan method dari trait untuk data dropdown filter
         $filterData = $this->getFilterData($request);
 
         return view('admin.cpmk.list', array_merge(
-            ['cpmks' => $cpmks],
+            ['cpmks' => $cpmks, 'userOtoritas' => $userOtoritas],
             $filterData
         ));
     }
 
     public function edit($id)
     {
-        $ids = Crypt::decrypt($id);
-        $cpmk = CPMK::find($ids);
-        $cpl = CPL::firstWhere('id',$cpmk->cpl_id);
-        $cpmk->cpl = $cpl;
+        try {
+            $ids = Crypt::decrypt($id);
+        } catch (\Exception $e) {
+            $ids = $id;
+        }
+        $cpmk = CPMK::with('cpl.kurikulum')->findOrFail($ids);
+        
+        $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
+        $cplsQuery = CPL::query()
+            ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->join('kurikulums', 'cpls.id_kurikulum', '=', 'kurikulums.id')
+            ->select('cpls.id', 'cpls.kode', 'cpls.judul', 'kurikulums.tahun as tahun_kurikulum');
 
-        return view('admin.cpmk.edit', compact('cpmk'));
+        if ($userOtoritas === 'Admin Universitas' || $userOtoritas === 'Penjamin Mutu Universitas') {
+            $cplsQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
+        } elseif (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
+            $cplsQuery->where('cpls.id_prodi', auth()->user()->id_prodiUser);
+        } elseif ($cpmk->id_prodi) {
+            $cplsQuery->where('cpls.id_prodi', $cpmk->id_prodi);
+        }
+        $cpls = $cplsQuery->orderBy('kurikulums.tahun', 'asc')->orderBy('cpls.kode', 'asc')->get();
+
+        if ($cpls->isEmpty()) {
+            $cpls = CPL::query()
+                ->join('kurikulums', 'cpls.id_kurikulum', '=', 'kurikulums.id')
+                ->select('cpls.id', 'cpls.kode', 'cpls.judul', 'kurikulums.tahun as tahun_kurikulum')
+                ->where('cpls.id_prodi', $cpmk->id_prodi ?? (auth()->user()->id_prodiUser ?? null))
+                ->orderBy('kurikulums.tahun', 'asc')
+                ->orderBy('cpls.kode', 'asc')
+                ->get();
+        }
+
+        return view('admin.cpmk.edit', compact('cpmk', 'cpls'));
     }
 
     public function update(Request $request, $id)
     {
-        $ids = Crypt::decrypt($id);
+        try {
+            $ids = Crypt::decrypt($id);
+        } catch (\Exception $e) {
+            $ids = $id;
+        }
         $request->validate([
             'cpl' => 'required',
             'judul' =>
@@ -183,22 +218,112 @@ class CpmkController extends Controller
 
     public function delete($id)
     {
-        $ids = Crypt::decrypt($id);
-        CPMK::where('id', $ids)->delete();
-        return redirect()->route($this->getRouteByAuthority())->with('success', 'CPMK berhasil dihapus!');
+        try {
+            $ids = Crypt::decrypt($id);
+        } catch (\Exception $e) {
+            $ids = $id;
+        }
+
+        DB::beginTransaction();
+        try {
+            $cpmk = CPMK::findOrFail($ids);
+            $kodeCpmk = $cpmk->kode;
+
+            // 1. Ambil semua ID Sub-CPMK terkait
+            $subCpmkIds = SubCpmk::where('cpmk_id', $ids)->pluck('id');
+
+            // 2. Hapus data di tabel turunan Sub-CPMK
+            if ($subCpmkIds->isNotEmpty()) {
+                if (Schema::hasTable('mk_sub_cpmk') && Schema::hasColumn('mk_sub_cpmk', 'sub_cpmk_id')) {
+                    DB::table('mk_sub_cpmk')->whereIn('sub_cpmk_id', $subCpmkIds)->delete();
+                }
+                if (Schema::hasTable('activities') && Schema::hasColumn('activities', 'sub_cpmk_id')) {
+                    DB::table('activities')->whereIn('sub_cpmk_id', $subCpmkIds)->delete();
+                }
+                if (Schema::hasTable('mutus') && Schema::hasColumn('mutus', 'sub_cpmk_id')) {
+                    DB::table('mutus')->whereIn('sub_cpmk_id', $subCpmkIds)->delete();
+                }
+                if (Schema::hasTable('soals') && Schema::hasColumn('soals', 'sub_cpmk_id')) {
+                    DB::table('soals')->whereIn('sub_cpmk_id', $subCpmkIds)->delete();
+                }
+                if (Schema::hasTable('tanpa_soal') && Schema::hasColumn('tanpa_soal', 'sub_cpmk_id')) {
+                    DB::table('tanpa_soal')->whereIn('sub_cpmk_id', $subCpmkIds)->delete();
+                }
+                if (Schema::hasTable('konversi_cpmk_metode') && Schema::hasColumn('konversi_cpmk_metode', 'sub_cpmk_id')) {
+                    DB::table('konversi_cpmk_metode')->whereIn('sub_cpmk_id', $subCpmkIds)->delete();
+                }
+                SubCpmk::whereIn('id', $subCpmkIds)->delete();
+            }
+
+            // 3. Hapus data di tabel yang mereferensikan CPMK (foreign keys)
+            if (Schema::hasTable('mutus') && Schema::hasColumn('mutus', 'Cpmk')) {
+                DB::table('mutus')->where('Cpmk', $ids)->delete();
+            }
+            if (Schema::hasTable('cpmk_soals') && Schema::hasColumn('cpmk_soals', 'id_cpmk')) {
+                DB::table('cpmk_soals')->where('id_cpmk', $ids)->delete();
+            }
+            if (Schema::hasTable('cpl_cpmk') && Schema::hasColumn('cpl_cpmk', 'cpmk_id')) {
+                DB::table('cpl_cpmk')->where('cpmk_id', $ids)->delete();
+            }
+            if (Schema::hasTable('cpmk_mk') && Schema::hasColumn('cpmk_mk', 'cpmk_id')) {
+                DB::table('cpmk_mk')->where('cpmk_id', $ids)->delete();
+            }
+            if (Schema::hasTable('cpl_mk_cpmk_penilaian') && Schema::hasColumn('cpl_mk_cpmk_penilaian', 'cpmk_id')) {
+                DB::table('cpl_mk_cpmk_penilaian')->where('cpmk_id', $ids)->delete();
+            }
+            if (Schema::hasTable('profesi_cpmk') && Schema::hasColumn('profesi_cpmk', 'cpmk_id')) {
+                DB::table('profesi_cpmk')->where('cpmk_id', $ids)->delete();
+            }
+            if (Schema::hasTable('activities') && Schema::hasColumn('activities', 'cpmk_id')) {
+                DB::table('activities')->where('cpmk_id', $ids)->delete();
+            }
+            if (Schema::hasTable('soals') && Schema::hasColumn('soals', 'cpmk_id')) {
+                DB::table('soals')->where('cpmk_id', $ids)->delete();
+            }
+            if (Schema::hasTable('tanpa_soals') && Schema::hasColumn('tanpa_soals', 'cpmk_id')) {
+                DB::table('tanpa_soals')->where('cpmk_id', $ids)->delete();
+            }
+            if (Schema::hasTable('tanpa_soal') && Schema::hasColumn('tanpa_soal', 'cpmk_id')) {
+                DB::table('tanpa_soal')->where('cpmk_id', $ids)->delete();
+            }
+            if (Schema::hasTable('konversi_cpmk_metode') && Schema::hasColumn('konversi_cpmk_metode', 'cpmk_id')) {
+                DB::table('konversi_cpmk_metode')->where('cpmk_id', $ids)->delete();
+            }
+            if (Schema::hasTable('evaluasi_cpmk_mahasiswas') && Schema::hasColumn('evaluasi_cpmk_mahasiswas', 'cpmk_id')) {
+                DB::table('evaluasi_cpmk_mahasiswas')->where('cpmk_id', $ids)->delete();
+            }
+            if (Schema::hasTable('evaluasi_mk_cpmk_angkatans') && Schema::hasColumn('evaluasi_mk_cpmk_angkatans', 'cpmk_id')) {
+                DB::table('evaluasi_mk_cpmk_angkatans')->where('cpmk_id', $ids)->delete();
+            }
+
+            // 4. Hapus CPMK utama
+            $cpmk->delete();
+
+            DB::commit();
+            return redirect()->route($this->getRouteByAuthority())->with('success', "CPMK {$kodeCpmk} & seluruh data terkait berhasil dihapus!");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menghapus CPMK: ' . $e->getMessage());
+        }
     }
 
     private function getRouteByAuthority(): string
     {
+        $otoritas = auth()->user()->otoritas->otoritas ?? '';
         $routes = [
             'Admin' => 'admin.list-cpmk',
             'Admin Universitas' => 'admin-universitas.list-cpmk',
-            'Kepala Program Studi' => 'kepala-program-studi.list-cpmk',
+            'Kepala Program Studi' => 'kepala-program-studi.cpmk-list',
             'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.list-cpmk',
             'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.list-cpmk',
             'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.list-cpmk',
         ];
 
-        return $routes[auth()->user()->otoritas->otoritas] ?? 'default.route';
+        $target = $routes[$otoritas] ?? 'dosen.cpmk-list';
+        if (\Illuminate\Support\Facades\Route::has($target)) {
+            return $target;
+        }
+        return 'dosen.cpmk-list';
     }
 }

@@ -50,11 +50,11 @@
             justify-content: space-between;
         }
 
-        /* Section Titles */
+        /* Section Titles & Subtitles */
         .section-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: #1e293b;
+            font-size: 1.0rem !important;
+            font-weight: 700 !important;
+            color: #1F3BB3;
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -62,7 +62,22 @@
         }
 
         .section-title i {
-            color: #1f3bb3;
+            font-size: 1.1rem !important;
+            color: #1F3BB3;
+        }
+
+        .section-subtitle {
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            color: #1e293b;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 0;
+        }
+
+        .section-subtitle i {
+            font-size: 1.0rem !important;
         }
 
         /* Ensure layout allows sticky scrolling */
@@ -521,13 +536,13 @@
                 <div class="col-md-4 col-sm-6">
                     <div class="p-3 bg-light rounded-3 border text-center">
                         <div class="text-muted small fw-semibold">CPMK Tertinggi</div>
-                        <div class="h4 mb-0 fw-bold text-success mt-1" id="metricHighestCpmk">{{ $kodeMaxCpmk ?: '-' }} <span class="small fs-6 text-muted">({{ $maxCpmk }})</span></div>
+                        <div class="h5 mb-0 fw-bold text-success mt-1" id="metricHighestCpmk" style="font-size: 0.95rem;">{{ $kodeMaxCpmk ?: '-' }} <span class="small text-muted" style="font-size: 0.8rem;">({{ $maxCpmk }})</span></div>
                     </div>
                 </div>
                 <div class="col-md-4 col-sm-6">
                     <div class="p-3 bg-light rounded-3 border text-center">
                         <div class="text-muted small fw-semibold">CPMK Terendah</div>
-                        <div class="h4 mb-0 fw-bold text-danger mt-1" id="metricLowestCpmk">{{ $kodeMinCpmk ?: '-' }} <span class="small fs-6 text-muted">({{ $minCpmk }})</span></div>
+                        <div class="h5 mb-0 fw-bold text-danger mt-1" id="metricLowestCpmk" style="font-size: 0.95rem;">{{ $kodeMinCpmk ?: '-' }} <span class="small text-muted" style="font-size: 0.8rem;">({{ $minCpmk }})</span></div>
                     </div>
                 </div>
             </div>
@@ -536,14 +551,14 @@
             <div class="row g-4 align-items-center mb-4">
                 <div class="col-lg-6 col-md-12">
                     <div class="d-flex justify-content-center align-items-center p-2">
-                        <div style="width: 100%; max-width: 300px; margin: 0 auto;">
+                        <div style="position: relative; width: 100%; height: 270px; max-width: 360px; margin: 0 auto;">
                             <canvas id="radarChart"></canvas>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-6 col-md-12">
                     <div class="d-flex flex-column justify-content-center h-100">
-                        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-table text-primary me-2"></i> Rincian Capaian CPMK:</h6>
+                        <h6 class="section-subtitle mb-2"><i class="bi bi-table text-primary me-2"></i> Rincian Capaian CPMK:</h6>
                         <div class="modern-table-container">
                             <div class="table-responsive" style="max-height: 340px; overflow-y: auto;">
                                 <table class="table modern-table mb-0" id="tableRincianCpmk">
@@ -557,7 +572,7 @@
                                         @forelse ($cpmkTableList as $row)
                                             <tr>
                                                 <td class="text-center">
-                                                    <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-1" style="font-size: 0.82rem;">
+                                                    <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-0.5" style="font-size: 0.72rem; letter-spacing: 0.02em;">
                                                         {{ $row['kode'] }}
                                                     </span>
                                                 </td>
@@ -579,8 +594,8 @@
             {{-- Deskripsi CPMK (Collapsible Grid Cards) --}}
             <div class="mt-4 pt-3 border-top">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 cpmk-desc-header" id="headerToggleCpmkDesc" style="cursor: pointer; user-select: none;">
-                    <h6 class="keterangan fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                        <i class="bi bi-card-text text-primary"></i> Descriptions (Deskripsi CPMK)
+                    <h6 class="section-subtitle keterangan mb-0">
+                        <i class="bi bi-card-text text-primary me-2"></i> Descriptions (Deskripsi CPMK)
                         <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.75rem;">{{ count($cpmkResultAll) }} CPMK</span>
                     </h6>
                     <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center" type="button" id="btnToggleCpmkDesc" style="border-radius: 6px; font-size: 13px; width: 32px; height: 30px; padding: 0;" title="Buka / Tutup Deskripsi CPMK">
@@ -1160,7 +1175,7 @@
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: true,
+                        maintainAspectRatio: false,
                         scales: {
                             r: {
                                 angleLines: {

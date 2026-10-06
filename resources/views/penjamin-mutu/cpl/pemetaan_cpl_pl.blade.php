@@ -115,9 +115,9 @@
                             <thead class="bg-light">
                                 <tr>
                                     <th class="text-center col-no" style="width: 50px;">No</th>
-                                    <th class="text-start col-pl" style="min-width: 180px;">Profil Lulusan (PL)</th>
+                                    <th class="text-start col-pl" style="min-width: 240px; width: 280px;">Profil Lulusan (PL)</th>
                                     @forelse ($cpls as $cpl)
-                                        <th class="text-center col-cpl" title="{{ $cpl->judul }}" style="width: 100px; white-space: normal; font-size: 12px; line-height: 1.3;">
+                                        <th class="text-center col-cpl" title="{{ $cpl->judul }}" style="width: 95px; min-width: 85px; white-space: normal; font-size: 12px; line-height: 1.3;">
                                             <div class="fw-bold">{{ $cpl->kode }}</div>
                                             <div class="text-muted font-11 fw-normal">{{ $cpl->kurikulum->tahun ?? '' }}</div>
                                         </th>
@@ -143,9 +143,11 @@
                                         $isExact100 = (abs($totalBobotPL - 100) < 0.01);
                                     @endphp
                                     <tr>
-                                        <td class="text-center">{{ $index + 1 }}</td>
-                                        <td class="text-start">
-                                            <div class="fw-bold text-dark">{{ $profilLulusan->namaProfil ?: ($profilLulusan->kode ?: 'Profil Lulusan') }}</div>
+                                        <td class="text-center align-middle">{{ $index + 1 }}</td>
+                                        <td class="text-start align-middle">
+                                            <div class="fw-bold text-dark text-wrap text-break" style="min-width: 200px; max-width: 320px; line-height: 1.4; word-break: break-word;">
+                                                {{ $profilLulusan->namaProfil ?: ($profilLulusan->kode ?: 'Profil Lulusan') }}
+                                            </div>
                                         </td>
                                         @foreach ($cpls as $cpl)
                                             @php
@@ -328,7 +330,7 @@
         }
 
         .cpl-pl-table {
-            table-layout: fixed;
+            table-layout: auto !important;
             width: 100% !important;
             border-collapse: separate !important;
             border-spacing: 0 !important;
@@ -338,6 +340,7 @@
         .cpl-pl-table th {
             border-bottom: 2px solid #e2e8f0 !important;
             border-right: 1px solid rgba(0, 0, 0, 0.04) !important;
+            vertical-align: middle !important;
         }
 
         .cpl-pl-table tbody tr {
@@ -348,6 +351,10 @@
             border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
             border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
             border-right: 1px solid rgba(0, 0, 0, 0.04) !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            vertical-align: middle !important;
         }
 
         .cpl-pl-table tbody tr:hover td {
@@ -356,21 +363,24 @@
 
         .cpl-pl-table thead th,
         .cpl-pl-table tbody td {
-            vertical-align: middle;
-            padding: 0.65rem 0.5rem;
+            padding: 0.75rem 0.65rem;
         }
 
         .cpl-pl-table .col-no {
-            width: 50px;
+            width: 50px !important;
+            min-width: 50px !important;
         }
 
         .cpl-pl-table .col-pl {
-            width: 220px;
+            min-width: 240px !important;
+            width: 280px !important;
+            white-space: normal !important;
+            word-break: break-word !important;
         }
 
         .cpl-pl-table .col-cpl {
-            width: auto;
-            min-width: 90px;
+            min-width: 85px !important;
+            width: 95px !important;
         }
 
         .cpl-pl-table .col-total {
@@ -382,9 +392,12 @@
             text-align: center;
         }
 
-        .cpl-pl-table tbody td:nth-child(2) {
-            text-align: left;
+        .cpl-pl-table tbody td:nth-child(2),
+        .cpl-pl-table tbody td.text-start {
+            text-align: left !important;
             font-weight: 600;
+            white-space: normal !important;
+            word-break: break-word !important;
         }
 
         .bg-primary-soft {
@@ -465,9 +478,9 @@
                 },
                 columnDefs: [
                     { targets: 0, className: 'text-center', width: '50px' },
-                    { targets: 1, className: 'text-start', width: '220px' },
+                    { targets: 1, className: 'text-start', width: '280px' },
                     @if ($cpls->count() > 0)
-                    { targets: [{{ implode(',', range(2, 1 + $cpls->count())) }}], className: 'text-center', orderable: false },
+                    { targets: [{{ implode(',', range(2, 1 + $cpls->count())) }}], className: 'text-center', orderable: false, width: '95px' },
                     @endif
                     { targets: {{ 2 + $cpls->count() }}, className: 'text-center', width: '175px', orderable: false }
                 ]

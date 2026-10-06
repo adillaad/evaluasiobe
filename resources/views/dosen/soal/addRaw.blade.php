@@ -70,12 +70,11 @@
 
     <div class="container-fluid">
         <div class="card">
-            <div class="card-header">
-                <div class="fw-bold">
-                    <h3>Tambah Soal Mata Kuliah Baru</h3>
+            <div class="card-header bg-white py-3">
+                <div class="fw-bold d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0 fw-bold text-dark" style="font-size: 1.25rem;">Tambah Soal Mata Kuliah Baru</h4>
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="tooltip" data-bs-placement="left"
-                        title="Form ini digunakan untuk membuat soal yang akan digunakan untuk membuat template penilaian"
-                        style="float:right;">
+                        title="Form ini digunakan untuk membuat soal yang akan digunakan untuk membuat template penilaian">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                             class="bi bi-info-circle-fill" viewBox="0 0 16 16">
                             <path
@@ -222,13 +221,12 @@
 
         <!-- Tabel soal yang sudah disimpan untuk MK + jenis ini -->
         <div class="card mt-4">
-            <div class="card-header">
-                <div class="fw-bold">
-                    <h3 class="mt-3">Data Soal yang Sudah Diinputkan</h3>
+            <div class="card-header bg-white py-3">
+                <div class="fw-bold d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0 fw-bold text-dark" style="font-size: 1.25rem;">Data Soal yang Sudah Diinputkan</h4>
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="tooltip"
                         data-bs-placement="left"
-                        title="Menampilkan soal yang sudah tersimpan untuk Mata Kuliah dan Jenis Penilaian yang dipilih"
-                        style="float:right;">
+                        title="Menampilkan soal yang sudah tersimpan untuk Mata Kuliah dan Jenis Penilaian yang dipilih">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                             class="bi bi-info-circle-fill" viewBox="0 0 16 16">
                             <path

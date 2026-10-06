@@ -56,24 +56,39 @@
             border-top-right-radius: 14px;
         }
 
-        /* Section Titles with Icon and Larger Modern Typography */
+        /* Section Titles & Subtitles with Consistent Typography */
         .section-title {
-            font-size: 1.15rem;
-            font-weight: 700;
+            font-size: 1.0rem !important;
+            font-weight: 700 !important;
             color: #1F3BB3;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             letter-spacing: -0.01em;
             margin-bottom: 0;
         }
 
         .section-title i {
-            font-size: 1.25rem;
+            font-size: 1.1rem !important;
             color: #1F3BB3;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .section-subtitle {
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            color: #1e293b;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: -0.01em;
+            margin-bottom: 0;
+        }
+
+        .section-subtitle i {
+            font-size: 1.0rem !important;
         }
 
         /* Hero Header Profile (Fixed / Sticky when scrolling, Prominent, Neat Alignment) */

@@ -145,7 +145,26 @@ class CPLMKcontroller extends Controller
         //     }
         // }
         
-        $cpls = CPL::all();
+        $idKurikulums = $mks->pluck('id_kurikulum')->unique()->filter();
+        $cplQuery = CPL::query()->with('kurikulum')->orderBy('nomor', 'asc');
+
+        if (auth()->user()->id_prodiUser) {
+            $cplQuery->where('cpls.id_prodi', auth()->user()->id_prodiUser);
+        }
+        if ($idKurikulums->isNotEmpty()) {
+            $cplQuery->whereIn('cpls.id_kurikulum', $idKurikulums);
+        }
+
+        $cpls = $cplQuery->get();
+
+        // Pastikan CPL yang sudah terpetakan tetap dimuat jika ada
+        $mappedCplIds = $cplmks->pluck('cpl_id')->filter()->unique();
+        $missingCplIds = $mappedCplIds->diff($cpls->pluck('id'));
+        if ($missingCplIds->isNotEmpty()) {
+            $extraCpls = CPL::whereIn('id', $missingCplIds)->get();
+            $cpls = $cpls->concat($extraCpls);
+        }
+
         return view('dosen.CPLMK.list', array_merge(
             ['mks' => $mks],
             ['cpls' => $cpls],

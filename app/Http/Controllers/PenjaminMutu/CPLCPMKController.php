@@ -769,21 +769,26 @@ public function storeSubCpmk(Request $request)
     // }
     $validated = $request->validate([
         'cpmk_id' => 'required|integer|exists:cpmks,id',
-        'uraian' => 'required|string',
-        // kurikulum_id dan cpmk_kode tidak perlu divalidasi karena tidak disimpan langsung
+        'uraian'  => 'required|string',
+        'kode'    => 'nullable|string|max:255',
     ]);
 
     try {
         $id_prodi = auth()->user()->id_prodiUser;
         $parentCpmk = CPMK::findOrFail($validated['cpmk_id']);
-        $subCpmkCount = SubCpmk::where('cpmk_id', $validated['cpmk_id'])->count() + 1;
-        do {
-            $newKode = 'Sub-' . $parentCpmk->kode . $subCpmkCount;
-            $existsKode = SubCpmk::where('cpmk_id', $validated['cpmk_id'])->where('kode', $newKode)->exists();
-            if ($existsKode) {
-                $subCpmkCount++;
-            }
-        } while ($existsKode);
+
+        if (!empty($validated['kode'])) {
+            $newKode = trim($validated['kode']);
+        } else {
+            $subCpmkCount = SubCpmk::where('cpmk_id', $validated['cpmk_id'])->count() + 1;
+            do {
+                $newKode = 'Sub-' . $parentCpmk->kode . $subCpmkCount;
+                $existsKode = SubCpmk::where('cpmk_id', $validated['cpmk_id'])->where('kode', $newKode)->exists();
+                if ($existsKode) {
+                    $subCpmkCount++;
+                }
+            } while ($existsKode);
+        }
 
         // 2. Siapkan data yang bersih untuk disimpan
         $dataToCreate = [

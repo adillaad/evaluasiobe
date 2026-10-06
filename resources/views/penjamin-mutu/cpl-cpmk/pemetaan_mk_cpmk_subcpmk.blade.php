@@ -219,6 +219,11 @@
                             </select>
                         </div>
                         <div class="form-group mb-3">
+                            <label for="kode" class="fw-bold">Kode Sub CPMK <span class="text-muted fw-normal small">(Opsional)</span> :</label>
+                            <input type="text" name="kode" id="kode" class="form-control" placeholder="Kosongkan jika ingin kode otomatis dari sistem (misal: Sub-CPMK-011)" value="{{ old('kode') }}">
+                            <small class="text-muted">Biarkan kosong agar sistem membuatkan kode otomatis secara berurutan.</small>
+                        </div>
+                        <div class="form-group mb-3">
                             <label for="uraian" class="fw-bold">Uraian Sub CPMK :</label>
                             <textarea name="uraian" id="uraian" class="form-control" style="height: 100px" placeholder="Uraian Sub CPMK">{{ old('uraian') }}</textarea>
                             @error('uraian')

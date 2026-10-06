@@ -55,6 +55,7 @@
     $(document).ready(function() {
         if (typeof $.fn.DataTable !== 'undefined') {
             $.fn.dataTable.ext.errMode = 'none';
+            $.fn.dataTable.ext.pager.numbers_length = 5;
 
             function setupDataTableLayout() {
                 $('.dataTable').each(function() {

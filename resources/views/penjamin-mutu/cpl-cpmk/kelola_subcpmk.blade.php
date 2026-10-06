@@ -167,7 +167,7 @@
                     <form action="{{ route($currentPrefix . 'cpl-cpmk.subCpmk-store') }}" method="POST">
                         @csrf
                         <div class="row">
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="kurikulum_id" class="fw-bold">Kurikulum :</label>
                                 <select name="kurikulum_id" id="kurikulum_id" class="form-select" required>
                                     <option value="">-- Pilih Kurikulum --</option>
@@ -178,18 +178,22 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="cpl_id" class="fw-bold">CPL :</label>
                                 <select name="cpl_id" id="cpl_id" class="form-select" required>
                                     <option value="">-- Pilih CPL --</option>
                                 </select>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="cpmk_id" class="fw-bold">CPMK :</label>
                                 <input type="hidden" name="cpmk_kode" id="cpmk_kode">
                                 <select name="cpmk_id" id="cpmk_id" class="form-select" required>
                                     <option value="">-- Pilih CPMK --</option>
                                 </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="kode" class="fw-bold">Kode Sub CPMK <span class="text-muted fw-normal small">(Opsional)</span> :</label>
+                                <input type="text" name="kode" id="kode" class="form-control" placeholder="Otomatis jika kosong" value="{{ old('kode') }}">
                             </div>
                         </div>
 

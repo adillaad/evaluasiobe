@@ -1,3 +1,9 @@
+@php
+    use App\Support\AptikomTheme;
+    $isAptikomHeader = auth()->check() && auth()->user()->prodi ? (bool) auth()->user()->prodi->is_aptikom : true;
+    $themeHeaderColor = AptikomTheme::resolve(auth()->user(), $themeColor ?? null);
+    $themeHeaderHoverColor = $isAptikomHeader ? '#004c78' : '#1d52cc';
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -91,36 +97,54 @@
         }
 
         /* UNIFIED GLOBAL BUTTON COLOR STYLES & OUTLINE ICON STATES */
-        .btn-primary, a.btn-primary, button.btn-primary {
-            background-color: #0284c7 !important;
-            border-color: #0284c7 !important;
+        .btn-primary, a.btn-primary, button.btn-primary,
+        .btn-info, a.btn-info, button.btn-info,
+        .btn-cyan, a.btn-cyan, button.btn-cyan,
+        .modern-btn-primary, .btn-theme-cetak {
+            background-color: {{ $themeHeaderColor }} !important;
+            background: {{ $themeHeaderColor }} !important;
+            border-color: {{ $themeHeaderColor }} !important;
             color: #ffffff !important;
         }
-        .btn-primary i, .btn-primary i::before, .btn-primary span, .btn-primary svg {
+        .btn-primary i, .btn-primary i::before, .btn-primary span, .btn-primary svg,
+        .btn-info i, .btn-info i::before, .btn-info span, .btn-info svg,
+        .btn-cyan i, .btn-cyan i::before, .btn-cyan span, .btn-cyan svg,
+        .modern-btn-primary i, .modern-btn-primary span,
+        .btn-theme-cetak i, .btn-theme-cetak span {
             color: #ffffff !important;
             stroke: #ffffff !important;
             fill: #ffffff !important;
         }
         .btn-primary:hover, .btn-primary:focus, .btn-primary:active,
-        a.btn-primary:hover, a.btn-primary:focus, a.btn-primary:active {
-            background-color: #0369a1 !important;
-            border-color: #0369a1 !important;
+        a.btn-primary:hover, a.btn-primary:focus, a.btn-primary:active,
+        .btn-info:hover, .btn-info:focus, .btn-info:active,
+        a.btn-info:hover, a.btn-info:focus, a.btn-info:active,
+        .btn-cyan:hover, .btn-cyan:focus, .btn-cyan:active,
+        a.btn-cyan:hover, a.btn-cyan:focus, a.btn-cyan:active,
+        .modern-btn-primary:hover, .btn-theme-cetak:hover {
+            background-color: {{ $themeHeaderHoverColor }} !important;
+            background: {{ $themeHeaderHoverColor }} !important;
+            border-color: {{ $themeHeaderHoverColor }} !important;
             color: #ffffff !important;
         }
 
-        .btn-outline-primary, a.btn-outline-primary, button.btn-outline-primary {
-            border: 1px solid #0284c7 !important;
+        .btn-outline-primary, a.btn-outline-primary, button.btn-outline-primary,
+        .btn-outline-info, a.btn-outline-info, button.btn-outline-info {
+            border: 1px solid {{ $themeHeaderColor }} !important;
             background-color: transparent !important;
-            color: #0284c7 !important;
+            color: {{ $themeHeaderColor }} !important;
         }
-        .btn-outline-primary i, .btn-outline-primary i::before, .btn-outline-primary span, .btn-outline-primary svg {
-            color: #0284c7 !important;
-            stroke: #0284c7 !important;
+        .btn-outline-primary i, .btn-outline-primary i::before, .btn-outline-primary span, .btn-outline-primary svg,
+        .btn-outline-info i, .btn-outline-info i::before, .btn-outline-info span, .btn-outline-info svg {
+            color: {{ $themeHeaderColor }} !important;
+            stroke: {{ $themeHeaderColor }} !important;
         }
         .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active, .btn-outline-primary.active,
-        a.btn-outline-primary:hover, a.btn-outline-primary:focus, a.btn-outline-primary:active, a.btn-outline-primary.active {
-            background-color: #0284c7 !important;
-            border-color: #0284c7 !important;
+        a.btn-outline-primary:hover, a.btn-outline-primary:focus, a.btn-outline-primary:active, a.btn-outline-primary.active,
+        .btn-outline-info:hover, .btn-outline-info:focus, .btn-outline-info:active, .btn-outline-info.active,
+        a.btn-outline-info:hover, a.btn-outline-info:focus, a.btn-outline-info:active, a.btn-outline-info.active {
+            background-color: {{ $themeHeaderColor }} !important;
+            border-color: {{ $themeHeaderColor }} !important;
             color: #ffffff !important;
         }
         .btn-outline-primary:hover *, .btn-outline-primary:focus *,
@@ -335,9 +359,84 @@
             color: #475569 !important;
         }
         .dataTables_wrapper .dataTables_paginate {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
             float: right !important;
-            text-align: right !important;
             margin-top: 0.75rem !important;
+        }
+
+        /* UNIFIED COMPACT PAGINATION BUTTONS */
+        .pagination {
+            display: inline-flex !important;
+            gap: 4px !important;
+            border-radius: 8px !important;
+        }
+        .pagination .page-item .page-link,
+        .page-link,
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            padding: 0 10px !important;
+            margin: 0 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            border-radius: 6px !important;
+            border: 1px solid #cbd5e1 !important;
+            background: #ffffff !important;
+            background-image: none !important;
+            color: #475569 !important;
+            cursor: pointer !important;
+            box-shadow: none !important;
+            transition: all 0.15s ease-in-out !important;
+            text-decoration: none !important;
+            line-height: 1 !important;
+        }
+        .pagination .page-item .page-link:hover,
+        .page-link:hover,
+        .pagination .page-item .page-link:focus,
+        .page-link:focus,
+        .pagination .page-item .page-link:active,
+        .page-link:active,
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover,
+        .dataTables_wrapper .dataTables_paginate .paginate_button:focus,
+        .dataTables_wrapper .dataTables_paginate .paginate_button:active {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+            background-image: none !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: none !important;
+        }
+        .pagination .page-item.active .page-link,
+        .page-link.active,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:focus,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:active {
+            background-color: {{ $themeHeaderColor }} !important;
+            background: {{ $themeHeaderColor }} !important;
+            background-image: none !important;
+            border-color: {{ $themeHeaderColor }} !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 2px 6px {{ $isAptikomHeader ? 'rgba(0, 97, 153, 0.3)' : 'rgba(38, 100, 245, 0.3)' }} !important;
+        }
+        .pagination .page-item.disabled .page-link,
+        .page-link.disabled,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:focus,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:active {
+            color: #94a3b8 !important;
+            background: #f8fafc !important;
+            background-image: none !important;
+            border-color: #e2e8f0 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7 !important;
+            box-shadow: none !important;
         }
 
         /* UNIFIED GLOBAL FORM INPUT SYSTEM */

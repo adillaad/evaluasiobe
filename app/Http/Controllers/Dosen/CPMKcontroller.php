@@ -9,6 +9,7 @@ use App\Models\SubCpmk; // <--- Jangan lupa import ini
 use Illuminate\Http\Request;
 use App\Traits\UniversityFilterTrait;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CPMKcontroller extends Controller
 {
@@ -192,7 +193,7 @@ class CPMKcontroller extends Controller
             ->join('kurikulums', 'cpls.id_kurikulum', '=', 'kurikulums.id')
             ->whereNotNull('cpmks.cpl_id')
             ->select('cpmks.*')
-            ->with('subCpmks');
+            ->with(['subCpmks', 'cpl.kurikulum', 'prodi.fakultas']);
 
         // Logika filter berdasarkan peran pengguna
         if ($userOtoritas === 'Admin Universitas') {
@@ -218,8 +219,7 @@ class CPMKcontroller extends Controller
         $cpmks = $cpmks
             ->orderBy('cpls.kode', 'asc')
             ->orderBy('cpmks.kode', 'asc')
-            ->paginate(10)
-            ->withQueryString();
+            ->get();
 
         // Gunakan method dari trait untuk data dropdown filter
         $filterData = $this->getFilterData($request);
@@ -232,11 +232,17 @@ class CPMKcontroller extends Controller
 
     public function Edit($id)
     {
-        $cpmk = CPMK::find($id);
-        $mk = MK::firstWhere('kode', $cpmk->kode_mk);
-        $cpmk->mk = $mk->nama;
-        // dd($cpmk);
-        return view('dosen.CPMK.edit', compact('cpmk'));
+        $idProdi = auth()->user()->id_prodiUser;
+        $cpmk = CPMK::with('cpl')->findOrFail($id);
+        $cpls = CPL::query()
+            ->join('kurikulums', 'cpls.id_kurikulum', '=', 'kurikulums.id')
+            ->where('cpls.id_prodi', $idProdi)
+            ->select('cpls.*', 'kurikulums.tahun as tahun_kurikulum')
+            ->orderBy('kurikulums.tahun', 'asc')
+            ->orderBy('cpls.kode', 'asc')
+            ->get();
+
+        return view('dosen.CPMK.edit', compact('cpmk', 'cpls'));
     }
 
     public function Update(Request $request, $id)
@@ -255,20 +261,120 @@ class CPMKcontroller extends Controller
     }
     public function Delete($id)
     {
-        CPMK::where('id', $id)->delete();
-        return redirect()->route('dosen.cpmk-list')->with('success', 'CPMK successfully deleted!');
+        DB::beginTransaction();
+
+        try {
+            $cpmk = CPMK::findOrFail($id);
+            $kodeCpmk = $cpmk->kode;
+
+            // 1. Ambil semua ID Sub-CPMK terkait menggunakan Model SubCpmk (tabel: sub_cpmk)
+            $subCpmkIds = SubCpmk::where('cpmk_id', $id)->pluck('id');
+
+            // 2. Hapus data di tabel turunan Sub-CPMK (jika ada)
+            if ($subCpmkIds->isNotEmpty()) {
+                if (Schema::hasTable('mk_sub_cpmk') && Schema::hasColumn('mk_sub_cpmk', 'sub_cpmk_id')) {
+                    DB::table('mk_sub_cpmk')->whereIn('sub_cpmk_id', $subCpmkIds)->delete();
+                }
+                if (Schema::hasTable('activities') && Schema::hasColumn('activities', 'sub_cpmk_id')) {
+                    DB::table('activities')->whereIn('sub_cpmk_id', $subCpmkIds)->delete();
+                }
+                if (Schema::hasTable('mutus') && Schema::hasColumn('mutus', 'sub_cpmk_id')) {
+                    DB::table('mutus')->whereIn('sub_cpmk_id', $subCpmkIds)->delete();
+                }
+                if (Schema::hasTable('soals') && Schema::hasColumn('soals', 'sub_cpmk_id')) {
+                    DB::table('soals')->whereIn('sub_cpmk_id', $subCpmkIds)->delete();
+                }
+                if (Schema::hasTable('tanpa_soal') && Schema::hasColumn('tanpa_soal', 'sub_cpmk_id')) {
+                    DB::table('tanpa_soal')->whereIn('sub_cpmk_id', $subCpmkIds)->delete();
+                }
+                if (Schema::hasTable('konversi_cpmk_metode') && Schema::hasColumn('konversi_cpmk_metode', 'sub_cpmk_id')) {
+                    DB::table('konversi_cpmk_metode')->whereIn('sub_cpmk_id', $subCpmkIds)->delete();
+                }
+                SubCpmk::whereIn('id', $subCpmkIds)->delete();
+            }
+
+            // 3. Hapus data di tabel yang mereferensikan CPMK (foreign keys) dengan verifikasi keberadaan tabel & kolom
+            if (Schema::hasTable('mutus') && Schema::hasColumn('mutus', 'Cpmk')) {
+                DB::table('mutus')->where('Cpmk', $id)->delete();
+            }
+            if (Schema::hasTable('cpmk_soals') && Schema::hasColumn('cpmk_soals', 'id_cpmk')) {
+                DB::table('cpmk_soals')->where('id_cpmk', $id)->delete();
+            }
+            if (Schema::hasTable('cpl_cpmk') && Schema::hasColumn('cpl_cpmk', 'cpmk_id')) {
+                DB::table('cpl_cpmk')->where('cpmk_id', $id)->delete();
+            }
+            if (Schema::hasTable('cpmk_mk') && Schema::hasColumn('cpmk_mk', 'cpmk_id')) {
+                DB::table('cpmk_mk')->where('cpmk_id', $id)->delete();
+            }
+            if (Schema::hasTable('cpl_mk_cpmk_penilaian') && Schema::hasColumn('cpl_mk_cpmk_penilaian', 'cpmk_id')) {
+                DB::table('cpl_mk_cpmk_penilaian')->where('cpmk_id', $id)->delete();
+            }
+            if (Schema::hasTable('profesi_cpmk') && Schema::hasColumn('profesi_cpmk', 'cpmk_id')) {
+                DB::table('profesi_cpmk')->where('cpmk_id', $id)->delete();
+            }
+            if (Schema::hasTable('activities') && Schema::hasColumn('activities', 'cpmk_id')) {
+                DB::table('activities')->where('cpmk_id', $id)->delete();
+            }
+            if (Schema::hasTable('soals') && Schema::hasColumn('soals', 'cpmk_id')) {
+                DB::table('soals')->where('cpmk_id', $id)->delete();
+            }
+            if (Schema::hasTable('tanpa_soals') && Schema::hasColumn('tanpa_soals', 'cpmk_id')) {
+                DB::table('tanpa_soals')->where('cpmk_id', $id)->delete();
+            }
+            if (Schema::hasTable('tanpa_soal') && Schema::hasColumn('tanpa_soal', 'cpmk_id')) {
+                DB::table('tanpa_soal')->where('cpmk_id', $id)->delete();
+            }
+            if (Schema::hasTable('konversi_cpmk_metode') && Schema::hasColumn('konversi_cpmk_metode', 'cpmk_id')) {
+                DB::table('konversi_cpmk_metode')->where('cpmk_id', $id)->delete();
+            }
+            if (Schema::hasTable('evaluasi_cpmk_mahasiswas') && Schema::hasColumn('evaluasi_cpmk_mahasiswas', 'cpmk_id')) {
+                DB::table('evaluasi_cpmk_mahasiswas')->where('cpmk_id', $id)->delete();
+            }
+            if (Schema::hasTable('evaluasi_mk_cpmk_angkatans') && Schema::hasColumn('evaluasi_mk_cpmk_angkatans', 'cpmk_id')) {
+                DB::table('evaluasi_mk_cpmk_angkatans')->where('cpmk_id', $id)->delete();
+            }
+
+            // 4. Hapus CPMK utama
+            $cpmk->delete();
+
+            DB::commit();
+
+            return redirect()
+                ->route('dosen.cpmk-list')
+                ->with('success', "CPMK $kodeCpmk & seluruh data terkait berhasil dihapus!");
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return redirect()
+                ->back()
+                ->with('error', 'Gagal menghapus CPMK: ' . $e->getMessage());
+        }
     }
 
     public function hapusSubCpmk($id)
     {
+        DB::beginTransaction();
+
         try { 
             $subCpmk = SubCpmk::findOrFail($id);
             $kodeSub = $subCpmk->kode; 
+
+            if (Schema::hasTable('mk_sub_cpmk') && Schema::hasColumn('mk_sub_cpmk', 'sub_cpmk_id')) {
+                DB::table('mk_sub_cpmk')->where('sub_cpmk_id', $id)->delete();
+            }
+            if (Schema::hasTable('activities') && Schema::hasColumn('activities', 'sub_cpmk_id')) {
+                DB::table('activities')->where('sub_cpmk_id', $id)->delete();
+            }
+
             $subCpmk->delete(); 
+            DB::commit();
+
             return redirect()->back()->with('success', "$kodeSub berhasil dihapus.");
 
-        } catch (\Exception $e) { 
-            return redirect()->back()->with('error', 'Gagal menghapus Sub-CPMK. Terjadi kesalahan sistem.');
+        } catch (\Throwable $e) { 
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menghapus Sub-CPMK: ' . $e->getMessage());
         }
     }
 }

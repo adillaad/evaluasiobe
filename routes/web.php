@@ -233,6 +233,12 @@ Route::middleware(['auth'])->group(function () {
             // CPMK routes
             Route::controller(CPMKdosen::class)->group(function () {
                 Route::get('cpmk/list-cpmk', 'List')->name('cpmk-list');
+                Route::get('cpmk/add-cpmk', 'Add')->name('cpmk-add');
+                Route::post('cpmk/add-cpmk', 'Store')->name('cpmk-store');
+                Route::get('cpmk/edit-cpmk/{id}', 'Edit')->name('cpmk-edit');
+                Route::put('cpmk/edit-cpmk/{id}', 'Update')->name('cpmk-update');
+                Route::delete('cpmk/delete-cpmk/{id}', 'Delete')->name('cpmk-delete');
+                Route::delete('/sub-cpmk/delete/{id}', 'hapusSubCpmk')->name('sub-cpmk-delete');
             });
 
             // Activities routes
@@ -436,6 +442,13 @@ Route::middleware(['auth'])->group(function () {
                         Route::put('edit-cpmk/{id}', 'update')->name('update-cpmk');
                         Route::delete('delete-cpmk/{id}', 'delete')->name('delete-cpmk');
                         Route::get('/get-cpl-by-kurikulum/{kurikulum_id}','getCplbyKurkulum')->name('getCplByKurikulum');
+
+                        // Aliases for compatibility
+                        Route::get('cpmk-edit/{id}', 'edit')->name('cpmk-edit');
+                        Route::put('cpmk-update/{id}', 'update')->name('cpmk-update');
+                        Route::delete('cpmk-delete/{id}', 'delete')->name('cpmk-delete');
+                        Route::get('cpmk-add', 'create')->name('cpmk-add');
+                        Route::post('cpmk-store', 'store')->name('cpmk-store');
                     });
                 }
             });
@@ -475,8 +488,8 @@ Route::middleware(['auth'])->group(function () {
                     Route::controller(CPMKdosen::class)->group(function () {
                         Route::get('cpmk/add-cpmk', 'Add')->name('cpmk-add');
                         Route::post('cpmk/add-cpmk', 'Store')->name('cpmk-store');
-                        Route::get('cpmk/edit-cpmk/{id}', 'Edit')->name('cpmk-edit');;
-                        Route::put('cpmk/edit-cpmk/{id}', 'Update');
+                        Route::get('cpmk/edit-cpmk/{id}', 'Edit')->name('cpmk-edit');
+                        Route::put('cpmk/edit-cpmk/{id}', 'Update')->name('cpmk-update');
                         Route::delete('cpmk/delete-cpmk/{id}', 'Delete')->name('cpmk-delete');
                         Route::delete('/sub-cpmk/delete/{id}', 'hapusSubCpmk')->name('sub-cpmk-delete');
                     });
@@ -665,6 +678,13 @@ Route::middleware(['auth'])->group(function () {
                             Route::get('edit-cpmk/{id}', 'edit')->name('edit-cpmk');
                             Route::put('edit-cpmk/{id}', 'update')->name('update-cpmk');
                             Route::delete('delete-cpmk/{id}', 'delete')->name('delete-cpmk');
+
+                            // Aliases for compatibility
+                            Route::get('cpmk-edit/{id}', 'edit')->name('cpmk-edit');
+                            Route::put('cpmk-update/{id}', 'update')->name('cpmk-update');
+                            Route::delete('cpmk-delete/{id}', 'delete')->name('cpmk-delete');
+                            Route::get('cpmk-add', 'create')->name('cpmk-add');
+                            Route::post('cpmk-store', 'store')->name('cpmk-store');
                         });
                     }else {
                         // Penjamin Mutu Universitas & Fakultas -> Hanya List
@@ -1098,6 +1118,13 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                     Route::get('edit-cpmk/{id}', 'edit')->name('edit-cpmk');
                     Route::put('edit-cpmk/{id}', 'update')->name('update-cpmk');
                     Route::delete('delete-cpmk/{id}', 'delete')->name('delete-cpmk');
+
+                    // Aliases for compatibility
+                    Route::get('cpmk-edit/{id}', 'edit')->name('cpmk-edit');
+                    Route::put('cpmk-update/{id}', 'update')->name('cpmk-update');
+                    Route::delete('cpmk-delete/{id}', 'delete')->name('cpmk-delete');
+                    Route::get('cpmk-add', 'create')->name('cpmk-add');
+                    Route::post('cpmk-store', 'store')->name('cpmk-store');
                 });
 
                 // BK Pages

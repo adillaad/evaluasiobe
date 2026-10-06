@@ -142,24 +142,39 @@
             color: #ef4444;
         }
 
-        /* Section Titles with Icon and Larger Modern Typography */
+        /* Section Titles & Subtitles with Consistent Typography */
         .section-title {
-            font-size: 1.15rem;
-            font-weight: 700;
+            font-size: 1.0rem !important;
+            font-weight: 700 !important;
             color: #1F3BB3;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             letter-spacing: -0.01em;
             margin-bottom: 0;
         }
 
         .section-title i {
-            font-size: 1.25rem;
+            font-size: 1.1rem !important;
             color: #1F3BB3;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .section-subtitle {
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            color: #1e293b;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: -0.01em;
+            margin-bottom: 0;
+        }
+
+        .section-subtitle i {
+            font-size: 1.0rem !important;
         }
 
         /* Ensure layout ancestors allow sticky / fixed scrolling */
@@ -947,7 +962,7 @@
                 {{-- Tabel Rincian Skor Capaian CPL Per Tahun --}}
                 <div class="mt-4 pt-3 border-top">
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                        <h6 class="fw-bold text-dark mb-0"><i class="bi bi-table text-primary me-2"></i> Rincian Skor Capaian CPL:</h6>
+                        <h6 class="section-subtitle mb-0"><i class="bi bi-table text-primary me-2"></i> Rincian Skor Capaian CPL:</h6>
                     </div>
                     <div class="modern-table-container mb-4">
                         <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
@@ -1009,7 +1024,7 @@
                 {{-- Tabel Rincian Ketercapaian CPL (%) Per Tahun --}}
                 <div class="mt-4 pt-3 border-top">
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                        <h6 class="fw-bold text-dark mb-0"><i class="bi bi-table text-primary me-2"></i> Rincian Ketercapaian CPL (%):</h6>
+                        <h6 class="section-subtitle mb-0"><i class="bi bi-table text-primary me-2"></i> Rincian Ketercapaian CPL (%):</h6>
                     </div>
                     <div class="modern-table-container mb-4">
                         <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
@@ -1034,7 +1049,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="p-3 border rounded-3" style="background: #ffffff;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center">
+                                    <h6 class="section-subtitle mb-0">
                                         <i class="bi bi-check-circle-fill text-success me-2"></i> Mata Kuliah Lulus
                                     </h6>
                                 </div>
@@ -1047,7 +1062,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="p-3 border rounded-3" style="background: #ffffff;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="keteranganTidakLulus fw-bold text-dark mb-0 d-flex align-items-center">
+                                    <h6 class="section-subtitle keteranganTidakLulus mb-0">
                                         <i class="bi bi-x-circle-fill text-danger me-2"></i> Mata Kuliah Tidak Lulus
                                     </h6>
                                 </div>
@@ -1061,7 +1076,7 @@
 
                     {{-- Pemetaan CPL ke Mata Kuliah --}}
                     <div class="mt-4 pt-3 border-top">
-                        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-diagram-2 text-primary me-2"></i> Pemetaan CPL ke Mata Kuliah :</h6>
+                        <h6 class="section-subtitle mb-2"><i class="bi bi-diagram-2 text-primary me-2"></i> Pemetaan CPL ke Mata Kuliah :</h6>
                         <div class="modern-guide-box mb-4">
                             <div class="row align-items-center g-3 mb-3">
                                 <div class="col-md-4 col-sm-6">
@@ -1077,8 +1092,8 @@
 
                         {{-- Deskripsi CPL (Bisa di Buka Tutup) --}}
                         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-4 pt-3 border-top" id="headerToggleCplDesc" style="cursor: pointer; user-select: none;">
-                            <h6 class="keterangan fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                                <i class="bi bi-card-text text-primary"></i> Descriptions (Deskripsi CPL)
+                            <h6 class="section-subtitle keterangan mb-0">
+                                <i class="bi bi-card-text text-primary me-2"></i> Descriptions (Deskripsi CPL)
                                 <span id="cplBadgeCount" class="badge bg-light text-secondary border ms-1" style="font-size: 0.75rem; display: none;"></span>
                             </h6>
                             <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center" type="button" id="btnToggleCplDesc" style="border-radius: 6px; font-size: 13px; width: 32px; height: 30px; padding: 0; pointer-events: none;" title="Buka / Tutup Deskripsi CPL">
@@ -1207,7 +1222,7 @@
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-list-stars text-primary me-2"></i> Rincian Bobot Profil Lulusan & Karir:</h6>
+                        <h6 class="section-subtitle mb-2"><i class="bi bi-list-stars text-primary me-2"></i> Rincian Bobot Profil Lulusan & Karir:</h6>
                         <div class="modern-table-container">
                             <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
                                 <table id="hasilProfilTable" class="table modern-table mb-0">
