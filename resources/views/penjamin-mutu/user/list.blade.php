@@ -174,6 +174,15 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        @if ($errors->any())
+                            <div class="alert alert-danger py-2 small mb-3">
+                                <ul class="mb-0 ps-3">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Name <span class="text-danger">*</span></label>
@@ -228,20 +237,23 @@
                         {{-- UNIVERSITAS --}}
                         <div class="mb-3">
                             <label class="form-label">Universitas</label>
-                            <input type="hidden" name="universitas" value="{{ auth()->user()->id_universitasUser }}">
+                            <input type="hidden" name="universitas" value="{{ auth()->user()->id_universitasUser ?? 1 }}">
                             <input type="text" class="form-control" value="{{ auth()->user()->universitas->nama ?? '-' }}" readonly>
                         </div>
 
                         {{-- FAKULTAS --}}
                         <div class="mb-3">
                             <label class="form-label">Fakultas <span class="text-danger">*</span></label>
-                            @php $isFakultasDisabled = in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Kepala Program Studi']); @endphp
+                            @php 
+                                $isFakultasDisabled = in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Kepala Program Studi']); 
+                                $userFakultasId = auth()->user()->id_fakultasUser ?? auth()->user()->prodi?->id_fakultas ?? auth()->user()->prodis->first()?->id_fakultas;
+                            @endphp
                             @if ($isFakultasDisabled)
-                                <input type="hidden" name="fakultas" value="{{ auth()->user()->id_fakultasUser }}">
+                                <input type="hidden" name="fakultas" value="{{ $userFakultasId }}">
                             @endif
                             <select class="form-select w-100" name="{{ $isFakultasDisabled ? '' : 'fakultas' }}" {{ $isFakultasDisabled ? 'disabled' : '' }}>
                                 @foreach ($faculties ?? ($fakultas ?? []) as $f)
-                                    <option value="{{ $f->id }}" {{ old('fakultas', $isFakultasDisabled ? auth()->user()->id_fakultasUser : '') == $f->id ? 'selected' : '' }}>
+                                    <option value="{{ $f->id }}" {{ old('fakultas', $userFakultasId) == $f->id ? 'selected' : '' }}>
                                         {{ $f->nama }}
                                     </option>
                                 @endforeach
@@ -252,16 +264,19 @@
                         {{-- PRODI --}}
                         <div class="mb-3">
                             <label class="form-label">Prodi <span class="text-danger">*</span></label>
-                            @php $isProdiLocked = in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']); @endphp
+                            @php 
+                                $isProdiLocked = in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']); 
+                                $userProdiId = auth()->user()->id_prodiUser ?? auth()->user()->prodis->first()?->id;
+                            @endphp
                             @if ($isProdiLocked)
-                                <input type="hidden" name="prodi[]" value="{{ auth()->user()->id_prodiUser }}">
+                                <input type="hidden" name="prodi[]" value="{{ $userProdiId }}">
                             @endif
-                            <select class="form-select w-100" name="{{ $isProdiLocked ? '' : 'prodi[]' }}" {{ $isProdiLocked ? 'disabled' : 'multiple' }}>
+                            <select class="form-select w-100" name="{{ $isProdiLocked ? '' : 'prodi[]' }}" {{ $isProdiLocked ? 'disabled' : '' }}>
                                 @if ($isProdiLocked)
-                                    <option value="{{ auth()->user()->id_prodiUser }}" selected>{{ auth()->user()->prodi->nama ?? '-' }}</option>
+                                    <option value="{{ $userProdiId }}" selected>{{ auth()->user()->prodi->nama ?? auth()->user()->prodis->first()?->nama ?? '-' }}</option>
                                 @else
                                     @foreach($programs ?? ($prodi ?? []) as $p)
-                                        <option value="{{ $p->id }}" {{ (is_array(old('prodi')) && in_array($p->id, old('prodi'))) ? 'selected' : '' }}>
+                                        <option value="{{ $p->id }}" {{ (is_array(old('prodi')) && in_array($p->id, old('prodi'))) || $loop->first ? 'selected' : '' }}>
                                             {{ $p->nama }}
                                         </option>
                                     @endforeach

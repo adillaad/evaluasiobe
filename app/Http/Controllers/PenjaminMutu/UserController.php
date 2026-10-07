@@ -94,32 +94,77 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z., ]+$/'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => [
-                'required', 
-                'string', 
-                'min:8',
-                'confirmed',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/'
-            ],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
             'img' => ['nullable'],
-            'otoritas' => ['required', 'array'],
-            'otoritas.*' => ['required', 'string', 'max:255'],
-            'nama_otoritas' => ['nullable', 'array'],
-            'nama_otoritas.*' => ['nullable', 'string', 'max:255', 'regex:/^[a-zA-Z., ]+$/'],
-            'prodi' => ['required', 'array'],
-            'prodi.*' => ['exists:prodi,id'],
-            'fakultas' => ['required'],
-            'universitas' => ['required']
-        ], [
-            // Custom messages
-            'password.regex' => 'Password Harus Mengandung Huruf Besar, Huruf Kecil, Angka, dan Simbol',
+            'otoritas' => ['required'],
+            'prodi' => ['nullable'],
+            'fakultas' => ['nullable'],
+            'universitas' => ['nullable']
         ]);
 
-        // Ambil prodi pertama dari array untuk dijadikan prodi aktif default
-        $activeProdiId = $request->prodi[0];
-        $activeProdi = Prodi::with('fakultas')->find($activeProdiId);
+        $prodiArray = array_values(array_filter((array) $request->input('prodi', [])));
+        if (empty($prodiArray)) {
+            $authUserProdiId = auth()->user()->id_prodiUser ?? auth()->user()->prodis->first()?->id;
+            if ($authUserProdiId) {
+                $prodiArray = [$authUserProdiId];
+            } else {
+                $firstProdi = Prodi::first();
+                if ($firstProdi) {
+                    $prodiArray = [$firstProdi->id];
+                }
+            }
+        }
+
+        $activeProdiId = $prodiArray[0] ?? null;
+        $activeProdi = $activeProdiId ? Prodi::with('fakultas')->find($activeProdiId) : null;
+        if (!$activeProdi) {
+            $activeProdi = Prodi::with('fakultas')->first();
+        }
+
+        $idFakultas = $activeProdi ? $activeProdi->id_fakultas : (auth()->user()->id_fakultasUser ?? 1);
+        $idUniversitas = ($activeProdi && $activeProdi->fakultas) ? $activeProdi->fakultas->id_universitas : (auth()->user()->id_universitasUser ?? 1);
+
+        $existingUser = User::where('email', $request->email)->first();
+
+        if ($existingUser) {
+            DB::transaction(function () use ($request, $existingUser, $activeProdi, $idFakultas, $idUniversitas, $prodiArray) {
+                $updateData = ['name' => $request->name];
+                if (!empty($request->password)) {
+                    $updateData['password'] = Hash::make($request->password);
+                }
+                if (!$existingUser->id_prodiUser && $activeProdi) {
+                    $updateData['id_prodiUser'] = $activeProdi->id;
+                    $updateData['id_fakultasUser'] = $idFakultas;
+                    $updateData['id_universitasUser'] = $idUniversitas;
+                }
+                $existingUser->update($updateData);
+
+                $otoritasArray = (array) $request->input('otoritas', []);
+                $namaOtoritasArray = $request->input('nama_otoritas', []);
+                foreach ($otoritasArray as $otoritas) {
+                    if (!$existingUser->otoritas()->where('otoritas', $otoritas)->exists()) {
+                        UserOtoritas::create([
+                            'user_id' => $existingUser->id,
+                            'otoritas' => $otoritas,
+                            'nama_otoritas' => is_array($namaOtoritasArray) ? ($namaOtoritasArray[$otoritas] ?? null) : null,
+                            'active' => !$existingUser->otoritas()->where('active', true)->exists()
+                        ]);
+                    }
+                }
+
+                $hasActiveProdi = $existingUser->prodis()->wherePivot('active', true)->exists();
+                foreach (array_unique($prodiArray) as $pId) {
+                    if (!$existingUser->prodis()->where('prodi_id', $pId)->exists()) {
+                        $existingUser->prodis()->attach($pId, ['active' => !$hasActiveProdi]);
+                        $hasActiveProdi = true;
+                    }
+                }
+            });
+
+            return redirect()->back()->with('success', 'User ' . $existingUser->name . ' (' . $request->email . ') berhasil ditambahkan!');
+        }
 
         $img = $request->file('img');
         if ($img != null) {
@@ -131,42 +176,39 @@ class UserController extends Controller
 
         $user = null;
 
-        DB::transaction(function () use ($request, $imagePath, $activeProdi, &$user) {
-            // Buat user dengan prodi aktif pertama
+        DB::transaction(function () use ($request, $imagePath, $activeProdi, $idFakultas, $idUniversitas, $prodiArray, &$user) {
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'img' => $imagePath,
-                // DIUBAH: Isi kolom lama dengan data dari prodi aktif pertama
-                'id_prodiUser' => $activeProdi->id,
-                'id_fakultasUser' => $activeProdi->id_fakultas,
-                'id_universitasUser' => $activeProdi->fakultas->id_universitas,
+                'id_prodiUser' => $activeProdi ? $activeProdi->id : null,
+                'id_fakultasUser' => $idFakultas,
+                'id_universitasUser' => $idUniversitas,
             ]);
 
-            // Handle multiple otoritas (tidak ada perubahan)
-            $otoritasArray = $request->otoritas;
-            $namaOtoritasArray = $request->nama_otoritas ?? [];
+            $otoritasArray = (array) $request->input('otoritas', []);
+            $namaOtoritasArray = $request->input('nama_otoritas', []);
             $isFirst = true;
             foreach ($otoritasArray as $otoritas) {
                 UserOtoritas::create([
                     'user_id' => $user->id,
                     'otoritas' => $otoritas,
-                    'nama_otoritas' => $namaOtoritasArray[$otoritas] ?? null,
+                    'nama_otoritas' => is_array($namaOtoritasArray) ? ($namaOtoritasArray[$otoritas] ?? null) : null,
                     'active' => $isFirst
                 ]);
                 $isFirst = false;
             }
 
-            // BARU: Handle multiple prodi, mirip seperti otoritas
-            $prodiArray = array_unique($request->prodi);
             $prodiSyncData = [];
             $isFirstProdi = true;
-            foreach ($prodiArray as $prodiId) {
+            foreach (array_unique($prodiArray) as $prodiId) {
                 $prodiSyncData[$prodiId] = ['active' => $isFirstProdi];
                 $isFirstProdi = false;
             }
-            $user->prodis()->sync($prodiSyncData);
+            if (!empty($prodiSyncData)) {
+                $user->prodis()->sync($prodiSyncData);
+            }
         });
 
         event(new Registered($user));
@@ -176,6 +218,12 @@ class UserController extends Controller
 
     public function list(Request $request)
     {
+        $authUser = auth()->user();
+        $authUnivId = $authUser->id_universitasUser ?? $authUser->fakultas?->id_universitas ?? $authUser->prodis->first()?->fakultas?->id_universitas;
+        $authFakId = $authUser->id_fakultasUser ?? $authUser->prodi?->id_fakultas ?? $authUser->prodis->first()?->id_fakultas;
+        $kaprodiProdiId = $authUser->id_prodiUser ?? $authUser->prodis->first()?->id;
+        $userOtoritas = $authUser->otoritas->otoritas ?? '';
+
         $query = User::query()
             ->select('users.*')
             ->with(['otoritas', 'prodis'])
@@ -189,14 +237,15 @@ class UserController extends Controller
                 COALESCE(prodi.id, users.id_prodiUser) ASC
             ')
             ->orderByRaw("FIELD(user_otoritas.otoritas, 'Admin', 'Admin Universitas', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen')")
-            ->whereNotNull(['name', 'email', 'id_universitasUser'])
+            ->whereNotNull('name')
+            ->whereNotNull('email')
             ->where('users.id', '!=', auth()->id())
             ->distinct();
 
         $availableDosen = collect();
 
-        // Untuk Admin Universitas
-        if (auth()->user()->otoritas->otoritas == 'Penjamin Mutu Universitas') {
+        // Filter berdasarkan peran
+        if ($userOtoritas == 'Penjamin Mutu Universitas') {
             $query->whereHas('otoritas', function ($q) {
                 $q->whereIn('otoritas', [
                     'Penjamin Mutu Fakultas',
@@ -206,9 +255,16 @@ class UserController extends Controller
                     'Kepala Program Studi',
                     'Dosen'
                 ]);
-            })
-                ->where('id_universitasUser', auth()->user()->id_universitasUser);
-        } elseif (auth()->user()->otoritas->otoritas == 'Penjamin Mutu Fakultas') {
+            });
+            if ($authUnivId) {
+                $query->where(function ($q) use ($authUnivId) {
+                    $q->where('id_universitasUser', $authUnivId)
+                      ->orWhereHas('prodis.fakultas', function ($sub) use ($authUnivId) {
+                          $sub->where('fakultas.id_universitas', $authUnivId);
+                      });
+                });
+            }
+        } elseif ($userOtoritas == 'Penjamin Mutu Fakultas') {
             $query->whereHas('otoritas', function ($q) {
                 $q->whereIn('otoritas', [
                     'Penjamin Mutu Program Studi',
@@ -216,38 +272,53 @@ class UserController extends Controller
                     'Kepala Program Studi',
                     'Dosen'
                 ]);
-            })
-                ->where('id_fakultasUser', auth()->user()->id_fakultasUser);
-        } elseif (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
-            $kaprodiProdiId = auth()->user()->id_prodiUser;
-
+            });
+            if ($authFakId) {
+                $query->where(function ($q) use ($authFakId) {
+                    $q->where('id_fakultasUser', $authFakId)
+                      ->orWhereHas('prodis', function ($sub) use ($authFakId) {
+                          $sub->where('prodi.id_fakultas', $authFakId);
+                      });
+                });
+            }
+        } elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
             $query->whereHas('otoritas', function ($q) {
                 $q->whereIn('otoritas', [
                     'Kepala Program Studi',
                     'Dosen'
                 ]);
-            })
-                ->where(function ($q) use ($kaprodiProdiId) {
+            });
+
+            if ($kaprodiProdiId) {
+                $query->where(function ($q) use ($kaprodiProdiId) {
                     $q->where('id_prodiUser', $kaprodiProdiId)
                       ->orWhereHas('prodis', function ($p) use ($kaprodiProdiId) {
                           $p->where('prodi.id', $kaprodiProdiId);
                       });
                 });
 
-            // Ambil daftar seluruh dosen yang ada di universitas tetapi belum masuk ke prodi Kaprodi
-            $availableDosen = User::whereHas('otoritas', function ($q) {
-                    $q->whereIn('otoritas', ['Dosen', 'Kepala Program Studi']);
-                })
-                ->where('id_universitasUser', auth()->user()->id_universitasUser)
-                ->whereDoesntHave('prodis', function ($p) use ($kaprodiProdiId) {
-                    $p->where('prodi.id', $kaprodiProdiId);
-                })
-                ->where(function($q) use ($kaprodiProdiId) {
-                    $q->where('id_prodiUser', '!=', $kaprodiProdiId)
-                      ->orWhereNull('id_prodiUser');
-                })
-                ->orderBy('name', 'asc')
-                ->get();
+                // Ambil daftar seluruh dosen yang ada di universitas tetapi belum masuk ke prodi Kaprodi
+                $availableDosen = User::whereHas('otoritas', function ($q) {
+                        $q->whereIn('otoritas', ['Dosen', 'Kepala Program Studi']);
+                    })
+                    ->where(function ($q) use ($authUnivId) {
+                        if ($authUnivId) {
+                            $q->where('id_universitasUser', $authUnivId)
+                              ->orWhereHas('prodis.fakultas', function ($sub) use ($authUnivId) {
+                                  $sub->where('fakultas.id_universitas', $authUnivId);
+                              });
+                        }
+                    })
+                    ->whereDoesntHave('prodis', function ($p) use ($kaprodiProdiId) {
+                        $p->where('prodi.id', $kaprodiProdiId);
+                    })
+                    ->where(function($q) use ($kaprodiProdiId) {
+                        $q->where('id_prodiUser', '!=', $kaprodiProdiId)
+                          ->orWhereNull('id_prodiUser');
+                    })
+                    ->orderBy('name', 'asc')
+                    ->get();
+            }
         }
 
 
@@ -333,31 +404,41 @@ class UserController extends Controller
         $userOtoritas = auth()->user()->otoritas->otoritas;
 
         if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
-            $kaprodiProdiId = auth()->user()->id_prodiUser;
+            $kaprodiProdiId = auth()->user()->id_prodiUser ?? auth()->user()->prodis->first()?->id;
 
-            // Lepas relasi prodi_user untuk prodi Kaprodi ini
-            $user->prodis()->detach($kaprodiProdiId);
+            if ($kaprodiProdiId) {
+                // Lepas relasi prodi_user untuk prodi Kaprodi ini
+                $user->prodis()->detach($kaprodiProdiId);
 
-            // Jika id_prodiUser aktif milik user adalah prodi ini, alihkan ke prodi lain atau null
-            if ($user->id_prodiUser == $kaprodiProdiId) {
-                $nextProdi = $user->prodis()->first();
-                if ($nextProdi) {
-                    $user->update([
-                        'id_prodiUser' => $nextProdi->id,
-                        'id_fakultasUser' => $nextProdi->id_fakultas,
-                    ]);
-                    DB::table('prodi_user')
-                        ->where('user_id', $user->id)
-                        ->where('prodi_id', $nextProdi->id)
-                        ->update(['active' => true]);
-                } else {
-                    $user->update(['id_prodiUser' => null]);
+                // Jika id_prodiUser aktif milik user adalah prodi ini, alihkan ke prodi lain atau null
+                if ($user->id_prodiUser == $kaprodiProdiId) {
+                    $nextProdi = $user->prodis()->first();
+                    if ($nextProdi) {
+                        $user->update([
+                            'id_prodiUser' => $nextProdi->id,
+                            'id_fakultasUser' => $nextProdi->id_fakultas,
+                        ]);
+                        DB::table('prodi_user')
+                            ->where('user_id', $user->id)
+                            ->where('prodi_id', $nextProdi->id)
+                            ->update(['active' => true]);
+                    } else {
+                        $user->update(['id_prodiUser' => null]);
+                    }
                 }
+            }
+
+            // Jika user tidak lagi memiliki prodi manapun di pivot table, hapus data user secara permanen
+            if ($user->prodis()->count() === 0) {
+                $user->otoritas()->delete();
+                $user->delete();
+                return redirect()->route($this->getRouteByAuthority())->with('success', 'User ' . $user->name . ' berhasil dihapus dari sistem!');
             }
 
             return redirect()->route($this->getRouteByAuthority())->with('success', 'Dosen ' . $user->name . ' berhasil dihapus dari daftar dosen pengampu prodi ini!');
         }
 
+        $user->otoritas()->delete();
         $user->delete();
 
         return redirect()->route($this->getRouteByAuthority())->with('success', 'User successfully deleted!');

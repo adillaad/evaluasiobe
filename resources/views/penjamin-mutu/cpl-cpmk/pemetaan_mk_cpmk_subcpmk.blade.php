@@ -178,61 +178,71 @@
 
     <div class="container-fluid mb-4">
 
-        {{-- Form Tambah Sub CPMK jika authorized --}}
+        {{-- Card Form Tambah Sub CPMK dengan Header Clickable --}}
         @if(in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
-                    <h5 class="card-title fw-bold mb-0 text-primary">
-                        <i class="ti-plus me-1"></i> Tambah Sub CPMK Baru
+            <div class="card mb-4 shadow-sm border">
+                <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between cursor-pointer" 
+                     data-bs-toggle="collapse" 
+                     data-bs-target="#collapseSubCpmkForm" 
+                     aria-expanded="{{ $errors->any() || old('uraian') || old('kurikulum_id') ? 'true' : 'false' }}" 
+                     aria-controls="collapseSubCpmkForm"
+                     style="cursor: pointer;">
+                    <h5 class="card-title fw-bold mb-0 text-primary d-flex align-items-center gap-2">
+                        <i class="ti-plus"></i> Form Input Sub CPMK Baru
                     </h5>
-                    <button type="button" class="btn btn-success text-white font-weight-bold d-inline-flex align-items-center gap-1 shadow-sm" style="background-color: #10ac84 !important; border-color: #10ac84 !important; color: #ffffff !important;" data-bs-toggle="modal" data-bs-target="#importSubCpmkModal">
-                        <i class="ti-import me-1 text-white"></i>
-                        <span style="color: #ffffff !important;">Import Sub CPMK</span>
-                    </button>
+                    <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation();">
+                        <button type="button" class="btn btn-success text-white font-weight-bold d-inline-flex align-items-center gap-1 shadow-sm" style="background-color: #10ac84 !important; border-color: #10ac84 !important; color: #ffffff !important;" data-bs-toggle="modal" data-bs-target="#importSubCpmkModal">
+                            <i class="ti-import me-1 text-white"></i>
+                            <span style="color: #ffffff !important;">Import Sub CPMK</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form action="{{ route($currentPrefix. 'cpl-cpmk.subCpmk-store') }}" method="POST">
-                        @csrf
-                        <div class="form-group mb-3">
-                            <label for="kurikulum_id" class="fw-bold">Kurikulum :</label>
-                            <select name="kurikulum_id" id="kurikulum_id" class="form-select">
-                                <option value="">-- Pilih Kurikulum --</option>
-                                @foreach ($kurikulums as $kurikulum)
-                                    <option value="{{ $kurikulum->id }}" {{ old('kurikulum_id') == $kurikulum->id ? 'selected' : '' }}>{{ $kurikulum->tahun }}</option>    
-                                @endforeach
-                            </select>
-                            @error('kurikulum_id')
-                                <div class="alert alert-danger mt-1 py-1 small">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="cpl_id" class="fw-bold">CPL :</label>
-                            <select name="cpl_id" id="cpl_id" class="form-select">
-                                <option value="">-- Pilih CPL --</option>
-                            </select>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="cpmk_id" class="fw-bold">CPMK :</label>
-                            <input type="hidden" name="cpmk_kode" id="cpmk_kode">
-                            <select name="cpmk_id" id="cpmk_id" class="form-select" required>
-                                <option value="">-- Pilih CPMK --</option>
-                            </select>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="kode" class="fw-bold">Kode Sub CPMK <span class="text-muted fw-normal small">(Opsional)</span> :</label>
-                            <input type="text" name="kode" id="kode" class="form-control" placeholder="Kosongkan jika ingin kode otomatis dari sistem (misal: Sub-CPMK-011)" value="{{ old('kode') }}">
-                            <small class="text-muted">Biarkan kosong agar sistem membuatkan kode otomatis secara berurutan.</small>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="uraian" class="fw-bold">Uraian Sub CPMK :</label>
-                            <textarea name="uraian" id="uraian" class="form-control" style="height: 100px" placeholder="Uraian Sub CPMK">{{ old('uraian') }}</textarea>
-                            @error('uraian')
-                                <div class="alert alert-danger mt-1 py-1 small">{{ $message }}</div>
-                            @enderror
-                        </div>
-                
-                        <button type="submit" class="btn btn-primary"><i class="ti-save me-1"></i> Simpan Sub CPMK</button>
-                    </form>
+                <div class="collapse {{ $errors->any() || old('uraian') || old('kurikulum_id') ? 'show' : '' }}" id="collapseSubCpmkForm">
+                    <div class="card-body border-top">
+                        <form action="{{ route($currentPrefix. 'cpl-cpmk.subCpmk-store') }}" method="POST">
+                            @csrf
+                            <div class="form-group mb-3">
+                                <label for="kurikulum_id" class="fw-bold">Kurikulum :</label>
+                                <select name="kurikulum_id" id="kurikulum_id" class="form-select">
+                                    <option value="">-- Pilih Kurikulum --</option>
+                                    @foreach ($kurikulums as $kurikulum)
+                                        <option value="{{ $kurikulum->id }}" {{ old('kurikulum_id') == $kurikulum->id ? 'selected' : '' }}>{{ $kurikulum->tahun }}</option>    
+                                    @endforeach
+                                </select>
+                                @error('kurikulum_id')
+                                    <div class="alert alert-danger mt-1 py-1 small">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="cpl_id" class="fw-bold">CPL :</label>
+                                <select name="cpl_id" id="cpl_id" class="form-select">
+                                    <option value="">-- Pilih CPL --</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="cpmk_id" class="fw-bold">CPMK :</label>
+                                <input type="hidden" name="cpmk_kode" id="cpmk_kode">
+                                <select name="cpmk_id" id="cpmk_id" class="form-select" required>
+                                    <option value="">-- Pilih CPMK --</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="kode" class="fw-bold">Kode Sub CPMK <span class="text-muted fw-normal small">(Opsional)</span> :</label>
+                                <input type="text" name="kode" id="kode" class="form-control" placeholder="Kosongkan jika ingin kode otomatis dari sistem (misal: Sub-CPMK-011)" value="{{ old('kode') }}">
+                                <small class="text-muted">Biarkan kosong agar sistem membuatkan kode otomatis secara berurutan.</small>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="uraian" class="fw-bold">Uraian Sub CPMK :</label>
+                                <textarea name="uraian" id="uraian" class="form-control" style="height: 100px" placeholder="Uraian Sub CPMK">{{ old('uraian') }}</textarea>
+                                @error('uraian')
+                                    <div class="alert alert-danger mt-1 py-1 small">{{ $message }}</div>
+                                @enderror
+                            </div>
+                    
+                            <button type="submit" class="btn btn-primary"><i class="ti-save me-1"></i> Simpan Sub CPMK</button>
+                            <button type="button" class="btn btn-secondary ms-2" data-bs-toggle="collapse" data-bs-target="#collapseSubCpmkForm">Batal</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         @endif

@@ -110,14 +110,17 @@
                     {{-- FAKULTAS --}}
                     <div class="form-group">
                         <label>Fakultas <span class="text-danger">*</span></label>
-                        @php $isFakultasDisabled = in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Kepala Program Studi']); @endphp
+                        @php 
+                            $isFakultasDisabled = in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Kepala Program Studi']); 
+                            $userFakultasId = auth()->user()->id_fakultasUser ?? auth()->user()->prodi?->id_fakultas ?? auth()->user()->prodis->first()?->id_fakultas;
+                        @endphp
                         @if ($isFakultasDisabled)
-                            <input type="hidden" name="fakultas" value="{{ auth()->user()->id_fakultasUser }}">
+                            <input type="hidden" name="fakultas" value="{{ $userFakultasId }}">
                         @endif
                         <select class="single-select w-100" name="{{ $isFakultasDisabled ? '' : 'fakultas' }}" {{ $isFakultasDisabled ? 'disabled' : '' }}>
                             <option></option>
                             @foreach ($fakultas as $f)
-                                <option value="{{ $f->id }}" {{ old('fakultas', $isFakultasDisabled ? auth()->user()->id_fakultasUser : '') == $f->id ? 'selected' : '' }}>
+                                <option value="{{ $f->id }}" {{ old('fakultas', $userFakultasId) == $f->id ? 'selected' : '' }}>
                                     {{ $f->nama }}
                                 </option>
                             @endforeach
@@ -128,23 +131,19 @@
                     {{-- PRODI --}}
                     <div class="form-group">
                         <label>Prodi<span class="text-danger">*</span></label>
-                        {{-- DIUBAH: Tambahkan logika untuk mengunci prodi --}}
                         @php
                             $isProdiLocked = in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']);
+                            $userProdiId = auth()->user()->id_prodiUser ?? auth()->user()->prodis->first()?->id;
                         @endphp
                         
-                        {{-- Jika prodi dikunci, kirim nilainya lewat input hidden --}}
                         @if ($isProdiLocked)
-                            <input type="hidden" name="prodi[]" value="{{ auth()->user()->id_prodiUser }}">
+                            <input type="hidden" name="prodi[]" value="{{ $userProdiId }}">
                         @endif
 
-                        {{-- Atribut 'name' dan 'disabled' sekarang dinamis --}}
                         <select class="prodi-select w-100" name="{{ $isProdiLocked ? '' : 'prodi[]' }}" multiple {{ $isProdiLocked ? 'disabled' : '' }}>
                             @if ($isProdiLocked)
-                                {{-- Jika terkunci, hanya tampilkan prodi milik user --}}
-                                <option value="{{ auth()->user()->id_prodiUser }}" selected>{{ auth()->user()->prodi->nama }}</option>
+                                <option value="{{ $userProdiId }}" selected>{{ auth()->user()->prodi->nama ?? auth()->user()->prodis->first()?->nama ?? '-' }}</option>
                             @elseif(old('fakultas') || in_array($userOtoritas, ['Penjamin Mutu Fakultas']))
-                                {{-- Logika untuk menampilkan old value jika ada --}}
                                 @foreach($prodi as $p)
                                     <option value="{{ $p->id }}" {{ (is_array(old('prodi')) && in_array($p->id, old('prodi'))) ? 'selected' : '' }}>
                                         {{ $p->nama }}

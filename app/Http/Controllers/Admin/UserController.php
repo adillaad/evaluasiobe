@@ -95,32 +95,77 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z., ]+$/'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => [
-                'required', 
-                'string', 
-                'min:8',
-                'confirmed',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/'
-            ],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
             'img' => ['nullable'],
-            'otoritas' => ['required', 'array'],
-            'otoritas.*' => ['required', 'string', 'max:255'],
-            'nama_otoritas' => ['nullable', 'array'],
-            'nama_otoritas.*' => ['nullable', 'string', 'max:255', 'regex:/^[a-zA-Z., ]+$/'],
-            'prodi' => ['required', 'array'],
-            'prodi.*' => ['exists:prodi,id'],
-            'fakultas' => ['required'],
-            'universitas' => ['required']
-        ], [
-            // Custom messages
-            'password.regex' => 'Password Harus Mengandung Huruf Besar, Huruf Kecil, Angka, dan Simbol',
+            'otoritas' => ['required'],
+            'prodi' => ['nullable'],
+            'fakultas' => ['nullable'],
+            'universitas' => ['nullable']
         ]);
 
-        // Ambil prodi pertama dari array untuk dijadikan prodi aktif default
-        $activeProdiId = $request->prodi[0];
-        $activeProdi = Prodi::with('fakultas')->find($activeProdiId);
+        $prodiArray = array_values(array_filter((array) $request->input('prodi', [])));
+        if (empty($prodiArray)) {
+            $authUserProdiId = auth()->user()->id_prodiUser ?? auth()->user()->prodis->first()?->id;
+            if ($authUserProdiId) {
+                $prodiArray = [$authUserProdiId];
+            } else {
+                $firstProdi = Prodi::first();
+                if ($firstProdi) {
+                    $prodiArray = [$firstProdi->id];
+                }
+            }
+        }
+
+        $activeProdiId = $prodiArray[0] ?? null;
+        $activeProdi = $activeProdiId ? Prodi::with('fakultas')->find($activeProdiId) : null;
+        if (!$activeProdi) {
+            $activeProdi = Prodi::with('fakultas')->first();
+        }
+
+        $idFakultas = $activeProdi ? $activeProdi->id_fakultas : (auth()->user()->id_fakultasUser ?? 1);
+        $idUniversitas = ($activeProdi && $activeProdi->fakultas) ? $activeProdi->fakultas->id_universitas : (auth()->user()->id_universitasUser ?? 1);
+
+        $existingUser = User::where('email', $request->email)->first();
+
+        if ($existingUser) {
+            DB::transaction(function () use ($request, $existingUser, $activeProdi, $idFakultas, $idUniversitas, $prodiArray) {
+                $updateData = ['name' => $request->name];
+                if (!empty($request->password)) {
+                    $updateData['password'] = Hash::make($request->password);
+                }
+                if (!$existingUser->id_prodiUser && $activeProdi) {
+                    $updateData['id_prodiUser'] = $activeProdi->id;
+                    $updateData['id_fakultasUser'] = $idFakultas;
+                    $updateData['id_universitasUser'] = $idUniversitas;
+                }
+                $existingUser->update($updateData);
+
+                $otoritasArray = (array) $request->input('otoritas', []);
+                $namaOtoritasArray = $request->input('nama_otoritas', []);
+                foreach ($otoritasArray as $otoritas) {
+                    if (!$existingUser->otoritas()->where('otoritas', $otoritas)->exists()) {
+                        UserOtoritas::create([
+                            'user_id' => $existingUser->id,
+                            'otoritas' => $otoritas,
+                            'nama_otoritas' => is_array($namaOtoritasArray) ? ($namaOtoritasArray[$otoritas] ?? null) : null,
+                            'active' => !$existingUser->otoritas()->where('active', true)->exists()
+                        ]);
+                    }
+                }
+
+                $hasActiveProdi = $existingUser->prodis()->wherePivot('active', true)->exists();
+                foreach (array_unique($prodiArray) as $pId) {
+                    if (!$existingUser->prodis()->where('prodi_id', $pId)->exists()) {
+                        $existingUser->prodis()->attach($pId, ['active' => !$hasActiveProdi]);
+                        $hasActiveProdi = true;
+                    }
+                }
+            });
+
+            return redirect()->back()->with('success', 'User ' . $existingUser->name . ' (' . $request->email . ') berhasil ditambahkan!');
+        }
 
         $img = $request->file('img');
         if ($img != null) {
@@ -132,42 +177,39 @@ class UserController extends Controller
 
         $user = null;
 
-        DB::transaction(function () use ($request, $imagePath, $activeProdi, &$user) {
-            // Buat user dengan prodi aktif pertama
+        DB::transaction(function () use ($request, $imagePath, $activeProdi, $idFakultas, $idUniversitas, $prodiArray, &$user) {
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'img' => $imagePath,
-                // DIUBAH: Isi kolom lama dengan data dari prodi aktif pertama
-                'id_prodiUser' => $activeProdi->id,
-                'id_fakultasUser' => $activeProdi->id_fakultas,
-                'id_universitasUser' => $activeProdi->fakultas->id_universitas,
+                'id_prodiUser' => $activeProdi ? $activeProdi->id : null,
+                'id_fakultasUser' => $idFakultas,
+                'id_universitasUser' => $idUniversitas,
             ]);
 
-            // Handle multiple otoritas (tidak ada perubahan)
-            $otoritasArray = $request->otoritas;
-            $namaOtoritasArray = $request->nama_otoritas ?? [];
+            $otoritasArray = (array) $request->input('otoritas', []);
+            $namaOtoritasArray = $request->input('nama_otoritas', []);
             $isFirst = true;
             foreach ($otoritasArray as $otoritas) {
                 UserOtoritas::create([
                     'user_id' => $user->id,
                     'otoritas' => $otoritas,
-                    'nama_otoritas' => $namaOtoritasArray[$otoritas] ?? null,
+                    'nama_otoritas' => is_array($namaOtoritasArray) ? ($namaOtoritasArray[$otoritas] ?? null) : null,
                     'active' => $isFirst
                 ]);
                 $isFirst = false;
             }
 
-            // BARU: Handle multiple prodi, mirip seperti otoritas
-            $prodiArray = array_unique($request->prodi);
             $prodiSyncData = [];
             $isFirstProdi = true;
-            foreach ($prodiArray as $prodiId) {
+            foreach (array_unique($prodiArray) as $prodiId) {
                 $prodiSyncData[$prodiId] = ['active' => $isFirstProdi];
                 $isFirstProdi = false;
             }
-            $user->prodis()->sync($prodiSyncData);
+            if (!empty($prodiSyncData)) {
+                $user->prodis()->sync($prodiSyncData);
+            }
         });
 
         event(new Registered($user));
@@ -177,6 +219,9 @@ class UserController extends Controller
 
     public function list(Request $request)
     {
+        $authUser = auth()->user();
+        $authUnivId = $authUser->id_universitasUser ?? $authUser->fakultas?->id_universitas ?? $authUser->prodis->first()?->fakultas?->id_universitas;
+
         $query = User::query()
             ->select('users.*')
             ->with(['otoritas', 'prodis'])
@@ -190,12 +235,13 @@ class UserController extends Controller
                 COALESCE(prodi.id, users.id_prodiUser) ASC
             ')
             ->orderByRaw("FIELD(user_otoritas.otoritas, 'Admin', 'Admin Universitas', 'Wakil Rektor', 'Wakil Dekan', 'Dosen', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi')")
-            ->whereNotNull(['name', 'email', 'id_universitasUser'])
+            ->whereNotNull('name')
+            ->whereNotNull('email')
             ->where('users.id', '!=', auth()->id())
             ->distinct();
 
         // Untuk Admin Universitas
-        if (auth()->user()->otoritas->otoritas == 'Admin Universitas') {
+        if (($authUser->otoritas->otoritas ?? '') == 'Admin Universitas') {
             $query->whereHas('otoritas', function ($q) {
                 $q->whereIn('otoritas', [
                     'Admin Universitas',
@@ -208,8 +254,15 @@ class UserController extends Controller
                     'Kepala Program Studi',
                     'Dosen'
                 ]);
-            })
-                ->where('id_universitasUser', auth()->user()->id_universitasUser);
+            });
+            if ($authUnivId) {
+                $query->where(function ($q) use ($authUnivId) {
+                    $q->where('id_universitasUser', $authUnivId)
+                      ->orWhereHas('prodis.fakultas', function ($sub) use ($authUnivId) {
+                          $sub->where('fakultas.id_universitas', $authUnivId);
+                      });
+                });
+            }
         }
 
         // Gunakan method dari trait untuk filter

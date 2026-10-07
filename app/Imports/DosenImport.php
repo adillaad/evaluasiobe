@@ -24,6 +24,7 @@ class DosenImport implements ToCollection
 
         foreach ($rows as $index => $row) {
             $rowArr = $row instanceof Collection ? $row->toArray() : (array) $row;
+            $rowArrValues = array_values($rowArr);
 
             $namaRaw = $rowArr['nama'] ?? $rowArr['Nama'] ?? null;
             $emailRaw = $rowArr['email'] ?? $rowArr['Email'] ?? null;
@@ -32,25 +33,34 @@ class DosenImport implements ToCollection
             $passRaw = $rowArr['password'] ?? $rowArr['Password'] ?? null;
 
             // Jika dibaca via indeks array numeric:
-            if (isset($rowArr[4])) {
+            if (count($rowArrValues) >= 5) {
                 // 5 Kolom: Nama (0), Email (1), Otoritas (2), Program Studi (3), Password (4)
-                $namaRaw = $rowArr[0];
-                $emailRaw = $rowArr[1];
-                $otoritasRaw = $rowArr[2];
-                $prodiRaw = $rowArr[3];
-                $passRaw = $rowArr[4];
-            } elseif (isset($rowArr[3]) && !$otoritasRaw) {
-                // 4 Kolom (Legacy): Nama (0), Email (1), Program Studi (2), Password (3)
-                $namaRaw = $rowArr[0];
-                $emailRaw = $rowArr[1];
-                $prodiRaw = $rowArr[2];
-                $passRaw = $rowArr[3];
-            } elseif (isset($rowArr[0])) {
-                $namaRaw = $rowArr[0] ?? null;
-                $emailRaw = $rowArr[1] ?? null;
-                $otoritasRaw = $rowArr[2] ?? null;
-                $prodiRaw = $rowArr[3] ?? null;
-                $passRaw = $rowArr[4] ?? null;
+                $namaRaw = $namaRaw ?? ($rowArrValues[0] ?? null);
+                $emailRaw = $emailRaw ?? ($rowArrValues[1] ?? null);
+                $otoritasRaw = $otoritasRaw ?? ($rowArrValues[2] ?? null);
+                $prodiRaw = $prodiRaw ?? ($rowArrValues[3] ?? null);
+                $passRaw = $passRaw ?? ($rowArrValues[4] ?? null);
+            } elseif (count($rowArrValues) == 4) {
+                $col2 = trim((string) ($rowArrValues[2] ?? ''));
+                if ($this->isOtoritasString($col2)) {
+                    // 4 Kolom: Nama (0), Email (1), Otoritas (2), Program Studi (3)
+                    $namaRaw = $namaRaw ?? ($rowArrValues[0] ?? null);
+                    $emailRaw = $emailRaw ?? ($rowArrValues[1] ?? null);
+                    $otoritasRaw = $otoritasRaw ?? ($rowArrValues[2] ?? null);
+                    $prodiRaw = $prodiRaw ?? ($rowArrValues[3] ?? null);
+                } else {
+                    // 4 Kolom (Legacy): Nama (0), Email (1), Program Studi (2), Password (3)
+                    $namaRaw = $namaRaw ?? ($rowArrValues[0] ?? null);
+                    $emailRaw = $emailRaw ?? ($rowArrValues[1] ?? null);
+                    $prodiRaw = $prodiRaw ?? ($rowArrValues[2] ?? null);
+                    $passRaw = $passRaw ?? ($rowArrValues[3] ?? null);
+                }
+            } elseif (count($rowArrValues) > 0) {
+                $namaRaw = $namaRaw ?? ($rowArrValues[0] ?? null);
+                $emailRaw = $emailRaw ?? ($rowArrValues[1] ?? null);
+                $otoritasRaw = $otoritasRaw ?? ($rowArrValues[2] ?? null);
+                $prodiRaw = $prodiRaw ?? ($rowArrValues[3] ?? null);
+                $passRaw = $passRaw ?? ($rowArrValues[4] ?? null);
             }
 
             $namaStr = trim((string) $namaRaw);
@@ -60,7 +70,7 @@ class DosenImport implements ToCollection
             $passStr = trim((string) $passRaw);
 
             // Skip header row
-            if (strcasecmp($namaStr, 'Nama') === 0 || strcasecmp($emailStr, 'Email') === 0) {
+            if (strcasecmp($namaStr, 'Nama') === 0 || strcasecmp($emailStr, 'Email') === 0 || strcasecmp($namaStr, 'Name') === 0) {
                 continue;
             }
 
@@ -77,6 +87,9 @@ class DosenImport implements ToCollection
                     $pNameClean = trim($pName);
                     if (!empty($pNameClean)) {
                         $found = Prodi::with('fakultas')->where('nama', 'LIKE', '%' . $pNameClean . '%')->first();
+                        if (!$found) {
+                            $found = Prodi::with('fakultas')->whereRaw('LOWER(?) LIKE CONCAT("%", LOWER(nama), "%")', [$pNameClean])->first();
+                        }
                         if ($found) {
                             $matchedProdis->push($found);
                         }
@@ -84,18 +97,27 @@ class DosenImport implements ToCollection
                 }
             }
 
-            if ($matchedProdis->isEmpty() && $this->defaultProdiId) {
+            // Pastikan defaultProdiId (prodi dari user yang melakukan import) selalu dimasukkan
+            if ($this->defaultProdiId) {
                 $foundDefault = Prodi::with('fakultas')->find($this->defaultProdiId);
-                if ($foundDefault) {
-                    $matchedProdis->push($foundDefault);
+                if ($foundDefault && !$matchedProdis->contains('id', $foundDefault->id)) {
+                    $matchedProdis->prepend($foundDefault);
                 }
             }
 
             if ($matchedProdis->isEmpty()) {
                 $authUser = auth()->user();
-                $foundAuth = Prodi::with('fakultas')->find($authUser->id_prodiUser ?? null) ?? Prodi::with('fakultas')->first();
+                $authProdiId = $authUser->id_prodiUser ?? $authUser->prodis->first()?->id;
+                $foundAuth = $authProdiId ? Prodi::with('fakultas')->find($authProdiId) : null;
                 if ($foundAuth) {
                     $matchedProdis->push($foundAuth);
+                }
+            }
+
+            if ($matchedProdis->isEmpty()) {
+                $firstProdi = Prodi::with('fakultas')->first();
+                if ($firstProdi) {
+                    $matchedProdis->push($firstProdi);
                 }
             }
 
@@ -112,10 +134,16 @@ class DosenImport implements ToCollection
 
             if ($existingUser) {
                 $user = $existingUser;
-                $user->update([
-                    'name' => $namaStr,
-                    'password' => !empty($passStr) ? Hash::make($passStr) : $user->password,
-                ]);
+                $updateData = ['name' => $namaStr];
+                if (!empty($passStr)) {
+                    $updateData['password'] = Hash::make($passStr);
+                }
+                if (!$user->id_prodiUser) {
+                    $updateData['id_prodiUser'] = $primaryProdi->id;
+                    $updateData['id_fakultasUser'] = $primaryProdi->id_fakultas;
+                    $updateData['id_universitasUser'] = $primaryProdi->fakultas?->id_universitas ?? 1;
+                }
+                $user->update($updateData);
             } else {
                 $user = User::create([
                     'email' => $emailStr,
@@ -124,7 +152,7 @@ class DosenImport implements ToCollection
                     'img' => 'User-Profile.png',
                     'id_prodiUser' => $primaryProdi->id,
                     'id_fakultasUser' => $primaryProdi->id_fakultas,
-                    'id_universitasUser' => $primaryProdi->fakultas->id_universitas ?? 1,
+                    'id_universitasUser' => $primaryProdi->fakultas?->id_universitas ?? 1,
                 ]);
             }
 
@@ -135,7 +163,10 @@ class DosenImport implements ToCollection
                 foreach ($splitRoles as $r) {
                     $rClean = trim($r);
                     if (!empty($rClean)) {
-                        $roles[] = $rClean;
+                        $mappedRole = $this->mapOtoritas($rClean);
+                        if (!in_array($mappedRole, $roles)) {
+                            $roles[] = $mappedRole;
+                        }
                     }
                 }
             }
@@ -175,5 +206,50 @@ class DosenImport implements ToCollection
         if ($importedCount === 0) {
             throw new \Exception('Tidak ada data user/dosen yang valid untuk diimport dari file Excel ini. Pastikan format kolom sesuai (Nama, Email, Otoritas, Program Studi, Password).');
         }
+    }
+
+    private function isOtoritasString(string $val): bool
+    {
+        $valLower = strtolower($val);
+        $keywords = ['dosen', 'kaprodi', 'kepala', 'penjamin', 'mutu', 'dekan', 'rektor', 'admin', 'pmp', 'pmf', 'pmu'];
+        foreach ($keywords as $kw) {
+            if (str_contains($valLower, $kw)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function mapOtoritas(string $raw): string
+    {
+        $rawLower = strtolower(trim($raw));
+        if (str_contains($rawLower, 'kepala') || str_contains($rawLower, 'kaprodi')) {
+            return 'Kepala Program Studi';
+        }
+        if (str_contains($rawLower, 'universitas') && (str_contains($rawLower, 'penjamin') || str_contains($rawLower, 'pmu'))) {
+            return 'Penjamin Mutu Universitas';
+        }
+        if (str_contains($rawLower, 'fakultas') && (str_contains($rawLower, 'penjamin') || str_contains($rawLower, 'pmf'))) {
+            return 'Penjamin Mutu Fakultas';
+        }
+        if (str_contains($rawLower, 'prodi') && (str_contains($rawLower, 'penjamin') || str_contains($rawLower, 'pmp'))) {
+            return 'Penjamin Mutu Program Studi';
+        }
+        if (str_contains($rawLower, 'wakil rektor') || str_contains($rawLower, 'warek')) {
+            return 'Wakil Rektor';
+        }
+        if (str_contains($rawLower, 'wakil dekan') || str_contains($rawLower, 'wadek')) {
+            return 'Wakil Dekan';
+        }
+        if (str_contains($rawLower, 'admin universitas')) {
+            return 'Admin Universitas';
+        }
+        if (str_contains($rawLower, 'admin')) {
+            return 'Admin';
+        }
+        if (str_contains($rawLower, 'dosen')) {
+            return 'Dosen';
+        }
+        return ucwords($raw);
     }
 }
