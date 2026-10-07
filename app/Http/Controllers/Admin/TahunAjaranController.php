@@ -31,7 +31,7 @@ class TahunAjaranController extends Controller
                 }),
             ],
         ], [
-            'jenis_semester.unique' => 'Tahun ajaran dan jenis semester tersebut sudah ada.',
+            'jenis_semester.unique' => 'Tahun akademik dan jenis semester tersebut sudah ada.',
         ]);
 
         try {
@@ -40,9 +40,9 @@ class TahunAjaranController extends Controller
                 'jenis_semester' => $request->jenis_semester,
             ]);
 
-            return redirect()->back()->with('success', 'Tahun Ajaran berhasil ditambahkan.');
+            return redirect()->back()->with('success', 'Tahun Akademik berhasil ditambahkan.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('failed', 'Gagal menambahkan Tahun Ajaran: ' . $e->getMessage());
+            return redirect()->back()->with('failed', 'Gagal menambahkan Tahun Akademik: ' . $e->getMessage());
         }
     }
 
@@ -62,7 +62,7 @@ class TahunAjaranController extends Controller
                     ->ignore($tahunAjaran->id),
             ],
         ], [
-            'jenis_semester.unique' => 'Tahun ajaran dan jenis semester tersebut sudah ada.',
+            'jenis_semester.unique' => 'Tahun akademik dan jenis semester tersebut sudah ada.',
         ]);
 
         try {
@@ -71,9 +71,9 @@ class TahunAjaranController extends Controller
                 'jenis_semester' => $request->jenis_semester,
             ]);
 
-            return redirect()->back()->with('success', 'Tahun Ajaran berhasil diperbarui.');
+            return redirect()->back()->with('success', 'Tahun Akademik berhasil diperbarui.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('failed', 'Gagal memperbarui Tahun Ajaran: ' . $e->getMessage());
+            return redirect()->back()->with('failed', 'Gagal memperbarui Tahun Akademik: ' . $e->getMessage());
         }
     }
 
@@ -83,9 +83,9 @@ class TahunAjaranController extends Controller
             $tahunAjaran = TahunAjaran::findOrFail($id);
             $tahunAjaran->delete();
 
-            return redirect()->back()->with('success', 'Tahun Ajaran berhasil dihapus.');
+            return redirect()->back()->with('success', 'Tahun Akademik berhasil dihapus.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('failed', 'Gagal menghapus Tahun Ajaran (mungkin sedang digunakan data lain).');
+            return redirect()->back()->with('failed', 'Gagal menghapus Tahun Akademik (mungkin sedang digunakan data lain).');
         }
     }
 }

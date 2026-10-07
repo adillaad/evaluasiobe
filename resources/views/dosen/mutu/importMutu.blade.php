@@ -68,8 +68,21 @@
                 @csrf
                 <div class="d-flex flex-column gap-3">
                     <div class="d-flex align-items-end flex-wrap gap-2">
+                        @if (isset($tahunAjarans) && $tahunAjarans->isNotEmpty())
+                            <div style="max-width: 220px; width: 100%;">
+                                <label class="form-label fw-semibold small mb-1">Tahun Akademik</label>
+                                <select name="tahun_ajaran_id" class="form-select form-select-sm filter-auto-submit" style="height: 38px;">
+                                    <option value="">-- Semua Tahun Akademik --</option>
+                                    @foreach ($tahunAjarans as $ta)
+                                        <option value="{{ $ta->id }}" {{ request('tahun_ajaran_id') == $ta->id ? 'selected' : '' }}>
+                                            {{ $ta->label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
                         @if (isset($mks) && $mks->isNotEmpty())
-                            <div style="max-width: 380px; width: 100%;">
+                            <div style="max-width: 320px; width: 100%;">
                                 <label class="form-label fw-semibold small mb-1">Mata Kuliah</label>
                                 <select name="mk_kode" class="form-select form-select-sm filter-auto-submit" style="height: 38px;">
                                     <option value="">-- Semua Mata Kuliah --</option>
@@ -81,7 +94,7 @@
                                 </select>
                             </div>
                         @endif
-                        @if (request('course') || request('mk_kode'))
+                        @if (request('course') || request('mk_kode') || request('tahun_ajaran_id'))
                             <div>
                                 <a href="{{ route($currentPrefix . 'import-mutu') }}" class="btn btn-secondary btn-sm px-4 fw-semibold d-flex align-items-center justify-content-center" style="height: 38px;">
                                     <i class="ti ti-refresh me-1"></i> Reset

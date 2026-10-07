@@ -21,7 +21,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="{{ route($currentPrefix . 'tahun-ajaran.index') }}">
                     <i class="mdi mdi-calendar-clock menu-icon"></i>
-                    <span class="menu-title">Tahun Ajaran</span>
+                    <span class="menu-title">Tahun Akademik</span>
                 </a>
             </li>
             @if ($userOtoritas === 'Admin')

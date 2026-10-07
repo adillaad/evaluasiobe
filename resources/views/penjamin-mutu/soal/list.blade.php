@@ -107,7 +107,8 @@
                                 <th width="4%">No</th>
                                 <th width="12%">Kode MK</th>
                                 <th>Nama MK</th>
-                                <th width="18%">Prodi</th>
+                                <th width="16%">Dosen Pengaju</th>
+                                <th width="16%">Prodi</th>
                                 <th width="10%" class="text-center">Diajukan</th>
                                 <th width="11%" class="text-center">Status</th>
                                 <th width="12%" class="text-center">Aksi</th>
@@ -132,6 +133,13 @@
                                             <div class="text-muted" style="font-size:0.78rem;">{{ $mk->nama_fakultas }}
                                             </div>
                                         @endif
+                                    </td>
+
+                                    {{-- Dosen Pengaju --}}
+                                    <td>
+                                        <span class="fw-semibold text-dark small">
+                                            <i class="ti-user me-1 text-muted"></i>{{ $mk->nama_dosen }}
+                                        </span>
                                     </td>
 
                                     {{-- Prodi --}}
@@ -162,7 +170,7 @@
                                         <div class="d-flex justify-content-center align-items-center gap-1">
 
                                             {{-- Periksa --}}
-                                            <a href="{{ route($rolePrefix . 'soal-detail', $mk->kode) }}"
+                                            <a href="{{ route($rolePrefix . 'soal-detail', ['kode_mk' => $mk->kode, 'dosen' => $mk->dosen_key]) }}"
                                                 class="btn btn-info btn-icons" data-bs-toggle="tooltip" data-bs-placement="top"
                                                 title="Periksa detail soal">
                                                 <i class="ti-eye"></i>
@@ -172,15 +180,15 @@
                                             @php
                                                 $canAction = ($mk->status_label === 'siap');
                                             @endphp
-                                            <form action="{{ route($rolePrefix . 'soal-validasi-mk', $mk->kode) }}"
+                                            <form action="{{ route($rolePrefix . 'soal-validasi-mk', ['kode_mk' => $mk->kode, 'dosen' => $mk->dosen_key]) }}"
                                                 method="POST" class="d-inline m-0 p-0">
                                                 @csrf
                                                 <button type="submit"
                                                     class="btn btn-success btn-icons {{ !$canAction ? 'disabled' : '' }}" 
                                                     {{ !$canAction ? 'disabled' : '' }}
                                                     data-bs-toggle="tooltip" data-bs-placement="top"
-                                                    title="{{ $mk->status_label === 'valid' ? 'Semua soal MK ini sudah divalidasi' : ($mk->status_label === 'ditolak' ? 'Soal MK ini ditolak, menunggu dosen mengajukan soal baru' : ($canAction ? 'Setujui semua soal MK ini' : 'Belum ada soal diajukan')) }}"
-                                                    onclick="return confirm('Validasi semua soal MK {{ $mk->kode }}?')">
+                                                    title="{{ $mk->status_label === 'valid' ? 'Soal dosen ini divalidasi' : ($mk->status_label === 'ditolak' ? 'Soal ditolak, menunggu dosen mengajukan ulang' : ($canAction ? 'Setujui soal dosen ini' : 'Belum ada soal diajukan')) }}"
+                                                    onclick="return confirm('Validasi soal MK {{ $mk->kode }} dari dosen {{ addslashes($mk->nama_dosen) }}?')">
                                                     <i class="ti-check"></i>
                                                 </button>
                                             </form>
@@ -190,8 +198,8 @@
                                                 class="btn btn-danger btn-icons {{ !$canAction ? 'disabled' : '' }}" 
                                                 {{ !$canAction ? 'disabled' : '' }}
                                                 data-bs-toggle="tooltip" data-bs-placement="top"
-                                                title="{{ $mk->status_label === 'valid' ? 'Semua soal MK ini sudah divalidasi' : ($mk->status_label === 'ditolak' ? 'Soal MK ini ditolak, menunggu dosen mengajukan soal baru' : ($canAction ? 'Tolak soal MK ini' : 'Belum ada soal diajukan')) }}"
-                                                onclick="openTolakModal('{{ $mk->kode }}')">
+                                                title="{{ $mk->status_label === 'valid' ? 'Soal dosen ini divalidasi' : ($mk->status_label === 'ditolak' ? 'Soal ditolak, menunggu dosen mengajukan ulang' : ($canAction ? 'Tolak soal dosen ini' : 'Belum ada soal diajukan')) }}"
+                                                onclick="openTolakModal('{{ $mk->kode }}', '{{ $mk->dosen_key }}', '{{ addslashes($mk->nama_dosen) }}')">
                                                 <i class="ti-close"></i>
                                             </button>
 
@@ -200,7 +208,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-5 text-muted">
+                                    <td colspan="8" class="text-center py-5 text-muted">
                                         <i class="ti-folder me-2"></i>
                                         Belum ada MK yang memiliki soal diajukan.
                                     </td>
@@ -250,16 +258,17 @@
     </div>
 
     <script>
-        // Peta route tolak per MK (digenerate Blade agar aman multi-role)
+        // Peta route tolak per MK dan Dosen
         const tolakRoutes = {
             @foreach ($mkList as $mk)
-                "{{ $mk->kode }}": "{{ route($rolePrefix . 'soal-tolak-mk', $mk->kode) }}",
+                "{{ $mk->kode }}_{{ $mk->dosen_key }}": "{{ route($rolePrefix . 'soal-tolak-mk', ['kode_mk' => $mk->kode, 'dosen' => $mk->dosen_key]) }}",
             @endforeach
         };
 
-        function openTolakModal(kodeMk) {
-            document.getElementById('modalTolakKode').textContent = kodeMk;
-            document.getElementById('formTolak').action = tolakRoutes[kodeMk];
+        function openTolakModal(kodeMk, dosenKey, namaDosen) {
+            document.getElementById('modalTolakKode').textContent = kodeMk + ' (' + namaDosen + ')';
+            const key = kodeMk + '_' + dosenKey;
+            document.getElementById('formTolak').action = tolakRoutes[key] || "{{ route($rolePrefix . 'soal-tolak-mk', '') }}/" + kodeMk + "?dosen=" + dosenKey;
             document.getElementById('formTolak').querySelector('textarea').value = '';
             new bootstrap.Modal(document.getElementById('modalTolak')).show();
         }

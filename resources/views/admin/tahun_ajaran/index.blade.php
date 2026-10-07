@@ -7,11 +7,11 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h4 class="card-title mb-1">Daftar Tahun Ajaran</h4>
-                        <p class="text-muted small mb-0">Kelola daftar tahun ajaran dan semester perkuliahan.</p>
+                        <h4 class="card-title mb-1">Daftar Tahun Akademik</h4>
+                        <p class="text-muted small mb-0">Kelola daftar tahun akademik dan semester perkuliahan.</p>
                     </div>
                     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTahunAjaranModal">
-                        <i class="mdi mdi-plus-circle me-1"></i> Tambah Tahun Ajaran
+                        <i class="mdi mdi-plus-circle me-1"></i> Tambah Tahun Akademik
                     </button>
                 </div>
 
@@ -22,7 +22,7 @@
                                 <th style="width: 8%" class="text-center">No</th>
                                 <th>Tahun</th>
                                 <th>Jenis Semester</th>
-                                <th>Tahun Ajaran</th>
+                                <th>Tahun Akademik</th>
                                 <th style="width: 18%" class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -42,7 +42,7 @@
                                             <button class="btn btn-warning btn-sm py-1 px-2 text-white" data-bs-toggle="modal" data-bs-target="#editModal{{ $item->id }}">
                                                 <i class="mdi mdi-pencil me-1"></i> Edit
                                             </button>
-                                            <form action="{{ route($currentPrefix . 'tahun-ajaran.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tahun ajaran ini?');">
+                                            <form action="{{ route($currentPrefix . 'tahun-ajaran.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tahun akademik ini?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-sm py-1 px-2">
@@ -59,7 +59,7 @@
                                                         @csrf
                                                         @method('PUT')
                                                         <div class="modal-header py-2 px-3 bg-light">
-                                                            <h5 class="modal-title fs-6 fw-bold" id="editModalLabel{{ $item->id }}">Edit Tahun Ajaran</h5>
+                                                            <h5 class="modal-title fs-6 fw-bold" id="editModalLabel{{ $item->id }}">Edit Tahun Akademik</h5>
                                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                         </div>
                                                         <div class="modal-body p-3">
@@ -87,7 +87,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted p-4">Belum ada data tahun ajaran.</td>
+                                    <td colspan="5" class="text-center text-muted p-4">Belum ada data tahun akademik.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -114,7 +114,7 @@
             <form method="POST" action="{{ route($currentPrefix . 'tahun-ajaran.store') }}">
                 @csrf
                 <div class="modal-header py-2 px-3 bg-light">
-                    <h5 class="modal-title fs-6 fw-bold" id="addTahunAjaranModalLabel">Tambah Tahun Ajaran</h5>
+                    <h5 class="modal-title fs-6 fw-bold" id="addTahunAjaranModalLabel">Tambah Tahun Akademik</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-3">

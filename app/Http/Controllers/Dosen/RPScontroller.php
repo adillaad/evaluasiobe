@@ -211,7 +211,7 @@ class RPScontroller extends Controller
             'pengembang' => 'required',
             'koordinator' => 'nullable',
             'dosen' => 'required',
-            'dosen_anggota1' => 'required|different:dosen',
+            'dosen_anggota1' => 'nullable|different:dosen',
             'dosen_anggota2' => 'nullable|different:dosen|different:dosen_anggota1',
             'media_software' => 'required',
             'media_hardware' => 'required',
@@ -220,18 +220,18 @@ class RPScontroller extends Controller
             'pustaka_utama' => 'required|array|min:1',
             'pustaka_utama.*' => 'required',   
              
-            'new_pustaka_judul.*' => 'required_if:pustaka_utama.*,tambah_baru|nullable|string|max:255',
-            'new_pustaka_penulis.*' => 'required_if:pustaka_utama.*,tambah_baru|nullable|string|max:255',
-            'new_pustaka_penerbit.*' => 'nullable|string|max:100',
-            'new_pustaka_tahun.*' => 'required_if:pustaka_utama.*,tambah_baru|nullable|integer|digits:4',
+            'new_judul_utama.*' => 'nullable|string|max:255',
+            'new_penulis_utama.*' => 'nullable|string|max:255',
+            'new_penerbit_utama.*' => 'nullable|string|max:100',
+            'new_tahun_utama.*' => 'nullable|integer|digits:4',
 
             'pustaka_pendukung' => 'nullable|array',
             'pustaka_pendukung.*' => 'nullable',
 
-            'new_judul_pendukung.*' => 'required_if:pustaka_pendukung.*,tambah_baru|nullable|string|max:255',
-            'new_penulis_pendukung.*' => 'required_if:pustaka_pendukung.*,tambah_baru|nullable|string|max:255',
+            'new_judul_pendukung.*' => 'nullable|string|max:255',
+            'new_penulis_pendukung.*' => 'nullable|string|max:255',
             'new_penerbit_pendukung.*' => 'nullable|string|max:100',
-            'new_tahun_pendukung.*' => 'required_if:pustaka_pendukung.*,tambah_baru|nullable|integer|digits:4',
+            'new_tahun_pendukung.*' => 'nullable|integer|digits:4',
         ]); 
         return DB::transaction(function () use ($request, $validatedData) {
 

@@ -121,7 +121,7 @@
                         </div>
                         <div class="col-5">
                             <div class="form-group">
-                                <label>Tahun Ajaran <span class="text-danger">*</span></label>
+                                <label>Tahun Akademik <span class="text-danger">*</span></label>
                                 <select class="form-control" name="semester" id="semester" required>
                                     <option value="" disabled selected>Select...</option>
                                     @if(isset($tahunAjarans))

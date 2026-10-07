@@ -1,6 +1,8 @@
 @php
     $jenjang = strtoupper(trim($prodi->jenjang ?? ''));
-    $isPascasarjana = in_array($jenjang, ['S2', 'S3', 'SPESIALIS', 'MAGISTER', 'DOKTOR', 'SUB SPESIALIS', 'SP-1', 'SP-2', 'S2 TERAPAN', 'S3 TERAPAN']);
+    $isDoktor = in_array($jenjang, ['S3', 'DOKTOR', 'SUB SPESIALIS', 'SP-2', 'S3 TERAPAN']);
+    $isMagister = in_array($jenjang, ['S2', 'MAGISTER', 'SPESIALIS', 'SP-1', 'S2 TERAPAN']);
+    $jenjangLabel = $isDoktor ? 'Doktor / Subspesialis' : ($isMagister ? 'Magister / Spesialis' : 'Diploma / Sarjana / Profesi');
 @endphp
 
 <div class="modern-card">
@@ -71,7 +73,7 @@
                         <span>2. Rentang Nilai Mutu Mata Kuliah & Kelulusan</span>
                     </div>
                     <p class="text-muted small mb-3" style="font-size: 0.82rem; line-height: 1.4;">
-                        Standar konversi nilai akhir mata kuliah untuk program <strong>{{ $isPascasarjana ? 'Pascasarjana / Spesialis' : 'Diploma / Sarjana / Profesi' }}</strong>:
+                        Standar konversi nilai akhir mata kuliah untuk program <strong>{{ $jenjangLabel }}</strong> (Peraturan Akademik Unila 2025):
                     </p>
                     <div class="table-responsive bg-white rounded border">
                         <table class="table table-sm table-bordered mb-0" style="font-size: 0.82rem;">
@@ -84,7 +86,50 @@
                                 </tr>
                             </thead>
                             <tbody class="text-center">
-                                @if ($isPascasarjana)
+                                @if ($isDoktor)
+                                    <tr>
+                                        <td class="fw-bold">&ge; 85.00</td>
+                                        <td class="fw-bold text-success">A</td>
+                                        <td>4.00</td>
+                                        <td><span class="badge bg-success-subtle text-success">Lulus</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">80.00 - &lt; 85.00</td>
+                                        <td class="fw-bold text-success">B+</td>
+                                        <td>3.50</td>
+                                        <td><span class="badge bg-success-subtle text-success">Lulus</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">75.00 - &lt; 80.00</td>
+                                        <td class="fw-bold text-success">B</td>
+                                        <td>3.00</td>
+                                        <td><span class="badge bg-success-subtle text-success">Lulus (Min.)</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">70.00 - &lt; 75.00</td>
+                                        <td class="fw-bold text-secondary">C+</td>
+                                        <td>2.50</td>
+                                        <td><span class="badge bg-danger-subtle text-danger">Tidak Lulus</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">65.00 - &lt; 70.00</td>
+                                        <td class="fw-bold text-secondary">C</td>
+                                        <td>2.00</td>
+                                        <td><span class="badge bg-danger-subtle text-danger">Tidak Lulus</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">55.00 - &lt; 65.00</td>
+                                        <td class="fw-bold text-secondary">D</td>
+                                        <td>1.00</td>
+                                        <td><span class="badge bg-danger-subtle text-danger">Tidak Lulus</span></td>
+                                    </tr>
+                                    <tr class="table-danger-subtle">
+                                        <td class="fw-bold text-danger">&lt; 55.00</td>
+                                        <td class="fw-bold text-danger">E</td>
+                                        <td>0.00</td>
+                                        <td><span class="badge bg-danger-subtle text-danger">Tidak Lulus</span></td>
+                                    </tr>
+                                @elseif ($isMagister)
                                     <tr>
                                         <td class="fw-bold">&ge; 81.00</td>
                                         <td class="fw-bold text-success">A</td>
@@ -109,8 +154,20 @@
                                         <td>2.50</td>
                                         <td><span class="badge bg-success-subtle text-success">Lulus (Min.)</span></td>
                                     </tr>
+                                    <tr>
+                                        <td class="fw-bold">55.00 - &lt; 65.00</td>
+                                        <td class="fw-bold text-secondary">C</td>
+                                        <td>2.00</td>
+                                        <td><span class="badge bg-danger-subtle text-danger">Tidak Lulus</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">50.00 - &lt; 55.00</td>
+                                        <td class="fw-bold text-secondary">D</td>
+                                        <td>1.00</td>
+                                        <td><span class="badge bg-danger-subtle text-danger">Tidak Lulus</span></td>
+                                    </tr>
                                     <tr class="table-danger-subtle">
-                                        <td class="fw-bold text-danger">&lt; 65.00</td>
+                                        <td class="fw-bold text-danger">&lt; 50.00</td>
                                         <td class="fw-bold text-danger">E</td>
                                         <td>0.00</td>
                                         <td><span class="badge bg-danger-subtle text-danger">Tidak Lulus</span></td>

@@ -43,12 +43,17 @@ class Prodi extends Model
 
         $jenjang = strtoupper(trim($this->jenjang ?? ''));
 
-        // b. Program Magister / Magister Terapan / Spesialis, Doktor, Doktor Terapan, dan Sub Spesialis
-        if (in_array($jenjang, ['S2', 'S3', 'SPESIALIS', 'MAGISTER', 'DOKTOR', 'SUB SPESIALIS', 'SP-1', 'SP-2', 'S2 TERAPAN', 'S3 TERAPAN'])) {
-            return $this->gradePascasarjana($numeric);
+        // c. Program Doktor / Doktor Terapan / Subspesialis
+        if (in_array($jenjang, ['S3', 'S-3', 'DOKTOR', 'SUB SPESIALIS', 'SP-2', 'SP2', 'S3 TERAPAN']) || str_contains($jenjang, 'DOKTOR') || str_contains($jenjang, 'S3')) {
+            return $this->gradeDoktor($numeric);
         }
 
-        // a. Program Diploma / Sarjana / Sarjana Terapan / Profesi (Default)
+        // b. Program Magister / Magister Terapan / Spesialis
+        if (in_array($jenjang, ['S2', 'S-2', 'MAGISTER', 'SPESIALIS', 'SP-1', 'SP1', 'S2 TERAPAN']) || str_contains($jenjang, 'MAGISTER') || str_contains($jenjang, 'S2') || str_contains($jenjang, 'SPESIALIS')) {
+            return $this->gradeMagister($numeric);
+        }
+
+        // a. Program Diploma / Sarjana / Sarjana Terapan / Profesi (Default untuk S1, D3, D4, dll.)
         return $this->gradeDiplomaSarjana($numeric);
     }
 
@@ -56,11 +61,15 @@ class Prodi extends Model
     {
         $jenjang = strtoupper(trim($this->jenjang ?? ''));
 
-        if (in_array($jenjang, ['S2', 'S3', 'SPESIALIS', 'MAGISTER', 'DOKTOR', 'SUB SPESIALIS', 'SP-1', 'SP-2', 'S2 TERAPAN', 'S3 TERAPAN'])) {
-            return 65.0;
+        if (in_array($jenjang, ['S3', 'S-3', 'DOKTOR', 'SUB SPESIALIS', 'SP-2', 'SP2', 'S3 TERAPAN']) || str_contains($jenjang, 'DOKTOR') || str_contains($jenjang, 'S3')) {
+            return 75.0; // Minimal B
         }
 
-        return 50.0;
+        if (in_array($jenjang, ['S2', 'S-2', 'MAGISTER', 'SPESIALIS', 'SP-1', 'SP1', 'S2 TERAPAN']) || str_contains($jenjang, 'MAGISTER') || str_contains($jenjang, 'S2') || str_contains($jenjang, 'SPESIALIS')) {
+            return 65.0; // Minimal C+
+        }
+
+        return 50.0; // Minimal D
     }
 
     public function isLulus(float $nilai): bool
@@ -126,7 +135,7 @@ class Prodi extends Model
     }
 
     /**
-     * a. Program Diploma / Sarjana / Sarjana Terapan / Profesi
+     * a. Program Diploma / Sarjana / Sarjana Terapan / Profesi (Peraturan Unila 2025)
      * >= 76        : A  (4.00) - Lulus
      * >= 71 - < 76 : B+ (3.50) - Lulus
      * >= 66 - < 71 : B  (3.00) - Lulus
@@ -149,20 +158,47 @@ class Prodi extends Model
     }
 
     /**
-     * b. Program Magister / Magister Terapan / Spesialis, Doktor, Doktor Terapan, dan Sub Spesialis
+     * b. Program Magister / Magister Terapan / Spesialis (Peraturan Unila 2025)
      * >= 81        : A  (4.00) - Lulus
      * >= 75 - < 81 : B+ (3.50) - Lulus
      * >= 70 - < 75 : B  (3.00) - Lulus
-     * >= 65 - < 70 : C+ (2.50) - Lulus
-     * < 65         : E  (0.00) - Tidak Lulus
+     * >= 65 - < 70 : C+ (2.50) - Lulus (Batas Min. Lulus)
+     * >= 55 - < 65 : C  (2.00) - Tidak Lulus
+     * >= 50 - < 55 : D  (1.00) - Tidak Lulus
+     * < 50         : E  (0.00) - Tidak Lulus
      */
-    private function gradePascasarjana(float $n): array
+    private function gradeMagister(float $n): array
     {
         return match (true) {
             $n >= 81 => ['A',  4.00],
             $n >= 75 => ['B+', 3.50],
             $n >= 70 => ['B',  3.00],
             $n >= 65 => ['C+', 2.50],
+            $n >= 55 => ['C',  2.00],
+            $n >= 50 => ['D',  1.00],
+            default  => ['E',  0.00],
+        };
+    }
+
+    /**
+     * c. Program Doktor / Doktor Terapan / Subspesialis (Peraturan Unila 2025)
+     * >= 85        : A  (4.00) - Lulus
+     * >= 80 - < 85 : B+ (3.50) - Lulus
+     * >= 75 - < 80 : B  (3.00) - Lulus (Batas Min. Lulus)
+     * >= 70 - < 75 : C+ (2.50) - Tidak Lulus
+     * >= 65 - < 70 : C  (2.00) - Tidak Lulus
+     * >= 55 - < 65 : D  (1.00) - Tidak Lulus
+     * < 55         : E  (0.00) - Tidak Lulus
+     */
+    private function gradeDoktor(float $n): array
+    {
+        return match (true) {
+            $n >= 85 => ['A',  4.00],
+            $n >= 80 => ['B+', 3.50],
+            $n >= 75 => ['B',  3.00],
+            $n >= 70 => ['C+', 2.50],
+            $n >= 65 => ['C',  2.00],
+            $n >= 55 => ['D',  1.00],
             default  => ['E',  0.00],
         };
     }

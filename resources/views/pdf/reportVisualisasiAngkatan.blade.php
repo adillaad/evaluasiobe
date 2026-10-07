@@ -276,7 +276,7 @@
             $nextYear = $calYear + 1;
             $sem1 = max(1, $yearOffset * 2 + 1);
             $sem2 = max(2, $yearOffset * 2 + 2);
-            $activePeriodLabel = "Tahun Ajaran {$calYear}/{$nextYear} (Semester {$sem1} & {$sem2})";
+            $activePeriodLabel = "Tahun Akademik {$calYear}/{$nextYear} (Semester {$sem1} & {$sem2})";
         }
     @endphp
     <table class="info-table">

@@ -12,7 +12,7 @@
                         </h4>
                         <p class="text-muted small mb-0">
                             Mata Kuliah: <strong>{{ $konversi->mk_kode }} - {{ $konversi->mk->nama ?? '' }}</strong> &nbsp;|&nbsp;
-                            Tahun Ajaran: {{ $konversi->tahunAjaran->tahun ?? '-' }}@if(!empty($konversi->tahunAjaran->jenis_semester)) ({{ $konversi->tahunAjaran->jenis_semester }})@endif &nbsp;|&nbsp;
+                            Tahun Akademik: {{ $konversi->tahunAjaran->tahun ?? '-' }}@if(!empty($konversi->tahunAjaran->jenis_semester)) ({{ $konversi->tahunAjaran->jenis_semester }})@endif &nbsp;|&nbsp;
                             Kurikulum: Tahun {{ $konversi->kurikulum->tahun ?? '-' }}
                         </p>
                     </div>
@@ -57,6 +57,9 @@
                 </div>
 
                 {{-- Tabel Daftar Nilai Konversi --}}
+                @php
+                    $prodiObj = $konversi->mk?->prodi ?? auth()->user()->prodiUserObj ?? new \App\Models\Prodi();
+                @endphp
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered align-middle">
                         <thead class="table-primary text-center align-middle">
@@ -69,6 +72,8 @@
                                 <th class="fw-bold">CPMK / Soal</th>
                                 <th class="fw-bold">Nilai CPMK (Nilai Soal)</th>
                                 <th class="fw-bold">Nilai Akhir Metode</th>
+                                <th class="fw-bold">Nilai Akhir MK</th>
+                                <th class="fw-bold">Huruf Mutu MK</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -86,6 +91,21 @@
                                     $metodeGrouped = $items->groupBy(function($it) {
                                         return $it->konversi_metode_id ?: ($it->Jenis ?: 'default');
                                     });
+
+                                    // Hitung Nilai Akhir MK per mahasiswa (Penjumlahan terbobot dari Nilai Akhir Metode)
+                                    $totalNaMk = 0;
+                                    $hasValidScore = false;
+                                    foreach ($metodeGrouped as $kmKey => $kmItems) {
+                                        $firstKmItem = $kmItems->first();
+                                        $nMetode = $firstKmItem->Nilai !== null ? (float)$firstKmItem->Nilai : null;
+                                        $bMetode = (float)($firstKmItem->konversiMetode?->bobot ?? $firstKmItem->BobotSoal ?? 0);
+                                        if ($nMetode !== null) {
+                                            $totalNaMk += ($nMetode * ($bMetode / 100.0));
+                                            $hasValidScore = true;
+                                        }
+                                    }
+                                    $valNaMk = $hasValidScore ? round($totalNaMk, 2) : null;
+                                    $hurufNaMk = $valNaMk !== null ? ($prodiObj->convertGrade($valNaMk)[0] ?? '-') : '-';
 
                                     $isFirstMhsRow = true;
                                 @endphp
@@ -106,7 +126,6 @@
                                                 <td class="text-center bg-white align-middle" rowspan="{{ $totalMhsRows }}">{{ $mhsModel->angkatan ?? $item->angkatan ?? '-' }}</td>
                                                 <td class="text-center fw-semibold text-dark bg-white align-middle" rowspan="{{ $totalMhsRows }}">{{ $npm }}</td>
                                                 <td class="fw-semibold text-dark bg-white align-middle" rowspan="{{ $totalMhsRows }}">{{ $item->Nama_mhs ?? $item->nama_mhs ?? $mhsModel->Nama ?? '-' }}</td>
-                                                @php $isFirstMhsRow = false; @endphp
                                             @endif
 
                                             {{-- Kolom Metode Penilaian (Span Per Metode) --}}
@@ -133,23 +152,38 @@
                                                 @endif
                                             </td>
 
-                                            {{-- Kolom Nilai CPMK / Nilai Soal (Biasa/Tidak Berwarna) --}}
+                                            {{-- Kolom Nilai CPMK / Nilai Soal --}}
                                             <td class="text-center align-middle bg-white text-dark">
                                                 {{ $item->nilaiSoal !== null ? number_format($item->nilaiSoal, 2) : ($item->Nilai !== null ? number_format($item->Nilai, 2) : '-') }}
                                             </td>
 
-                                            {{-- Kolom Nilai Akhir Metode (Span Per Metode: 1 baris per metode, Biasa/Tidak Berwarna) --}}
+                                            {{-- Kolom Nilai Akhir Metode (Span Per Metode) --}}
                                             @if ($cIndex === 0)
                                                 <td class="text-center align-middle bg-white text-dark" rowspan="{{ $totalKmRows }}">
                                                     {{ $nilaiAkhirMetode !== null ? number_format($nilaiAkhirMetode, 2) : '-' }}
                                                 </td>
+                                            @endif
+
+                                            {{-- Kolom Nilai Akhir MK & Huruf Mutu MK (Span Seluruh Metode) --}}
+                                            @if ($isFirstMhsRow)
+                                                <td class="text-center align-middle bg-white fw-bold text-dark" rowspan="{{ $totalMhsRows }}">
+                                                    {{ $valNaMk !== null ? number_format($valNaMk, 2) : '-' }}
+                                                </td>
+                                                <td class="text-center align-middle bg-white" rowspan="{{ $totalMhsRows }}">
+                                                    @if ($valNaMk !== null)
+                                                        <span class="fw-bold text-dark fs-6">{{ $hurufNaMk }}</span>
+                                                    @else
+                                                        <span class="text-muted small">&mdash;</span>
+                                                    @endif
+                                                </td>
+                                                @php $isFirstMhsRow = false; @endphp
                                             @endif
                                         </tr>
                                     @endforeach
                                 @endforeach
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted p-4">
+                                    <td colspan="10" class="text-center text-muted p-4">
                                         <i class="mdi mdi-information-outline me-1"></i> Belum ada data nilai yang diimpor.
                                     </td>
                                 </tr>

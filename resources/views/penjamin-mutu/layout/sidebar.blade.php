@@ -258,12 +258,6 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                     <ul class="nav flex-column sub-menu">
                         @if ($userOtoritas == 'Kepala Program Studi')
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route($currentPrefix . 'rps-list') }}">Tambah RPS</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route($currentPrefix . 'rps.list') }}">Daftar RPS</a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link"
                                     href="{{ route('kepala-program-studi.rps.validation.list') }}">Validasi RPS</a>
                             </li>
@@ -295,6 +289,8 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                             </li>
                         @endif
                         
+                        {{-- Sub-menu soal selain Validasi Soal dinonaktifkan untuk Kaprodi --}}
+                        {{-- 
                         @if (in_array($userOtoritas, ['Kepala Program Studi', 'Dosen']))
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route($currentPrefix . 'soal-addRaw') }}">Tambah Soal</a>
@@ -313,6 +309,7 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                 </li>
                             @endif
                         @endif
+                        --}}
                     </ul>
                 </div>
             </li>
@@ -328,12 +325,15 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                 <div class="collapse" id="penilaian">
                     <ul class="nav flex-column sub-menu">
                         @if ($userOtoritas == 'Kepala Program Studi')
+                            {{-- Sub-menu Download Template & Import Nilai Soal dinonaktifkan --}}
+                            {{-- 
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route($currentPrefix . 'add-mutu') }}">Download Template Soal</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route($currentPrefix . 'import-mutu') }}">Import Nilai Soal</a>
                             </li>
+                            --}}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route($currentPrefix . 'konversi-nilai.index') }}">Import Nilai Konversi</a>
                             </li>

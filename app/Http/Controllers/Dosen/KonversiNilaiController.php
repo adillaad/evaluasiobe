@@ -277,7 +277,7 @@ class KonversiNilaiController extends Controller
         }
 
         return redirect()->route('dosen.konversi-nilai.index')
-            ->with('success', 'Tahun Ajaran setup konversi berhasil diperbarui.');
+            ->with('success', 'Tahun Akademik setup konversi berhasil diperbarui.');
     }
 
     // Step 2 & 3: Kelola Metode & Pemetaan CPMK/Sub-CPMK

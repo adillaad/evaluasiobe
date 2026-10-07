@@ -83,7 +83,7 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                             {{-- Filter Tahun Ajaran --}}
                             @if (isset($tahunAjarans) && $tahunAjarans->isNotEmpty())
                                 <div style="min-width: 140px;">
-                                    <label for="tahun_ajaran_id" class="form-label fw-bold small mb-1">Tahun Ajaran</label>
+                                    <label for="tahun_ajaran_id" class="form-label fw-bold small mb-1">Tahun Akademik</label>
                                     <select name="tahun_ajaran_id" id="tahun_ajaran_id" class="form-select form-select-sm filter-auto-submit" style="height: 38px;">
                                         <option value="">-- Semua TA --</option>
                                         @foreach ($tahunAjarans as $ta)
@@ -156,7 +156,7 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                 @elseif ($isFacultyLevel)
                                     <th>Prodi</th>
                                 @endif
-                                <th>Tahun Ajaran</th>
+                                <th>Tahun Akademik</th>
                                 <th>Angkatan</th>
                                 <th>Nama</th>
                                 <th>NPM</th>
@@ -253,8 +253,10 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                                                                  <span class="text-muted small">&mdash;</span>
                                                                              @endif
                                                                          </div>
-                                                                         <div class="fw-bold text-dark pe-3" style="font-size: 0.95rem;">
-                                                                             {{ $soalItem['nilai'] !== null ? number_format((float)$soalItem['nilai'], 2) : '-' }}
+                                                                         <div class="pe-3 d-flex align-items-center gap-2">
+                                                                             <span class="fw-bold text-dark" style="font-size: 0.95rem;">
+                                                                                 {{ $soalItem['nilai'] !== null ? number_format((float)$soalItem['nilai'], 2) : '-' }}
+                                                                             </span>
                                                                          </div>
                                                                      </div>
                                                                  @endforeach

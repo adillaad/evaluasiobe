@@ -212,7 +212,7 @@ select:disabled {
                                 <i class="mdi mdi-grid-large me-1"></i>{{ $konversi->mk->prodi->nama ?? '-' }}
                                 @if ($konversi->mk->prodi->fakultas ?? null) &mdash; {{ $konversi->mk->prodi->fakultas->nama }} @endif
                                 &nbsp;|&nbsp; SKS: {{ $konversi->mk->total_sks ?? '-' }}
-                                &nbsp;|&nbsp; Tahun Ajaran: {{ $konversi->tahunAjaran->tahun ?? '-' }} ({{ $konversi->tahunAjaran->jenis_semester ?? '-' }})
+                                &nbsp;|&nbsp; Tahun Akademik: {{ $konversi->tahunAjaran->tahun ?? '-' }} ({{ $konversi->tahunAjaran->jenis_semester ?? '-' }})
                                 @if ($konversi->kurikulum) &nbsp;|&nbsp; Kurikulum {{ $konversi->kurikulum->tahun }} @endif
                             </div>
                         </div>

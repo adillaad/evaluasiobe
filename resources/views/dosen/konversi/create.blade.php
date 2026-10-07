@@ -17,7 +17,7 @@
                     </a>
                     <h4 class="card-title mb-0">Setup Konversi Nilai</h4>
                 </div>
-                <p class="text-muted small mb-4">Pilih Mata Kuliah, Tahun Ajaran, dan Kurikulum yang sesuai.</p>
+                <p class="text-muted small mb-4">Pilih Mata Kuliah, Tahun Akademik, dan Kurikulum yang sesuai.</p>
 
                 <form action="{{ route($currentPrefix . 'konversi-nilai.store-setup') }}" method="POST">
                     @csrf
@@ -48,11 +48,11 @@
                         <small id="mk_help_text" class="text-muted d-block mt-1">Silakan pilih Kurikulum untuk menampilkan daftar mata kuliah yang tersedia.</small>
                     </div>
 
-                    <!-- 3. Select Tahun Ajaran -->
+                    <!-- 3. Select Tahun Akademik -->
                     <div class="mb-4">
-                        <label for="tahun_ajaran_id" class="form-label fw-semibold">Tahun Ajaran <span class="text-danger">*</span></label>
+                        <label for="tahun_ajaran_id" class="form-label fw-semibold">Tahun Akademik <span class="text-danger">*</span></label>
                         <select name="tahun_ajaran_id" id="tahun_ajaran_id" class="form-control" required>
-                            <option value="" disabled selected>-- Pilih Tahun Ajaran  --</option>
+                            <option value="" disabled selected>-- Pilih Tahun Akademik  --</option>
                             @foreach ($tahunAjarans as $ta)
                                 <option value="{{ $ta->id }}" {{ old('tahun_ajaran_id') == $ta->id ? 'selected' : '' }}>
                                     {{ $ta->tahun }}/{{ (int)$ta->tahun + 1 }} - {{ $ta->jenis_semester }}

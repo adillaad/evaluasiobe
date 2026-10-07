@@ -172,13 +172,13 @@
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="batas_kelulusan_mhs" class="form-label">Ambang Batas Kelulusan Mahasiswa <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" min="0" max="100" name="batas_kelulusan_mhs" id="batas_kelulusan_mhs" class="form-control form-control-sm" placeholder="contoh: 50.01" readonly required>
+                <input type="number" step="0.01" min="0" max="100" name="batas_kelulusan_mhs" id="batas_kelulusan_mhs" class="form-control form-control-sm" placeholder="contoh: 50.01" required>
             </div>
         </div>
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="batas_kelulusan_mk" class="form-label">Ambang Batas Kelulusan Mata Kuliah <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" min="0" max="100" name="batas_kelulusan_mk" id="batas_kelulusan_mk" class="form-control form-control-sm" placeholder="contoh: 75.50" readonly required>
+                <input type="number" step="0.01" min="0" max="100" name="batas_kelulusan_mk" id="batas_kelulusan_mk" class="form-control form-control-sm" placeholder="contoh: 75.50" required>
             </div>
         </div>
     </div>
@@ -207,7 +207,7 @@ $(document).ready(function() {
         if(!kode_mk) return;
 
         $.ajax({
-            url: `{{ route('dosen.get-pustaka-by-mk', ['kode_mk' => ':kode_mk']) }}`.replace(':kode_mk', kode_mk),
+            url: `{{ route($currentPrefix . 'get-pustaka-by-mk', ['kode_mk' => ':kode_mk']) }}`.replace(':kode_mk', kode_mk),
             type: 'GET',
             dataType: 'json',
             success: function(data) {
@@ -290,7 +290,7 @@ $(document).ready(function() {
 
     // Helper Reset Row saat Clone
     function resetRow(row) {
-        row.find('select').val(''); // Reset pilihan
+        row.find('select').prop('disabled', false).val(''); // Reset pilihan dan aktifkan select
         row.find('.pustaka-baru-form').hide().find('input').val(''); // Reset form baru
         row.find('.remove-pustaka-btn').show(); // Pastikan tombol hapus muncul
     }

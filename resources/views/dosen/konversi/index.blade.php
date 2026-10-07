@@ -30,7 +30,7 @@
                             <th style="width: 5%" class="text-center">No</th>
                             <th style="width: 15%">Kode MK</th>
                             <th>Nama Mata Kuliah</th>
-                            <th style="width: 20%">Tahun Ajaran</th>
+                            <th style="width: 20%">Tahun Akademik</th>
                             <th style="width: 15%" class="text-center">Kurikulum</th>
                             <th style="width: 22%" class="text-center">Aksi</th>
                         </tr>
@@ -71,7 +71,7 @@
                                         </form>
                                     </div>
 
-                                    {{-- Modal Edit Setup MK Kurikulum (Hanya Tahun Ajaran yang bisa diubah) --}}
+                                    {{-- Modal Edit Setup MK Kurikulum (Hanya Tahun Akademik yang bisa diubah) --}}
                                     <div class="modal fade" id="editSetupModal{{ $konversi->id }}" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content border-0 shadow-sm rounded-3">
@@ -84,7 +84,7 @@
                                                             </div>
                                                             <div>
                                                                 <h5 class="modal-title fs-6 fw-bold mb-0 text-dark">Edit Setup MK Kurikulum</h5>
-                                                                <span class="text-muted small">Perbarui Tahun Ajaran Konversi</span>
+                                                                <span class="text-muted small">Perbarui Tahun Akademik Konversi</span>
                                                             </div>
                                                         </div>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -101,7 +101,7 @@
                                                             <small class="text-muted" style="font-size: 0.75rem;"><i class="ti ti-info-circle me-1"></i> Kurikulum tidak dapat diubah.</small>
                                                         </div>
                                                         <div class="mb-3">
-                                                            <label for="tahun_ajaran_id_{{ $konversi->id }}" class="form-label small fw-bold text-dark mb-1">Tahun Ajaran <span class="text-danger">*</span></label>
+                                                            <label for="tahun_ajaran_id_{{ $konversi->id }}" class="form-label small fw-bold text-dark mb-1">Tahun Akademik <span class="text-danger">*</span></label>
                                                             <select name="tahun_ajaran_id" id="tahun_ajaran_id_{{ $konversi->id }}" class="form-select form-select-sm" required>
                                                                 @foreach ($tahunAjarans as $ta)
                                                                     <option value="{{ $ta->id }}" {{ $konversi->tahun_ajaran_id == $ta->id ? 'selected' : '' }}>
@@ -109,7 +109,7 @@
                                                                     </option>
                                                                 @endforeach
                                                             </select>
-                                                            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;"><i class="ti ti-check me-1"></i> Silakan pilih Tahun Ajaran yang ingin diperbarui.</small>
+                                                            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;"><i class="ti ti-check me-1"></i> Silakan pilih Tahun Akademik yang ingin diperbarui.</small>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer py-2 px-4 bg-light border-top justify-content-between">

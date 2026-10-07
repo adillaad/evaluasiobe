@@ -833,6 +833,7 @@ class SoalController extends Controller
     {
         $user = auth()->user();
         $mks = MK::where('id_prodi', $user->id_prodiUser)->orderBy('nama', 'asc')->get();
+        $tahunAjarans = \App\Models\TahunAjaran::orderBy('tahun', 'desc')->get();
 
         $query = Mutu::query()
             ->with('mahasiswa')
@@ -855,7 +856,7 @@ class SoalController extends Controller
 
         $mutus = $query->paginate(10);
 
-        return view('dosen.mutu.importMutu', compact('mutus', 'mks'));
+        return view('dosen.mutu.importMutu', compact('mutus', 'mks', 'tahunAjarans'));
     }
 
     public function import1()
@@ -896,6 +897,7 @@ class SoalController extends Controller
     {
         $user = auth()->user();
         $mks = MK::where('id_prodi', $user->id_prodiUser)->orderBy('nama', 'asc')->get();
+        $tahunAjarans = \App\Models\TahunAjaran::orderBy('tahun', 'desc')->get();
 
         $query = Mutu::query()
             ->with('mahasiswa')
@@ -920,6 +922,16 @@ class SoalController extends Controller
             $query->where('mutus.Course', $request->mk_kode);
         }
 
+        if ($request->filled('tahun_ajaran_id')) {
+            $ta = \App\Models\TahunAjaran::find($request->tahun_ajaran_id);
+            $query->where(function($q) use ($request, $ta) {
+                $q->where('mutus.tahun_ajaran_id', $request->tahun_ajaran_id);
+                if ($ta) {
+                    $q->orWhere('mutus.tahun', 'like', '%' . $ta->tahun . '%');
+                }
+            });
+        }
+
         $query->when($request->course, function ($q) use ($request) {
             $keyword = $request->course;
             return $q->where(function ($sub) use ($keyword) {
@@ -937,7 +949,7 @@ class SoalController extends Controller
 
         $mutus = $query->paginate(10);
 
-        return view('dosen.mutu.importMutu', compact('mutus', 'mks'));
+        return view('dosen.mutu.importMutu', compact('mutus', 'mks', 'tahunAjarans'));
     }
 
     public function filterSoal(Request $request)

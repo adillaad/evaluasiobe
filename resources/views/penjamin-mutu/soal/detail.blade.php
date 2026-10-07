@@ -503,7 +503,7 @@
                         <p class="small fw-bold text-muted text-uppercase mb-2">
                             <i class="ti-comment-alt me-1"></i>Kirim Pesan ke Dosen (tanpa tolak)
                         </p>
-                        <form action="{{ route($rolePrefix . 'soal-pesan-mk', $kode_mk) }}" method="POST">
+                        <form action="{{ route($rolePrefix . 'soal-pesan-mk', ['kode_mk' => $kode_mk, 'dosen' => $dosenParam]) }}" method="POST">
                             @csrf
                             <div class="mb-2">
                                 <textarea name="pesan" class="form-control form-control-sm" rows="3"

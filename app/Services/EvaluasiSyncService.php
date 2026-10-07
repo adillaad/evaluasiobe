@@ -239,14 +239,21 @@ class EvaluasiSyncService
             $na = $attemptScores->max() ?? 0;
             $na = round($na, 2);
 
-            $huruf = 'E';
-            $bobot = 0.0;
-            if ($na >= 76) { $huruf = 'A'; $bobot = 4.0; }
-            elseif ($na >= 71) { $huruf = 'B+'; $bobot = 3.5; }
-            elseif ($na >= 66) { $huruf = 'B'; $bobot = 3.0; }
-            elseif ($na >= 61) { $huruf = 'C+'; $bobot = 2.5; }
-            elseif ($na >= 56) { $huruf = 'C'; $bobot = 2.0; }
-            elseif ($na >= 50) { $huruf = 'D'; $bobot = 1.0; }
+            $prodiObj = $mhs->prodi ?? null;
+            if ($prodiObj) {
+                [$huruf, $bobot] = $prodiObj->convertGrade($na);
+                $status = $prodiObj->getStatusKelulusan($na);
+            } else {
+                $huruf = 'E';
+                $bobot = 0.0;
+                if ($na >= 76) { $huruf = 'A'; $bobot = 4.0; }
+                elseif ($na >= 71) { $huruf = 'B+'; $bobot = 3.5; }
+                elseif ($na >= 66) { $huruf = 'B'; $bobot = 3.0; }
+                elseif ($na >= 61) { $huruf = 'C+'; $bobot = 2.5; }
+                elseif ($na >= 56) { $huruf = 'C'; $bobot = 2.0; }
+                elseif ($na >= 50) { $huruf = 'D'; $bobot = 1.0; }
+                $status = ($na >= 50) ? 'Lulus' : 'Tidak Lulus';
+            }
 
             $totalBobotSks += ($bobot * $sks);
 
@@ -258,7 +265,7 @@ class EvaluasiSyncService
                 'nilai_akhir' => $na,
                 'huruf' => $huruf,
                 'bobot' => $bobot,
-                'status' => ($na >= 50) ? 'Lulus' : 'Tidak Lulus',
+                'status' => $status,
             ];
         }
 
