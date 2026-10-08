@@ -170,7 +170,9 @@ class DashboardController extends Controller
         $baseAngkatan = 2022;
         $semestersToFilter = [];
 
-        if ($semester && $semester !== 'all' && is_numeric($semester)) {
+        if (is_array($semester)) {
+            $semestersToFilter = array_map('intval', $semester);
+        } elseif ($semester && $semester !== 'all' && is_numeric($semester)) {
             $semestersToFilter = [(int)$semester];
         } elseif ($tahun && $tahun !== 'all' && $tahun !== '') {
             $parsedT = (int)explode('/', $tahun)[0];

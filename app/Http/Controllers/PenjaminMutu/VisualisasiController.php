@@ -4396,9 +4396,21 @@ class VisualisasiController extends Controller
             $pCapaians = [];
             $runningMaxCapaian = 0.0;
 
+            $pMinAngkatan = DB::table('mahasiswa')
+                ->where('id_prodi', $pId)
+                ->whereNotNull('angkatan')
+                ->where('angkatan', '>=', 2018)
+                ->min('angkatan');
+
             foreach ($availableYears as $yr) {
-                $offset = max(0, (int)$yr - $startYear);
-                $maxSem = min(8, ($offset + 1) * 2);
+                if (!$pMinAngkatan || (int)$yr < (int)$pMinAngkatan) {
+                    $pScores[$yr] = 0.0;
+                    $pCapaians[$yr] = 0.0;
+                    continue;
+                }
+
+                $offset = max(0, (int)$yr - (int)$pMinAngkatan);
+                $maxSem = min(8, $offset * 2 + 1);
                 $cumSemesters = range(1, $maxSem);
 
                 $yrData = $dashboardController->getFakultasCplAnalytics($fakultasId, 'all', $cumSemesters);
@@ -4436,10 +4448,11 @@ class VisualisasiController extends Controller
             ];
         }
 
+        $totalProdiCount = count($fakultasCplData['prodi_stats']);
         $yearlyAverages = [];
         foreach ($availableYears as $yr) {
-            $avgSkor = $yearlyTotals[$yr]['count_skor'] > 0 ? round($yearlyTotals[$yr]['sum_skor'] / $yearlyTotals[$yr]['count_skor'], 1) : 0;
-            $avgCapaian = $yearlyTotals[$yr]['count_capaian'] > 0 ? round($yearlyTotals[$yr]['sum_capaian'] / $yearlyTotals[$yr]['count_capaian'], 1) : 0;
+            $avgSkor = $totalProdiCount > 0 ? round($yearlyTotals[$yr]['sum_skor'] / $totalProdiCount, 1) : 0;
+            $avgCapaian = $totalProdiCount > 0 ? round($yearlyTotals[$yr]['sum_capaian'] / $totalProdiCount, 1) : 0;
             $yearlyAverages[$yr] = [
                 'avg_skor' => $avgSkor,
                 'avg_capaian' => $avgCapaian
@@ -4698,14 +4711,27 @@ class VisualisasiController extends Controller
                 $countUnivCapaian++;
             }
 
-            // Yearly progression per fakultas
+            // Yearly progression per fakultas (berdasarkan angkatan tertua fakultas masing-masing)
             $fScores = [];
             $fCapaians = [];
             $runningMaxCapaian = 0.0;
 
+            $fakProdiIds = Prodi::where('id_fakultas', $fak->id)->pluck('id')->toArray();
+            $fakMinAngkatan = DB::table('mahasiswa')
+                ->whereIn('id_prodi', $fakProdiIds)
+                ->whereNotNull('angkatan')
+                ->where('angkatan', '>=', 2018)
+                ->min('angkatan');
+
             foreach ($availableYears as $yr) {
-                $offset = max(0, (int)$yr - $startYear);
-                $maxSem = min(8, ($offset + 1) * 2);
+                if (!$fakMinAngkatan || (int)$yr < (int)$fakMinAngkatan) {
+                    $fScores[$yr] = 0.0;
+                    $fCapaians[$yr] = 0.0;
+                    continue;
+                }
+
+                $offset = max(0, (int)$yr - (int)$fakMinAngkatan);
+                $maxSem = min(8, $offset * 2 + 1);
                 $cumSemesters = range(1, $maxSem);
 
                 $yrData = $dashboardController->getFakultasCplAnalytics($fak->id, 'all', $cumSemesters);
