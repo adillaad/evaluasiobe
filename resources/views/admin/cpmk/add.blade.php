@@ -2,6 +2,7 @@
     $routePrefix = [
         'Admin Universitas' => ['prefix' => 'admin-universitas.'],
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
     ];
 
@@ -90,7 +91,7 @@
         var kurikulumID = $('#kurikulum_id').val();
         const otoritas = "{{ $userOtoritas }}";
         let urlget = '';
-        if(otoritas === "Kepala Program Studi"){
+        if (otoritas === "Koordinator Program Studi" || otoritas === "Kepala Program Studi"){
             urlget = `/kepala-program-studi/get-cpl-by-kurikulum/${kurikulumID}`;
         } else if (otoritas === 'Penjamin Mutu Program Studi'){
             urlget = `/penjamin-mutu/program-studi/get-cpl-by-kurikulum/${kurikulumID}`;

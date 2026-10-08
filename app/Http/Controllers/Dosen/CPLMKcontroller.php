@@ -29,7 +29,7 @@ class CPLMKcontroller extends Controller
             return $queryRpss->where('fakultas.id', $user->id_fakultasUser);
         }
 
-        if ($otoritas === 'Kepala Program Studi') {
+        if (in_array($otoritas, ['Koordinator Program Studi', 'Kepala Program Studi'])) {
             return $queryRpss->where('prodi.id', $user->id_prodiUser);
         }
 

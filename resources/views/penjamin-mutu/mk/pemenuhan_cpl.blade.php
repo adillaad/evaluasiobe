@@ -1,6 +1,7 @@
 @php
     $routePrefix = [
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
         'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
         'Penjamin Mutu Fakultas' => ['prefix' => 'penjamin-mutu.fakultas.'],
@@ -51,7 +52,7 @@
                         <p class="text-muted small mb-0">Pemetaan keterhubungan pemenuhan Capaian Pembelajaran Lulusan (CPL) berdasarkan Mata Kuliah per Semester.</p>
                     </div>
 
-                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
+                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
                         <div class="d-flex align-items-center gap-2">
                             <button type="button" id="btn-toggle-matrix-edit" class="btn btn-outline-primary rounded-3 font-weight-bold d-inline-flex align-items-center gap-1 px-3 py-2">
                                 <i class="mdi mdi-pencil-box-multiple-outline font-18"></i>

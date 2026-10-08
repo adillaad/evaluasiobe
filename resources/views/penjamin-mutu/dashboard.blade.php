@@ -188,7 +188,7 @@
     </div>
 
     {{-- SECTION: CHARTS UNTUK PROGRAM STUDI / DOSEN (Role Prodi Level) --}}
-    @if (in_array(auth()->user()->otoritas->otoritas, ['Dosen', 'Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+    @if (in_array(auth()->user()->otoritas->otoritas, ['Dosen', 'Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
         <div class="container-fluid my-3 px-3">
             <div class="row g-3">
                 <div class="col-lg-6 grid-margin stretch-card">
@@ -224,13 +224,13 @@
             .replace(/\s+/g, '-');
 
         $(document).ready(function() {
-            @if (in_array(auth()->user()->otoritas->otoritas, ['Dosen', 'Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+            @if (in_array(auth()->user()->otoritas->otoritas, ['Dosen', 'Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                 showChart();
             @endif
         });
 
         function showChart(url) {
-            const chartUrl = otoritas === "kepala-program-studi" 
+            const chartUrl = (otoritas === "koordinator-program-studi" || otoritas === "kepala-program-studi") 
                         ? `${baseURL}/dashboard-chart` 
                         : `${baseURL}/${otoritas}/dashboard-chart`;
             $.ajax({

@@ -2,7 +2,7 @@
     // Definisikan peran level
     $universityLevelRoles = ['Admin Universitas', 'Penjamin Mutu Universitas', 'Wakil Rektor'];
     $facultyLevelRoles = ['Wakil Dekan', 'Penjamin Mutu Fakultas'];
-    $prodiLevelRoles = ['Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Dosen'];
+    $prodiLevelRoles = ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Dosen'];
 
     $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
 

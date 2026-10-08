@@ -208,7 +208,7 @@ class CPMKcontroller extends Controller
             // Penjamin Mutu Fakultas melihat semua CPMK di fakultasnya
             $cpmks->where('fakultas.id', auth()->user()->id_fakultasUser);
 
-        } elseif (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Dosen'])) {
+        } elseif (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Dosen'])) {
             // Kaprodi dan Penjamin Mutu Prodi melihat CPMK di prodinya saja
             $cpmks->where('cpmks.id_prodi', auth()->user()->id_prodiUser);
         }

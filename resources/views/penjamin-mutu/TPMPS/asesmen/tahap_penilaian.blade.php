@@ -1,6 +1,7 @@
 {{-- @php
     $routePrefix = [
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
     ];
 
@@ -15,7 +16,7 @@
     <div class="card">
         <div class="card-body">
             <h4 class="card-title">Tahap Penilaian</h4>
-            @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+            @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
             <a href="{{ route( $currentPrefix . 'asesmen.instrumen-penilaian-add') }}" class="btn btn-primary">Tambah Data Instrumen</a>
             @endif
             <div class="table-responsive mt-4">

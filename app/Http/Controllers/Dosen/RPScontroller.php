@@ -61,7 +61,7 @@ class RPScontroller extends Controller
             $query->whereHas('prodi', function ($q) use ($user) {
                 $q->where('id_fakultas', $user->id_fakultasUser);
             });
-        } elseif (in_array($otoritas, ['Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $query->where('id_prodi', $user->id_prodiUser)
                   ->where('pengembang', $user->name);
         }
@@ -245,7 +245,7 @@ class RPScontroller extends Controller
             ->value('versi');
         $versi = $lastVersi ? $lastVersi + 1 : 1;
         $kaprodi = User::whereHas('otoritas', function($q){
-            $q->where('otoritas', 'Kepala Program Studi');
+            $q->whereIn('otoritas', ['Koordinator Program Studi', 'Kepala Program Studi']);
         })->where('id_prodiUser', auth()->user()->id_prodiUser)->value('name');
         $rps = RPS::create([
             'nomor' => $nomor,

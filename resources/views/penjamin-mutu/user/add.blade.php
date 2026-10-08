@@ -3,7 +3,8 @@
     //     'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
     //     'Penjamin Mutu Fakultas' => ['prefix' => 'penjamin-mutu.fakultas.'],
     //     'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
-    //     'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
+    //     'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
+        'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
     // ];
 
     // $userOtoritas = auth()->user()->otoritas->otoritas;
@@ -20,8 +21,9 @@
         case 'Penjamin Mutu Program Studi':
             $ajaxUrlPath = 'penjamin-mutu/program-studi';
             break;
+        case 'Koordinator Program Studi':
         case 'Kepala Program Studi':
-            $ajaxUrlPath = 'kepala-program-studi';
+            $ajaxUrlPath = 'koordinator-program-studi';
             break;
         default:
             $ajaxUrlPath = 'penjamin-mutu/program-studi';
@@ -79,15 +81,15 @@
                                 <option value="Wakil Dekan">Wakil Dekan</option>
                                 <option value="Penjamin Mutu Fakultas">Penjamin Mutu Fakultas</option>
                                 <option value="Penjamin Mutu Program Studi">Penjamin Mutu Program Studi</option>
-                                <option value="Kepala Program Studi">Kepala Program Studi</option>
+                                <option value="Koordinator Program Studi">Koordinator Program Studi</option>
                                 <option value="Dosen">Dosen</option>
                             @elseif ($userOtoritas == 'Penjamin Mutu Fakultas')
                                 <option value="Wakil Dekan">Wakil Dekan</option>
                                 <option value="Penjamin Mutu Program Studi">Penjamin Mutu Program Studi</option>
-                                <option value="Kepala Program Studi">Kepala Program Studi</option>
+                                <option value="Koordinator Program Studi">Koordinator Program Studi</option>
                                 <option value="Dosen">Dosen</option>
-                            @elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                                <option value="Kepala Program Studi">Kepala Program Studi</option>
+                            @elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
+                                <option value="Koordinator Program Studi">Koordinator Program Studi</option>
                                 <option value="Dosen">Dosen</option>
                             @endif
                         </select>
@@ -111,7 +113,7 @@
                     <div class="form-group">
                         <label>Fakultas <span class="text-danger">*</span></label>
                         @php 
-                            $isFakultasDisabled = in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Kepala Program Studi']); 
+                            $isFakultasDisabled = in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']); 
                             $userFakultasId = auth()->user()->id_fakultasUser ?? auth()->user()->prodi?->id_fakultas ?? auth()->user()->prodis->first()?->id_fakultas;
                         @endphp
                         @if ($isFakultasDisabled)
@@ -132,7 +134,7 @@
                     <div class="form-group">
                         <label>Prodi<span class="text-danger">*</span></label>
                         @php
-                            $isProdiLocked = in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']);
+                            $isProdiLocked = in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']);
                             $userProdiId = auth()->user()->id_prodiUser ?? auth()->user()->prodis->first()?->id;
                         @endphp
                         

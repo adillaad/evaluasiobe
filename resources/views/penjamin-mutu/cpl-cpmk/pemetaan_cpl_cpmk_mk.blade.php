@@ -377,7 +377,7 @@
             var mkKode = document.getElementById("mk_kode").value;
             const otoritas = "{{ $userOtoritas }}";
             let urlget = '';
-            if(otoritas === "Kepala Program Studi"){
+            if (otoritas === "Koordinator Program Studi" || otoritas === "Kepala Program Studi"){
                 urlget = `/kepala-program-studi/cpl-cpmk/get-cpmk-by-mk/${mkKode}`;
             } else if (otoritas === 'Penjamin Mutu Program Studi'){
                 urlget = `/penjamin-mutu/program-studi/cpl-cpmk/get-cpmk-by-mk/${mkKode}`;

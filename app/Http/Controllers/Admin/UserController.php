@@ -234,7 +234,7 @@ class UserController extends Controller
                 COALESCE(fakultas.id, users.id_fakultasUser) ASC,
                 COALESCE(prodi.id, users.id_prodiUser) ASC
             ')
-            ->orderByRaw("FIELD(user_otoritas.otoritas, 'Admin', 'Admin Universitas', 'Wakil Rektor', 'Wakil Dekan', 'Dosen', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi')")
+            ->orderByRaw("FIELD(user_otoritas.otoritas, 'Admin', 'Admin Universitas', 'Wakil Rektor', 'Wakil Dekan', 'Dosen', 'Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi')")
             ->whereNotNull('name')
             ->whereNotNull('email')
             ->where('users.id', '!=', auth()->id())
@@ -247,11 +247,11 @@ class UserController extends Controller
                     'Admin Universitas',
                     'Wakil Rektor',
                     'Wakil Dekan',
+                    'Koordinator Program Studi',
                     'Kepala Program Studi',
                     'Penjamin Mutu Universitas',
                     'Penjamin Mutu Fakultas',
                     'Penjamin Mutu Program Studi',
-                    'Kepala Program Studi',
                     'Dosen'
                 ]);
             });

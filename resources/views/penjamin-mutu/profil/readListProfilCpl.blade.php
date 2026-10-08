@@ -9,7 +9,7 @@
                 <th scope="col">Profile Weights</th>
                 @if (in_array($userOtoritas, [
                         'Penjamin Mutu Program Studi',
-                        'Kepala Program Studi',
+                        'Koordinator Program Studi', 'Kepala Program Studi',
                     ]))
                     <th class="text-center" style="width: 100px;">Action</th>
                 @endif
@@ -18,7 +18,7 @@
         <tbody>
             @if ($profilCpls->isEmpty())
                 <tr>
-                    <td colspan="{{ in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']) ? 6 : 5 }}"
+                    <td colspan="{{ in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']) ? 6 : 5 }}"
                         style="text-align: center;">Tidak ada data</td>
                 </tr>
             @else
@@ -31,7 +31,7 @@
                         <td>{{ (float)$profilCpl->bobot == (int)$profilCpl->bobot ? (int)$profilCpl->bobot : $profilCpl->bobot }}%</td>
                         @if (in_array($userOtoritas, [
                                 'Penjamin Mutu Program Studi',
-                                'Kepala Program Studi',
+                                'Koordinator Program Studi', 'Kepala Program Studi',
                             ]))
                             <td class="text-center">
                                 <div class="d-flex align-items-center justify-content-center gap-1">

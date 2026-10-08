@@ -136,7 +136,7 @@
         }
     </style>
 
-    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
         <div class="container-fluid mb-4">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
@@ -218,7 +218,7 @@
                         <p class="text-muted small mb-0">Daftar Bahan Kajian (BK) dikelompokkan berdasarkan Rumpun.</p>
                     </div>
 
-                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                         <div class="d-flex align-items-center gap-2">
                             <button type="button" class="btn btn-success text-white btn-icon-text" data-bs-toggle="modal" data-bs-target="#importBkModal">
                                 <i class="ti-upload me-1"></i>
@@ -238,7 +238,7 @@
                                 <th class="text-center" style="width: 120px;">Kode BK</th>
                                 <th>Nama Bahan Kajian</th>
                                 <th class="text-center" style="width: 150px;">Kurikulum</th>
-                                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                                     <th class="text-center" style="width: 120px;">Action</th>
                                 @endif
                             </tr>
@@ -248,7 +248,7 @@
                             @forelse ($bks as $rumpun => $items)
                                 @php $section++; @endphp
                                 <tr class="table-light">
-                                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="py-2.5 px-3 fw-bold text-dark">
+                                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="py-2.5 px-3 fw-bold text-dark">
                                         {{ chr(64 + $section) }}. {{ $rumpun ?: 'Unassigned / Lainnya' }}
                                     </td>
                                 </tr>
@@ -266,7 +266,7 @@
                                                 {{ $bk->kurikulum->tahun ?? '-' }}
                                             </span>
                                         </td>
-                                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                                             <td class="text-center">
                                                 <div class="d-flex align-items-center justify-content-center gap-1">
                                                     <button type="button" 
@@ -296,7 +296,7 @@
                                 @endforeach
                             @empty
                                 <tr>
-                                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="text-center text-muted py-4">
+                                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="text-center text-muted py-4">
                                         <i class="mdi mdi-file-table-outline font-32 d-block mb-1"></i>
                                         Belum ada data Bahan Kajian.
                                     </td>
@@ -361,7 +361,7 @@
     </div>
 
     {{-- Modal Import Bahan Kajian --}}
-    @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+    @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
         <div class="modal fade" id="importBkModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-sm rounded-3">

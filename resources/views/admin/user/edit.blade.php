@@ -52,7 +52,7 @@
                             <option value="Admin Universitas" {{ in_array('Admin Universitas', $currentOtoritas) ? 'selected' : '' }}>Admin Universitas</option>
                             <option value="Wakil Rektor" {{ in_array('Wakil Rektor', $currentOtoritas) ? 'selected' : '' }}>Wakil Rektor</option>
                             <option value="Wakil Dekan" {{ in_array('Wakil Dekan', $currentOtoritas) ? 'selected' : '' }}>Wakil Dekan</option>
-                            <option value="Kepala Program Studi" {{ in_array('Kepala Program Studi', $currentOtoritas) ? 'selected' : '' }}>Kepala Program Studi</option>
+                            <option value="Koordinator Program Studi" {{ in_array('Koordinator Program Studi', $currentOtoritas) || in_array('Kepala Program Studi', $currentOtoritas) ? 'selected' : '' }}>Koordinator Program Studi</option>
                             <option value="Dosen" {{ in_array('Dosen', $currentOtoritas) ? 'selected' : '' }}>Dosen</option>
                             <option value="Penjamin Mutu Program Studi" {{ in_array('Penjamin Mutu Program Studi', $currentOtoritas) ? 'selected' : '' }}>Penjamin Mutu Program Studi</option>
                             <option value="Penjamin Mutu Fakultas" {{ in_array('Penjamin Mutu Fakultas', $currentOtoritas) ? 'selected' : '' }}>Penjamin Mutu Fakultas</option>

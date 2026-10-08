@@ -2,11 +2,12 @@
     $userOtoritas = auth()->user()->otoritas->otoritas ?? 'Dosen';
     $templateToExtend = in_array($userOtoritas, ['Admin Universitas', 'Admin']) 
         ? 'admin.template' 
-        : (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Universitas']) 
+        : (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Universitas']) 
             ? 'penjamin-mutu.template' 
             : 'dosen.template');
 
     $routePrefixMap = [
+        'Koordinator Program Studi' => 'koordinator-program-studi.',
         'Kepala Program Studi' => 'kepala-program-studi.',
         'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.',
         'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.',

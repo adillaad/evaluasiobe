@@ -3,6 +3,7 @@
         'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
         'Penjamin Mutu Fakultas' => ['prefix' => 'penjamin-mutu.fakultas.'],
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
     ];
 
@@ -2342,7 +2343,7 @@
                 loadAngkatan(prodi, universitas);
             });
 
-            @if ($userOtoritas == 'Kepala Program Studi' || $userOtoritas == 'Penjamin Mutu Program Studi' || $userOtoritas == 'Dosen')
+            @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi']) || $userOtoritas == 'Penjamin Mutu Program Studi' || $userOtoritas == 'Dosen')
                 var userProdi = "{{ auth()->user()->id_prodiUser ?? '' }}";
                 if (userProdi) {
                     var universitas = $('#universitas').val();

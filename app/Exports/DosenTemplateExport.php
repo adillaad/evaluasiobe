@@ -14,7 +14,7 @@ class DosenTemplateExport implements FromArray, WithHeadings, WithColumnWidths
             [
                 'Dr. Ahmad Dahlan, M.Kom.',
                 'ahmad.dahlan@unila.ac.id',
-                'Dosen, Kepala Program Studi',
+                'Dosen, Koordinator Program Studi',
                 'Informatika',
                 'Unilajaya!'
             ],

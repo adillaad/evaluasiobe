@@ -3,7 +3,8 @@
         'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
         'Penjamin Mutu Fakultas' => ['prefix' => 'penjamin-mutu.fakultas.'],
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
-        'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
+        'Kepala Program Studi' => ['prefix' => 'koordinator-program-studi.'],
     ];
 $userOtoritas = auth()->user()->otoritas->otoritas;
 $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program-studi.';
@@ -16,6 +17,7 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                 'Penjamin Mutu Universitas',
                 'Penjamin Mutu Fakultas',
                 'Penjamin Mutu Program Studi',
+                'Koordinator Program Studi',
                 'Kepala Program Studi',
             ]))
             <li class="nav-item">
@@ -24,7 +26,7 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                     <span class="menu-title">Dashboard</span>
                 </a>
             </li>
-            @if ($userOtoritas == 'Kepala Program Studi')
+            @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi']))
                 <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="collapse" href="#kurikulum" aria-expanded="false"
                         aria-controls="kurikulum" onclick="document.getElementById('kur').click()">
@@ -129,7 +131,7 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                 </a>
                 <div class="collapse" id="cpmk">
                     <ul class="nav flex-column sub-menu">
-                        @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+                        @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route($currentPrefix . 'add-cpmk') }}">Tambah CPMK</a>
                             </li>
@@ -221,7 +223,7 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                 </a>
                 <div class="collapse" id="asesmen">
                     <ul class="nav flex-column sub-menu">
-                        @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+                        @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
                             <li class="nav-item"><a class="nav-link"
                                     href="{{ route($currentPrefix . 'asesmen.asesmen-add') }}">Tambah Asesmen</a>
                             </li>
@@ -256,10 +258,10 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                 </a>
                 <div class="collapse" id="rps">
                     <ul class="nav flex-column sub-menu">
-                        @if ($userOtoritas == 'Kepala Program Studi')
+                        @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi']))
                             <li class="nav-item">
                                 <a class="nav-link"
-                                    href="{{ route('kepala-program-studi.rps.validation.list') }}">Validasi RPS</a>
+                                    href="{{ route('koordinator-program-studi.rps.validation.list') }}">Validasi RPS</a>
                             </li>
                         @elseif (in_array($userOtoritas, [
                                 'Penjamin Mutu Program Studi',
@@ -291,7 +293,7 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                         
                         {{-- Sub-menu soal selain Validasi Soal dinonaktifkan untuk Kaprodi --}}
                         {{-- 
-                        @if (in_array($userOtoritas, ['Kepala Program Studi', 'Dosen']))
+                        @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Dosen']))
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route($currentPrefix . 'soal-addRaw') }}">Tambah Soal</a>
                             </li>
@@ -324,7 +326,7 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                 </a>
                 <div class="collapse" id="penilaian">
                     <ul class="nav flex-column sub-menu">
-                        @if ($userOtoritas == 'Kepala Program Studi')
+                        @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi']))
                             {{-- Sub-menu Download Template & Import Nilai Soal dinonaktifkan --}}
                             {{-- 
                             <li class="nav-item">

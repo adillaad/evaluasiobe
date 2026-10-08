@@ -75,6 +75,7 @@
         'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
         'Penjamin Mutu Fakultas' => ['prefix' => 'penjamin-mutu.fakultas.'],
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
         'Dosen' => ['prefix' => 'dosen.'],
     ];
@@ -127,7 +128,7 @@
                 <div class="card-body text-center py-5">
                     <i class="mdi mdi-clipboard-outline" style="font-size:3rem; color:#ccc;"></i>
                     <p class="text-muted mt-3 mb-3">Belum ada asesmen yang dikonfigurasi untuk mata kuliah ini.</p>
-                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                         <a href="{{ Route::has($currentPrefix . 'asesmen.asesmen-add') ? route($currentPrefix . 'asesmen.asesmen-add') . '?mk_kode=' . $mk->kode : '#' }}" class="btn btn-primary btn-sm">
                             <i class="mdi mdi-plus-circle me-1"></i> Tambah Asesmen Pertama
                         </a>
@@ -254,7 +255,7 @@
                     <span class="small fw-bold"><i class="mdi mdi-table me-1 text-primary"></i> Detail Asesmen</span>
                     <small class="text-muted" style="font-size:0.75rem;">({{ $penilaians->total() }} baris CPL-CPMK)</small>
                 </div>
-                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                     <div>
                         <a href="{{ Route::has($currentPrefix . 'asesmen.asesmen-add') ? route($currentPrefix . 'asesmen.asesmen-add') . '?mk_kode=' . $mk->kode : '#' }}" class="btn btn-primary btn-sm px-3 py-1 shadow-sm">
                             <i class="mdi mdi-plus-circle me-1"></i> Tambah Asesmen
@@ -273,7 +274,7 @@
                                 <th style="width: 16%">Metode</th>
                                 <th style="width: 10%" class="text-center">Bobot Metode</th>
                                 <th style="width: 25%">Kriteria Penilaian</th>
-                                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                                     <th style="width: 8%" class="text-center">Aksi</th>
                                 @endif
                             </tr>
@@ -330,7 +331,7 @@
                                             @endif
 
                                             {{-- Aksi Per Paket Metode --}}
-                                            @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                                            @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                                                 @if ($ji === 0)
                                                     <td class="text-center align-middle" rowspan="{{ $instrumenRows }}">
                                                         <div class="d-inline-flex gap-1 justify-content-center">
@@ -354,7 +355,7 @@
                                     @endfor
 
                                     {{-- ====== MODAL EDIT PAKET METODE (VERTIKAL CENTER TERKONTROL) ====== --}}
-                                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                                         <div class="modal fade" id="editMetodeModal{{ $pm->id }}" tabindex="-1" aria-labelledby="editMetodeModalLabel{{ $pm->id }}" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                                             <div class="modal-dialog modal-dialog-centered" style="max-width: 540px;">
                                                 <div class="modal-content text-start border-0 shadow">
@@ -456,7 +457,7 @@
                                         <td><span class="badge bg-info text-dark">{{ $p->cpl->kode ?? '-' }}</span></td>
                                         <td><span class="badge bg-success">{{ $p->cpmk->kode ?? '-' }}</span></td>
                                         <td colspan="3" class="text-muted text-center">Belum ada metode & kriteria penilaian</td>
-                                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                                             <td class="text-center">
                                                 <form action="{{ url()->current() . '/' . $p->id }}" method="POST"
                                                       onsubmit="return confirm('Hapus asesmen ini?')">

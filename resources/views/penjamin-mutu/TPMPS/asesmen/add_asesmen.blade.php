@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", function() {
         var mkKode = document.getElementById("mk_kode").value;
         var cplSelect = document.getElementById('cpl_id'); 
         let urlget = '';
-        if(userOtoritas === "Kepala Program Studi"){
+        if (userOtoritas === "Koordinator Program Studi" || userOtoritas === "Kepala Program Studi"){
             urlget = `/kepala-program-studi/asesmen/get-cpl-by-mk/${mkKode}`;
         } else if (userOtoritas === 'Penjamin Mutu Program Studi'){
             urlget = `/penjamin-mutu/program-studi/asesmen/get-cpl-by-mk/${mkKode}`;
@@ -237,7 +237,7 @@ document.addEventListener("DOMContentLoaded", function() {
         var cpmkSelect = document.getElementById('cpmk-select'); 
 
         let urlget = '';
-        if(userOtoritas === "Kepala Program Studi"){
+        if (userOtoritas === "Koordinator Program Studi" || userOtoritas === "Kepala Program Studi"){
             urlget = `/kepala-program-studi/asesmen/get-cpmk-by-cpl/${cplId}?mk_kode=${mkKode}`;
         } else if (userOtoritas === 'Penjamin Mutu Program Studi'){
             urlget = `/penjamin-mutu/program-studi/asesmen/get-cpmk-by-cpl/${cplId}?mk_kode=${mkKode}`;

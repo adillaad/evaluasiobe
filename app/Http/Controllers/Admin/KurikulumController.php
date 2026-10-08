@@ -23,7 +23,7 @@ class KurikulumController extends Controller
 
         if (auth()->user()->otoritas->otoritas === 'Admin Universitas') {
             $query->where('universitas.id', auth()->user()->id_universitasUser);
-        } elseif (auth()->user()->otoritas->otoritas === 'Kepala Program Studi') {
+        } elseif (in_array(auth()->user()->otoritas->otoritas, ['Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
@@ -58,6 +58,7 @@ class KurikulumController extends Controller
                     ->get();
                 break;
 
+            case 'Koordinator Program Studi':
             case 'Kepala Program Studi':
                 // Kaprodi memiliki fakultas dan prodi yang sudah terkunci.
                 // Kita tetap ambil datanya untuk ditampilkan di dropdown yang disabled.
@@ -224,7 +225,7 @@ class KurikulumController extends Controller
             if ($kurikulum->prodi->fakultas->id_universitas != $user->id_universitasUser) {
                 throw new AuthorizationException;
             }
-        } elseif ($otoritas === 'Kepala Program Studi') {
+        } elseif (in_array($otoritas, ['Koordinator Program Studi', 'Kepala Program Studi'])) {
             if ($kurikulum->id_prodi != $user->id_prodiUser) {
                 throw new AuthorizationException;
             }
@@ -236,6 +237,7 @@ class KurikulumController extends Controller
         $routes = [
             'Admin' => 'admin.list-kurikulum',
             'Admin Universitas' => 'admin-universitas.list-kurikulum',
+            'Koordinator Program Studi' => 'koordinator-program-studi.list-kurikulum',
             'Kepala Program Studi' => 'kepala-program-studi.list-kurikulum',
         ];
 

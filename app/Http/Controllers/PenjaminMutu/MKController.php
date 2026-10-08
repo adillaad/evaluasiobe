@@ -289,7 +289,8 @@ class MKController extends Controller
     {
         $routes = [
             'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.mk.susunan-mk',
-            'Kepala Program Studi' => 'kepala-program-studi.mk.susunan-mk',
+            'Koordinator Program Studi' => 'koordinator-program-studi.mk.susunan-mk',
+            'Kepala Program Studi' => 'koordinator-program-studi.mk.susunan-mk',
             'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.mk.susunan-mk',
             'Admin Universitas' => 'admin-universitas.list-mk',
         ];
@@ -320,7 +321,7 @@ class MKController extends Controller
                 $q->where('fakultas.id', $user->id_fakultasUser)
                   ->orWhereNull('mks.id_prodi');
             });
-        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where(function($q) use ($userProdiId) {
                 $q->where('prodi.id', $userProdiId)
                   ->orWhere(function($sub) use ($userProdiId) {
@@ -400,7 +401,7 @@ class MKController extends Controller
                 $q->where('fakultas.id', $user->id_fakultasUser)
                   ->orWhereNull('mks.id_prodi');
             });
-        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where(function($q) use ($userProdiId) {
                 $q->where('prodi.id', $userProdiId)
                   ->orWhere(function($sub) use ($userProdiId) {
@@ -475,7 +476,7 @@ class MKController extends Controller
         } else if ($userOtoritas === 'Penjamin Mutu Fakultas') {
             $query->where('fakultas.id', $user->id_fakultasUser);
             $queryMks->where('fakultas.id', $user->id_fakultasUser);
-        } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where('prodi.id', $user->id_prodiUser);
             $queryMks->where('prodi.id', $user->id_prodiUser);
         }
@@ -507,7 +508,7 @@ class MKController extends Controller
             $queryKur->where('fakultas.id_universitas', $user->id_universitasUser);
         } else if ($userOtoritas === 'Penjamin Mutu Fakultas') {
             $queryKur->where('fakultas.id', $user->id_fakultasUser);
-        } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $queryKur->where('prodi.id', $user->id_prodiUser);
         }
         $kurikulums = $queryKur->get();
@@ -529,7 +530,7 @@ class MKController extends Controller
             $queryCpl->where('fakultas.id_universitas', $user->id_universitasUser);
         } else if ($userOtoritas === 'Penjamin Mutu Fakultas') {
             $queryCpl->where('fakultas.id', $user->id_fakultasUser);
-        } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $queryCpl->where('prodi.id', $user->id_prodiUser);
         }
 

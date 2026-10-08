@@ -30,7 +30,7 @@ class ProfilCplController extends Controller
                 $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
             } else if (in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
                 $query->where('fakultas.id', auth()->user()->id_fakultasUser);
-            } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+            } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
                 $query->where('prodi.id', auth()->user()->id_prodiUser);
             }
 

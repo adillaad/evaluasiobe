@@ -1,6 +1,7 @@
 {{-- @php
     $routePrefix = [
         'Admin Universitas' => ['prefix' => 'admin-universitas.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
     ];
 
@@ -48,7 +49,7 @@
         }
     </style>
     <div class="d-flex row gap-4">
-        @if (in_array($userOtoritas, ['Admin Universitas', 'Kepala Program Studi']))
+        @if (in_array($userOtoritas, ['Admin Universitas', 'Koordinator Program Studi', 'Kepala Program Studi']))
             <div>
                 <div class="card">
                     <div class="card-body">
@@ -59,8 +60,8 @@
                             @php
                                 $user = auth()->user();
                                 $userOtoritas = $user->otoritas->otoritas;
-                                $isFakultasDisabled = $userOtoritas === 'Kepala Program Studi';
-                                $isProdiDisabled = $userOtoritas === 'Kepala Program Studi';
+                                $isFakultasDisabled = in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi']);
+                                $isProdiDisabled = in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi']);
                             @endphp
                             {{-- Universitas (Otomatis terpilih dan disembunyikan) --}}
                             <input type="hidden" name="universitas" value="{{ $user->id_universitasUser }}">
@@ -74,7 +75,7 @@
                                     </div>
                                 @enderror
                             </div>
-                            @if ($userOtoritas === 'Kepala Program Studi')
+                            @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi']))
                                 {{-- Untuk Kaprodi: Fakultas & Prodi disembunyikan, nilainya dikirim via hidden input --}}
                                 <input type="hidden" name="fakultas" value="{{ $user->id_fakultasUser }}">
                                 <input type="hidden" name="id_prodi" value="{{ $user->id_prodiUser }}">

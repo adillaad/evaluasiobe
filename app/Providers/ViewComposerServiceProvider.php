@@ -34,7 +34,9 @@ class ViewComposerServiceProvider extends ServiceProvider
                     'Penjamin Mutu Universitas'   => 'penjamin-mutu.universitas.',
                     'Penjamin Mutu Fakultas'      => 'penjamin-mutu.fakultas.',
                     'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.',
-                    'Kepala Program Studi'        => 'kepala-program-studi.',
+                    'Koordinator Program Studi'   => 'koordinator-program-studi.',
+                    'Koordinator Program Studi'        => 'koordinator-program-studi.',
+                    'Kepala Program Studi'        => 'koordinator-program-studi.',
                     'Dosen'                       => 'dosen.',
                 ];
 

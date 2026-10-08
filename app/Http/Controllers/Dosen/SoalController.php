@@ -48,7 +48,7 @@ class SoalController extends Controller
     public function Add()
     {
         $user = auth()->user();
-        $isKaprodi = ($user->otoritas->otoritas ?? '') == 'Kepala Program Studi';
+        $isKaprodi = in_array($user->otoritas->otoritas ?? '', ['Koordinator Program Studi', 'Kepala Program Studi']);
         $rpss = RPS::where('id_prodi', $user->id_prodiUser)
             ->where('pengembang', $user->name)
             ->whereHas('mk')
@@ -77,7 +77,7 @@ class SoalController extends Controller
     public function addRaw()
     {
         $user = auth()->user();
-        $isKaprodi = ($user->otoritas->otoritas ?? '') == 'Kepala Program Studi';
+        $isKaprodi = in_array($user->otoritas->otoritas ?? '', ['Koordinator Program Studi', 'Kepala Program Studi']);
 
         $kurikulum = Kurikulum::query()
             ->where('id_prodi', $user->id_prodiUser)
@@ -194,7 +194,7 @@ class SoalController extends Controller
     public function New(Request $request)
     {
         $user = auth()->user();
-        $isKaprodi = ($user->otoritas->otoritas ?? '') == 'Kepala Program Studi';
+        $isKaprodi = in_array($user->otoritas->otoritas ?? '', ['Koordinator Program Studi', 'Kepala Program Studi']);
 
         $universitas = Universitas::where('id', $user->id_universitasUser)->get();
         $prodi = Prodi::where('id', $user->id_prodiUser)->get();
@@ -287,7 +287,7 @@ class SoalController extends Controller
     public function addRawTS(Request $request)
     {
         $user = auth()->user();
-        $isKaprodi = ($user->otoritas->otoritas ?? '') == 'Kepala Program Studi';
+        $isKaprodi = in_array($user->otoritas->otoritas ?? '', ['Koordinator Program Studi', 'Kepala Program Studi']);
 
         $universitas = Universitas::where('id', $user->id_universitasUser)->get();
         $prodi = Prodi::where('id', $user->id_prodiUser)->get();
@@ -883,7 +883,7 @@ class SoalController extends Controller
             $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $query->where('prodi.id_fakultas', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $query->where('mutus.id_prodi', auth()->user()->id_prodiUser);
         }
 

@@ -47,7 +47,7 @@ class RpsController extends Controller
 
         $kaprodis = User::query()
             ->join('user_otoritas', 'users.id', '=', 'user_otoritas.user_id')
-            ->where('user_otoritas.otoritas', 'Kepala Program Studi')
+            ->whereIn('user_otoritas.otoritas', ['Koordinator Program Studi', 'Kepala Program Studi'])
             ->where('id_universitasUser', auth()->user()->id_universitasUser)
             ->select('users.*')
             ->get();
@@ -178,7 +178,7 @@ Private study: ' . $bobot . 'x 60 = 180 minutes per week."';
 
         $kaprodis = User::query()
             ->join('user_otoritas', 'users.id', '=', 'user_otoritas.user_id')
-            ->where('user_otoritas.otoritas', 'Kepala Program Studi')
+            ->whereIn('user_otoritas.otoritas', ['Koordinator Program Studi', 'Kepala Program Studi'])
             ->where('id_universitasUser', auth()->user()->id_universitasUser)
             ->select('users.*')
             ->get();

@@ -1,6 +1,7 @@
 {{-- @php
     $routePrefix = [
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
     ];
 
@@ -58,7 +59,7 @@
         var bkId = document.getElementById("bk_id").value;
         console.log(bkId); // Pastikan menggunakan console.log, bukan console.console
         const otoritas = "{{ $userOtoritas }}";
-        if(otoritas === "Kepala Program Studi"){
+        if (otoritas === "Koordinator Program Studi" || otoritas === "Kepala Program Studi"){
             urlget = `/kepala-program-studi/bk/get-mk-by-bk/${bkId}`;
         } else if (otoritas === 'Penjamin Mutu Program Studi'){
             urlget = `/penjamin-mutu/program-studi/bk/get-mk-by-bk/${bkId}`;

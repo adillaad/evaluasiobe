@@ -140,7 +140,7 @@
                 <th width="12%">Kode PL</th>
                 <th width="28%">Profil Karir</th>
                 <th>Graduate Profile</th>
-                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                     <th width="12%" class="text-center">Action</th>
                 @endif
             </tr>
@@ -148,7 +148,7 @@
         <tbody>
             @if ($listProfil->isEmpty())
                 <tr>
-                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="text-center text-muted py-4">
+                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="text-center text-muted py-4">
                         Tidak ada data
                     </td>
                 </tr>
@@ -162,7 +162,7 @@
                         </td>
                         <td class="wrap-content">{{ ucfirst($profil->deskripsi) }}</td>
 
-                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                             <td class="text-center">
                                 <div class="d-flex align-items-center justify-content-center gap-1">
                                     <button type="button" class="btn btn-outline-primary btn-icons"

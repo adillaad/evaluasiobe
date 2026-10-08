@@ -93,6 +93,7 @@ class DashboardController extends Controller
                     ->where('fakultas.id', $user->id_fakultasUser)
                     ->where('prodi.id', $user->id_prodiUser)
                     ->get();
+            case 'Koordinator Program Studi':
             case 'Kepala Program Studi':
                 return $query->join('prodi', 'rpss.id_prodi', '=', 'prodi.id')
                     ->where('prodi.id', $user->id_prodiUser)

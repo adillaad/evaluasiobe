@@ -574,7 +574,7 @@ class ProfilController extends Controller
                 })
             )
             ->when(
-                in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']),
+                in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']),
                 fn($q) => $q->where(function($sub) use ($userProdiId) {
                     $sub->where('mks.id_prodi', $userProdiId)
                         ->orWhereExists(function($pivot) use ($userProdiId) {

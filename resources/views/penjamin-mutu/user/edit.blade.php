@@ -3,7 +3,8 @@
     //     'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
     //     'Penjamin Mutu Fakultas' => ['prefix' => 'penjamin-mutu.fakultas.'],
     //     'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
-    //     'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
+    //     'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
+        'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
     // ];
 
     // $userOtoritas = auth()->user()->otoritas->otoritas;
@@ -20,8 +21,9 @@
         case 'Penjamin Mutu Program Studi':
             $ajaxUrlPath = 'penjamin-mutu/program-studi';
             break;
+        case 'Koordinator Program Studi':
         case 'Kepala Program Studi':
-            $ajaxUrlPath = 'kepala-program-studi';
+            $ajaxUrlPath = 'koordinator-program-studi';
             break;
         default:
             $ajaxUrlPath = 'penjamin-mutu/program-studi'; // Fallback default
@@ -80,15 +82,15 @@
                                 <option value="Wakil Dekan" {{ in_array('Wakil Dekan', $currentOtoritas) ? 'selected' : '' }}>Wakil Dekan</option>
                                 <option value="Penjamin Mutu Fakultas" {{ in_array('Penjamin Mutu Fakultas', $currentOtoritas) ? 'selected' : '' }}>Penjamin Mutu Fakultas</option>
                                 <option value="Penjamin Mutu Program Studi" {{ in_array('Penjamin Mutu Program Studi', $currentOtoritas) ? 'selected' : '' }}>Penjamin Mutu Program Studi</option>
-                                <option value="Kepala Program Studi" {{ in_array('Kepala Program Studi', $currentOtoritas) ? 'selected' : '' }}>Kepala Program Studi</option>
+                                <option value="Koordinator Program Studi" {{ in_array('Koordinator Program Studi', $currentOtoritas) || in_array('Kepala Program Studi', $currentOtoritas) ? 'selected' : '' }}>Koordinator Program Studi</option>
                                 <option value="Dosen" {{ in_array('Dosen', $currentOtoritas) ? 'selected' : '' }}>Dosen</option>
                             @elseif ($userOtoritas == 'Penjamin Mutu Fakultas')
                                 <option value="Wakil Dekan" {{ in_array('Wakil Dekan', $currentOtoritas) ? 'selected' : '' }}>Wakil Dekan</option>
                                 <option value="Penjamin Mutu Program Studi" {{ in_array('Penjamin Mutu Program Studi', $currentOtoritas) ? 'selected' : '' }}>Penjamin Mutu Program Studi</option>
-                                <option value="Kepala Program Studi" {{ in_array('Kepala Program Studi', $currentOtoritas) ? 'selected' : '' }}>Kepala Program Studi</option>
+                                <option value="Koordinator Program Studi" {{ in_array('Koordinator Program Studi', $currentOtoritas) || in_array('Kepala Program Studi', $currentOtoritas) ? 'selected' : '' }}>Koordinator Program Studi</option>
                                 <option value="Dosen" {{ in_array('Dosen', $currentOtoritas) ? 'selected' : '' }}>Dosen</option>
-                            @elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                                <option value="Kepala Program Studi" {{ in_array('Kepala Program Studi', $currentOtoritas) ? 'selected' : '' }}>Kepala Program Studi</option>
+                            @elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
+                                <option value="Koordinator Program Studi" {{ in_array('Koordinator Program Studi', $currentOtoritas) || in_array('Kepala Program Studi', $currentOtoritas) ? 'selected' : '' }}>Koordinator Program Studi</option>
                                 <option value="Dosen" {{ in_array('Dosen', $currentOtoritas) ? 'selected' : '' }}>Dosen</option>
                             @endif
                         </select>
@@ -110,7 +112,7 @@
                     {{-- FAKULTAS --}}
                     <div class="form-group">
                         <label>Fakultas</label>
-                         @php $isFakultasDisabled = in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Kepala Program Studi']); @endphp
+                         @php $isFakultasDisabled = in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']); @endphp
                         <select class="single-select w-100" name="fakultas_filter" {{ $isFakultasDisabled ? 'disabled' : '' }}>
                             <option></option>
                             @foreach ($allFakultas as $fakultas)
@@ -124,7 +126,7 @@
                     {{-- PRODI --}}
                     <div class="form-group" id="prodi-form">
                         <label>Prodi <span class="text-danger">*</span></label>
-                        @php $isProdiLocked = in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']); @endphp
+                        @php $isProdiLocked = in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']); @endphp
                         
                         @if ($isProdiLocked)
                             <input type="hidden" name="prodi[]" value="{{ $user->id_prodiUser }}">

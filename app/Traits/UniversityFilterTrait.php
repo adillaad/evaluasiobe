@@ -183,7 +183,7 @@ trait UniversityFilterTrait
         // Definisikan peran berdasarkan level untuk mempermudah pembacaan
         $isUniversityLevel = in_array($userOtoritas, ['Admin Universitas', 'Wakil Rektor', 'Penjamin Mutu Universitas']);
         $isFacultyLevel = in_array($userOtoritas, ['Wakil Dekan', 'Penjamin Mutu Fakultas']);
-        $isProdiLevel = in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Dosen']);
+        $isProdiLevel = in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Dosen']);
 
         // --- Filter Universitas ---
         if ($isUniversityLevel || $isFacultyLevel || $isProdiLevel) {

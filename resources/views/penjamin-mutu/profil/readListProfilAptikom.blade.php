@@ -51,7 +51,7 @@
                 <th>Profil Lulusan</th>
                 <th width="10%">Status</th>
                 <th width="15%">Acuan</th>
-                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                     <th width="15%" class="text-center">Action</th>
                 @endif
             </tr>
@@ -59,7 +59,7 @@
         <tbody>
             @if ($listProfil->isEmpty())
                 <tr>
-                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 7 : 6 }}"
+                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']) ? 7 : 6 }}"
                         class="text-center text-muted py-4">
                         Tidak ada data
                     </td>
@@ -78,7 +78,7 @@
                         </td>
                         <td>{{ ucfirst($profil->acuan) }}</td>
 
-                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                             <td class="text-center">
                                 <div class="d-flex align-items-center justify-content-center gap-1">
                                     <button type="button" class="btn btn-outline-primary btn-icons"

@@ -7,7 +7,7 @@
         $currentPrefix = 'penjamin-mutu.fakultas.';
     } elseif ($userOtoritas === 'Penjamin Mutu Program Studi') {
         $currentPrefix = 'penjamin-mutu.program-studi.';
-    } elseif ($userOtoritas === 'Kepala Program Studi') {
+    } elseif (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi'])) {
         $currentPrefix = 'kepala-program-studi.';
     } else {
         $currentPrefix = 'admin.';

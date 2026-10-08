@@ -34,7 +34,7 @@ class KomponenController extends Controller
             $jenis->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } else if ($otoritas == 'Wakil Dekan') {
             $jenis->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } else if (in_array($otoritas, ['Kepala Program Studi', 'Dosen'])) {
+        } else if (in_array($otoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $jenis->where('prodi.id', auth()->user()->id_prodiUser);
         }
 

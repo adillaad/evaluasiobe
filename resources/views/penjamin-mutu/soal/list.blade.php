@@ -4,7 +4,8 @@
         $rolePrefix = match (auth()->user()->otoritas->otoritas) {
             'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.',
             'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.',
-            'Kepala Program Studi' => 'kepala-program-studi.',
+            'Koordinator Program Studi' => 'koordinator-program-studi.',
+        'Kepala Program Studi' => 'kepala-program-studi.',
             default => 'penjamin-mutu.program-studi.',
         };
 

@@ -79,7 +79,7 @@
                         <select class="js-example-basic-single w-100" name="jabatan" id="jabatan">
                             <option selected="true" value="" disabled selected>Select...</option>
                             <option value="" {{ $user->jabatan == '' ? 'selected' : '' }}>Tidak Ada Jabatan</option>
-                            <option value="Kaprodi" {{ $user->jabatan == 'Kaprodi' ? 'selected' : '' }}>Kaprodi</option>
+                            <option value="Koordinator Program Studi" {{ $user->jabatan == 'Koordinator Program Studi' || $user->jabatan == 'Kaprodi' ? 'selected' : '' }}>Koordinator Program Studi</option>
                         </select>
                         @error('jabatan')
                             <div class="alert alert-danger">

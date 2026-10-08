@@ -101,8 +101,8 @@
                 <div id="global-warning" class="alert alert-warning d-none">
                     <i class="ti ti-alert-triangle me-1"></i>
                     <strong>Perhatian:</strong> Beberapa soal/instrumen belum divalidasi oleh Penjamin Mutu atau
-                    Kepala Program Studi. Item tersebut tidak dapat dipilih sampai disetujui.
-                    <strong>Hubungi Penjamin Mutu Prodi / Kepala Program Studi untuk menyetujui soal Anda.</strong>
+                    Koordinator Program Studi. Item tersebut tidak dapat dipilih sampai disetujui.
+                    <strong>Hubungi Penjamin Mutu Prodi / Koordinator Program Studi untuk menyetujui soal Anda.</strong>
                 </div>
 
                 <form action="{{ route('dosen.excelGabungan') }}" method="GET" id="form-download">
@@ -363,7 +363,7 @@
                 }
                 var color = statusLabel === 'Ditolak' ? 'danger' : 'secondary';
                 return '<span class="badge bg-' + color + '">' + statusLabel + '</span>' +
-                    '<br><small class="text-danger" style="font-size:.7rem">Hubungi PM / Kaprodi</small>';
+                    '<br><small class="text-danger" style="font-size:.7rem">Hubungi PM / Koorprodi</small>';
             }
 
             function renderItemTable(soals, instrumens) {
@@ -380,7 +380,7 @@
                         var canSelect = soal.can_select;
                         var rowClass = canSelect ? '' : ' disabled-item';
                         var disAttr = canSelect ? '' :
-                            ' disabled title="Soal belum divalidasi — hubungi PM/Kaprodi"';
+                            ' disabled title="Soal belum divalidasi — hubungi PM/Koorprodi"';
 
                         rows += '<tr class="item-row' + rowClass + '" data-item-id="soal-' + soalId +
                             '" data-cpmk-id="' + cpmkId + '" data-type="soal">' +
@@ -419,7 +419,7 @@
                         var canSelect = item.can_select;
                         var rowClass = canSelect ? '' : ' disabled-item';
                         var disAttr = canSelect ? '' :
-                            ' disabled title="Instrumen belum divalidasi — hubungi PM/Kaprodi"';
+                            ' disabled title="Instrumen belum divalidasi — hubungi PM/Koorprodi"';
 
                         rows += '<tr class="item-row' + rowClass + '" data-item-id="ts-' + tsId +
                             '" data-cpmk-id="' + cpmkId + '" data-type="ts">' +

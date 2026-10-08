@@ -1,6 +1,7 @@
 @php
     $routePrefix = [
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
         'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
         'Penjamin Mutu Fakultas' => ['prefix' => 'penjamin-mutu.fakultas.'],
@@ -152,7 +153,7 @@
         </div>
 
         {{-- Form Tambah Sub CPMK Baru --}}
-        @if(in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
+        @if(in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
             <div class="card mb-4 shadow-sm">
                 <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
                     <h5 class="card-title fw-bold mb-0 text-primary">
@@ -300,7 +301,7 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        @if(in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
+                                        @if(in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
                                             <div class="d-flex align-items-center justify-content-center gap-1">
                                                 <button type="button" class="btn btn-sm btn-outline-primary p-1 px-2" 
                                                     title="Edit Sub CPMK"
@@ -384,7 +385,7 @@
 
             function getPrefixUrl() {
                 const userOtoritas = @json($userOtoritas);
-                if (userOtoritas === 'Kepala Program Studi') return '/kepala-program-studi/cpl-cpmk';
+                if (userOtoritas === 'Koordinator Program Studi' || userOtoritas === 'Kepala Program Studi') return '/kepala-program-studi/cpl-cpmk';
                 if (userOtoritas === 'Penjamin Mutu Universitas') return '/penjamin-mutu/universitas/cpl-cpmk';
                 if (userOtoritas === 'Penjamin Mutu Fakultas') return '/penjamin-mutu/fakultas/cpl-cpmk';
                 return '/penjamin-mutu/program-studi/cpl-cpmk';

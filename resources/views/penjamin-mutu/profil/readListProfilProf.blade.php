@@ -51,7 +51,7 @@
                 <th class="text-center">Kurikulum</th>
                 <th>Profesi</th>
 
-                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                     <th>Action</th>
                 @endif
 
@@ -96,7 +96,7 @@
                         @endif
                     </td>
 
-                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                         <td>
                             <div class="d-flex align-items-center gap-1">
                                 <button class="btn btn-outline-primary btn-icons" onclick="showProfil({{ $profil->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">

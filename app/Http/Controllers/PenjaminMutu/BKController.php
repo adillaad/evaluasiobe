@@ -27,7 +27,7 @@ class BKController extends Controller
             $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
             $query->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where('prodi.id', $idProdi);
         }
 
@@ -180,7 +180,7 @@ class BKController extends Controller
                         ->where('prodi.id_fakultas', $fakId);
                 });
             });
-        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $queryBks->where('prodi.id', $userProdiId);
             $queryMks->where(function($q) use ($userProdiId) {
                 $q->where('mks.id_prodi', $userProdiId)
@@ -221,7 +221,7 @@ class BKController extends Controller
             $queryKur->where('fakultas.id_universitas', $user->id_universitasUser);
         } else if ($user->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
             $queryKur->where('fakultas.id', $user->id_fakultasUser);
-        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $queryKur->where('prodi.id', $user->id_prodiUser);
         }
         $kurikulums = $queryKur->get();
@@ -237,7 +237,7 @@ class BKController extends Controller
         $userProdiId = $user->id_prodiUser;
 
         $queryMks = MK::query();
-        if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $queryMks->where(function($q) use ($userProdiId) {
                 $q->where('mks.id_prodi', $userProdiId)
                   ->orWhereExists(function($sub) use ($userProdiId) {

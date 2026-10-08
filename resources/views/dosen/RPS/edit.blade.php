@@ -155,7 +155,7 @@
                                     {{ $user->name }}</option>
                             @endforeach
                         </select>
-                        <label for="kaprodi">Kepala program studi <span style="color:red">*</span></label>
+                        <label for="kaprodi">Koordinator program studi <span style="color:red">*</span></label>
                         @error('kaprodi')
                             <div class="alert alert-danger">
                                 {{ $message }}

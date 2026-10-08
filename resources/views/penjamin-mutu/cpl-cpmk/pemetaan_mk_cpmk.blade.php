@@ -18,7 +18,8 @@
             'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
             'Penjamin Mutu Fakultas' => ['prefix' => 'penjamin-mutu.fakultas.'],
             'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
-            'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
+            'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
+        'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
         ];
         $userOtoritas = auth()->user()->otoritas->otoritas;
         $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program-studi.';
@@ -298,7 +299,7 @@
                                 <i class="mdi mdi-file-tree me-1"></i> Tree
                             </button>
                         </div>
-                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                             <button class="btn btn-primary btn-icon-text" type="button" data-bs-toggle="collapse" data-bs-target="#formTambahMKCPMK" aria-expanded="false" aria-controls="formTambahMKCPMK">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 <span>Tambah Pemetaan MK - CPMK</span>
@@ -307,7 +308,7 @@
                     </div>
                 </div>
 
-                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                     <div class="collapse mb-4" id="formTambahMKCPMK">
                         <div class="card card-body border shadow-sm bg-light">
                             <h5 class="fw-bold mb-3 text-primary">Form Tambah Pemetaan MK ke CPMK & Bobot</h5>
@@ -426,7 +427,7 @@
                                         </div>
                                     </div>
                                      <div class="d-flex align-items-center gap-2">
-                                         @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                                         @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                                              <button type="button" class="btn btn-outline-success btn-sm p-1 px-2 text-success border-success" 
                                                  type="button" 
                                                  data-bs-toggle="collapse" 
@@ -462,7 +463,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                         @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                                                         @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                                                              <div class="d-flex align-items-center gap-1">
                                                                  <button type="button" class="btn btn-outline-primary btn-sm edit-single-cpmk-btn p-1 px-2" 
                                                                      data-mk-kode="{{ $mk->kode }}" 
@@ -505,7 +506,7 @@
     </div>
 
     {{-- MODAL EDIT PEMETAAN MK-CPMK (PER MATA KULIAH) --}}
-    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
         <div class="modal fade" id="editMkCpmkModal" tabindex="-1" aria-labelledby="editMkCpmkModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -687,7 +688,7 @@
 
         function loadCpmkOptions(mkKode, containerSelector, isEdit = false) {
             let urlget = '';
-            if(otoritas === "Kepala Program Studi"){
+            if (otoritas === "Koordinator Program Studi" || otoritas === "Kepala Program Studi"){
                 urlget = `/kepala-program-studi/cpl-cpmk/get-cpmk-by-mk/${mkKode}`;
             } else if (otoritas === 'Penjamin Mutu Program Studi'){
                 urlget = `/penjamin-mutu/program-studi/cpl-cpmk/get-cpmk-by-mk/${mkKode}`;
@@ -878,7 +879,7 @@
             $('#modal_cpmk_rows_container').html('<div class="text-center text-muted py-3">Loading data CPMK...</div>');
 
             let updateUrl = '';
-            if (otoritas === "Kepala Program Studi") {
+            if (otoritas === "Koordinator Program Studi" || otoritas === "Kepala Program Studi") {
                 updateUrl = `/kepala-program-studi/cpl-cpmk/update-mk-cpmk/${mkKode}`;
             } else if (otoritas === 'Penjamin Mutu Program Studi') {
                 updateUrl = `/penjamin-mutu/program-studi/cpl-cpmk/update-mk-cpmk/${mkKode}`;
@@ -887,7 +888,7 @@
 
             // Fetch available CPMKs for this MK
             let urlget = '';
-            if (otoritas === "Kepala Program Studi") {
+            if (otoritas === "Koordinator Program Studi" || otoritas === "Kepala Program Studi") {
                 urlget = `/kepala-program-studi/cpl-cpmk/get-cpmk-by-mk/${mkKode}`;
             } else if (otoritas === 'Penjamin Mutu Program Studi') {
                 urlget = `/penjamin-mutu/program-studi/cpl-cpmk/get-cpmk-by-mk/${mkKode}`;
@@ -959,7 +960,7 @@
             $('#edit_single_bobot_input').val(currentBobot > 0 ? currentBobot : '');
 
             let updateUrl = '';
-            if (otoritas === "Kepala Program Studi") {
+            if (otoritas === "Koordinator Program Studi" || otoritas === "Kepala Program Studi") {
                 updateUrl = `/kepala-program-studi/cpl-cpmk/update-single-mk-cpmk/${mkKode}/${currentCpmkId}`;
             } else if (otoritas === 'Penjamin Mutu Program Studi') {
                 updateUrl = `/penjamin-mutu/program-studi/cpl-cpmk/update-single-mk-cpmk/${mkKode}/${currentCpmkId}`;
@@ -968,7 +969,7 @@
 
             // Populate CPMK dropdown
             let urlget = '';
-            if (otoritas === "Kepala Program Studi") {
+            if (otoritas === "Koordinator Program Studi" || otoritas === "Kepala Program Studi") {
                 urlget = `/kepala-program-studi/cpl-cpmk/get-cpmk-by-mk/${mkKode}`;
             } else if (otoritas === 'Penjamin Mutu Program Studi') {
                 urlget = `/penjamin-mutu/program-studi/cpl-cpmk/get-cpmk-by-mk/${mkKode}`;

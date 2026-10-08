@@ -46,7 +46,7 @@ class MahasiswaController extends Controller
             $mahasiswaQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($data['userOtoritas'], ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $mahasiswaQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($data['userOtoritas'], ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($data['userOtoritas'], ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $mahasiswaQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
         // Admin, tidak ada filter yang diterapkan di sini.
@@ -219,6 +219,7 @@ class MahasiswaController extends Controller
             'Dosen' => 'dosen.template',
             'Admin' => 'admin.template',
             'Admin Universitas' => 'admin.template',
+            'Koordinator Program Studi' => 'penjamin-mutu.template',
             'Kepala Program Studi' => 'penjamin-mutu.template',
             'Penjamin Mutu Universitas' => 'penjamin-mutu.template',
             'Penjamin Mutu Fakultas' => 'penjamin-mutu.template',

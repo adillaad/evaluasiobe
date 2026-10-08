@@ -17,7 +17,7 @@
                         'Penjamin Mutu Universitas',
                         'Penjamin Mutu Fakultas',
                         'Penjamin Mutu Program Studi',
-                        'Kepala Program Studi',
+                        'Koordinator Program Studi', 'Kepala Program Studi',
                     ]))
                     <button type="submit" class="btn btn-success" onclick="create()">Add Competency Profile</button>
                 @endif
@@ -51,6 +51,7 @@
                     return 'wakil-rektor';
                 case 'Wakil Dekan':
                     return 'wakil-dekan';
+                case 'Koordinator Program Studi':
                 case 'Kepala Program Studi':
                     return 'kepala-program-studi';
                 case 'Dosen':

@@ -27,6 +27,7 @@ class DaftarAsesmenMkController extends Controller
             'Penjamin Mutu Universitas',
             'Penjamin Mutu Fakultas',
             'Penjamin Mutu Program Studi',
+            'Koordinator Program Studi',
             'Kepala Program Studi',
         ];
 
@@ -116,6 +117,7 @@ class DaftarAsesmenMkController extends Controller
 
         $allowedDeleteRoles = [
             'Penjamin Mutu Program Studi',
+            'Koordinator Program Studi',
             'Kepala Program Studi',
         ];
 
@@ -147,6 +149,7 @@ class DaftarAsesmenMkController extends Controller
             'Penjamin Mutu Universitas',
             'Penjamin Mutu Fakultas',
             'Penjamin Mutu Program Studi',
+            'Koordinator Program Studi',
             'Kepala Program Studi',
         ];
 
@@ -209,7 +212,7 @@ class DaftarAsesmenMkController extends Controller
         $user = auth()->user();
         $userOtoritas = $user->otoritas->otoritas ?? 'Dosen';
 
-        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             abort(403, 'Anda tidak memiliki hak akses untuk mengedit asesmen.');
         }
 
@@ -269,7 +272,7 @@ class DaftarAsesmenMkController extends Controller
         $user = auth()->user();
         $userOtoritas = $user->otoritas->otoritas ?? 'Dosen';
 
-        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             abort(403, 'Anda tidak memiliki hak akses untuk mengedit metode.');
         }
 
@@ -320,7 +323,7 @@ class DaftarAsesmenMkController extends Controller
         $user = auth()->user();
         $userOtoritas = $user->otoritas->otoritas ?? 'Dosen';
 
-        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             abort(403, 'Hanya PM Prodi / Kaprodi yang dapat menghapus metode.');
         }
 

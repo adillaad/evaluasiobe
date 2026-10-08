@@ -211,7 +211,7 @@ class DosenImport implements ToCollection
     private function isOtoritasString(string $val): bool
     {
         $valLower = strtolower($val);
-        $keywords = ['dosen', 'kaprodi', 'kepala', 'penjamin', 'mutu', 'dekan', 'rektor', 'admin', 'pmp', 'pmf', 'pmu'];
+        $keywords = ['dosen', 'kaprodi', 'koorprodi', 'koordinator', 'kepala', 'penjamin', 'mutu', 'dekan', 'rektor', 'admin', 'pmp', 'pmf', 'pmu'];
         foreach ($keywords as $kw) {
             if (str_contains($valLower, $kw)) {
                 return true;
@@ -223,8 +223,8 @@ class DosenImport implements ToCollection
     private function mapOtoritas(string $raw): string
     {
         $rawLower = strtolower(trim($raw));
-        if (str_contains($rawLower, 'kepala') || str_contains($rawLower, 'kaprodi')) {
-            return 'Kepala Program Studi';
+        if (str_contains($rawLower, 'koordinator') || str_contains($rawLower, 'koorprodi') || str_contains($rawLower, 'kepala') || str_contains($rawLower, 'kaprodi')) {
+            return 'Koordinator Program Studi';
         }
         if (str_contains($rawLower, 'universitas') && (str_contains($rawLower, 'penjamin') || str_contains($rawLower, 'pmu'))) {
             return 'Penjamin Mutu Universitas';

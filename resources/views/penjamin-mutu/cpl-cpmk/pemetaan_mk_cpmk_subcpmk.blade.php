@@ -14,6 +14,7 @@
 
     $routePrefix = [
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
         'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
         'Penjamin Mutu Fakultas' => ['prefix' => 'penjamin-mutu.fakultas.'],
@@ -179,7 +180,7 @@
     <div class="container-fluid mb-4">
 
         {{-- Card Form Tambah Sub CPMK dengan Header Clickable --}}
-        @if(in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+        @if(in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
             <div class="card mb-4 shadow-sm border">
                 <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between cursor-pointer" 
                      data-bs-toggle="collapse" 
@@ -294,7 +295,7 @@
                             </button>
                         </div>
 
-                        @if(in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
+                        @if(in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas']))
                             <button type="button" id="btn-toggle-matrix-edit" class="btn btn-outline-primary font-weight-bold d-inline-flex align-items-center gap-1">
                                 <i class="ti-pencil-alt"></i>
                                 <span id="btn-matrix-text">Edit Matriks</span>
@@ -752,7 +753,7 @@
             const otoritas = "{{ $userOtoritas }}";
 
             function getPrefixUrl() {
-                if (otoritas === "Kepala Program Studi") {
+                if (otoritas === "Koordinator Program Studi" || otoritas === "Kepala Program Studi") {
                     return "/kepala-program-studi/cpl-cpmk";
                 }
                 return "/penjamin-mutu/program-studi/cpl-cpmk";

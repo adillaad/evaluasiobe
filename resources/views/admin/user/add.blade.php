@@ -103,7 +103,7 @@
                             @endif
                             <option value="Wakil Rektor">Wakil Rektor</option>
                             <option value="Wakil Dekan">Wakil Dekan</option>
-                            <option value="Kepala Program Studi">Kepala Program Studi</option>
+                            <option value="Koordinator Program Studi">Koordinator Program Studi</option>
                             <option value="Dosen">Dosen</option>
                             <option value="Penjamin Mutu Program Studi">Penjamin Mutu Program Studi</option>
                             <option value="Penjamin Mutu Fakultas">Penjamin Mutu Fakultas</option>

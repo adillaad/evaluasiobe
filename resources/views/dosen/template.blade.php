@@ -1,6 +1,7 @@
 @php
     $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
     $isPenjaminMutuOrKaprodi = in_array($userOtoritas, [
+        'Koordinator Program Studi',
         'Kepala Program Studi',
         'Penjamin Mutu Program Studi',
         'Penjamin Mutu Fakultas',

@@ -29,7 +29,7 @@ class DashboardController extends Controller
             $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $query->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where('prodi.id', auth()->user()->id_prodiUser);
         }
         // Ambil data soal

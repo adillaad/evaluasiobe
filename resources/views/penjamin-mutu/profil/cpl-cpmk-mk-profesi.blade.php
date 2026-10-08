@@ -13,7 +13,7 @@
     @php
         $otoritas = auth()->user()->otoritas->otoritas;
 
-        if ($otoritas === 'Kepala Program Studi') {
+        if (in_array($otoritas, ['Koordinator Program Studi', 'Kepala Program Studi'])) {
             $pdfRoute = 'kepala-program-studi.generate-pdf-cpl-cpmk-mk-profesi';
             $printRoute = 'kepala-program-studi.print-cpl-cpmk-mk-profesi';
         } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Dosen'])) {

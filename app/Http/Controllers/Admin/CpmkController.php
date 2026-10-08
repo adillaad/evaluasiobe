@@ -32,7 +32,7 @@ class CpmkController extends Controller
         if ($userOtoritas === 'Admin Universitas') {
             $kurikulumsQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
             $cplsQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } elseif ($userOtoritas === 'Kepala Program Studi' || $userOtoritas === 'Penjamin Mutu Program Studi') {
+        } elseif (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
             $kurikulumsQuery->where('kurikulums.id_prodi', auth()->user()->id_prodiUser);
             $cplsQuery->where('cpls.id_prodi', auth()->user()->id_prodiUser);
         }
@@ -51,7 +51,7 @@ class CpmkController extends Controller
 
     if ($userOtoritas === 'Admin Universitas') {
         $cplsQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-    } elseif ($userOtoritas === 'Kepala Program Studi' || $userOtoritas === 'Penjamin Mutu Program Studi') {
+    } elseif (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
         $cplsQuery->where('cpls.id_prodi', auth()->user()->id_prodiUser);
     }
 
@@ -139,7 +139,7 @@ class CpmkController extends Controller
             // Penjamin Mutu Fakultas melihat semua CPMK di fakultasnya
             $cpmks->where('fakultas.id', auth()->user()->id_fakultasUser);
 
-        } elseif ($userOtoritas === 'Kepala Program Studi' || $userOtoritas === 'Penjamin Mutu Program Studi') {
+        } elseif (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
             // Kaprodi dan Penjamin Mutu Prodi melihat CPMK di prodinya saja
             $cpmks->where('prodi.id', auth()->user()->id_prodiUser);
         }
@@ -176,7 +176,7 @@ class CpmkController extends Controller
 
         if ($userOtoritas === 'Admin Universitas' || $userOtoritas === 'Penjamin Mutu Universitas') {
             $cplsQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
-        } elseif (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
+        } elseif (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
             $cplsQuery->where('cpls.id_prodi', auth()->user()->id_prodiUser);
         } elseif ($cpmk->id_prodi) {
             $cplsQuery->where('cpls.id_prodi', $cpmk->id_prodi);
@@ -314,6 +314,7 @@ class CpmkController extends Controller
         $routes = [
             'Admin' => 'admin.list-cpmk',
             'Admin Universitas' => 'admin-universitas.list-cpmk',
+            'Koordinator Program Studi' => 'koordinator-program-studi.cpmk-list',
             'Kepala Program Studi' => 'kepala-program-studi.cpmk-list',
             'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.list-cpmk',
             'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.list-cpmk',

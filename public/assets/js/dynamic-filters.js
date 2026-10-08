@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 1. DEFINISIKAN GRUP PERAN
     const universityLevelRoles = ['Admin Universitas', 'Penjamin Mutu Universitas', 'Wakil Rektor'];
     const facultyLevelRoles = ['Wakil Dekan', 'Penjamin Mutu Fakultas'];
-    const prodiLevelRoles = ['Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Dosen'];
+    const prodiLevelRoles = ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Dosen'];
 
     // 2. INISIALISASI SELECT2 (Tidak berubah)
     if (universitasSelect.length) {

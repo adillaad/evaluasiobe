@@ -19,7 +19,7 @@
                 @if (in_array($userOtoritas, [
                         
                         'Penjamin Mutu Program Studi',
-                        'Kepala Program Studi',
+                        'Koordinator Program Studi', 'Kepala Program Studi',
                     ]))
                     <th>Action</th>
                 @endif
@@ -28,7 +28,7 @@
         <tbody>
             @if ($listProfil->isEmpty())
                 <tr>
-                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 9 : 8 }}"
+                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']) ? 9 : 8 }}"
                         style="text-align: center;">Tidak ada data</td>
                 </tr>
             @else
@@ -62,7 +62,7 @@
                         @if (in_array($userOtoritas, [
                         
                                 'Penjamin Mutu Program Studi',
-                                'Kepala Program Studi',
+                                'Koordinator Program Studi', 'Kepala Program Studi',
                             ]))
                             <td>
                                 <div class="d-flex align-items-center gap-1">

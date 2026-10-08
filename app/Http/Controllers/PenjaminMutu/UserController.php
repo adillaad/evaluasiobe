@@ -66,6 +66,7 @@ class UserController extends Controller
                 break;
 
             case 'Penjamin Mutu Program Studi':
+            case 'Koordinator Program Studi':
             case 'Kepala Program Studi':
                 // Pre-load all selections for the user's program
                 $data['fakultas'] = Fakultas::select('id', 'nama')
@@ -245,7 +246,8 @@ class UserController extends Controller
                 COALESCE(fakultas.id, users.id_fakultasUser) ASC,
                 COALESCE(prodi.id, users.id_prodiUser) ASC
             ')
-            ->orderByRaw("FIELD(user_otoritas.otoritas, 'Admin', 'Admin Universitas', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen')")
+            ->orderByRaw("FIELD(user_otoritas.otoritas, 'Admin', 'Admin Universitas', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Koordinator Program Studi',
+                    'Kepala Program Studi', 'Dosen')")
             ->whereNotNull('name')
             ->whereNotNull('email')
             ->where('users.id', '!=', auth()->id())
@@ -261,6 +263,7 @@ class UserController extends Controller
                     'Penjamin Mutu Program Studi',
                     'Wakil Rektor',
                     'Wakil Dekan',
+                    'Koordinator Program Studi',
                     'Kepala Program Studi',
                     'Dosen'
                 ]);
@@ -278,6 +281,7 @@ class UserController extends Controller
                 $q->whereIn('otoritas', [
                     'Penjamin Mutu Program Studi',
                     'Wakil Dekan',
+                    'Koordinator Program Studi',
                     'Kepala Program Studi',
                     'Dosen'
                 ]);
@@ -290,9 +294,10 @@ class UserController extends Controller
                       });
                 });
             }
-        } elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->whereHas('otoritas', function ($q) {
                 $q->whereIn('otoritas', [
+                    'Koordinator Program Studi',
                     'Kepala Program Studi',
                     'Dosen'
                 ]);
@@ -308,7 +313,7 @@ class UserController extends Controller
 
                 // Ambil daftar seluruh dosen yang ada di universitas tetapi belum masuk ke prodi Kaprodi
                 $availableDosen = User::whereHas('otoritas', function ($q) {
-                        $q->whereIn('otoritas', ['Dosen', 'Kepala Program Studi']);
+                        $q->whereIn('otoritas', ['Dosen', 'Koordinator Program Studi', 'Kepala Program Studi']);
                     })
                     ->where(function ($q) use ($authUnivId) {
                         if ($authUnivId) {
@@ -349,7 +354,7 @@ class UserController extends Controller
         $user = auth()->user();
         $userOtoritas = $user->otoritas->otoritas;
 
-        if (!in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Admin', 'Admin Universitas'])) {
+        if (!in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Admin', 'Admin Universitas'])) {
             return redirect()->back()->with('error', 'Akses ditolak.');
         }
 
@@ -412,7 +417,7 @@ class UserController extends Controller
         $user = User::findOrFail($ids);
         $userOtoritas = auth()->user()->otoritas->otoritas;
 
-        if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
+        if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
             $kaprodiProdiId = auth()->user()->id_prodiUser ?? auth()->user()->prodis->first()?->id;
 
             if ($kaprodiProdiId) {
@@ -568,7 +573,8 @@ class UserController extends Controller
             'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.list-user',
             'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.list-user',
             'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.list-user',
-            'Kepala Program Studi'          => 'kepala-program-studi.list-user'
+            'Koordinator Program Studi'   => 'koordinator-program-studi.list-user',
+            'Kepala Program Studi'          => 'koordinator-program-studi.list-user'
         ];
 
         return $routes[auth()->user()->otoritas->otoritas] ?? 'default.route';
@@ -579,7 +585,9 @@ class UserController extends Controller
         $routes = [
             'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.add-user',
             'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.add-user',
-            'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.add-user'
+            'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.add-user',
+            'Koordinator Program Studi'   => 'koordinator-program-studi.add-user',
+            'Kepala Program Studi'        => 'koordinator-program-studi.add-user'
         ];
 
         return $routes[auth()->user()->otoritas->otoritas] ?? 'default.add-user';

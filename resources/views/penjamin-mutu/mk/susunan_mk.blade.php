@@ -116,7 +116,7 @@
 
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
                     <h4 class="card-title mb-0 me-auto">List Susunan Mata Kuliah</h4>
-                    @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+                    @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <button type="button" class="btn btn-success text-white btn-icon-text" data-bs-toggle="modal" data-bs-target="#importMkModal">
                                 <i class="ti-upload me-1"></i>
@@ -148,7 +148,7 @@
                                 <th rowspan="2">Tahun Kurikulum</th>
                                 <th rowspan="2">SKS</th>
                                 <th colspan="{{ max(1, (int)($maxSemester ?? 8)) }}" style="text-align:center;">Semester</th>
-                                @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+                                @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
                                     <th rowspan="2">Action</th>
                                 @endif
                             </tr>
@@ -176,7 +176,7 @@
                                             @endif
                                         </td>
                                     @endforeach
-                                    @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+                                    @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
                                         <td>
                                             <div class="d-flex align-items-center gap-1">
                                                 <a href="edit-mk/{{ $mk->kode }}"
@@ -205,7 +205,7 @@
     </div>
 
     {{-- Modal Import Mata Kuliah --}}
-    @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+    @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
         <div class="modal fade" id="importMkModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-sm rounded-3">

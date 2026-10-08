@@ -25,7 +25,7 @@
                 <!--    :faculties="$faculties"-->
                 <!--    :programs="$programs"-->
                 <!--/>-->
-                @if (in_array($userOtoritas, ['Dosen', 'Kepala Program Studi'])) 
+                @if (in_array($userOtoritas, ['Dosen', 'Koordinator Program Studi', 'Kepala Program Studi'])) 
                     <div class="mb-3">
                         <button type="button" class="btn btn-primary btn-icon-text" data-bs-toggle="modal" data-bs-target="#addRpsModal">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -99,7 +99,7 @@
                                                 <i class="ti-printer"></i>
                                             </a>
 
-                                            @if (in_array($userOtoritas, ['Dosen', 'Kepala Program Studi']))
+                                            @if (in_array($userOtoritas, ['Dosen', 'Koordinator Program Studi', 'Kepala Program Studi']))
                                                 @if($rps->status == 'draft' || $rps->status == 'rejected')
                                                     <form action="{{ route($currentPrefix . 'rps-submit-validation', $rps->id) }}" method="post" class="d-inline m-0 p-0" onsubmit="return confirm('Ajukan RPS ini untuk divalidasi?')">
                                                         @csrf
@@ -146,7 +146,7 @@
             </div>
         </div>
     </div>
-    @if (in_array($userOtoritas, ['Dosen', 'Kepala Program Studi']))
+    @if (in_array($userOtoritas, ['Dosen', 'Koordinator Program Studi', 'Kepala Program Studi']))
     <div class="modal fade" id="addRpsModal" tabindex="-1" aria-labelledby="addRpsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable"> {{-- Dibuat besar dan bisa di-scroll --}}
             <div class="modal-content">
@@ -163,7 +163,7 @@
     </div>
     @endif
 
-    @if (in_array($userOtoritas, ['Dosen', 'Kepala Program Studi']))
+    @if (in_array($userOtoritas, ['Dosen', 'Koordinator Program Studi', 'Kepala Program Studi']))
     @foreach($rpss as $rps)
         <div class="modal fade" id="editRpsModal{{ $rps->id }}" tabindex="-1" aria-labelledby="editRpsModalLabel{{ $rps->id }}" aria-hidden="true">
             <div class="modal-dialog modal-xl modal-dialog-scrollable">

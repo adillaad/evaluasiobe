@@ -80,7 +80,7 @@ class SoalController extends Controller
             $mkQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif ($otoritas === 'Penjamin Mutu Fakultas') {
             $mkQuery->where('prodi.id_fakultas', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $mkQuery->where('mks.id_prodi', auth()->user()->id_prodiUser);
         }
 
@@ -675,7 +675,8 @@ class SoalController extends Controller
         $routeMap = [
             'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.list-soal',
             'Penjamin Mutu Fakultas'    => 'penjamin-mutu.fakultas.list-soal',
-            'Kepala Program Studi'      => 'kepala-program-studi.list-soal',
+            'Koordinator Program Studi'      => 'koordinator-program-studi.list-soal',
+            'Kepala Program Studi'      => 'koordinator-program-studi.list-soal',
             'default'                   => 'penjamin-mutu.program-studi.list-soal',
         ];
         $routeName = $routeMap[$otoritas] ?? 'penjamin-mutu.program-studi.list-soal';
@@ -970,7 +971,7 @@ class SoalController extends Controller
             $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif ($otoritas === 'Penjamin Mutu Fakultas') {
             $query->where('prodi.id_fakultas', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where('mutus.id_prodi', auth()->user()->id_prodiUser);
         }
 

@@ -6,7 +6,7 @@
                 <th style="width: 45%; text-align: center;">CPMK</th>
                 <th style="width: 10%; text-align: center;">CPL</th>
                 <th style="width: 10%; text-align: center;">Bobot</th>
-                @if (in_array($userOtoritas ?? auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                @if (in_array($userOtoritas ?? auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                     <th style="width: 10%; text-align: center;">Aksi</th>
                 @endif
             </tr>
@@ -69,7 +69,7 @@
                             <span class="fw-semibold text-dark">{{ $mk->nama }}</span>
                         </td>
                         <td colspan="3" class="text-muted small fst-italic align-middle">- Belum ada CPMK terpetakan -</td>
-                        @if (in_array($userOtoritas ?? auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                        @if (in_array($userOtoritas ?? auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                             <td class="text-center align-middle">
                                 <button type="button" class="btn btn-outline-primary btn-sm edit-mk-cpmk-btn p-1 px-2" 
                                     data-mk-kode="{{ $mk->kode }}" 
@@ -85,7 +85,7 @@
                 @endif
             @empty
                 <tr>
-                    <td colspan="{{ in_array($userOtoritas ?? auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="text-center text-muted py-4">
+                    <td colspan="{{ in_array($userOtoritas ?? auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="text-center text-muted py-4">
                         Tidak ada data Mata Kuliah.
                     </td>
                 </tr>

@@ -1,6 +1,7 @@
 {{-- @php
     $routePrefix = [
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
         'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
     ];

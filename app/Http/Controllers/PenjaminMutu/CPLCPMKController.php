@@ -28,7 +28,7 @@ class CPLCPMKController extends Controller
             $query->where('fakultas.id_universitas', $user->id_universitasUser);
         } else if ($user->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
             $query->where('fakultas.id', $user->id_fakultasUser);
-        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $query->where('prodi.id', $user->id_prodiUser);
         }
 
@@ -47,7 +47,7 @@ class CPLCPMKController extends Controller
             $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
             $query->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
@@ -86,7 +86,7 @@ class CPLCPMKController extends Controller
             $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
             $query->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
@@ -163,7 +163,7 @@ class CPLCPMKController extends Controller
                         ->where('prodi.id_fakultas', $fakId);
                 });
             });
-        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $queryCpl->where('prodi.id', $userProdiId);
             $queryMks->where(function($q) use ($userProdiId) {
                 $q->where('mks.id_prodi', $userProdiId)
@@ -206,7 +206,7 @@ class CPLCPMKController extends Controller
         $userProdiId = $user->id_prodiUser;
 
         $queryMks = MK::query();
-        if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $queryMks->where(function($q) use ($userProdiId) {
                 $q->where('mks.id_prodi', $userProdiId)
                   ->orWhereExists(function($sub) use ($userProdiId) {
@@ -303,7 +303,7 @@ class CPLCPMKController extends Controller
                         ->where('prodi.id_fakultas', $fakId);
                 });
             });
-        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where(function($q) use ($userProdiId) {
                 $q->where('mks.id_prodi', $userProdiId)
                   ->orWhereExists(function($sub) use ($userProdiId) {
@@ -344,7 +344,7 @@ class CPLCPMKController extends Controller
         $userProdiId = $user->id_prodiUser;
 
         $queryMks = MK::query();
-        if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $queryMks->where(function($q) use ($userProdiId) {
                 $q->where('mks.id_prodi', $userProdiId)
                   ->orWhereExists(function($sub) use ($userProdiId) {
@@ -678,6 +678,7 @@ class CPLCPMKController extends Controller
 
             $routePrefix = [
                 'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.',
+                'Koordinator Program Studi' => 'koordinator-program-studi.',
                 'Kepala Program Studi' => 'kepala-program-studi.',
                 'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.',
                 'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.',
@@ -813,7 +814,7 @@ public function indexKelolaSubCpmk(Request $request)
 
     // Ambil daftar CPL milik prodi untuk filter tab CPL
     $cplQuery = CPL::query();
-    if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+    if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
         $cplQuery->where('id_prodi', auth()->user()->id_prodiUser);
     }
     if ($request->filled('kurikulum_id')) {
@@ -825,7 +826,7 @@ public function indexKelolaSubCpmk(Request $request)
         ->join('cpmks', 'sub_cpmk.cpmk_id', '=', 'cpmks.id')
         ->join('cpls', 'cpmks.cpl_id', '=', 'cpls.id');
 
-    if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+    if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
         $query->where('sub_cpmk.id_prodi', auth()->user()->id_prodiUser);
     }
 

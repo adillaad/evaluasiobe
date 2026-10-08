@@ -2,6 +2,7 @@
     $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
 
     switch ($userOtoritas) {
+        case 'Koordinator Program Studi':
         case 'Kepala Program Studi':
             $currentPrefix = 'kepala-program-studi.';
             $baseTemplate = 'penjamin-mutu.template';

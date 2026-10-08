@@ -146,7 +146,7 @@
                                                 <i class="mdi mdi-eye me-1"></i>
                                             </a>
 
-                                            @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                                            @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                                                 <form action="{{ url()->current() }}/{{ $mk->kode }}/destroy-all" method="POST" class="d-inline"
                                                       onsubmit="return confirm('Apakah Anda yakin ingin menghapus SEMUA asesmen pada mata kuliah {{ $mk->nama }}?')">
                                                     @csrf

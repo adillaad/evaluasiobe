@@ -20,7 +20,7 @@
             <div class="card-body">
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
                     <h4 class="card-title mb-0 me-auto">CPL Program Studi</h4>
-                    @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+                    @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <button type="button" class="btn btn-success text-white btn-icon-text" data-bs-toggle="modal" data-bs-target="#importCplModal">
                                 <i class="ti-upload me-1"></i>
@@ -134,7 +134,7 @@
                                 @if (!in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi']))
                                     <th style="width: 200px;">Fakultas</th>
                                 @endif
-                                @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+                                @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
                                     <th style="width: 100px;">Action</th>
                                 @endif
                             </tr>
@@ -151,7 +151,7 @@
                                     @if (!in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi']))
                                         <td>{{ $cpl->prodi->fakultas->nama }}</td>
                                     @endif
-                                    @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+                                    @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
                                         <td>
                                             <div class="d-flex align-items-center gap-1">
                                                 <a href="{{ route($currentPrefix . 'cpl.edit', encrypt($cpl->id)) }}"
@@ -182,7 +182,7 @@
     </div>
 
     {{-- Modal Import CPL Program Studi --}}
-    @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+    @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
         <div class="modal fade" id="importCplModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-sm rounded-3">

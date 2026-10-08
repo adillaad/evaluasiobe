@@ -6,7 +6,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="card-title mb-0">Daftar Mahasiswa</h4>
                     <div class="d-flex gap-2">
-                        @if (in_array($userOtoritas, ['Dosen', 'Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Admin', 'Admin Universitas']))
+                        @if (in_array($userOtoritas, ['Dosen', 'Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Admin', 'Admin Universitas']))
                             <button type="button" class="btn btn-primary btn-icon-text" data-bs-toggle="modal" data-bs-target="#tambahMahasiswaModal">
                                 <i class="ti-plus me-1"></i> Tambah Mahasiswa
                             </button>
@@ -38,7 +38,7 @@
                                 @if ($userOtoritas == 'Admin')
                                     <th>Universitas</th>
                                 @endif
-                                @if (in_array($userOtoritas, ['Dosen', 'Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Admin', 'Admin Universitas']))
+                                @if (in_array($userOtoritas, ['Dosen', 'Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Admin', 'Admin Universitas']))
                                     <th>Action</th>
                                 @endif
                             </tr>
@@ -59,7 +59,7 @@
                                     @if ($userOtoritas == 'Admin')
                                         <td>{{ $mahasiswa->prodi->fakultas->universitas->nama }}</td>
                                     @endif
-                                    @if (in_array($userOtoritas, ['Dosen', 'Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Admin', 'Admin Universitas']))
+                                    @if (in_array($userOtoritas, ['Dosen', 'Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Admin', 'Admin Universitas']))
                                         <td>
                                             <div class="d-flex align-items-center gap-1">
                                                 <button type="button" class="btn btn-warning btn-icons text-white" data-bs-toggle="modal" data-bs-target="#editMahasiswaModal_{{ $mahasiswa->id }}" title="Edit">

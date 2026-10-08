@@ -18,12 +18,21 @@ class CekRole
     {
         $userOtoritas = $request->user()->otoritas->otoritas ?? '';
 
-        if (in_array($userOtoritas, $otoritas)) {
+        // Normalisasi otoritas alias Koordinator/Kepala Program Studi
+        $normalizedOtoritas = $otoritas;
+        if (in_array('Koordinator Program Studi', $otoritas) && !in_array('Kepala Program Studi', $normalizedOtoritas)) {
+            $normalizedOtoritas[] = 'Kepala Program Studi';
+        }
+        if (in_array('Kepala Program Studi', $otoritas) && !in_array('Koordinator Program Studi', $normalizedOtoritas)) {
+            $normalizedOtoritas[] = 'Koordinator Program Studi';
+        }
+
+        if (in_array($userOtoritas, $normalizedOtoritas)) {
             return $next($request);
         }
 
-        // Kaprodi (Kepala Program Studi) memiliki semua hak akses fitur Dosen
-        if (in_array('Dosen', $otoritas) && $userOtoritas === 'Kepala Program Studi') {
+        // Koordinator Program Studi (Kepala Program Studi) memiliki semua hak akses fitur Dosen
+        if (in_array('Dosen', $otoritas) && in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi'])) {
             return $next($request);
         }
 

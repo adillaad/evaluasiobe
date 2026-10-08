@@ -82,7 +82,7 @@
                         <select class="js-example-basic-single w-100" name="jabatan" id="jabatan">
                             <option selected="true" value="" disabled selected>Select...</option>
                             <option value="">Tidak Ada Jabatan</option>
-                            <option value="Kaprodi" {{ old('jabatan') == 'Kaprodi' ? 'selected' : '' }}>Kaprodi</option>
+                            <option value="Koordinator Program Studi" {{ old('jabatan') == 'Koordinator Program Studi' || old('jabatan') == 'Kaprodi' ? 'selected' : '' }}>Koordinator Program Studi</option>
                         </select>
                         @error('jabatan')
                             <div class="alert alert-danger">

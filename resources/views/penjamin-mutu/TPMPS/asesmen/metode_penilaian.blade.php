@@ -1,6 +1,7 @@
 @php
     $routePrefix = [
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
     ];
 
@@ -176,7 +177,7 @@
                         <h4 class="section-title"><i class="bi bi-grid-3x3-gap-fill"></i> Metode Penilaian</h4>
                         <p class="text-muted small mb-0 mt-1">Matriks pemetaan metode penilaian per CPL, Mata Kuliah, dan CPMK.</p>
                     </div>
-                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                         <a href="{{ route($currentPrefix . 'asesmen.metode-penilaian-add') }}" class="btn btn-primary d-inline-flex align-items-center gap-2">
                             <i class="bi bi-plus-lg"></i> Tambah Metode Penilaian
                         </a>

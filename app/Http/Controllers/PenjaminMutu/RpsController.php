@@ -30,7 +30,7 @@ class RpsController extends Controller
     //     // =========================
     //     // 1) SCOPE SESUAI OTORITAS
     //     // =========================
-    //     if (in_array($otoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
+    //     if (in_array($otoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
     //         $query->whereHas('mk', fn ($q) => $q->where('id_prodi', $user->id_prodiUser));
     //     } elseif ($otoritas === 'Penjamin Mutu Fakultas') {
     //         $query->whereHas('mk.prodi', fn ($q) => $q->where('id_fakultas', $user->id_fakultasUser));
@@ -119,7 +119,7 @@ class RpsController extends Controller
             ->where('status', 'published');
 
         // Scope akses sesuai otoritas
-        if (in_array($otoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
+        if (in_array($otoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
             $query->whereHas('mk', function ($q) use ($user) {
                 $q->where('id_prodi', $user->id_prodiUser);
             });
@@ -189,7 +189,7 @@ class RpsController extends Controller
             ->when($otoritas === 'Penjamin Mutu Fakultas', function ($q) use ($user) {
                 $q->where('id_fakultas', $user->id_fakultasUser);
             })
-            ->when(in_array($otoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']), function ($q) use ($user) {
+            ->when(in_array($otoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']), function ($q) use ($user) {
                 $q->where('id', $user->id_prodiUser);
             })
             ->orderBy('nama')
@@ -228,7 +228,8 @@ class RpsController extends Controller
             'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.',
             'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.',
             'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.',
-            'Kepala Program Studi' => 'kepala-program-studi.',
+            'Koordinator Program Studi' => 'koordinator-program-studi.',
+            'Kepala Program Studi' => 'koordinator-program-studi.',
             default => 'penjamin-mutu.program-studi.',
         };
     }

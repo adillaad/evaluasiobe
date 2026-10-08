@@ -894,11 +894,8 @@ Route::middleware(['auth'])->group(function () {
             });
         }
 
-        Route::middleware('cekrole:Kepala Program Studi')->group(function () use ($academicCommonRoutes) {
-            $role = 'Kepala Program Studi';
-            $prefix = strtolower(str_replace(' ', '-', $role));
-            Route::prefix($prefix)->name("$prefix.")->group(function () use ($academicCommonRoutes, $prefix) {
-                $academicCommonRoutes();
+        $kaprodiRoutesGroup = function () use ($academicCommonRoutes) {
+            $academicCommonRoutes();
 
                 Route::controller(RPSdosen::class)->group(function () {
                     Route::get('rps/add-rps', 'Add')->name('rps-add');
@@ -1294,7 +1291,11 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                     Route::any('/generate-pdf-visualisasi-program-studi', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualProgramStudi'])->name('generate-pdfVisualProgramStudi');
                     Route::any('/generate-pdf-visualisasi-fakultas', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualFakultas'])->name('generate-pdfVisualFakultas');
                 });
-            });
+            };
+
+        Route::middleware('cekrole:Koordinator Program Studi,Kepala Program Studi')->group(function () use ($kaprodiRoutesGroup) {
+            Route::prefix('koordinator-program-studi')->name('koordinator-program-studi.')->group($kaprodiRoutesGroup);
+            Route::prefix('kepala-program-studi')->name('kepala-program-studi.')->group($kaprodiRoutesGroup);
         });
         
         // ROUTE MAHASISWA

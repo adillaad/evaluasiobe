@@ -44,7 +44,7 @@ class ActivitiesController extends Controller
             $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } else if ($otoritas == 'Wakil Dekan') {
             $query->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif ($otoritas == 'Kepala Program Studi') {
+        } elseif (in_array($otoritas, ['Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where('prodi.id', auth()->user()->id_prodiUser);
         } elseif ($otoritas == 'Dosen') {
             $query->join('rpss', 'activities.id_rps', '=', 'rpss.id')

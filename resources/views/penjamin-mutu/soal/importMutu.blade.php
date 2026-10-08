@@ -23,7 +23,7 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
         $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
         $isUnivLevel = in_array($userOtoritas, ['Penjamin Mutu Universitas', 'Admin Universitas', 'Wakil Rektor']);
         $isFacultyLevel = in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan']);
-        $isProdiLevel = in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen']);
+        $isProdiLevel = in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen']);
     @endphp
 
     <div class="col-12">

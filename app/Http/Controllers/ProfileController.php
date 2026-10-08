@@ -26,7 +26,7 @@ class ProfileController extends Controller
         $profiles = $isSecondaryProdi
             ? UserOtoritas::where('user_id', Auth::id())->where('otoritas', 'Dosen')->get()
             : UserOtoritas::where('user_id', Auth::id())
-                ->orderByRaw("FIELD(otoritas, 'Admin', 'Admin Universitas', 'Wakil Rektor', 'Wakil Dekan', 'Kepala Program Studi' ,'Dosen', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi')")
+                ->orderByRaw("FIELD(otoritas, 'Admin', 'Admin Universitas', 'Wakil Rektor', 'Wakil Dekan', 'Koordinator Program Studi', 'Kepala Program Studi' ,'Dosen', 'Penjamin Mutu Universitas', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi')")
                 ->get()
                 ->unique('otoritas')
                 ->values();
@@ -41,6 +41,7 @@ class ProfileController extends Controller
             'Wakil Rektor' => 'dosen.template',
             'Wakil Dekan' => 'dosen.template',
             'Dosen' => 'dosen.template',
+            'Koordinator Program Studi' => 'penjamin-mutu.template',
             'Kepala Program Studi' => 'penjamin-mutu.template',
             'Penjamin Mutu Universitas' => 'penjamin-mutu.template',
             'Penjamin Mutu Fakultas' => 'penjamin-mutu.template',
@@ -79,7 +80,8 @@ class ProfileController extends Controller
             'Admin Universitas' => 'admin-universitas.home',
             'Wakil Rektor' => 'wakil-rektor.home',
             'Wakil Dekan' => 'wakil-dekan.home',
-            'Kepala Program Studi' => 'kepala-program-studi.home',
+            'Koordinator Program Studi' => 'koordinator-program-studi.home',
+            'Kepala Program Studi' => 'koordinator-program-studi.home',
             'Dosen' => 'dosen.home',
             'Penjamin Mutu' => 'penjamin-mutu.universitas.home',
             'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.home',
@@ -111,7 +113,8 @@ class ProfileController extends Controller
                 'Admin Universitas' => 'admin-universitas.home',
                 'Wakil Rektor' => 'wakil-rektor.home',
                 'Wakil Dekan' => 'wakil-dekan.home',
-                'Kepala Program Studi' => 'kepala-program-studi.home',
+                'Koordinator Program Studi' => 'koordinator-program-studi.home',
+            'Kepala Program Studi' => 'koordinator-program-studi.home',
                 'Dosen' => 'dosen.home',
                 'Penjamin Mutu' => 'penjamin-mutu.universitas.home',
                 'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.home',

@@ -3,6 +3,7 @@
     $userOtoritas = $userOtoritas ?? (auth()->user()->otoritas->otoritas ?? 'Dosen');
 
     $routePrefixMap = [
+        'Koordinator Program Studi' => 'koordinator-program-studi.',
         'Kepala Program Studi' => 'kepala-program-studi.',
         'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.',
         'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.',
@@ -14,8 +15,8 @@
         'Admin' => 'admin.',
     ];
     $currentPrefix = $routePrefixMap[$userOtoritas] ?? 'admin-universitas.';
-    $canManageCpmk = in_array($userOtoritas, ['Dosen', 'Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Admin', 'Admin Universitas']);
-    $templateToExtend = in_array($userOtoritas, ['Admin Universitas', 'Admin']) ? 'admin.template' : (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Universitas']) ? 'penjamin-mutu.template' : 'dosen.template');
+    $canManageCpmk = in_array($userOtoritas, ['Dosen', 'Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Admin', 'Admin Universitas']);
+    $templateToExtend = in_array($userOtoritas, ['Admin Universitas', 'Admin']) ? 'admin.template' : (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi', 'Penjamin Mutu Fakultas', 'Penjamin Mutu Universitas']) ? 'penjamin-mutu.template' : 'dosen.template');
 
     $getRouteUrl = function($action, $id = null) use ($currentPrefix) {
         $name1 = $currentPrefix . 'cpmk-' . $action;

@@ -22,8 +22,8 @@ class Admin
             return redirect()->route('admin-universitas.home');
         } elseif (auth()->user()->otoritas->otoritas == 'Wakil Dekan') {
             return redirect()->route('wakil-dekan.home');
-        } elseif (auth()->user()->otoritas->otoritas == 'Kepala Program Studi') {
-            return redirect()->route('kepala-program-studi.home');
+        } elseif (in_array(auth()->user()->otoritas->otoritas, ['Koordinator Program Studi', 'Kepala Program Studi'])) {
+            return redirect()->route('koordinator-program-studi.home');
         } elseif (auth()->user()->otoritas->otoritas == 'Dosen') {
             return redirect()->route('dosen.home');
         } elseif (auth()->user()->otoritas->otoritas == 'Penjamin Mutu Universitas') {

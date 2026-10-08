@@ -57,7 +57,7 @@ class RubrikController extends Controller
             $programs = Prodi::where('id_fakultas', $fakultasIdUser)->get();
         }
 
-        elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $prodiIdUser = $user->id_prodiUser ?? $user->id_prodi ?? null;
 
             $query->whereHas('mk.prodi', function ($q) use ($prodiIdUser) {

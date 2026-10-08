@@ -60,7 +60,7 @@ class AsesmenController extends Controller
             $queryCpls->where('fakultas.id', $user->id_fakultasUser);
             $queryMks->where('fakultas.id', $user->id_fakultasUser);
             $queryCpmks->where('fakultas.id', $user->id_fakultasUser);
-        } else if (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $queryMetodes->where('prodi.id', $user->id_prodiUser);
             $queryPenilaian->where('prodi.id', $user->id_prodiUser);
             $queryCpls->where('prodi.id', $user->id_prodiUser);
@@ -150,7 +150,7 @@ class AsesmenController extends Controller
             $queryPenilaian->where('fakultas.id', $user->id_fakultasUser);
             $queryMetodes->where('fakultas.id', $user->id_fakultasUser);
             $queryInstrumens->where('fakultas.id', $user->id_fakultasUser);
-        } else if (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $queryPenilaian->where('prodi.id', $user->id_prodiUser);
             $queryMetodes->where('prodi.id', $user->id_prodiUser);
             $queryInstrumens->where('prodi.id', $user->id_prodiUser);
@@ -235,7 +235,7 @@ class AsesmenController extends Controller
             $queryCpls->where('fakultas.id', $user->id_fakultasUser);
             $queryMks->where('fakultas.id', $user->id_fakultasUser);
             $queryCpmks->where('fakultas.id', $user->id_fakultasUser);
-        } else if (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $queryMetodes->where('prodi.id', $user->id_prodiUser);
             $queryPenilaian->where('prodi.id', $user->id_prodiUser);
             $queryCpls->where('prodi.id', $user->id_prodiUser);
@@ -276,7 +276,7 @@ class AsesmenController extends Controller
             $queryMKs->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif ($userOtoritas === 'Penjamin Mutu Fakultas') {
             $queryMKs->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $queryMKs->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
@@ -382,7 +382,7 @@ class AsesmenController extends Controller
         } elseif (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
             $queryPenilaian->where('fakultas.id', auth()->user()->id_fakultasUser);
             $queryInstrumens->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } elseif (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $queryPenilaian->where('prodi.id', auth()->user()->id_prodiUser);
             $queryInstrumens->where('prodi.id', auth()->user()->id_prodiUser);
         }
@@ -555,7 +555,7 @@ class AsesmenController extends Controller
 
         $query = MetodePenilaian::query();
 
-        if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where('id_prodi', $user->id_prodiUser);
         }
 
@@ -602,7 +602,7 @@ class AsesmenController extends Controller
             $queryCpls->where('fakultas.id', $user->id_fakultasUser);
             $queryMks->where('fakultas.id', $user->id_fakultasUser);
             $queryCpmks->where('fakultas.id', $user->id_fakultasUser);
-        } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $queryMetodesList->where('prodi.id', $user->id_prodiUser);
             $queryPenilaian->where('prodi.id', $user->id_prodiUser);
             $queryCpls->where('prodi.id', $user->id_prodiUser);
@@ -626,7 +626,7 @@ class AsesmenController extends Controller
         $user = auth()->user();
         $userOtoritas = $user->otoritas->otoritas ?? 'Dosen';
 
-        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             abort(403, 'Anda tidak memiliki hak akses.');
         }
 
@@ -651,7 +651,7 @@ class AsesmenController extends Controller
         $user = auth()->user();
         $userOtoritas = $user->otoritas->otoritas ?? 'Dosen';
 
-        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             abort(403, 'Anda tidak memiliki hak akses.');
         }
 
@@ -674,7 +674,7 @@ class AsesmenController extends Controller
 
         $query = InstrumenPenilaian::query();
 
-        if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where('id_prodi', $user->id_prodiUser);
         }
 
@@ -692,7 +692,7 @@ class AsesmenController extends Controller
         $user = auth()->user();
         $userOtoritas = $user->otoritas->otoritas ?? 'Dosen';
 
-        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             abort(403, 'Anda tidak memiliki hak akses.');
         }
 
@@ -717,7 +717,7 @@ class AsesmenController extends Controller
         $user = auth()->user();
         $userOtoritas = $user->otoritas->otoritas ?? 'Dosen';
 
-        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        if (!in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             abort(403, 'Anda tidak memiliki hak akses.');
         }
 

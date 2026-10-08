@@ -163,7 +163,7 @@
                 });
 
                 // Modify initial state based on user role
-                if (['Wakil Rektor', 'Wakil Dekan', 'Kepala Program Studi', 'Dosen'].includes(
+                if (['Wakil Rektor', 'Wakil Dekan', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'].includes(
                         userRole)) {
                     universitasSelect.closest('.col-md-4').hide();
                     fakultasSelect.prop('disabled', false);

@@ -111,7 +111,7 @@
                         @enderror
                     </div>
                     <div class="form-group">
-                        <label for="kaprodi">Kepala program studi <span style="color:red">*</span></label>
+                        <label for="kaprodi">Koordinator program studi <span style="color:red">*</span></label>
                         <select name="kaprodi" class="js-example-basic-single w-100">
                             <option selected="true" value="" disabled selected>Select...</option>
                             @foreach ($kaprodis as $kaprodi)

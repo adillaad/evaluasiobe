@@ -43,7 +43,7 @@
                     <th style="width: 60px;">No</th>
                     <th>Nama Profesi</th>
                     <th>Kurikulum</th>
-                    @if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                    @if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                         <th style="width: 160px;">Aksi</th>
                     @endif
                 </tr>
@@ -54,7 +54,7 @@
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $item->nama }}</td>
                         <td>{{ $item->kurikulum->tahun ?? 'N/A' }}</td>
-                        @if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                        @if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                             <td>
                                 <div class="d-flex align-items-center gap-1">
                                     <button class="btn btn-outline-primary btn-icons" onclick="showProfesi({{ $item->id }})" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">

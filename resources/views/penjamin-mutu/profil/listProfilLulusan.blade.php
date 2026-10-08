@@ -1,6 +1,7 @@
 {{-- @php
     $routePrefix = [
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
     ];
 
@@ -28,7 +29,7 @@
 
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
                     <h4 class="card-title mb-0 me-auto">List Profil Lulusan</h4>
-                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <button type="button" class="btn btn-success text-white btn-icon-text" data-bs-toggle="modal" data-bs-target="#importProfilModal">
                                 <i class="ti-upload me-1"></i>
@@ -50,7 +51,7 @@
     </div>
 
     {{-- Modal Import Profil Lulusan --}}
-    @if (in_array($userOtoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+    @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
         <div class="modal fade" id="importProfilModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-sm rounded-3">
@@ -155,6 +156,7 @@
                     return 'wakil-rektor';
                 case 'Wakil Dekan':
                     return 'wakil-dekan';
+                case 'Koordinator Program Studi':
                 case 'Kepala Program Studi':
                     return 'kepala-program-studi';
                 case 'Dosen':

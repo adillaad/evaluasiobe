@@ -6,6 +6,7 @@
         'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
         'Penjamin Mutu Fakultas' => ['prefix' => 'penjamin-mutu.fakultas.'],
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
+        'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
         'Dosen' => ['prefix' => 'dosen.'],
     ];
@@ -176,7 +177,7 @@
 
                 <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-4">
                     <div>
-                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                        @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                             <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#addMetodeModal">
                                 <i class="mdi mdi-plus-circle font-16"></i>
                                 <span>Tambah Metode Penilaian</span>
@@ -207,7 +208,7 @@
                             <tr>
                                 <th style="width: 8%" class="text-center">No</th>
                                 <th>Nama Metode Penilaian</th>
-                                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                                @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                                     <th style="width: 20%" class="text-center">Aksi</th>
                                 @endif
                             </tr>
@@ -217,7 +218,7 @@
                                 <tr>
                                     <td class="text-center">{{ ($metodes->currentPage() - 1) * $metodes->perPage() + $i + 1 }}</td>
                                     <td>{{ $metode->nama }}</td>
-                                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+                                    @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                                         <td class="text-center">
                                             <div class="d-inline-flex gap-1">
                                                 <button type="button" class="btn btn-outline-primary btn-icons" data-bs-toggle="modal" data-bs-target="#editMetodeModal{{ $metode->id }}" data-bs-placement="top" title="Edit">
@@ -263,7 +264,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']) ? 3 : 2 }}" class="text-center text-muted p-4">
+                                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']) ? 3 : 2 }}" class="text-center text-muted p-4">
                                         Belum ada data Metode Penilaian.
                                     </td>
                                 </tr>
@@ -382,7 +383,7 @@
 </div>
 
 {{-- Modal Tambah --}}
-@if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
+@if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
     <div class="modal fade" id="addMetodeModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">

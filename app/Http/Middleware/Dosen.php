@@ -20,8 +20,8 @@ class Dosen
             return $next($request);
         } elseif (auth()->user()->otoritas->otoritas == 'Wakil Dekan') {
             return redirect()->name('wakil-dekan.home');
-        } elseif (auth()->user()->otoritas->otoritas == 'Kepala Program Studi') {
-            return redirect()->name('kepala-program-studi.home');
+        } elseif (in_array(auth()->user()->otoritas->otoritas, ['Koordinator Program Studi', 'Kepala Program Studi'])) {
+            return redirect()->route('koordinator-program-studi.home');
         } elseif (auth()->user()->otoritas->otoritas == 'Admin') {
             return redirect()->name('admin.home');
         } elseif (auth()->user()->otoritas->otoritas == 'Admin Universitas') {

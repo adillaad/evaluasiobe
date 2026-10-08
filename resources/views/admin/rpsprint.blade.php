@@ -74,7 +74,7 @@
     <tr class="contain">
         <th class="subtitle grey center-text" colspan="2">Pengembang RPS</th>
         <th class="subtitle grey center-text" colspan="3">Ketua Kelompok Keahlian</th>
-        <th class="subtitle grey center-text" colspan="3">Ka PRODI</th>
+        <th class="subtitle grey center-text" colspan="3">Koordinator Program Studi</th>
     </tr>
     <tr>
         <td class="sub-contain center-text" colspan="2" style="height: 90px; vertical-align:bottom;">

@@ -5,7 +5,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-end align-items-center mb-3">
                     <div class="d-flex gap-2">
-                        @if (in_array(auth()->user()->otoritas->otoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+                        @if (in_array(auth()->user()->otoritas->otoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
                             <button type="button" class="btn btn-primary text-white btn-icon-text" data-bs-toggle="modal" data-bs-target="#assignDosenModal">
                                 <i class="ti-user me-1"></i> Tambah Dosen Pengampu
                             </button>
@@ -50,6 +50,7 @@
                                     'Wakil Rektor',
                                     'Wakil Dekan',
                                     'Dosen',
+                                    'Koordinator Program Studi',
                                     'Kepala Program Studi',
                                     'Penjamin Mutu Universitas',
                                     'Penjamin Mutu Fakultas',
@@ -72,7 +73,7 @@
                                         return count($rankedRoles); // Jika tidak ditemukan, letakkan di akhir
                                     },
                                 ]);
-                                $isKaprodiRole = in_array(auth()->user()->otoritas->otoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']);
+                                $isKaprodiRole = in_array(auth()->user()->otoritas->otoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']);
                             @endphp
                             @foreach ($sortedUsers as $user)
                                 <tr>
@@ -144,7 +145,7 @@
                     <div class="modal-body">
                         <div class="alert alert-info py-2" role="alert" style="font-size: 13px;">
                             <i class="ti-info-alt me-1"></i> Format Excel: Nama, Email, Otoritas, Program Studi, Password.<br>
-                            Contoh Otoritas: <strong>Dosen</strong> atau <strong>Dosen, Kepala Program Studi</strong> (pisahkan dengan koma jika lebih dari 1).<br>
+                            Contoh Otoritas: <strong>Dosen</strong> atau <strong>Dosen, Koordinator Program Studi</strong> (pisahkan dengan koma jika lebih dari 1).<br>
                             Password default otomatis: <strong>Unilajaya!</strong> (bisa dikosongkan pada Excel).
                             <a href="{{ Route::has(($currentPrefix ?? '') . 'template-dosen-excel') ? route(($currentPrefix ?? '') . 'template-dosen-excel') : route('dosen.template-excel.global') }}" class="fw-bold text-decoration-underline ms-1 d-block mt-1">
                                 Download Template Excel
@@ -217,15 +218,15 @@
                                     <option value="Wakil Dekan">Wakil Dekan</option>
                                     <option value="Penjamin Mutu Fakultas">Penjamin Mutu Fakultas</option>
                                     <option value="Penjamin Mutu Program Studi">Penjamin Mutu Program Studi</option>
-                                    <option value="Kepala Program Studi">Kepala Program Studi</option>
+                                    <option value="Koordinator Program Studi">Koordinator Program Studi</option>
                                     <option value="Dosen" selected>Dosen</option>
                                 @elseif ($userOtoritas == 'Penjamin Mutu Fakultas')
                                     <option value="Wakil Dekan">Wakil Dekan</option>
                                     <option value="Penjamin Mutu Program Studi">Penjamin Mutu Program Studi</option>
-                                    <option value="Kepala Program Studi">Kepala Program Studi</option>
+                                    <option value="Koordinator Program Studi">Koordinator Program Studi</option>
                                     <option value="Dosen" selected>Dosen</option>
-                                @elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']))
-                                    <option value="Kepala Program Studi">Kepala Program Studi</option>
+                                @elseif (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
+                                    <option value="Koordinator Program Studi">Koordinator Program Studi</option>
                                     <option value="Dosen" selected>Dosen</option>
                                 @else
                                     <option value="Dosen" selected>Dosen</option>
@@ -245,7 +246,7 @@
                         <div class="mb-3">
                             <label class="form-label">Fakultas <span class="text-danger">*</span></label>
                             @php 
-                                $isFakultasDisabled = in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Kepala Program Studi']); 
+                                $isFakultasDisabled = in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']); 
                                 $userFakultasId = auth()->user()->id_fakultasUser ?? auth()->user()->prodi?->id_fakultas ?? auth()->user()->prodis->first()?->id_fakultas;
                                 $facultiesList = $faculties ?? ($fakultas ?? []);
                             @endphp
@@ -266,7 +267,7 @@
                         <div class="mb-3" id="wrapperModalProdi">
                             <label class="form-label">Prodi <span class="text-danger" id="badgeModalProdiRequired">*</span> <small class="text-muted fw-normal" id="helpModalProdi"></small></label>
                             @php 
-                                $isProdiLocked = in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']); 
+                                $isProdiLocked = in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']); 
                                 $userProdiId = auth()->user()->id_prodiUser ?? auth()->user()->prodis->first()?->id;
 
                                 // Fallback server-side: ambil daftar prodi dari fakultas terpilih/pertama jika $programs kosong
@@ -311,7 +312,7 @@
     </div>
 
     <!-- Modal Tambah Dosen Pengampu ke Prodi (Untuk Kaprodi) -->
-    @if (in_array(auth()->user()->otoritas->otoritas, ['Kepala Program Studi', 'Penjamin Mutu Program Studi']))
+    @if (in_array(auth()->user()->otoritas->otoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
         <div class="modal fade" id="assignDosenModal" tabindex="-1" aria-labelledby="assignDosenModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">

@@ -28,7 +28,7 @@ class VisualisasiController extends Controller
             $prodiQuery->where('fakultas.id_universitas', $userUniversitasId);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $prodiQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $prodiQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
@@ -55,7 +55,7 @@ class VisualisasiController extends Controller
     //         $universitasData->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
     //     } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
     //         $universitasData->where('fakultas.id', auth()->user()->id_fakultasUser);
-    //     } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+    //     } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
     //         $universitasData->where('prodi.id', auth()->user()->id_prodiUser);
     //     }
     //     $universitasData = $universitasData->get();
@@ -86,7 +86,7 @@ class VisualisasiController extends Controller
     //         $angkatanData->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
     //     } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
     //         $angkatanData->where('fakultas.id', auth()->user()->id_fakultasUser);
-    //     } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+    //     } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
     //         $angkatanData->where('prodi.id', auth()->user()->id_prodiUser);
     //     }
     //     $angkatanData = $angkatanData->get();
@@ -129,7 +129,7 @@ class VisualisasiController extends Controller
             $mhsQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $mhsQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $mhsQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
         $mhsList = $mhsQuery->get();
@@ -150,7 +150,7 @@ class VisualisasiController extends Controller
             $mutuQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $mutuQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $mutuQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
         $mutuList = $mutuQuery->distinct()->get();
@@ -288,7 +288,7 @@ class VisualisasiController extends Controller
             $subQueryBest->where('fak2.id_universitas', auth()->user()->id_universitasUser);
         } elseif ($otoritas && in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $subQueryBest->where('fak2.id', auth()->user()->id_fakultasUser);
-        } elseif ($otoritas && in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif ($otoritas && in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $subQueryBest->where('prodi2.id', auth()->user()->id_prodiUser);
         }
 
@@ -420,7 +420,7 @@ class VisualisasiController extends Controller
             $cpl->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $cpl->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $cpl->where('prodi.id', auth()->user()->id_prodiUser);
         }
         $cpl = $cpl->get(['mk_kode', 'mks.nama']);
@@ -570,7 +570,7 @@ class VisualisasiController extends Controller
             $nilaiMk->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $nilaiMk->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $nilaiMk->where('prodi.id', auth()->user()->id_prodiUser);
         }
         $nilaiMk = $nilaiMk->groupBy('mutus.Course')->get();
@@ -625,7 +625,7 @@ class VisualisasiController extends Controller
             $cplNilaiMk->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $cplNilaiMk->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $cplNilaiMk->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
@@ -652,7 +652,7 @@ class VisualisasiController extends Controller
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $cplResultsQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
             $cplResultsAllQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $cplResultsQuery->where('prodi.id', auth()->user()->id_prodiUser);
             $cplResultsAllQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
@@ -775,7 +775,7 @@ class VisualisasiController extends Controller
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $query .= " WHERE fakultas.id = :id_fakultas ";
             $bindings['id_fakultas'] = auth()->user()->id_fakultasUser;
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $query .= " WHERE prodi.id = :id_prodi ";
             $bindings['id_prodi'] = auth()->user()->id_prodiUser;
         }
@@ -822,7 +822,7 @@ class VisualisasiController extends Controller
             $allNpmQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $allNpmQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $allNpmQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
         $mutuNpms = $allNpmQuery->distinct()->pluck('npm')->toArray();
@@ -840,7 +840,7 @@ class VisualisasiController extends Controller
             $allCplPerAngkatanQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $allCplPerAngkatanQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $allCplPerAngkatanQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
@@ -904,7 +904,7 @@ class VisualisasiController extends Controller
                 $nilaiMkAngkatanLoop->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
             } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
                 $nilaiMkAngkatanLoop->where('fakultas.id', auth()->user()->id_fakultasUser);
-            } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+            } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
                 $nilaiMkAngkatanLoop->where('prodi.id', auth()->user()->id_prodiUser);
             }
 
@@ -950,7 +950,7 @@ class VisualisasiController extends Controller
                 $cplNilaiMkAngkatanQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
             } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
                 $cplNilaiMkAngkatanQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-            } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+            } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
                 $cplNilaiMkAngkatanQuery->where('prodi.id', auth()->user()->id_prodiUser);
             }
 
@@ -976,7 +976,7 @@ class VisualisasiController extends Controller
             } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
                 $cplResultsQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
                 $cplResultsAllQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-            } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+            } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
                 $cplResultsQuery->where('prodi.id', auth()->user()->id_prodiUser);
                 $cplResultsAllQuery->where('prodi.id', auth()->user()->id_prodiUser);
             }
@@ -1063,7 +1063,7 @@ class VisualisasiController extends Controller
             $cplAllTmp->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $cplAllTmp->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $cplAllTmp->where('prodi.id', auth()->user()->id_prodiUser);
         }
         $cplAllTmp = $cplAllTmp->get();
@@ -1103,7 +1103,7 @@ class VisualisasiController extends Controller
                 $namaMkQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
             } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
                 $namaMkQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-            } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+            } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
                 $namaMkQuery->where('prodi.id', auth()->user()->id_prodiUser);
             }
             $namaMk = $namaMkQuery->value('mks.nama');
@@ -1122,7 +1122,7 @@ class VisualisasiController extends Controller
             $labelCplQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $labelCplQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $labelCplQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
@@ -1148,7 +1148,7 @@ class VisualisasiController extends Controller
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $labelCplQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
             $profilCplInfoQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $labelCplQuery->where('prodi.id', auth()->user()->id_prodiUser);
             $profilCplInfoQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
@@ -1186,7 +1186,7 @@ class VisualisasiController extends Controller
                     $cplInfo->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
                 } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
                     $cplInfo->where('fakultas.id', auth()->user()->id_fakultasUser);
-                } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+                } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
                     $cplInfo->where('prodi.id', auth()->user()->id_prodiUser);
                 }
                 $cplInfo = $cplInfo->first();
@@ -1324,7 +1324,7 @@ class VisualisasiController extends Controller
             $soalDescQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $soalDescQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $soalDescQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
         $soalDesc = $soalDescQuery->get();
@@ -2164,7 +2164,7 @@ class VisualisasiController extends Controller
                       ->orWhereNull('fakultas.id');
                 });
             }
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             if (auth()->user()->id_prodiUser) {
                 $cpmkResultAllQuery->where(function($q) {
                     $q->where('prodi.id', auth()->user()->id_prodiUser)
@@ -2360,7 +2360,7 @@ class VisualisasiController extends Controller
             $prodiQuery->where('fakultas.id_universitas', $userUniversitasId);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $prodiQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $prodiQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
@@ -3529,7 +3529,7 @@ class VisualisasiController extends Controller
             $cpmkResultAllQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $cpmkResultAllQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $cpmkResultAllQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
         $cpmkResultAll = $cpmkResultAllQuery->get();
@@ -3590,7 +3590,7 @@ class VisualisasiController extends Controller
             $soalDescQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $soalDescQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $soalDescQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
@@ -3781,7 +3781,7 @@ class VisualisasiController extends Controller
             $prodiQuery->where('fakultas.id_universitas', $userUniversitasId);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $prodiQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $prodiQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
 
@@ -4010,7 +4010,7 @@ class VisualisasiController extends Controller
             $cpmkResultAllQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $cpmkResultAllQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $cpmkResultAllQuery->where('prodi.id', auth()->user()->id_prodiUser);
         }
         $cpmkResultAll = $cpmkResultAllQuery->get();
@@ -4150,7 +4150,7 @@ class VisualisasiController extends Controller
                     $soalDescQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
                 } elseif (in_array($otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
                     $soalDescQuery->where('fakultas.id', auth()->user()->id_fakultasUser);
-                } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+                } elseif (in_array($otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
                     $soalDescQuery->where('prodi.id', auth()->user()->id_prodiUser);
                 }
 
