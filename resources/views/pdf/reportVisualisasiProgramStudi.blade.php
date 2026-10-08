@@ -320,7 +320,7 @@
                         @foreach ($availableYears as $yr)
                             <th style="width: 80px;">Tahun {{ $yr }}</th>
                         @endforeach
-                        <th style="width: 95px;">Rata-rata</th>
+                        <th style="width: 95px;">Skor Akhir</th>
                     </tr>
                 </thead>
                 <tbody>

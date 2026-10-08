@@ -74,6 +74,22 @@
                             </div>
                         @enderror
                     </div>
+                    {{-- JENJANG --}}
+                    <div class="form-group mb-3">
+                        <label>Jenjang Pendidikan<span class="text-danger">*</span></label>
+                        <select class="form-select form-control" name="jenjang" id="jenjang">
+                            <option value="S1" {{ old('jenjang') == 'S1' ? 'selected' : '' }}>S1 - Sarjana</option>
+                            <option value="S2" {{ old('jenjang') == 'S2' ? 'selected' : '' }}>S2 - Magister</option>
+                            <option value="S3" {{ old('jenjang') == 'S3' ? 'selected' : '' }}>S3 - Doktor</option>
+                            <option value="D3" {{ old('jenjang') == 'D3' ? 'selected' : '' }}>D3 - Diploma Tiga</option>
+                            <option value="D4" {{ old('jenjang') == 'D4' ? 'selected' : '' }}>D4 - Sarjana Terapan</option>
+                        </select>
+                        @error('jenjang')
+                            <div class="alert alert-danger">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
                     <button type="submit" class="btn btn-primary me-2">Submit</button>
                 </form>
             </div>

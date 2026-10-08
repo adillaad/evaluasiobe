@@ -124,11 +124,25 @@ class ProdiController extends Controller
         }
 
         try {
+            $namaProdi = $request->prodi;
+            $jenjang = 'S1';
+            $upperNama = strtoupper($namaProdi);
+            if (str_contains($upperNama, 'S3') || str_contains($upperNama, 'DOKTOR')) {
+                $jenjang = 'S3';
+            } elseif (str_contains($upperNama, 'S2') || str_contains($upperNama, 'MAGISTER')) {
+                $jenjang = 'S2';
+            } elseif (str_contains($upperNama, 'D3') || str_contains($upperNama, 'D-3') || str_contains($upperNama, 'DIPLOMA 3')) {
+                $jenjang = 'D3';
+            } elseif (str_contains($upperNama, 'D4') || str_contains($upperNama, 'D-4') || str_contains($upperNama, 'DIPLOMA 4') || str_contains($upperNama, 'SARJANA TERAPAN')) {
+                $jenjang = 'D4';
+            }
+
             // Buat data prodi
             Prodi::create([
                 'id_fakultas' => $request->id_fakultas,
-                'nama' => $request->prodi,
+                'nama' => $namaProdi,
                 'is_aptikom' => $request->is_aptikom, 
+                'jenjang' => $request->jenjang ?? $jenjang,
             ]);
 
             return redirect()->route($this->getRouteByAuthority())->with('success', 'Prodi berhasil ditambahkan');

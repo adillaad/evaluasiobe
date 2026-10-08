@@ -37,8 +37,8 @@ class DashboardController extends Controller
                 'normalYears' => 3,
                 'normalSemesters' => 6,
                 'normalYearsSpan' => 4,
-                'maxYears' => 3,
-                'maxSemesters' => 6,
+                'maxYears' => 7,
+                'maxSemesters' => 14,
             ];
         } elseif (str_contains($jenjang, 'D3') || str_contains($jenjang, 'D-3') || str_contains($jenjang, 'D-III') || str_contains($jenjang, 'DIPLOMA 3') || str_contains($jenjang, 'DIPLOMA III')) {
             return [
@@ -221,6 +221,34 @@ class DashboardController extends Controller
         }
 
         $academicBreakdown = $mahasiswa->getAcademicBreakdown();
+
+        $semestersGroupedByYear = [];
+        foreach ($academicBreakdown['semesters'] ?? [] as $sem) {
+            $ta = $sem['tahun_akademik'] ?? 'Lainnya';
+            if (!isset($semestersGroupedByYear[$ta])) {
+                $semestersGroupedByYear[$ta] = [
+                    'tahun_akademik'  => $ta,
+                    'total_sks'       => 0,
+                    'total_sks_lulus' => 0,
+                    'total_mutu'      => 0.0,
+                    'semesters'       => []
+                ];
+            }
+            $semestersGroupedByYear[$ta]['total_sks'] += $sem['sks_semester'];
+            $semestersGroupedByYear[$ta]['total_sks_lulus'] += $sem['sks_lulus_semester'];
+            $semestersGroupedByYear[$ta]['total_mutu'] += $sem['bobot_mutu_semester'];
+            $semestersGroupedByYear[$ta]['semesters'][] = $sem;
+        }
+
+        foreach ($semestersGroupedByYear as $ta => &$yData) {
+            $yData['ip_tahun'] = $yData['total_sks'] > 0 
+                ? round($yData['total_mutu'] / $yData['total_sks'], 2) 
+                : 0.0;
+        }
+        unset($yData);
+
+        $academicBreakdown['years'] = array_values($semestersGroupedByYear);
+
         $competencyData = $mahasiswa->getCompetencyData();
         $allCpmks = collect($competencyData['cpmks'] ?? []);
         $allCpls  = collect($competencyData['cpls'] ?? []);
@@ -236,8 +264,8 @@ class DashboardController extends Controller
             ? $academicBreakdown['summary']['periode_terakhir'] 
             : ($academicBreakdown['summary']['semester_terakhir'] !== '-' ? $academicBreakdown['summary']['semester_terakhir'] : 'Semester Terakhir');
 
-        $avgSkorCpmk = round($allCpmks->avg('nilai') ?? 0, 1);
-        $avgSkorCpl  = round($allCpls->avg('nilai') ?? 0, 1);
+        $avgSkorCpmk = round($allCpmks->avg('nilai') ?? 0, 2);
+        $avgSkorCpl  = round($allCpls->avg('nilai') ?? 0, 2);
         $topCpmks = $allCpmks->sortByDesc('nilai')->take(5)->values();
         $topProfesi = $mahasiswa->getTopProfesi($allCpmks);
 

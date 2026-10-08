@@ -216,23 +216,20 @@
             white-space: nowrap;
         }
 
+        .bg-baik,
         .bg-sangat-baik {
-            background-color: #2ecc71 !important;
-            color: #fff !important;
-        }
-
-        .bg-baik {
-            background-color: #f39c12 !important;
+            background-color: #0072B2 !important;
             color: #fff !important;
         }
 
         .bg-cukup {
-            background-color: #3498db !important;
+            background-color: #E69F00 !important;
             color: #fff !important;
         }
 
-        .bg-kurang {
-            background-color: #e74c3c !important;
+        .bg-kurang,
+        .bg-perlu-peningkatan {
+            background-color: #D55E00 !important;
             color: #fff !important;
         }
 
@@ -337,14 +334,14 @@
             <td class="info-label">NPM</td>
             <td class="info-sep">:</td>
             <td>{{ $mahasiswaData->npm ?? '-' }}</td>
+            <td class="info-label">Jenjang Pendidikan</td>
+            <td class="info-sep">:</td>
+            <td><strong>{{ method_exists($prodi, 'getJenjangFullLabel') ? $prodi->getJenjangFullLabel() : ($prodi->jenjang ?? 'S1') }}</strong></td>
+        </tr>
+        <tr>
             <td class="info-label">Angkatan</td>
             <td class="info-sep">:</td>
             <td>{{ $mahasiswaData->angkatan ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="info-label">Tanggal Cetak</td>
-            <td class="info-sep">:</td>
-            <td>{{ date('d F Y') }}</td>
             <td class="info-label">Periode</td>
             <td class="info-sep">:</td>
             <td><strong>{{ $transkripData['activePeriodLabel'] ?? 'Kumulatif (Semua Semester)' }}</strong></td>
@@ -443,7 +440,9 @@
     {{-- PETUNJUK PENILAIAN --}}
     @php
         $jenjang = strtoupper(trim($prodi->jenjang ?? ''));
-        $isPascasarjana = in_array($jenjang, ['S2', 'S3', 'SPESIALIS', 'MAGISTER', 'DOKTOR', 'SUB SPESIALIS', 'SP-1', 'SP-2', 'S2 TERAPAN', 'S3 TERAPAN']);
+        $isDoktor = in_array($jenjang, ['S3', 'S-3', 'DOKTOR', 'SUB SPESIALIS', 'SP-2', 'SP2', 'S3 TERAPAN']) || str_contains($jenjang, 'DOKTOR') || str_contains($jenjang, 'S3');
+        $isMagister = in_array($jenjang, ['S2', 'S-2', 'MAGISTER', 'SPESIALIS', 'SP-1', 'SP1', 'S2 TERAPAN']) || str_contains($jenjang, 'MAGISTER') || str_contains($jenjang, 'S2') || str_contains($jenjang, 'SPESIALIS');
+        $labelJenjang = $isDoktor ? 'Doktor / Subspesialis' : ($isMagister ? 'Magister / Spesialis' : ($jenjang === 'D3' ? 'Diploma III' : ($jenjang === 'D4' ? 'Sarjana Terapan (D4)' : 'Sarjana / Diploma')));
     @endphp
     <div class="section-title">Keterangan & Indikator Penilaian</div>
     <div class="box" style="font-size: 8pt; margin-bottom: 10px;">
@@ -452,21 +451,24 @@
                 <td style="width: 50%; vertical-align: top; padding-right: 8px;">
                     <strong>Predikat Kompetensi OBE (CPL & CPMK):</strong>
                     <ul style="margin: 3px 0 0 15px; padding: 0; line-height: 1.3;">
-                        <li><strong>Sangat Baik:</strong> &ge; 85.00</li>
-                        <li><strong>Baik:</strong> 70.00 - &lt; 85.00</li>
-                        <li><strong>Cukup:</strong> 60.00 - &lt; 70.00</li>
-                        <li><strong>Kurang:</strong> &lt; 60.00</li>
+                        <li><strong>Baik:</strong> &ge; 75.00</li>
+                        <li><strong>Cukup:</strong> 51.00 - &lt; 75.00</li>
+                        <li><strong>Perlu Peningkatan:</strong> &le; 50.00</li>
                     </ul>
                 </td>
                 <td style="width: 50%; vertical-align: top; padding-left: 8px; border-left: 1px solid #ccc;">
-                    <strong>Konversi Nilai Mutu Mata Kuliah ({{ $isPascasarjana ? 'Pascasarjana' : 'Diploma/Sarjana' }}):</strong>
-                    @if ($isPascasarjana)
+                    <strong>Konversi Nilai Mutu Mata Kuliah ({{ $labelJenjang }}):</strong>
+                    @if ($isDoktor)
                         <ul style="margin: 3px 0 0 15px; padding: 0; line-height: 1.3;">
-                            <li><strong>A (4.00):</strong> &ge; 81.00 (Lulus)</li>
-                            <li><strong>B+ (3.50):</strong> 75.00 - &lt; 81.00 (Lulus)</li>
-                            <li><strong>B (3.00):</strong> 70.00 - &lt; 75.00 (Lulus)</li>
-                            <li><strong>C+ (2.50):</strong> 65.00 - &lt; 70.00 (Lulus Min.)</li>
-                            <li><strong>E (0.00):</strong> &lt; 65.00 (Tidak Lulus)</li>
+                            <li><strong>A (4.00):</strong> &ge; 85.00 &middot; <strong>B+ (3.50):</strong> 80.00 - &lt; 85.00 (Lulus)</li>
+                            <li><strong>B (3.00):</strong> 75.00 - &lt; 80.00 (Lulus Min.)</li>
+                            <li><strong>C+ / C / D / E:</strong> &lt; 75.00 (Tidak Lulus)</li>
+                        </ul>
+                    @elseif ($isMagister)
+                        <ul style="margin: 3px 0 0 15px; padding: 0; line-height: 1.3;">
+                            <li><strong>A (4.00):</strong> &ge; 81.00 &middot; <strong>B+ (3.50):</strong> 75.00 - &lt; 81.00 (Lulus)</li>
+                            <li><strong>B (3.00):</strong> 70.00 - &lt; 75.00 &middot; <strong>C+ (2.50):</strong> 65.00 - &lt; 70.00 (Lulus Min.)</li>
+                            <li><strong>C / D / E:</strong> &lt; 65.00 (Tidak Lulus)</li>
                         </ul>
                     @else
                         <ul style="margin: 3px 0 0 15px; padding: 0; line-height: 1.3;">

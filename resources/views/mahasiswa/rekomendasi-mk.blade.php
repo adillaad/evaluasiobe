@@ -200,7 +200,8 @@
                 <div class="col-12 col-md-4">
                     <div class="stat-card h-100 d-flex flex-column justify-content-between">
                         @php
-                            $sksPct = min(round(($sksLulus / 144) * 100, 1), 100);
+                            $targetSks = $prodi?->getTargetSks() ?? 144;
+                            $sksPct = min(round(($sksLulus / $targetSks) * 100, 1), 100);
                             $sksColor = $sksPct <= 50 ? '#D55E00' : ($sksPct <= 74 ? '#E69F00' : '#0072B2');
                         @endphp
                         <div>
@@ -211,14 +212,14 @@
                                 </div>
                             </div>
                             <div class="stat-value mb-1 text-primary">
-                                {{ $sksLulus }} <span class="fs-6 fw-normal text-muted">/ 144 SKS</span>
+                                {{ $sksLulus }} <span class="fs-6 fw-normal text-muted">/ {{ $targetSks }} SKS</span>
                             </div>
                             <div class="progress mb-2" style="height:6px;">
                                 <div class="progress-bar" style="width:{{ $sksPct }}%; background-color:{{ $sksColor }};"></div>
                             </div>
                         </div>
                         <small class="text-muted">
-                            Sisa <strong>{{ max(0, 144 - $sksLulus) }} SKS</strong> lagi menuju batas kelulusan
+                            Sisa <strong>{{ max(0, $targetSks - $sksLulus) }} SKS</strong> lagi menuju batas kelulusan
                         </small>
                     </div>
                 </div>
@@ -237,7 +238,7 @@
                                     <i class="bi bi-award"></i>
                                 </div>
                             </div>
-                            <div class="stat-value mb-1" style="color:{{ $avgColor }};">{{ $avgAll }}</div>
+                            <div class="stat-value mb-1" style="color:{{ $avgColor }};">{{ number_format($avgAll, 2) }}</div>
                             <div class="progress mb-2" style="height:6px;">
                                 <div class="progress-bar" style="width:{{ min($avgAll, 100) }}%; background-color:{{ $avgColor }};"></div>
                             </div>
@@ -362,7 +363,7 @@
                                 {{-- Avg CPMK Badge Kanan --}}
                                 <div class="text-end flex-shrink-0" style="min-width:90px;">
                                     <div class="fw-bold lh-1 mb-1" style="font-size:1.45rem;color:{{ $barColor }};">
-                                        {{ round($avg, 1) }}
+                                        {{ number_format($avg, 2) }}
                                     </div>
                                     <div class="text-muted mb-1" style="font-size:.72rem;white-space:nowrap;">Rata-rata CPMK</div>
                                     <div style="height:6px;border-radius:99px;background:#e9ecef;">

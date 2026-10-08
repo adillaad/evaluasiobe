@@ -333,14 +333,31 @@ class Mahasiswa extends Model
 
             $allUniqueCpmkIds = array_unique(array_merge($directCpmkIds, $konversiCpmkIds));
 
+            $hasKonversiInCourse = $records->contains(fn($r) => !empty($r->konversi_metode_id) || ($r->sumber ?? '') === 'konversi');
+            $hasRegularInCourse  = $records->contains(fn($r) => empty($r->konversi_metode_id) && ($r->sumber ?? '') !== 'konversi');
+
             foreach ($allUniqueCpmkIds as $cpmkId) {
                 $kmIdsForThisCpmk = array_unique($cpmkToKmMap[(string)$cpmkId] ?? []);
 
-                $cpmkRecords = $records->filter(function($r) use ($cpmkId, $kmIdsForThisCpmk) {
-                    $isDirectMatch = ((string)($r->Cpmk ?? '') === (string)$cpmkId);
-                    $isLegacyKonversi = (empty($r->Cpmk) && !empty($r->konversi_metode_id) && in_array($r->konversi_metode_id, $kmIdsForThisCpmk));
-                    return $isDirectMatch || $isLegacyKonversi;
-                })->unique('id');
+                if ($hasKonversiInCourse && !$hasRegularInCourse && !empty($kmIdsForThisCpmk)) {
+                    $cpmkRecords = $records->whereIn('konversi_metode_id', $kmIdsForThisCpmk);
+                } else {
+                    $cpmkRecords = $records->filter(function($r) use ($cpmkId, $kmIdsForThisCpmk) {
+                        $rCpmkId = null;
+                        if (!empty($r->Cpmk)) {
+                            $cValStr = trim((string)$r->Cpmk);
+                            if (is_numeric($cValStr)) {
+                                $rCpmkId = (int)$cValStr;
+                            } else {
+                                $rCpmkId = DB::table('cpmks')->where('kode', $cValStr)->value('id');
+                            }
+                        }
+
+                        $isMatchByCpmk = ($rCpmkId !== null && (int)$rCpmkId === (int)$cpmkId);
+                        $isMatchByKonversi = (!empty($r->konversi_metode_id) && in_array($r->konversi_metode_id, $kmIdsForThisCpmk));
+                        return $isMatchByCpmk || $isMatchByKonversi;
+                    })->unique('id');
+                }
 
                 if ($cpmkRecords->isEmpty()) continue;
 
@@ -547,26 +564,13 @@ class Mahasiswa extends Model
         foreach ($allMutus as $row) {
             $semNum = (int)($row->mk_semester ?: 1);
 
-            // Resolusi label periode akademik (contoh: Genap - 2022/2023)
-            if (!empty($row->ta_tahun) && !empty($row->ta_jenis_semester)) {
-                $nextY = (int)$row->ta_tahun + 1;
-                $periodLabel = "{$row->ta_jenis_semester} - {$row->ta_tahun}/{$nextY}";
-                $academicYear = "{$row->ta_tahun}/{$nextY}";
-                $semesterType = $row->ta_jenis_semester;
-            } elseif (!empty($row->mutu_tahun) && preg_match('/(Ganjil|Genap)\s*(\d{4})/i', $row->mutu_tahun, $m)) {
-                $y = (int)$m[2];
-                $nextY = $y + 1;
-                $periodLabel = "{$m[1]} - {$y}/{$nextY}";
-                $academicYear = "{$y}/{$nextY}";
-                $semesterType = ucfirst(strtolower($m[1]));
-            } else {
-                $yearOffset = (int)floor(($semNum - 1) / 2);
-                $calYear = $baseAngkatan + $yearOffset;
-                $nextYear = $calYear + 1;
-                $semesterType = ($semNum % 2 === 1) ? 'Ganjil' : 'Genap';
-                $periodLabel = "{$semesterType} - {$calYear}/{$nextYear}";
-                $academicYear = "{$calYear}/{$nextYear}";
-            }
+            // Resolusi semester dan tahun akademik berdasarkan progress kurikulum angkatan mahasiswa
+            $semesterType = ($semNum % 2 === 1) ? 'Ganjil' : 'Genap';
+            $yearOffset = (int)floor(($semNum - 1) / 2);
+            $calYear = $baseAngkatan + $yearOffset;
+            $nextYear = $calYear + 1;
+            $academicYear = "{$calYear}/{$nextYear}";
+            $periodLabel = "{$semesterType} - {$calYear}/{$nextYear}";
 
             $key = "Sem_{$semNum}";
             if (!isset($grouped[$key])) {
@@ -794,6 +798,16 @@ class Mahasiswa extends Model
             ->mapWithKeys(fn($r) => [(string)$r->Cpmk => (string)$r->Cpl])
             ->toArray();
 
+        $cpmkIdsToResolve = array_filter(array_keys($cpmkScoresForThisCourse), fn($id) => !isset($cpmkToCpl[(string)$id]));
+        if (!empty($cpmkIdsToResolve)) {
+            $dbCpmks = DB::table('cpmks')->whereIn('id', $cpmkIdsToResolve)->get(['id', 'cpl_id']);
+            foreach ($dbCpmks as $cRow) {
+                if (!empty($cRow->cpl_id)) {
+                    $cpmkToCpl[(string)$cRow->id] = (string)$cRow->cpl_id;
+                }
+            }
+        }
+
         // Kelompokkan nilai CPMK berdasarkan CPL-nya
         $cplGroups = [];
         foreach ($cpmkScoresForThisCourse as $cpmkId => $nilaiCpmk) {
@@ -839,9 +853,8 @@ class Mahasiswa extends Model
 
     public function getStatusLabel(float $score): string
     {
-        if ($score >= 85) return 'Sangat Baik';
-        if ($score >= 70) return 'Baik';
-        if ($score >= 60) return 'Cukup';
-        return 'Kurang';
+        if ($score >= 75) return 'Baik';
+        if ($score >= 51) return 'Cukup';
+        return 'Perlu Peningkatan';
     }
 }

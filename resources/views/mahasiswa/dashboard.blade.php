@@ -1,5 +1,10 @@
 @extends('mahasiswa.template')
 
+@php
+    use App\Support\AptikomTheme;
+    $themeColor = AptikomTheme::resolve(auth()->user(), '#006199');
+@endphp
+
 @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -234,6 +239,126 @@
             border-radius: 50%;
             display: inline-block;
         }
+
+        .btn-outline-purple {
+            color: #6f42c1;
+            border-color: rgba(111, 66, 193, 0.35);
+            background-color: rgba(111, 66, 193, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-purple:hover, .btn-outline-purple:focus {
+            color: #ffffff;
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+            box-shadow: 0 2px 6px rgba(111, 66, 193, 0.25);
+        }
+
+        .btn-outline-soft-blue {
+            color: #0284c7;
+            border-color: rgba(2, 132, 199, 0.35);
+            background-color: rgba(2, 132, 199, 0.08);
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-soft-blue:hover, .btn-outline-soft-blue:focus {
+            color: #ffffff;
+            background-color: #0284c7;
+            border-color: #0284c7;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+        }
+
+        .btn-outline-theme {
+            color: {{ $themeColor }};
+            border-color: {{ $themeColor }}45;
+            background-color: {{ $themeColor }}0d;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-theme:hover, .btn-outline-theme:focus {
+            color: #ffffff !important;
+            background-color: {{ $themeColor }} !important;
+            border-color: {{ $themeColor }} !important;
+            box-shadow: 0 2px 6px {{ $themeColor }}40;
+        }
+
+        .metric-footer-container {
+            min-height: 52px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .metric-footer-text-row {
+            min-height: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .metric-footer-btn-row {
+            min-height: 26px;
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .metric-subtext-shared {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            line-height: 1.4;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* Modal Detail IPS Layout & True Viewport Centering */
+        #modalDetailIps.modal {
+            z-index: 1060;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        #modalDetailIps .modal-dialog {
+            max-width: 960px;
+            width: 92%;
+            margin: 1.75rem auto !important;
+            display: flex;
+            align-items: center;
+            min-height: calc(100% - 3.5rem);
+        }
+
+        #modalDetailIps .modal-content {
+            width: 100%;
+            max-height: calc(100vh - 3.5rem);
+            border-radius: 16px;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18) !important;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #modalDetailIps .modal-header {
+            flex-shrink: 0;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 22px;
+        }
+
+        #modalDetailIps .modal-body {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            max-height: calc(100vh - 165px);
+            padding: 18px 22px;
+            background: #fbfcfe;
+        }
+
+        #modalDetailIps .modal-footer {
+            flex-shrink: 0;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 12px 22px;
+        }
     </style>
 @endpush
 
@@ -258,24 +383,8 @@
     }
 
     $ipkNum = (float)($ipk ?? 0);
-    $predikatIpk = 'Memuaskan';
-    $predikatBg = 'bg-info-subtle text-info';
-    if ($ipkNum >= 3.51) {
-        $predikatIpk = 'Dengan Pujian (Cumlaude)';
-        $predikatBg = 'bg-success-subtle text-success';
-    } elseif ($ipkNum >= 3.00) {
-        $predikatIpk = 'Sangat Memuaskan';
-        $predikatBg = 'bg-primary-subtle text-primary';
-    } elseif ($ipkNum >= 2.76) {
-        $predikatIpk = 'Memuaskan';
-        $predikatBg = 'bg-warning-subtle text-warning';
-    } elseif ($ipkNum > 0) {
-        $predikatIpk = 'Cukup';
-        $predikatBg = 'bg-secondary-subtle text-secondary';
-    } else {
-        $predikatIpk = 'Belum Ada Data';
-        $predikatBg = 'bg-light text-muted';
-    }
+    [$predikatIpk, $predikatBg] = $mahasiswa?->prodi ? $mahasiswa->prodi->getPredikatKelulusan($ipkNum) : ['Belum Ada Data', 'bg-light text-muted'];
+    $targetSks = $mahasiswa?->prodi ? $mahasiswa->prodi->getTargetSks() : 144;
 @endphp
 
 @section('content')
@@ -347,19 +456,21 @@
                     <div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="text-muted small fw-semibold">IPK Kumulatif</span>
-                            <div class="stat-icon-pill bg-success-subtle text-success">
+                            <div class="stat-icon-pill" style="background: {{ $themeColor }}15; color: {{ $themeColor }};">
                                 <i class="bi bi-mortarboard-fill"></i>
                             </div>
                         </div>
-                        <div class="stat-value mb-1 text-success">{{ number_format($ipk, 2) }}</div>
+                        <div class="stat-value mb-1" style="color: {{ $themeColor }};">{{ number_format($ipk, 2) }}</div>
                         <div class="progress mb-2" style="height:6px;">
-                            <div class="progress-bar bg-success" style="width:{{ min(round(($ipk / 4) * 100), 100) }}%"></div>
+                            <div class="progress-bar" style="background-color: {{ $themeColor }}; width:{{ min(round(($ipk / 4) * 100), 100) }}%"></div>
                         </div>
                     </div>
-                    <div>
-                        <span class="badge {{ $predikatBg }} badge-predikat text-truncate d-inline-block" style="max-width: 100%;">
-                            {{ $predikatIpk }}
-                        </span>
+                    <div class="metric-footer-container">
+                        <div class="metric-footer-text-row">
+                            <span class="metric-subtext-shared text-truncate" title="{{ $predikatIpk }}">
+                                {{ $predikatIpk }}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -370,19 +481,28 @@
                     <div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="text-muted small fw-semibold">IPS Terakhir</span>
-                            <div class="stat-icon-pill" style="background: rgba(111, 66, 193, 0.12); color: #6f42c1;">
+                            <div class="stat-icon-pill" style="background: {{ $themeColor }}15; color: {{ $themeColor }};">
                                 <i class="bi bi-speedometer2"></i>
                             </div>
                         </div>
-                        <div class="stat-value mb-1" style="color: #6f42c1;">{{ number_format($ips ?? 0, 2) }}</div>
+                        <div class="stat-value mb-1" style="color: {{ $themeColor }};">{{ number_format($ips ?? 0, 2) }}</div>
                         <div class="progress mb-2" style="height:6px;">
-                            <div class="progress-bar" style="background: #6f42c1; width:{{ min(round((($ips ?? 0) / 4) * 100), 100) }}%"></div>
+                            <div class="progress-bar" style="background-color: {{ $themeColor }}; width:{{ min(round((($ips ?? 0) / 4) * 100), 100) }}%"></div>
                         </div>
                     </div>
-                    <div>
-                        <small class="text-muted text-truncate d-block" title="{{ $ipsSubtext }}">
-                            <i class="bi bi-clock-history me-1"></i>{{ $ipsSubtext }}
-                        </small>
+                    <div class="metric-footer-container">
+                        <div class="metric-footer-text-row">
+                            <span class="metric-subtext-shared text-truncate" title="{{ $ipsSubtext }}">
+                                <i class="bi bi-clock-history me-1 opacity-75"></i>{{ $ipsSubtext }}
+                            </span>
+                        </div>
+                        <div class="metric-footer-btn-row">
+                            <button type="button" class="btn btn-outline-theme btn-sm py-1 px-2 d-inline-flex align-items-center gap-1 shadow-none"
+                                style="font-size: 10.5px; border-radius: 6px;"
+                                data-bs-toggle="modal" data-bs-target="#modalDetailIps">
+                                <i class="bi bi-calendar3-range"></i> <span>Lihat Detail IPS</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -393,22 +513,24 @@
                     <div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="text-muted small fw-semibold">SKS Lulus</span>
-                            <div class="stat-icon-pill bg-primary-subtle text-primary">
+                            <div class="stat-icon-pill" style="background: {{ $themeColor }}15; color: {{ $themeColor }};">
                                 <i class="bi bi-journal-check"></i>
                             </div>
                         </div>
-                        <div class="stat-value mb-1 text-primary">
+                        <div class="stat-value mb-1" style="color: {{ $themeColor }};">
                             {{ $sksLulus }}
-                            <span class="fs-6 fw-normal text-muted">/ 144</span>
+                            <span class="fs-6 fw-normal text-muted">/ {{ $targetSks }}</span>
                         </div>
                         <div class="progress mb-2" style="height:6px;">
-                            <div class="progress-bar bg-primary" style="width:{{ min(round(($sksLulus / 144) * 100), 100) }}%"></div>
+                            <div class="progress-bar" style="background-color: {{ $themeColor }}; width:{{ min(round(($sksLulus / $targetSks) * 100), 100) }}%"></div>
                         </div>
                     </div>
-                    <div>
-                        <small class="text-muted">
-                            Sisa <strong>{{ max(0, 144 - $sksLulus) }}</strong> SKS Lulus
-                        </small>
+                    <div class="metric-footer-container">
+                        <div class="metric-footer-text-row">
+                            <span class="metric-subtext-shared text-truncate">
+                                Sisa {{ max(0, $targetSks - $sksLulus) }} SKS Lulus
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -419,20 +541,24 @@
                     <div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span id="cplCardTitle" class="text-muted small fw-semibold">Rata-rata CPL</span>
-                            <div class="stat-icon-pill bg-info-subtle text-info">
+                            <div class="stat-icon-pill" style="background: {{ $themeColor }}15; color: {{ $themeColor }};">
                                 <i class="bi bi-award-fill"></i>
                             </div>
                         </div>
-                        <div id="cplCardVal" class="stat-value mb-1 text-info">{{ $avgSkorCpl }}</div>
+                        <div id="cplCardVal" class="stat-value mb-1" style="color: {{ $themeColor }};">{{ number_format($avgSkorCpl, 2) }}</div>
                         <div class="progress mb-2" style="height:6px;">
-                            <div id="cplCardBar" class="progress-bar bg-info" style="width:{{ min($avgSkorCpl, 100) }}%"></div>
+                            <div id="cplCardBar" class="progress-bar" style="background-color: {{ $themeColor }}; width:{{ min($avgSkorCpl, 100) }}%"></div>
                         </div>
-                        <small id="cplCardSubtext" class="text-muted text-truncate d-block mb-2">Standar Kelulusan &ge; 65.0</small>
                     </div>
-                    <button type="button" id="btnToggleCplMode" class="btn btn-outline-info btn-sm w-100 py-1 px-2 d-flex align-items-center justify-content-center gap-1 shadow-none"
-                        style="font-size: 11px; border-radius: 6px;">
-                        <i class="bi bi-arrow-left-right"></i> <span id="btnToggleCplText">Lihat Ketercapaian</span>
-                    </button>
+                    <div class="metric-footer-container">
+                        <div class="metric-footer-text-row"></div>
+                        <div class="metric-footer-btn-row">
+                            <button type="button" id="btnToggleCplMode" class="btn btn-outline-theme btn-sm py-1 px-2 d-inline-flex align-items-center gap-1 shadow-none"
+                                style="font-size: 10.5px; border-radius: 6px;">
+                                <i class="bi bi-arrow-left-right"></i> <span id="btnToggleCplText">Lihat Ketercapaian</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -442,17 +568,17 @@
                     <div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="text-muted small fw-semibold">Rata-rata CPMK</span>
-                            <div class="stat-icon-pill bg-warning-subtle text-warning">
+                            <div class="stat-icon-pill" style="background: {{ $themeColor }}15; color: {{ $themeColor }};">
                                 <i class="bi bi-patch-check-fill"></i>
                             </div>
                         </div>
-                        <div class="stat-value mb-1 text-warning">{{ $avgSkorCpmk }}</div>
+                        <div class="stat-value mb-1" style="color: {{ $themeColor }};">{{ number_format($avgSkorCpmk, 2) }}</div>
                         <div class="progress mb-2" style="height:6px;">
-                            <div class="progress-bar bg-warning" style="width:{{ min($avgSkorCpmk, 100) }}%"></div>
+                            <div class="progress-bar" style="background-color: {{ $themeColor }}; width:{{ min($avgSkorCpmk, 100) }}%"></div>
                         </div>
                     </div>
-                    <div>
-                        <small class="text-muted text-truncate d-block">Skor Asesmen Terpenuhi</small>
+                    <div class="metric-footer-container">
+                        <div class="metric-footer-text-row"></div>
                     </div>
                 </div>
             </div>
@@ -488,8 +614,8 @@
                                             <div class="progress-bar" style="width:{{ $v }}%; background:{{ wongColor($v) }};"></div>
                                         </div>
                                     </div>
-                                    <span style="font-weight:700; font-size:13px; color:{{ wongColor($v) }}; min-width: 45px; text-align: right;">
-                                        {{ $v }}
+                                    <span style="font-weight:700; font-size:13px; color:{{ wongColor($v) }}; min-width: 48px; text-align: right;">
+                                        {{ number_format($v, 2) }}
                                     </span>
                                 </div>
                             @empty
@@ -606,7 +732,213 @@
             </div>
         </div>
 
+    {{-- ── MODAL DETAIL IPS PER TAHUN AJARAN & SEMESTER ────────────────── --}}
+    <div class="modal fade" id="modalDetailIps" tabindex="-1" aria-labelledby="modalDetailIpsLabel" aria-hidden="true" data-bs-backdrop="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon-pill" style="background: rgba(111, 66, 193, 0.12); color: #6f42c1; width: 40px; height: 40px; font-size: 1.2rem;">
+                            <i class="bi bi-calendar3-range"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-dark mb-0" id="modalDetailIpsLabel" style="font-size: 1.05rem;">
+                                Rincian Indeks Prestasi Semester (IPS)
+                            </h5>
+                            <p class="text-muted small mb-0" style="font-size: 0.78rem;">
+                                Histori capaian per semester dan tahun ajaran untuk <strong>{{ $mahasiswa?->Nama ?? 'Mahasiswa' }}</strong> ({{ $mahasiswa?->NPM ?? '-' }})
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    {{-- 4 Stat Cards Ringkasan IPS & Akademik --}}
+                    <div class="row g-2 mb-3">
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 bg-white rounded-3 border text-center h-100 shadow-xs">
+                                <span class="text-muted d-block small mb-1" style="font-size: 0.75rem;">IPK Kumulatif</span>
+                                <span class="fw-bold text-success fs-5">{{ number_format($ipk ?? 0, 2) }}</span>
+                                <div class="small mt-1"><span class="badge {{ $predikatBg }}" style="font-size: 10px;">{{ $predikatIpk }}</span></div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 bg-white rounded-3 border text-center h-100 shadow-xs">
+                                <span class="text-muted d-block small mb-1" style="font-size: 0.75rem;">IPS Terakhir</span>
+                                <span class="fw-bold fs-5" style="color: #6f42c1;">{{ number_format($ips ?? 0, 2) }}</span>
+                                <div class="text-muted small mt-1 text-truncate" style="font-size: 10px;" title="{{ $ipsSubtext }}">{{ $ipsSubtext }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 bg-white rounded-3 border text-center h-100 shadow-xs">
+                                <span class="text-muted d-block small mb-1" style="font-size: 0.75rem;">Total SKS Lulus</span>
+                                <span class="fw-bold text-primary fs-5">{{ $sksLulus }} <span class="fs-6 fw-normal text-muted">/ {{ $targetSks }}</span></span>
+                                <div class="text-muted small mt-1" style="font-size: 10px;">Sisa {{ max(0, $targetSks - $sksLulus) }} SKS</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 bg-white rounded-3 border text-center h-100 shadow-xs">
+                                <span class="text-muted d-block small mb-1" style="font-size: 0.75rem;">Total Semester</span>
+                                <span class="fw-bold text-dark fs-5">{{ count($academicBreakdown['semesters'] ?? []) }}</span>
+                                <div class="text-muted small mt-1" style="font-size: 10px;">Semester Selesai</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Interactive Filter Buttons (Tahun Ajaran) jika tahun > 1 --}}
+                    @php
+                        $yearsData = $academicBreakdown['years'] ?? [];
+                    @endphp
+
+                    @if(count($yearsData) > 1)
+                        <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                            <span class="text-muted small fw-semibold me-1"><i class="bi bi-funnel"></i> Filter Tahun:</span>
+                            <button type="button" class="btn btn-sm btn-primary py-1 px-3 filter-ta-btn active shadow-none" data-ta="all" style="font-size: 11px; border-radius: 20px;">
+                                Semua Tahun
+                            </button>
+                            @foreach($yearsData as $y)
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-3 filter-ta-btn shadow-none" data-ta="{{ \Illuminate\Support\Str::slug($y['tahun_akademik']) }}" style="font-size: 11px; border-radius: 20px;">
+                                    TA {{ $y['tahun_akademik'] }}
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    {{-- Grouping Per Tahun Ajaran --}}
+                    @if(!empty($yearsData))
+                        <div class="d-flex flex-column gap-3">
+                            @foreach($yearsData as $y)
+                                <div class="card border rounded-3 overflow-hidden shadow-sm ta-group-card" data-ta="{{ \Illuminate\Support\Str::slug($y['tahun_akademik']) }}">
+                                    {{-- Year Header Bar --}}
+                                    <div class="px-3 py-2 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: #f1f5f9; border-bottom: 1px solid #e2e8f0;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-calendar-check-fill text-primary"></i>
+                                            <strong class="text-dark" style="font-size: 0.88rem;">Tahun Ajaran {{ $y['tahun_akademik'] }}</strong>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap" style="font-size: 0.78rem;">
+                                            <span class="badge bg-white text-secondary border px-2 py-1">
+                                                Total SKS: <strong>{{ $y['total_sks'] }}</strong> (Lulus: {{ $y['total_sks_lulus'] }} SKS)
+                                            </span>
+                                            <span class="badge px-2 py-1" style="background: rgba(111, 66, 193, 0.12); color: #6f42c1; border: 1px solid rgba(111, 66, 193, 0.25);">
+                                                IP Tahun: <strong>{{ number_format($y['ip_tahun'], 2) }}</strong>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {{-- Semesters inside this Academic Year --}}
+                                    <div class="p-3 d-flex flex-column gap-3" style="background: #ffffff;">
+                                        @foreach($y['semesters'] as $sem)
+                                            <div class="border rounded-3 p-3" style="background: #f8fafc;">
+                                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2 border-bottom">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="badge text-white px-2 py-1" style="background: #6f42c1; font-size: 0.82rem;">
+                                                            Semester {{ $sem['semester'] }} ({{ $sem['jenis_semester'] }})
+                                                        </span>
+                                                        <span class="text-muted small" style="font-size: 0.78rem;">
+                                                            Periode: <strong>{{ $sem['periode'] }}</strong>
+                                                        </span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                        <span class="badge bg-white border text-dark px-2 py-1" style="font-size: 0.78rem;">
+                                                            Beban: <strong>{{ $sem['sks_semester'] }} SKS</strong>
+                                                        </span>
+                                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.78rem;">
+                                                            Lulus: <strong>{{ $sem['sks_lulus_semester'] }} SKS</strong>
+                                                        </span>
+                                                        <span class="badge px-2 py-1" style="background: rgba(111, 66, 193, 0.15); color: #6f42c1; font-size: 0.78rem; font-weight: 700;">
+                                                            IPS: {{ number_format($sem['ips'], 2) }}
+                                                        </span>
+                                                        <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1" style="font-size: 0.78rem;">
+                                                            IPK: <strong>{{ number_format($sem['ipk_kumulatif'], 2) }}</strong>
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Progress Bar Nilai IPS Semester --}}
+                                                <div class="d-flex align-items-center gap-2 mb-2">
+                                                    <small class="text-muted" style="font-size: 0.74rem; min-width: 60px;">Skala IPS:</small>
+                                                    <div class="progress flex-grow-1" style="height: 5px;">
+                                                        <div class="progress-bar" style="background: #6f42c1; width: {{ min(round(($sem['ips'] / 4) * 100), 100) }}%;"></div>
+                                                    </div>
+                                                    <small class="fw-semibold" style="color: #6f42c1; font-size: 0.74rem;">{{ number_format($sem['ips'], 2) }} / 4.00</small>
+                                                </div>
+
+                                                {{-- Tabel Mata Kuliah di Semester Ini --}}
+                                                @if(!empty($sem['courses']))
+                                                    <div class="table-responsive bg-white rounded border">
+                                                        <table class="table table-sm table-hover mb-0" style="font-size: 0.8rem;">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th style="width: 35px;" class="text-center">#</th>
+                                                                    <th style="width: 120px;" class="text-center">Kode MK</th>
+                                                                    <th>Nama Mata Kuliah</th>
+                                                                    <th style="width: 60px;" class="text-center">SKS</th>
+                                                                    <th style="width: 70px;" class="text-center">Nilai</th>
+                                                                    <th style="width: 60px;" class="text-center">Huruf</th>
+                                                                    <th style="width: 60px;" class="text-center">Bobot</th>
+                                                                    <th style="width: 85px;" class="text-center">Status</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($sem['courses'] as $idx => $c)
+                                                                    <tr>
+                                                                        <td class="text-center text-muted">{{ $idx + 1 }}</td>
+                                                                        <td class="text-center font-monospace fw-medium text-secondary small">{{ $c['kode'] }}</td>
+                                                                        <td class="fw-medium text-dark">{{ $c['nama'] }}</td>
+                                                                        <td class="text-center fw-semibold">{{ $c['sks'] }}</td>
+                                                                        <td class="text-center fw-bold">{{ number_format($c['nilai_akhir'], 2) }}</td>
+                                                                        <td class="text-center">
+                                                                            <span class="badge {{ $c['is_lulus'] ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' }} px-2 py-1 font-monospace" style="font-size: 11px;">
+                                                                                {{ $c['nilai_huruf'] }}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td class="text-center text-muted">{{ number_format($c['bobot'], 2) }}</td>
+                                                                        <td class="text-center">
+                                                                            @if($c['is_lulus'])
+                                                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 11px;">
+                                                                                    Lulus
+                                                                                </span>
+                                                                            @else
+                                                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 11px;">
+                                                                                    Tidak Lulus
+                                                                                </span>
+                                                                            @endif
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                @else
+                                                    <div class="text-muted small text-center py-2">Belum ada mata kuliah di semester ini.</div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                            Belum ada data histori semester atau mata kuliah yang tercatat.
+                        </div>
+                    @endif
+                </div>
+
+                <div class="modal-footer d-flex justify-content-between align-items-center">
+                    <small class="text-muted" style="font-size: 0.78rem;">
+                        <i class="bi bi-info-circle me-1"></i> Data dihitung berdasarkan riwayat penilaian hasil asesmen OBE.
+                    </small>
+                    <button type="button" class="btn btn-secondary btn-sm px-3 shadow-none" data-bs-dismiss="modal" style="border-radius: 8px;">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
+
 @endsection
 
 @push('scripts')
@@ -620,15 +952,13 @@
             function updateCplCardUI() {
                 if (cplDisplayMode === 'rata-rata') {
                     $('#cplCardTitle').text('Rata-rata CPL');
-                    $('#cplCardVal').text(currentAvgSkorCpl);
+                    $('#cplCardVal').text(Number(currentAvgSkorCpl).toFixed(2));
                     $('#cplCardBar').css('width', Math.min(currentAvgSkorCpl, 100) + '%');
-                    $('#cplCardSubtext').text('Standar Kelulusan \u2265 65.0');
                     $('#btnToggleCplText').text('Lihat Ketercapaian');
                 } else {
                     $('#cplCardTitle').text('Ketercapaian CPL');
-                    $('#cplCardVal').text(currentAvgKetercapaianCpl + '%');
+                    $('#cplCardVal').text(Number(currentAvgKetercapaianCpl).toFixed(1) + '%');
                     $('#cplCardBar').css('width', Math.min(currentAvgKetercapaianCpl, 100) + '%');
-                    $('#cplCardSubtext').text('MK CPL Terpenuhi');
                     $('#btnToggleCplText').text('Lihat Rata-rata');
                 }
             }
@@ -637,6 +967,26 @@
                 e.preventDefault();
                 cplDisplayMode = (cplDisplayMode === 'rata-rata') ? 'ketercapaian' : 'rata-rata';
                 updateCplCardUI();
+            });
+
+            // Pindahkan modal ke <body> agar terbebas dari overflow/transform .main-panel dan berada tepat di tengah layar
+            if ($('#modalDetailIps').length && $('#modalDetailIps').parent().is(':not(body)')) {
+                $('#modalDetailIps').appendTo('body');
+            }
+
+            // Filter Tahun Ajaran pada Modal Detail IPS
+            $(document).on('click', '.filter-ta-btn', function(e) {
+                e.preventDefault();
+                $('.filter-ta-btn').removeClass('btn-primary active').addClass('btn-outline-secondary');
+                $(this).removeClass('btn-outline-secondary').addClass('btn-primary active');
+
+                var selectedTa = $(this).data('ta');
+                if (selectedTa === 'all') {
+                    $('.ta-group-card').fadeIn(200);
+                } else {
+                    $('.ta-group-card').hide();
+                    $('.ta-group-card[data-ta="' + selectedTa + '"]').fadeIn(200);
+                }
             });
         });
     </script>

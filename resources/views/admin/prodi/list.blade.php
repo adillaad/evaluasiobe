@@ -62,6 +62,7 @@
                             <tr>
                                 <th>No</th>
                                 <th>Prodi</th>
+                                <th>Jenjang</th>
                                 <th>Status Aptikom</th>
                                 <th>Fakultas</th>
                                 @if ($userOtoritas != 'Admin Universitas')
@@ -75,6 +76,7 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $prodi->nama }}</td>
+                                    <td><span class="badge bg-light text-secondary border fw-bold">{{ $prodi->jenjang }}</span></td>
                                     <td>
                                         <x-aptikom-badge :value="(bool) $prodi->is_aptikom" />
                                     </td>

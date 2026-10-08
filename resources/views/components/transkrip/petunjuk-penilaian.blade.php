@@ -1,7 +1,7 @@
 @php
     $jenjang = strtoupper(trim($prodi->jenjang ?? ''));
-    $isDoktor = in_array($jenjang, ['S3', 'DOKTOR', 'SUB SPESIALIS', 'SP-2', 'S3 TERAPAN']);
-    $isMagister = in_array($jenjang, ['S2', 'MAGISTER', 'SPESIALIS', 'SP-1', 'S2 TERAPAN']);
+    $isDoktor = in_array($jenjang, ['S3', 'S-3', 'DOKTOR', 'SUB SPESIALIS', 'SP-2', 'SP2', 'S3 TERAPAN']) || str_contains($jenjang, 'DOKTOR') || str_contains($jenjang, 'S3');
+    $isMagister = in_array($jenjang, ['S2', 'S-2', 'MAGISTER', 'SPESIALIS', 'SP-1', 'SP1', 'S2 TERAPAN']) || str_contains($jenjang, 'MAGISTER') || str_contains($jenjang, 'S2') || str_contains($jenjang, 'SPESIALIS');
     $jenjangLabel = $isDoktor ? 'Doktor / Subspesialis' : ($isMagister ? 'Magister / Spesialis' : 'Diploma / Sarjana / Profesi');
 @endphp
 
@@ -12,7 +12,7 @@
             <span>Petunjuk & Indikator Penilaian</span>
         </div>
         <span class="badge bg-light text-secondary border px-3 py-2" style="font-size: 0.8rem;">
-            Jenjang: <strong>{{ $prodi->jenjang ?? 'S1 / Sarjana' }}</strong>
+            Jenjang: <strong>{{ method_exists($prodi, 'getJenjangFullLabel') ? $prodi->getJenjangFullLabel() : ($jenjang ? "{$jenjang} / {$jenjangLabel}" : 'S1 / Sarjana') }}</strong>
         </span>
     </div>
 
@@ -41,9 +41,9 @@
                                 <tr>
                                     <td class="text-center fw-bold" style="color: #0072B2;">&ge; 75.00</td>
                                     <td class="text-center">
-                                        <span class="badge text-white" style="background-color: #0072B2;">Sangat Baik</span>
+                                        <span class="badge text-white" style="background-color: #0072B2;">Baik</span>
                                     </td>
-                                    <td>Memenuhi standar kompetensi unggul</td>
+                                    <td>Memenuhi standar kompetensi capaian pembelajaran</td>
                                 </tr>
                                 <tr>
                                     <td class="text-center fw-bold" style="color: #E69F00;">51.00 - 74.00</td>

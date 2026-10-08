@@ -167,10 +167,9 @@ public static function getPemetaanForMahasiswa(
 
     public static function statusKompetensi(float $score): string
     {
-        if ($score >= 85) return 'Sangat Baik';
-        if ($score >= 70) return 'Baik';
-        if ($score >= 60) return 'Cukup';
-        return 'Kurang';
+        if ($score >= 75) return 'Baik';
+        if ($score >= 51) return 'Cukup';
+        return 'Perlu Peningkatan';
     }
 
     private static function formatCpmksForProfesi(

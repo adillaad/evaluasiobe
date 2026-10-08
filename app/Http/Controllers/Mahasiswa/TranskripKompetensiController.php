@@ -42,8 +42,8 @@ class TranskripKompetensiController extends Controller
                 'normalYears' => 3,
                 'normalSemesters' => 6,
                 'normalYearsSpan' => 4,
-                'maxYears' => 3,
-                'maxSemesters' => 6,
+                'maxYears' => 7,
+                'maxSemesters' => 14,
             ];
         } elseif (str_contains($jenjang, 'D3') || str_contains($jenjang, 'D-3') || str_contains($jenjang, 'D-III') || str_contains($jenjang, 'DIPLOMA 3') || str_contains($jenjang, 'DIPLOMA III')) {
             return [

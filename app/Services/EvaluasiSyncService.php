@@ -132,7 +132,7 @@ class EvaluasiSyncService
 
         foreach ($cpls as $cpl) {
             $skor = isset($scoreDict[$cpl->id]) ? round($scoreDict[$cpl->id], 2) : 0;
-            $status = ($skor >= 75) ? 'Sangat Baik' : (($skor >= 51) ? 'Cukup' : (($skor > 0) ? 'Perlu Peningkatan' : 'Belum Ada Data'));
+            $status = ($skor >= 75) ? 'Baik' : (($skor >= 51) ? 'Cukup' : (($skor > 0) ? 'Perlu Peningkatan' : 'Belum Ada Data'));
 
             $rekapCpl[] = [
                 'cpl_id' => $cpl->id,
@@ -212,7 +212,7 @@ class EvaluasiSyncService
                 'judul' => $cp->judul ?? '',
                 'kode_mk' => $cp->Course,
                 'skor' => $skor,
-                'status' => ($skor >= 75) ? 'Sangat Baik' : (($skor >= 51) ? 'Cukup' : 'Perlu Peningkatan'),
+                'status' => ($skor >= 75) ? 'Baik' : (($skor >= 51) ? 'Cukup' : 'Perlu Peningkatan'),
             ];
         }
 
@@ -394,7 +394,7 @@ class EvaluasiSyncService
                 'kode' => $cpmk->kode,
                 'judul' => $cpmk->judul,
                 'avg_skor' => $avgScore,
-                'status' => ($avgScore >= 75) ? 'Sangat Baik' : (($avgScore >= 51) ? 'Cukup' : 'Perlu Peningkatan'),
+                'status' => ($avgScore >= 75) ? 'Baik' : (($avgScore >= 51) ? 'Cukup' : 'Perlu Peningkatan'),
             ];
         }
 

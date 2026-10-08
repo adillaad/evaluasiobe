@@ -1045,7 +1045,15 @@
                     </div>
 
                     {{-- Status Kelulusan Mata Kuliah --}}
-                    <div class="row mt-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4 mb-2">
+                        <h6 class="section-subtitle mb-0">
+                            <i class="bi bi-award text-primary me-2"></i> Status Kelulusan Mata Kuliah
+                        </h6>
+                        <span id="badgeStandarKelulusan" class="badge bg-light text-secondary border px-2 py-1" style="font-size: 11px;">
+                            Standar Lulus: Min. 50.0 (D)
+                        </span>
+                    </div>
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             <div class="p-3 border rounded-3" style="background: #ffffff;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -2619,6 +2627,7 @@
 
                 // Store for interactive sub-views (like Pemetaan CPL)
                 currentGlobalNilaiMkLulus = nilaiMkLulus;
+                var currentJenjangProdi = response.result.jenjangProdi || '';
 
                 // Data Tahun & Masa Studi
                 var yearsList = response.result.yearsList || [];
@@ -2743,31 +2752,87 @@
                     }
                 }
 
-                // Helper extract score and course name
+                // Helper format huruf mutu badge (Konsisten: hijau untuk lulus, merah untuk tidak lulus)
+                function formatHurufBadge(huruf, isLulus) {
+                    if (!huruf || huruf === '-') return '<span class="text-muted small">&mdash;</span>';
+                    var h = String(huruf).toUpperCase().trim();
+                    var badgeClass = isLulus ? 'badge-grade-success' : 'badge-grade-danger';
+                    return '<span class="' + badgeClass + '" style="min-width: 36px; text-align: center;">' + h + '</span>';
+                }
+
+                // Helper extract score, course name, and letter grade
                 function extractCourseData(courseCode, dataArr) {
                     var scoreVal = '-';
                     var courseName = courseCode;
+                    var gradeLetter = '-';
                     if (Array.isArray(dataArr)) {
                         scoreVal = dataArr[0] !== undefined ? dataArr[0] : '-';
                         courseName = dataArr[1] !== undefined ? dataArr[1] : courseCode;
+                        gradeLetter = dataArr[2] !== undefined ? dataArr[2] : '-';
                     } else if (typeof dataArr === 'object' && dataArr !== null) {
                         scoreVal = dataArr.nilai !== undefined ? dataArr.nilai : (dataArr[0] !== undefined ? dataArr[0] : '-');
                         courseName = dataArr.nama !== undefined ? dataArr.nama : (dataArr[1] !== undefined ? dataArr[1] : courseCode);
+                        gradeLetter = dataArr.huruf !== undefined ? dataArr.huruf : (dataArr[2] !== undefined ? dataArr[2] : '-');
                     } else if (dataArr !== undefined && dataArr !== null) {
                         scoreVal = dataArr;
                         courseName = courseCode;
                     }
-                    return { score: scoreVal, name: courseName };
+
+                    // Fallback kalkulasi huruf jika belum ada di dataArr
+                    if ((!gradeLetter || gradeLetter === '-') && !isNaN(parseFloat(scoreVal))) {
+                        var num = parseFloat(scoreVal);
+                        var jenjang = (typeof currentJenjangProdi !== 'undefined' ? currentJenjangProdi : '').toUpperCase();
+                        if (jenjang.includes('S3') || jenjang.includes('DOKTOR')) {
+                            if (num >= 85) gradeLetter = 'A';
+                            else if (num >= 80) gradeLetter = 'B+';
+                            else if (num >= 75) gradeLetter = 'B';
+                            else if (num >= 70) gradeLetter = 'C+';
+                            else if (num >= 65) gradeLetter = 'C';
+                            else if (num >= 55) gradeLetter = 'D';
+                            else gradeLetter = 'E';
+                        } else if (jenjang.includes('S2') || jenjang.includes('MAGISTER') || jenjang.includes('SPESIALIS')) {
+                            if (num >= 81) gradeLetter = 'A';
+                            else if (num >= 75) gradeLetter = 'B+';
+                            else if (num >= 70) gradeLetter = 'B';
+                            else if (num >= 65) gradeLetter = 'C+';
+                            else if (num >= 55) gradeLetter = 'C';
+                            else if (num >= 50) gradeLetter = 'D';
+                            else gradeLetter = 'E';
+                        } else {
+                            if (num >= 76) gradeLetter = 'A';
+                            else if (num >= 71) gradeLetter = 'B+';
+                            else if (num >= 66) gradeLetter = 'B';
+                            else if (num >= 61) gradeLetter = 'C+';
+                            else if (num >= 56) gradeLetter = 'C';
+                            else if (num >= 50) gradeLetter = 'D';
+                            else gradeLetter = 'E';
+                        }
+                    }
+
+                    return { score: scoreVal, name: courseName, grade: gradeLetter };
                 }
 
-                // LABEL MK LULUS & TIDAK LULUS (Dengan Kolom Nilai)
+                // LABEL MK LULUS & TIDAK LULUS (Dengan Kolom Nilai & Huruf Mutu)
+                var jenjangStrForBadge = (typeof currentJenjangProdi !== 'undefined' ? currentJenjangProdi : '').toUpperCase();
+                var minLulusBadgeText = 'Standar Lulus S1: Min. 50.0 (D)';
+                if (jenjangStrForBadge.includes('S3') || jenjangStrForBadge.includes('DOKTOR')) {
+                    minLulusBadgeText = 'Standar Lulus S3: Min. 75.0 (B)';
+                } else if (jenjangStrForBadge.includes('S2') || jenjangStrForBadge.includes('MAGISTER') || jenjangStrForBadge.includes('SPESIALIS')) {
+                    minLulusBadgeText = 'Standar Lulus S2: Min. 65.0 (C+)';
+                } else if (jenjangStrForBadge.includes('D3')) {
+                    minLulusBadgeText = 'Standar Lulus D3: Min. 50.0 (D)';
+                } else if (jenjangStrForBadge.includes('D4')) {
+                    minLulusBadgeText = 'Standar Lulus D4: Min. 50.0 (D)';
+                }
+                $('#badgeStandarKelulusan').text(minLulusBadgeText);
+
                 $('#labelMkLulus').html(
-                    '<table class="table modern-table mb-0" style="min-width: 440px;"><thead><tr><th width="45px" class="text-center">#</th><th width="110px" class="text-center">Kode MK</th><th>Nama Mata Kuliah</th><th width="120px" class="text-center" style="white-space:nowrap;">Nilai</th></tr></thead><tbody></tbody></table>'
+                    '<table class="table modern-table mb-0" style="min-width: 480px;"><thead><tr><th width="40px" class="text-center">#</th><th width="105px" class="text-center">Kode MK</th><th>Nama Mata Kuliah</th><th width="85px" class="text-center" style="white-space:nowrap;">Nilai</th><th width="75px" class="text-center" style="white-space:nowrap;">Huruf</th></tr></thead><tbody></tbody></table>'
                 );
 
                 if (!nilaiMkLulus || Object.keys(nilaiMkLulus).length === 0) {
                     $('#labelMkLulus table tbody').append(
-                        '<tr><td colspan="4" class="text-center text-muted py-3">Tidak ada mata kuliah lulus</td></tr>'
+                        '<tr><td colspan="5" class="text-center text-muted py-3">Tidak ada mata kuliah lulus</td></tr>'
                     );
                 } else {
                     var indeksMK = 1;
@@ -2778,18 +2843,19 @@
                             '<td class="text-center fw-medium text-secondary small font-monospace">' + courseCode + '</td>' +
                             '<td class="fw-medium text-dark">' + cd.name + '</td>' +
                             '<td class="text-center">' + formatNilaiBadge(cd.score, true) + '</td>' +
+                            '<td class="text-center">' + formatHurufBadge(cd.grade, true) + '</td>' +
                             '</tr>');
                         indeksMK += 1;
                     });
                 }
 
                 $('#labelMkTidakLulus').html(
-                    '<table class="table modern-table mb-0" style="min-width: 440px;"><thead><tr><th width="45px" class="text-center">#</th><th width="110px" class="text-center">Kode MK</th><th>Nama Mata Kuliah</th><th width="120px" class="text-center" style="white-space:nowrap;">Nilai</th></tr></thead><tbody></tbody></table>'
+                    '<table class="table modern-table mb-0" style="min-width: 480px;"><thead><tr><th width="40px" class="text-center">#</th><th width="105px" class="text-center">Kode MK</th><th>Nama Mata Kuliah</th><th width="85px" class="text-center" style="white-space:nowrap;">Nilai</th><th width="75px" class="text-center" style="white-space:nowrap;">Huruf</th></tr></thead><tbody></tbody></table>'
                 );
 
                 if (!nilaiMkTidakLulus || Object.keys(nilaiMkTidakLulus).length === 0) {
                     $('#labelMkTidakLulus table tbody').append(
-                        '<tr><td colspan="4" class="text-center text-muted py-3">Tidak ada mata kuliah tidak lulus</td></tr>'
+                        '<tr><td colspan="5" class="text-center text-muted py-3">Tidak ada mata kuliah tidak lulus</td></tr>'
                     );
                 } else {
                     var indeksMK = 1;
@@ -2800,6 +2866,7 @@
                             '<td class="text-center fw-medium text-secondary small font-monospace">' + courseCode + '</td>' +
                             '<td class="fw-medium text-dark">' + cd.name + '</td>' +
                             '<td class="text-center">' + formatNilaiBadge(cd.score, false) + '</td>' +
+                            '<td class="text-center">' + formatHurufBadge(cd.grade, false) + '</td>' +
                             '</tr>');
                         indeksMK += 1;
                     });
@@ -3336,12 +3403,13 @@
                     let mataKuliahLulusArray = [];
                     document.querySelectorAll("#labelMkLulus table tbody tr").forEach(row => {
                         let cols = row.querySelectorAll("td");
-                        if (cols.length === 4 && !row.querySelector("td[colspan]")) {
+                        if (cols.length >= 4 && !row.querySelector("td[colspan]")) {
                             mataKuliahLulusArray.push({
                                 no: cols[0].textContent.trim(),
                                 courseCode: cols[1].textContent.trim(),
                                 courseName: cols[2].textContent.trim(),
-                                nilai: cols[3].textContent.trim()
+                                nilai: cols[3].textContent.trim(),
+                                huruf: cols[4] ? cols[4].textContent.trim() : '-'
                             });
                         }
                     });
@@ -3350,12 +3418,13 @@
                     let mataKuliahTidakLulusArray = [];
                     document.querySelectorAll("#labelMkTidakLulus table tbody tr").forEach(row => {
                         let cols = row.querySelectorAll("td");
-                        if (cols.length === 4 && !row.querySelector("td[colspan]")) {
+                        if (cols.length >= 4 && !row.querySelector("td[colspan]")) {
                             mataKuliahTidakLulusArray.push({
                                 no: cols[0].textContent.trim(),
                                 courseCode: cols[1].textContent.trim(),
                                 courseName: cols[2].textContent.trim(),
-                                nilai: cols[3].textContent.trim()
+                                nilai: cols[3].textContent.trim(),
+                                huruf: cols[4] ? cols[4].textContent.trim() : '-'
                             });
                         }
                     });
@@ -3382,6 +3451,7 @@
                         angkatan: currentAngkatan,
                         prodi: currentProdi,
                         universitas: currentUniversitas,
+                        jenjang: currentJenjangProdi || 'S1',
                         descriptions: descriptions,
                         radarChartCapaianCplImg: radarChartCapaianCplImg,
                         radarChartImg: radarChartImg,

@@ -372,16 +372,16 @@
                                     ${cpl.kode}
                                 </code>
                             </td>
-                            <td>
-                                <div class="fw-medium text-dark">${cpl.deskripsi}</div>
+                            <td style="white-space: normal; word-break: break-word;">
+                                <div class="fw-medium text-dark" style="line-height: 1.45;">${cpl.deskripsi}</div>
                             </td>
                             <td class="text-center">
-                                <span class="badge text-white px-2 py-1" style="background-color: ${c}; font-size: 0.82rem;">
+                                <span class="badge rounded-pill text-white" style="background-color: ${c}; font-size: 0.74rem; font-weight: 600; padding: 3px 9px;">
                                     ${cpl.nilai.toFixed(2)}
                                 </span>
                             </td>
                             <td class="text-center">
-                                <span class="fw-bold small" style="color: ${c};">
+                                <span class="badge rounded-pill text-white" style="background-color: ${c}; font-size: 0.72rem; font-weight: 600; padding: 3px 9px;">
                                     ${cpl.status}
                                 </span>
                             </td>
@@ -446,10 +446,10 @@
                             <td class="text-center fw-bold">${course.sks || '-'}</td>
                             <td class="text-center">
                                 ${nilaiAkhir
-                                    ? `<span class="badge px-2 py-1 text-white" style="background-color:${wongColor}; font-size:0.82rem;">${nilaiAkhir}</span>`
+                                    ? `<span class="badge rounded-pill text-white" style="background-color: #0072B2; font-size: 0.74rem; font-weight: 600; padding: 3px 9px;">${nilaiAkhir}</span>`
                                     : '-'}
                             </td>
-                            <td class="text-center fw-bold fs-6 ${course.grade_color}">
+                            <td class="text-center text-dark" style="font-size: 0.82rem; font-weight: 700; color: #000 !important;">
                                 ${course.grade_huruf || '-'}
                             </td>
                             <td class="text-center">${statusBadge}</td>
@@ -490,7 +490,7 @@
                                                 <div class="flex-grow-1" style="height: 5px; border-radius: 99px; background: #e2e8f0;">
                                                     <div style="width: ${Math.min(c.nilai, 100)}%; height: 100%; border-radius: 99px; background: ${cc};"></div>
                                                 </div>
-                                                <span class="fw-bold small" style="color: ${cc}; min-width: 38px; text-align: right;">${c.nilai.toFixed(1)}</span>
+                                                <span class="fw-bold small" style="color: ${cc}; min-width: 44px; text-align: right; font-size: 0.76rem;">${c.nilai.toFixed(2)}</span>
                                             </div>
                                         </div>
                                     </div>`;
@@ -513,7 +513,7 @@
                                                 <div class="flex-grow-1" style="height: 5px; border-radius: 99px; background: #e2e8f0;">
                                                     <div style="width: ${Math.min(c.nilai, 100)}%; height: 100%; border-radius: 99px; background: ${cc};"></div>
                                                 </div>
-                                                <span class="fw-bold small" style="color: ${cc}; min-width: 38px; text-align: right;">${c.nilai.toFixed(1)}</span>
+                                                <span class="fw-bold small" style="color: ${cc}; min-width: 44px; text-align: right; font-size: 0.76rem;">${c.nilai.toFixed(2)}</span>
                                             </div>
                                         </div>
                                     </div>`;
@@ -532,8 +532,8 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="small text-muted">Nilai:</span>
-                                        <span class="badge text-white px-2 py-1" style="background: ${wColor};">${nilaiAkhir}</span>
-                                        <span class="badge bg-secondary px-2 py-1 fw-bold ${course.grade_color}">${course.grade_huruf}</span>
+                                        <span class="badge rounded-pill text-white" style="background: #0072B2; font-size: 0.74rem; font-weight: 600; padding: 3px 9px;">${nilaiAkhir}</span>
+                                        <span class="text-dark px-1" style="font-size: 0.82rem; font-weight: 700; color: #000 !important;">${course.grade_huruf || '-'}</span>
                                         ${statusBadge}
                                     </div>
                                 </div>

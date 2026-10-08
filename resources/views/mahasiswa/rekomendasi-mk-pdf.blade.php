@@ -257,7 +257,7 @@
             <td>{{ $mahasiswaData->angkatan ?? '-' }}</td>
             <td class="info-label">Progres SKS Lulus</td>
             <td class="info-sep">:</td>
-            <td>{{ $sksLulus }} / 144 SKS</td>
+            <td>{{ $sksLulus }} / {{ $prodi?->getTargetSks() ?? 144 }} SKS</td>
         </tr>
     </table>
 
@@ -293,7 +293,7 @@
                     <td style="text-align: center;">{{ $mk['semester'] }}</td>
                     <td style="text-align: center;">{{ $mk['sks'] }}</td>
                     <td style="text-align: center;">
-                        <span class="badge {{ $badgeClass }}">{{ round($avg, 1) }}%</span>
+                        <span class="badge {{ $badgeClass }}">{{ number_format($avg, 2) }}%</span>
                     </td>
                     <td>
                         <table class="cpmk-subtable">

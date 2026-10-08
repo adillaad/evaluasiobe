@@ -231,7 +231,7 @@
                         @php $userOtoritas = auth()->user()->otoritas->otoritas ?? ''; @endphp
                         <div class="mb-3">
                             <label class="form-label">Otoritas <span class="text-danger">*</span></label>
-                            <select class="form-select w-100" name="otoritas[]" required>
+                            <select class="form-select w-100" id="modalTambahUserOtoritas" name="otoritas[]" required>
                                 @if (in_array($userOtoritas, ['Admin', 'Admin Universitas', 'Penjamin Mutu Universitas']))
                                     <option value="Wakil Rektor">Wakil Rektor</option>
                                     <option value="Wakil Dekan">Wakil Dekan</option>
@@ -267,12 +267,13 @@
                             @php 
                                 $isFakultasDisabled = in_array($userOtoritas, ['Penjamin Mutu Fakultas', 'Penjamin Mutu Program Studi', 'Kepala Program Studi']); 
                                 $userFakultasId = auth()->user()->id_fakultasUser ?? auth()->user()->prodi?->id_fakultas ?? auth()->user()->prodis->first()?->id_fakultas;
+                                $facultiesList = $faculties ?? ($fakultas ?? []);
                             @endphp
                             @if ($isFakultasDisabled)
                                 <input type="hidden" name="fakultas" value="{{ $userFakultasId }}">
                             @endif
-                            <select class="form-select w-100" name="{{ $isFakultasDisabled ? '' : 'fakultas' }}" {{ $isFakultasDisabled ? 'disabled' : '' }}>
-                                @foreach ($faculties ?? ($fakultas ?? []) as $f)
+                            <select class="form-select w-100" id="modalTambahUserFakultas" name="{{ $isFakultasDisabled ? '' : 'fakultas' }}" {{ $isFakultasDisabled ? 'disabled' : '' }}>
+                                @foreach ($facultiesList as $f)
                                     <option value="{{ $f->id }}" {{ old('fakultas', $userFakultasId) == $f->id ? 'selected' : '' }}>
                                         {{ $f->nama }}
                                     </option>
@@ -282,24 +283,33 @@
                         </div>
 
                         {{-- PRODI --}}
-                        <div class="mb-3">
-                            <label class="form-label">Prodi <span class="text-danger">*</span></label>
+                        <div class="mb-3" id="wrapperModalProdi">
+                            <label class="form-label">Prodi <span class="text-danger" id="badgeModalProdiRequired">*</span> <small class="text-muted fw-normal" id="helpModalProdi"></small></label>
                             @php 
                                 $isProdiLocked = in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Kepala Program Studi']); 
                                 $userProdiId = auth()->user()->id_prodiUser ?? auth()->user()->prodis->first()?->id;
+
+                                // Fallback server-side: ambil daftar prodi dari fakultas terpilih/pertama jika $programs kosong
+                                $firstFacultyId = optional($facultiesList->first())->id;
+                                $selectedFakId = old('fakultas', $userFakultasId ?? $firstFacultyId);
+                                $initialProdis = ($programs && count($programs) > 0)
+                                    ? $programs
+                                    : ($selectedFakId ? \App\Models\Prodi::where('id_fakultas', $selectedFakId)->get() : collect());
                             @endphp
                             @if ($isProdiLocked)
                                 <input type="hidden" name="prodi[]" value="{{ $userProdiId }}">
                             @endif
-                            <select class="form-select w-100" name="{{ $isProdiLocked ? '' : 'prodi[]' }}" {{ $isProdiLocked ? 'disabled' : '' }}>
+                            <select class="form-select w-100" id="modalTambahUserProdi" name="{{ $isProdiLocked ? '' : 'prodi[]' }}" {{ $isProdiLocked ? 'disabled' : '' }}>
                                 @if ($isProdiLocked)
                                     <option value="{{ $userProdiId }}" selected>{{ auth()->user()->prodi->nama ?? auth()->user()->prodis->first()?->nama ?? '-' }}</option>
                                 @else
-                                    @foreach($programs ?? ($prodi ?? []) as $p)
+                                    @forelse($initialProdis as $p)
                                         <option value="{{ $p->id }}" {{ (is_array(old('prodi')) && in_array($p->id, old('prodi'))) || $loop->first ? 'selected' : '' }}>
                                             {{ $p->nama }}
                                         </option>
-                                    @endforeach
+                                    @empty
+                                        <option value="">-- Tidak ada program studi di fakultas ini --</option>
+                                    @endforelse
                                 @endif
                             </select>
                             @error('prodi') <div class="alert alert-danger mt-1 py-1 small">{{ $message }}</div> @enderror
@@ -320,3 +330,89 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        // AJAX Load Prodi pada Modal Tambah User (Menggunakan relative path agar sesuai dengan port & host aktif)
+        @php
+            $seg1 = request()->segment(1);
+            $seg2 = request()->segment(2);
+            $ajaxRelativeBase = '/' . $seg1 . '/' . ($seg2 && !str_contains($seg2, 'list-user') ? $seg2 . '/' : '') . 'get-prodi';
+        @endphp
+        const ajaxGetProdiBaseUrl = "{{ $ajaxRelativeBase }}";
+
+        function loadModalProdi(fakultasId, callback) {
+            const prodiSelect = $('#modalTambahUserProdi');
+            if (!prodiSelect.length || prodiSelect.is(':disabled')) return;
+
+            if (!fakultasId) {
+                prodiSelect.empty().append('<option value="">-- Pilih Fakultas Terlebih Dahulu --</option>');
+                return;
+            }
+
+            prodiSelect.prop('disabled', true);
+            $.ajax({
+                url: `${ajaxGetProdiBaseUrl}/${fakultasId}`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    prodiSelect.empty();
+                    if (!data || data.length === 0) {
+                        prodiSelect.append('<option value="">-- Tidak ada program studi di fakultas ini --</option>');
+                    } else {
+                        $.each(data, function(key, val) {
+                            prodiSelect.append(`<option value="${val.id}">${val.nama}</option>`);
+                        });
+                    }
+                    prodiSelect.prop('disabled', false);
+                    if (typeof callback === 'function') callback();
+                },
+                error: function(err) {
+                    console.error('Gagal memuat prodi:', err);
+                    prodiSelect.prop('disabled', false);
+                }
+            });
+        }
+
+        $(document).on('change', '#modalTambahUserFakultas', function() {
+            loadModalProdi($(this).val());
+        });
+
+        // Ketika modal dibuka, pastikan prodi terisi jika opsi belum ada
+        $('#tambahUserModal').on('shown.bs.modal', function() {
+            const fakultasId = $('#modalTambahUserFakultas').val();
+            const prodiSelect = $('#modalTambahUserProdi');
+            if (prodiSelect.children('option').length === 0) {
+                if (fakultasId) {
+                    loadModalProdi(fakultasId);
+                }
+            }
+        });
+
+        // Penyesuaian label prodi berdasarkan Otoritas yang dipilih
+        function syncOtoritasFields() {
+            const otoritasVal = $('#modalTambahUserOtoritas').val();
+            const badgeRequired = $('#badgeModalProdiRequired');
+            const helpText = $('#helpModalProdi');
+
+            if (otoritasVal === 'Wakil Rektor') {
+                badgeRequired.hide();
+                helpText.text('(Opsional / Tingkat Universitas)').show();
+            } else if (otoritasVal === 'Wakil Dekan' || otoritasVal === 'Penjamin Mutu Fakultas') {
+                badgeRequired.hide();
+                helpText.text('(Opsional / Homebase Prodi)').show();
+            } else {
+                badgeRequired.show();
+                helpText.text('').hide();
+            }
+        }
+
+        $(document).on('change', '#modalTambahUserOtoritas', function() {
+            syncOtoritasFields();
+        });
+
+        syncOtoritasFields();
+    });
+</script>
+@endpush

@@ -580,12 +580,29 @@ class VisualisasiController extends Controller
         $nilaiMkLulus = [];
         $nilaiMkTidakLulus = [];
 
+        $prodiModel = $prodiId ? Prodi::find($prodiId) : null;
+
         foreach ($nilaiMk as $nilai) {
             $namaMk = $namaMkList[$nilai->Course] ?? 'N/A';
-            if ($nilai->total_nilai >= 50) {
-                $nilaiMkLulus[$nilai->Course] = [$nilai->total_nilai, $namaMk];
+            $numScore = (float)$nilai->total_nilai;
+            $huruf = $prodiModel ? ($prodiModel->convertGrade($numScore)[0] ?? '-') : null;
+            if (!$huruf || $huruf === '-') {
+                $huruf = match(true) {
+                    $numScore >= 76 => 'A',
+                    $numScore >= 71 => 'B+',
+                    $numScore >= 66 => 'B',
+                    $numScore >= 61 => 'C+',
+                    $numScore >= 56 => 'C',
+                    $numScore >= 50 => 'D',
+                    default => 'E'
+                };
+            }
+            $isLulus = $prodiModel ? $prodiModel->isLulus($numScore) : ($numScore >= 50);
+
+            if ($isLulus) {
+                $nilaiMkLulus[$nilai->Course] = [$nilai->total_nilai, $namaMk, $huruf];
             } else {
-                $nilaiMkTidakLulus[$nilai->Course] = [$nilai->total_nilai, $namaMk];
+                $nilaiMkTidakLulus[$nilai->Course] = [$nilai->total_nilai, $namaMk, $huruf];
             }
         }
 
@@ -898,9 +915,12 @@ class VisualisasiController extends Controller
             $nilaiMkLulusAngkatan = [];
             $nilaiMkTidakLulusAngkatan = [];
 
+            $prodiModelAngkatan = $prodiId ? Prodi::find($prodiId) : null;
             foreach ($nilaiMkAngkatanLoop as $nilai) {
                 $namaMk = $namaMkList[$nilai->Course] ?? 'N/A';
-                if ($nilai->total_nilai >= 50) {
+                $numScore = (float)$nilai->total_nilai;
+                $isLulus = $prodiModelAngkatan ? $prodiModelAngkatan->isLulus($numScore) : ($numScore >= 50);
+                if ($isLulus) {
                     $nilaiMkLulusAngkatan[$nilai->Course] = [$nilai->total_nilai, $namaMk];
                 } else {
                     $nilaiMkTidakLulusAngkatan[$nilai->Course] = [$nilai->total_nilai, $namaMk];
@@ -1555,13 +1575,6 @@ class VisualisasiController extends Controller
 
             foreach ($cplResultsAll as $cpl) {
                 $rawScore = $cplScoreMapYr[$cpl->kode] ?? 0;
-                if ($i > 0) {
-                    $prevYear = $baseAngkatan + $i - 1;
-                    $prevScore = $skorCplPerTahun[$cpl->kode][$prevYear] ?? 0;
-                    if ($prevScore !== null && $rawScore < $prevScore && $prevScore > 0) {
-                        $rawScore = $prevScore;
-                    }
-                }
                 $skorCplPerTahun[$cpl->kode][$currentYear] = $rawScore;
             }
         }
@@ -1698,6 +1711,16 @@ class VisualisasiController extends Controller
         $rincianCplScores = $decodeIfString($request->rincianCplScores) ?? [];
         $komparasiCplAngkatan = $decodeIfString($request->komparasiCplAngkatan) ?? [];
 
+        $jenjangVal = $request->jenjang;
+        if (empty($jenjangVal) || $jenjangVal === 'S1') {
+            $upperP = strtoupper($request->prodi ?? '');
+            if (str_contains($upperP, 'S3') || str_contains($upperP, 'DOKTOR')) $jenjangVal = 'S3';
+            elseif (str_contains($upperP, 'S2') || str_contains($upperP, 'MAGISTER')) $jenjangVal = 'S2';
+            elseif (str_contains($upperP, 'D3') || str_contains($upperP, 'D-3') || str_contains($upperP, 'DIPLOMA 3')) $jenjangVal = 'D3';
+            elseif (str_contains($upperP, 'D4') || str_contains($upperP, 'D-4') || str_contains($upperP, 'DIPLOMA 4') || str_contains($upperP, 'SARJANA TERAPAN')) $jenjangVal = 'D4';
+            else $jenjangVal = $jenjangVal ?: 'S1';
+        }
+
         $data = [
             'nama' => $request->nama,
             'npm' => $request->npm,
@@ -1706,7 +1729,7 @@ class VisualisasiController extends Controller
             'universitas' => $request->universitas,
             'tahun' => $request->tahun,
             'semester' => $request->semester,
-            'jenjang' => $request->jenjang ?? 'S1',
+            'jenjang' => $jenjangVal,
             'maxYears' => $request->maxYears ?? 7,
             'disclaimerMasaStudi' => $request->disclaimerMasaStudi ?? '',
             'yearsList' => is_array($yearsList) ? $yearsList : [],
@@ -2626,9 +2649,12 @@ class VisualisasiController extends Controller
             $nilaiMkLulusAngkatan = [];
             $nilaiMkTidakLulusAngkatan = [];
 
+            $prodiModelAngkatan2 = $prodiId ? Prodi::find($prodiId) : null;
             foreach ($nilaiMk as $nilai) {
                 $namaMk = $namaMkList[$nilai->Course] ?? 'N/A';
-                if ($nilai->total_nilai >= 50) {
+                $numScore = (float)$nilai->total_nilai;
+                $isLulus = $prodiModelAngkatan2 ? $prodiModelAngkatan2->isLulus($numScore) : ($numScore >= 50);
+                if ($isLulus) {
                     $nilaiMkLulusAngkatan[$nilai->Course] = [$nilai->total_nilai, $namaMk];
                 } else {
                     $nilaiMkTidakLulusAngkatan[$nilai->Course] = [$nilai->total_nilai, $namaMk];
@@ -3136,13 +3162,6 @@ class VisualisasiController extends Controller
 
                 foreach ($cplResultsAll as $cpl) {
                     $rawScore = $cplScoreMapYr[$cpl->kode] ?? 0;
-                    if ($i > 0) {
-                        $prevYear = $baseAngkatan + $i - 1;
-                        $prevScore = $skorCplPerTahun[$cpl->kode][$prevYear] ?? 0;
-                        if ($prevScore !== null && $rawScore < $prevScore && $prevScore > 0) {
-                            $rawScore = $prevScore;
-                        }
-                    }
                     $skorCplPerTahun[$cpl->kode][$currentYear] = $rawScore;
                 }
             }
@@ -4375,7 +4394,6 @@ class VisualisasiController extends Controller
             $pId = $prodi['id'];
             $pScores = [];
             $pCapaians = [];
-            $runningMaxSkor = 0.0;
             $runningMaxCapaian = 0.0;
 
             foreach ($availableYears as $yr) {
@@ -4389,15 +4407,15 @@ class VisualisasiController extends Controller
                 $calcSkor = $prodiYr ? (float)$prodiYr['avg_skor_cpl'] : 0.0;
                 $calcCapaian = $prodiYr ? (float)$prodiYr['avg_capaian_cpl'] : 0.0;
 
-                // Monotonik akumulatif: Tetap atau mengalami peningkatan
-                $runningMaxSkor = max($runningMaxSkor, $calcSkor);
-                $runningMaxCapaian = max($runningMaxCapaian, $calcCapaian);
+                // Skor CPL kumulatif dapat naik atau turun secara dinamis
+                $pScores[$yr] = $calcSkor;
 
-                $pScores[$yr] = $runningMaxSkor;
+                // Ketercapaian CPL (%) tetap bersifat monotonik (tetap atau meningkat)
+                $runningMaxCapaian = max($runningMaxCapaian, $calcCapaian);
                 $pCapaians[$yr] = $runningMaxCapaian;
 
-                if ($runningMaxSkor > 0) {
-                    $yearlyTotals[$yr]['sum_skor'] += $runningMaxSkor;
+                if ($calcSkor > 0) {
+                    $yearlyTotals[$yr]['sum_skor'] += $calcSkor;
                     $yearlyTotals[$yr]['count_skor']++;
                 }
                 if ($runningMaxCapaian > 0) {
@@ -4680,10 +4698,9 @@ class VisualisasiController extends Controller
                 $countUnivCapaian++;
             }
 
-            // Yearly progression per fakultas (monotonik kumulatif)
+            // Yearly progression per fakultas
             $fScores = [];
             $fCapaians = [];
-            $runningMaxSkor = 0.0;
             $runningMaxCapaian = 0.0;
 
             foreach ($availableYears as $yr) {
@@ -4695,14 +4712,15 @@ class VisualisasiController extends Controller
                 $calcSkor = (float)($yrData['summary']['faculty_avg_skor'] ?? 0);
                 $calcCapaian = (float)($yrData['summary']['faculty_avg_capaian'] ?? 0);
 
-                $runningMaxSkor = max($runningMaxSkor, $calcSkor);
-                $runningMaxCapaian = max($runningMaxCapaian, $calcCapaian);
+                // Skor CPL kumulatif dapat naik atau turun secara dinamis
+                $fScores[$yr] = $calcSkor;
 
-                $fScores[$yr] = $runningMaxSkor;
+                // Ketercapaian CPL (%) tetap bersifat monotonik (tetap atau meningkat)
+                $runningMaxCapaian = max($runningMaxCapaian, $calcCapaian);
                 $fCapaians[$yr] = $runningMaxCapaian;
 
-                if ($runningMaxSkor > 0) {
-                    $yearlyTotals[$yr]['sum_skor'] += $runningMaxSkor;
+                if ($calcSkor > 0) {
+                    $yearlyTotals[$yr]['sum_skor'] += $calcSkor;
                     $yearlyTotals[$yr]['count_skor']++;
                 }
                 if ($runningMaxCapaian > 0) {

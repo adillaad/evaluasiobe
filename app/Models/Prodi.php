@@ -10,11 +10,90 @@ class Prodi extends Model
     use HasFactory;
     protected $table = 'prodi';
 
-    protected $fillable = ['nama', 'id_fakultas','is_aptikom'];
+    protected $fillable = ['nama', 'id_fakultas', 'is_aptikom', 'jenjang'];
 
     protected $casts = [
         'is_aptikom' => 'boolean',
     ];
+
+    public function getJenjangAttribute($value): string
+    {
+        if (!empty($value)) {
+            return strtoupper(trim($value));
+        }
+
+        $nama = strtoupper(trim($this->nama ?? ''));
+        if (str_contains($nama, 'S3') || str_contains($nama, 'DOKTOR')) return 'S3';
+        if (str_contains($nama, 'S2') || str_contains($nama, 'MAGISTER')) return 'S2';
+        if (str_contains($nama, 'D3') || str_contains($nama, 'DIPLOMA 3') || str_contains($nama, 'D-3') || str_contains($nama, 'D-III')) return 'D3';
+        if (str_contains($nama, 'D4') || str_contains($nama, 'DIPLOMA 4') || str_contains($nama, 'D-4') || str_contains($nama, 'SARJANA TERAPAN')) return 'D4';
+        if (str_contains($nama, 'S1') || str_contains($nama, 'SARJANA')) return 'S1';
+        return 'S1';
+    }
+
+    public function getTargetSks(): int
+    {
+        $jenjang = strtoupper(trim($this->jenjang ?? ''));
+        if (in_array($jenjang, ['S2', 'S-2', 'MAGISTER', 'SPESIALIS', 'SP-1', 'SP1', 'S2 TERAPAN']) || str_contains($jenjang, 'MAGISTER') || str_contains($jenjang, 'S2')) {
+            return 36;
+        }
+        if (in_array($jenjang, ['S3', 'S-3', 'DOKTOR', 'SUB SPESIALIS', 'SP-2', 'SP2', 'S3 TERAPAN']) || str_contains($jenjang, 'DOKTOR') || str_contains($jenjang, 'S3')) {
+            return 42;
+        }
+        if (in_array($jenjang, ['D3', 'D-3', 'D-III', 'DIPLOMA 3', 'DIPLOMA III']) || str_contains($jenjang, 'D3')) {
+            return 108;
+        }
+        return 144;
+    }
+
+    public function getJenjangFullLabel(): string
+    {
+        $jenjang = strtoupper(trim($this->jenjang ?? ''));
+        if (in_array($jenjang, ['S3', 'S-3', 'DOKTOR', 'SUB SPESIALIS', 'SP-2', 'SP2', 'S3 TERAPAN']) || str_contains($jenjang, 'DOKTOR') || str_contains($jenjang, 'S3')) {
+            return 'S3 / Doktor';
+        }
+        if (in_array($jenjang, ['S2', 'S-2', 'MAGISTER', 'SPESIALIS', 'SP-1', 'SP1', 'S2 TERAPAN']) || str_contains($jenjang, 'MAGISTER') || str_contains($jenjang, 'S2')) {
+            return 'S2 / Magister';
+        }
+        if (in_array($jenjang, ['D3', 'D-3', 'D-III', 'DIPLOMA 3', 'DIPLOMA III']) || str_contains($jenjang, 'D3')) {
+            return 'D3 / Ahli Madya';
+        }
+        if (in_array($jenjang, ['D4', 'D-4', 'D-IV', 'DIPLOMA 4', 'SARJANA TERAPAN']) || str_contains($jenjang, 'D4')) {
+            return 'D4 / Sarjana Terapan';
+        }
+        return 'S1 / Sarjana';
+    }
+
+    public function getPredikatKelulusan(float $ipk): array
+    {
+        $jenjang = strtoupper(trim($this->jenjang ?? ''));
+        $isPascasarjana = in_array($jenjang, ['S2', 'S-2', 'MAGISTER', 'SPESIALIS', 'SP-1', 'SP1', 'S2 TERAPAN', 'S3', 'S-3', 'DOKTOR']) || str_contains($jenjang, 'S2') || str_contains($jenjang, 'S3') || str_contains($jenjang, 'MAGISTER') || str_contains($jenjang, 'DOKTOR');
+
+        if ($isPascasarjana) {
+            if ($ipk >= 3.76) {
+                return ['Dengan Pujian (Cumlaude)', 'bg-success-subtle text-success'];
+            } elseif ($ipk >= 3.51) {
+                return ['Sangat Memuaskan', 'bg-primary-subtle text-primary'];
+            } elseif ($ipk >= 3.00) {
+                return ['Memuaskan', 'bg-info-subtle text-info'];
+            } elseif ($ipk > 0) {
+                return ['Cukup', 'bg-secondary-subtle text-secondary'];
+            }
+            return ['Belum Ada Data', 'bg-light text-muted'];
+        }
+
+        // Diploma / Sarjana
+        if ($ipk >= 3.51) {
+            return ['Dengan Pujian (Cumlaude)', 'bg-success-subtle text-success'];
+        } elseif ($ipk >= 3.00) {
+            return ['Sangat Memuaskan', 'bg-primary-subtle text-primary'];
+        } elseif ($ipk >= 2.76) {
+            return ['Memuaskan', 'bg-info-subtle text-info'];
+        } elseif ($ipk > 0) {
+            return ['Cukup', 'bg-secondary-subtle text-secondary'];
+        }
+        return ['Belum Ada Data', 'bg-light text-muted'];
+    }
 
     public function users()
     {
@@ -84,10 +163,9 @@ class Prodi extends Model
 
     public function getStatusKompetensi(float $nilai): string
     {
-        if ($nilai >= 85) return 'Sangat Baik';
-        if ($nilai >= 70) return 'Baik';
-        if ($nilai >= 60) return 'Cukup';
-        return 'Kurang';
+        if ($nilai >= 75) return 'Baik';
+        if ($nilai >= 51) return 'Cukup';
+        return 'Perlu Peningkatan';
     }
 
     public function nilaiToMutu(float $nilai): float
@@ -108,9 +186,8 @@ class Prodi extends Model
 
     public static function progressClass(float $score): string
     {
-        if ($score >= 85) return 'sb';
-        if ($score >= 70) return 'b';
-        if ($score >= 60) return 'c';
+        if ($score >= 75) return 'b';
+        if ($score >= 51) return 'c';
         return 'k';
     }
 
@@ -126,11 +203,10 @@ class Prodi extends Model
     public static function badgeClassKompetensi(string $status): string
     {
         return match ($status) {
-            'Sangat Baik' => 'sangat-baik',
-            'Baik'        => 'baik',
-            'Cukup'       => 'cukup',
-            'Kurang'      => 'kurang',
-            default       => 'cukup',
+            'Baik', 'Sangat Baik' => 'baik',
+            'Cukup'               => 'cukup',
+            'Perlu Peningkatan'   => 'kurang',
+            default               => 'cukup',
         };
     }
 

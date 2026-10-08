@@ -22,14 +22,20 @@
     </div>
 
     {{-- ── 2. Bagian Bawah: Rincian & Deskripsi Capaian per CPL ────────── --}}
+    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+        <div class="fw-bold text-dark" style="font-size: 0.92rem;">
+            <i class="bi bi-list-check text-primary me-1"></i> Rincian Skor Capaian per CPL
+        </div>
+    </div>
+
     <div class="table-responsive border rounded-3 bg-white">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0" style="width: 100%; table-layout: fixed;">
             <thead class="table-light" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: #475569;">
                 <tr>
-                    <th style="width: 120px;" class="text-center">Kode CPL</th>
-                    <th>Deskripsi Capaian Pembelajaran Lulusan</th>
-                    <th style="width: 120px;" class="text-center">Skor CPL</th>
-                    <th style="width: 140px;" class="text-center">Predikat</th>
+                    <th style="width: 100px;" class="text-center">Kode CPL</th>
+                    <th style="width: auto;">Deskripsi Capaian Pembelajaran Lulusan</th>
+                    <th style="width: 110px;" class="text-center">Skor CPL</th>
+                    <th style="width: 150px;" class="text-center">Predikat</th>
                 </tr>
             </thead>
             <tbody id="cplTableBody" style="font-size: 0.86rem;">

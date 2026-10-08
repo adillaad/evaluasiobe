@@ -106,13 +106,19 @@ class UserController extends Controller
 
         $prodiArray = array_values(array_filter((array) $request->input('prodi', [])));
         if (empty($prodiArray)) {
-            $authUserProdiId = auth()->user()->id_prodiUser ?? auth()->user()->prodis->first()?->id;
-            if ($authUserProdiId) {
-                $prodiArray = [$authUserProdiId];
+            $fakultasIdReq = $request->input('fakultas');
+            $prodiInFakultas = $fakultasIdReq ? Prodi::where('id_fakultas', $fakultasIdReq)->first() : null;
+            if ($prodiInFakultas) {
+                $prodiArray = [$prodiInFakultas->id];
             } else {
-                $firstProdi = Prodi::first();
-                if ($firstProdi) {
-                    $prodiArray = [$firstProdi->id];
+                $authUserProdiId = auth()->user()->id_prodiUser ?? auth()->user()->prodis->first()?->id;
+                if ($authUserProdiId) {
+                    $prodiArray = [$authUserProdiId];
+                } else {
+                    $firstProdi = Prodi::first();
+                    if ($firstProdi) {
+                        $prodiArray = [$firstProdi->id];
+                    }
                 }
             }
         }
@@ -123,8 +129,11 @@ class UserController extends Controller
             $activeProdi = Prodi::with('fakultas')->first();
         }
 
-        $idFakultas = $activeProdi ? $activeProdi->id_fakultas : (auth()->user()->id_fakultasUser ?? 1);
-        $idUniversitas = ($activeProdi && $activeProdi->fakultas) ? $activeProdi->fakultas->id_universitas : (auth()->user()->id_universitasUser ?? 1);
+        $idFakultas = $request->input('fakultas') 
+            ?? ($activeProdi ? $activeProdi->id_fakultas : (auth()->user()->id_fakultasUser ?? 1));
+        $idUniversitas = ($activeProdi && $activeProdi->fakultas) 
+            ? $activeProdi->fakultas->id_universitas 
+            : (auth()->user()->id_universitasUser ?? 1);
 
         $existingUser = User::where('email', $request->email)->first();
 

@@ -359,6 +359,17 @@
     <div class="section-box">
         <div class="section-title">3. Status Mata Kuliah (Lulus & Tidak Lulus)</div>
 
+        <div class="disclaimer-box" style="margin-top: 2px; margin-bottom: 6px;">
+            <strong>Standar Batas Kelulusan Mata Kuliah (Jenjang {{ $jenjang }}):</strong>
+            @if (in_array(strtoupper(trim($jenjang)), ['S3', 'S-3', 'DOKTOR']))
+                Nilai &ge; 75.00 (Huruf Mutu Minimal B)
+            @elseif (in_array(strtoupper(trim($jenjang)), ['S2', 'S-2', 'MAGISTER', 'SPESIALIS']))
+                Nilai &ge; 65.00 (Huruf Mutu Minimal C+)
+            @else
+                Nilai &ge; 50.00 (Huruf Mutu Minimal D)
+            @endif
+        </div>
+
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px;">
             <tr>
                 {{-- Kolom Kiri: Mata Kuliah Lulus --}}
@@ -371,6 +382,7 @@
                                 <th style="width: 65px; text-align: center;">Kode MK</th>
                                 <th>Nama Mata Kuliah</th>
                                 <th style="width: 45px; text-align: center;">Nilai</th>
+                                <th style="width: 38px; text-align: center;">Huruf</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -380,10 +392,11 @@
                                     <td style="text-align: center;">{{ $mk['courseCode'] ?? ($mk['kode'] ?? '') }}</td>
                                     <td>{{ $mk['courseName'] ?? ($mk['nama'] ?? '') }}</td>
                                     <td style="text-align: center; font-weight: bold; color: #1e8449;">{{ $mk['nilai'] ?? '-' }}</td>
+                                    <td style="text-align: center; font-weight: bold; color: #1e8449;">{{ $mk['huruf'] ?? '-' }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" style="text-align: center; color: #888;">Data Kosong</td>
+                                    <td colspan="5" style="text-align: center; color: #888;">Data Kosong</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -400,6 +413,7 @@
                                 <th style="width: 65px; text-align: center;">Kode MK</th>
                                 <th>Nama Mata Kuliah</th>
                                 <th style="width: 45px; text-align: center;">Nilai</th>
+                                <th style="width: 38px; text-align: center;">Huruf</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -409,10 +423,11 @@
                                     <td style="text-align: center;">{{ $mk['courseCode'] ?? ($mk['kode'] ?? '') }}</td>
                                     <td>{{ $mk['courseName'] ?? ($mk['nama'] ?? '') }}</td>
                                     <td style="text-align: center; font-weight: bold; color: #c0392b;">{{ $mk['nilai'] ?? '-' }}</td>
+                                    <td style="text-align: center; font-weight: bold; color: #c0392b;">{{ $mk['huruf'] ?? '-' }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" style="text-align: center; color: #888;">Data Kosong</td>
+                                    <td colspan="5" style="text-align: center; color: #888;">Data Kosong</td>
                                 </tr>
                             @endforelse
                         </tbody>
