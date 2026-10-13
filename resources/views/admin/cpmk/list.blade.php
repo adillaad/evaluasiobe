@@ -268,7 +268,7 @@
                                 @foreach ($subs as $subIndex => $sub)
                                     <tr data-cpl="{{ $cplKode }}" data-kurikulum="{{ $tahunKurikulum }}" class="row-cpmk">
                                         <td class="text-center align-middle row-no cell-nowrap">{{ $no++ }}</td>
-                                        <td class="text-center align-middle cell-nowrap">
+                                        <td class="text-center align-middle cell-nowrap" data-cpl="{{ $cplKode }}" data-filter="{{ $cplKode }}" data-search="{{ $cplKode }}">
                                             <span class="badge-cpl-kode">{{ $cplKode }}</span>
                                         </td>
                                         <td class="text-center align-middle fw-bold text-primary cell-nowrap">{{ $cpmk->kode }}</td>
@@ -310,14 +310,15 @@
                             @else
                                 <tr data-cpl="{{ $cplKode }}" data-kurikulum="{{ $tahunKurikulum }}" class="row-cpmk">
                                     <td class="text-center align-middle row-no cell-nowrap">{{ $no++ }}</td>
-                                    <td class="text-center align-middle cell-nowrap">
+                                    <td class="text-center align-middle cell-nowrap" data-cpl="{{ $cplKode }}" data-filter="{{ $cplKode }}" data-search="{{ $cplKode }}">
                                         <span class="badge-cpl-kode">{{ $cplKode }}</span>
                                     </td>
                                     <td class="text-center align-middle fw-bold text-primary cell-nowrap">{{ $cpmk->kode }}</td>
                                     <td class="align-middle" style="white-space: normal; word-break: break-word;">
                                         {{ $cpmk->judul ?? '-' }}
                                     </td>
-                                    <td colspan="2" class="text-center text-muted fst-italic align-middle bg-light">
+                                    <td class="text-center align-middle text-muted cell-nowrap">-</td>
+                                    <td class="text-center text-muted fst-italic align-middle bg-light">
                                         - Tidak ada Sub-CPMK -
                                     </td>
                                     <td class="text-center align-middle cell-nowrap">{{ $tahunKurikulum }}</td>
@@ -364,54 +365,78 @@
     <script src="{{ asset('assets/js/dynamic-filters.js') }}"></script>
     <script>
         $(document).ready(function() {
-            var dtTable = null;
-            if ($.fn.DataTable && $.fn.DataTable.isDataTable('#tableCpmkList')) {
-                dtTable = $('#tableCpmkList').DataTable();
-            } else if ($.fn.DataTable && $.fn.DataTable.isDataTable('.dataTable')) {
-                dtTable = $('.dataTable').DataTable();
-            }
+            var selectedCplFilter = 'all';
 
-            if (dtTable) {
-                dtTable.on('order.dt search.dt page.dt', function () {
-                    let i = 1;
-                    dtTable.cells(null, 0, { search: 'applied', order: 'applied' }).every(function () {
-                        this.data(i++);
-                    });
+            // Custom search filter for DataTables
+            if ($.fn.DataTable) {
+                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                    if (settings.nTable && settings.nTable.id !== 'tableCpmkList') {
+                        return true;
+                    }
+                    if (selectedCplFilter === 'all') {
+                        return true;
+                    }
+                    var rowNode = settings.aoData && settings.aoData[dataIndex] ? settings.aoData[dataIndex].nTr : null;
+                    var rowCpl = '';
+                    if (rowNode) {
+                        rowCpl = $(rowNode).attr('data-cpl') || $(rowNode).data('cpl');
+                    }
+                    if (!rowCpl && data && data.length > 1) {
+                        rowCpl = (data[1] || '').replace(/<[^>]*>/g, '').trim();
+                    }
+                    return String(rowCpl).trim() === String(selectedCplFilter).trim();
                 });
             }
 
-            $('.tab-filter-cpl').on('click', function() {
-                var targetCpl = $(this).data('cpl').toString();
+            function getCpmkDataTable() {
+                if ($.fn.DataTable && $.fn.DataTable.isDataTable('#tableCpmkList')) {
+                    return $('#tableCpmkList').DataTable();
+                }
+                return null;
+            }
+
+            function renumberVisibleRows(dt) {
+                if (dt) {
+                    let i = 1;
+                    dt.cells(null, 0, { search: 'applied', order: 'applied' }).every(function () {
+                        this.data(i++);
+                    });
+                } else {
+                    let i = 1;
+                    $('.row-cpmk:visible').each(function() {
+                        $(this).find('.row-no').text(i++);
+                    });
+                }
+            }
+
+            var dtTable = getCpmkDataTable();
+            if (dtTable) {
+                dtTable.on('order.dt search.dt page.dt draw.dt', function () {
+                    renumberVisibleRows(dtTable);
+                });
+            }
+
+            $('.tab-filter-cpl').on('click', function(e) {
+                e.preventDefault();
+                var targetCpl = $(this).data('cpl') ? $(this).data('cpl').toString().trim() : 'all';
+                selectedCplFilter = targetCpl;
 
                 $('.tab-filter-cpl').removeClass('active');
                 $(this).addClass('active');
 
-                var dt = dtTable;
-                if (!dt) {
-                    if ($.fn.DataTable && $.fn.DataTable.isDataTable('#tableCpmkList')) {
-                        dt = $('#tableCpmkList').DataTable();
-                    } else if ($.fn.DataTable && $.fn.DataTable.isDataTable('.dataTable')) {
-                        dt = $('.dataTable').DataTable();
-                    }
-                }
-
+                var dt = getCpmkDataTable();
                 if (dt) {
-                    if (targetCpl === 'all') {
-                        dt.column(1).search('').draw();
-                    } else {
-                        dt.column(1).search('^' + $.fn.dataTable.util.escapeRegex(targetCpl) + '$', true, false).draw();
-                    }
+                    dt.draw();
                 } else {
-                    var count = 1;
                     $('.row-cpmk').each(function() {
-                        var rowCpl = $(this).data('cpl').toString();
+                        var rowCpl = ($(this).attr('data-cpl') || $(this).data('cpl') || $(this).find('td:eq(1)').text()).toString().trim();
                         if (targetCpl === 'all' || rowCpl === targetCpl) {
                             $(this).show();
-                            $(this).find('.row-no').text(count++);
                         } else {
                             $(this).hide();
                         }
                     });
+                    renumberVisibleRows(null);
                 }
             });
         });

@@ -91,7 +91,8 @@ class MK extends Model
     public function cpl()
     {
         return $this->belongsToMany(CPL::class,'mk_cpl','mk_kode','cpl_id')
-        ->withPivot('id_prodi');
+        ->withPivot('id_prodi')
+        ->withTimestamps();
     }
 
     public function bk()

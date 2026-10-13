@@ -213,16 +213,20 @@
                                         }
                                     }
 
-                                    $tanggalFormatted = !empty($cplmk->created_at) && $cplmk->created_at != '0000-00-00 00:00:00'
-                                        ? date('d-m-Y', strtotime($cplmk->created_at))
-                                        : '-';
+                                    $tanggalRaw = (!empty($cplmk->created_at) && $cplmk->created_at != '0000-00-00 00:00:00')
+                                        ? $cplmk->created_at
+                                        : ((!empty($cplmk->updated_at) && $cplmk->updated_at != '0000-00-00 00:00:00') ? $cplmk->updated_at : null);
+                                    // Tanggal 2023-01-01 adalah backfill untuk data lama tanpa timestamp
+                                    $isBackfill = $tanggalRaw && date('Y-m-d', strtotime($tanggalRaw)) === '2023-01-01';
+                                    $tanggalFormatted = ($tanggalRaw && !$isBackfill) ? date('d-m-Y', strtotime($tanggalRaw)) : '-';
+                                    $tanggalOrder = ($tanggalRaw && !$isBackfill) ? date('Y-m-d', strtotime($tanggalRaw)) : '0000-00-00';
                                 @endphp
                                 <tr data-kurikulum="{{ $tahunKurikulum }}" class="row-cplmk">
                                     <td class="text-center align-middle">{{ $no++ }}</td>
                                     <td class="align-middle fw-bold">{{ $mkKode }}</td>
                                     <td class="align-middle">{{ $nama_mk }}</td>
                                     <td class="align-middle text-center">{{ $tahunKurikulum }}</td>
-                                    <td class="align-middle text-center">{{ $tanggalFormatted }}</td>
+                                    <td class="align-middle text-center" data-order="{{ $tanggalOrder }}">{{ $tanggalFormatted }}</td>
                                     <td class="align-middle text-center fw-bold">{{ $kode_cpl }}</td>
                                     @if (in_array(auth()->user()->otoritas->otoritas, ['Wakil Rektor', 'Wakil Dekan']))
                                         <td class="align-middle">{{ $nama_prodi }}</td>

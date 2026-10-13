@@ -112,10 +112,13 @@
                             </svg>
                         </button>
                         <label for="batas_kelulusan_mhs" class="form-label">Ambang Batas Kelulusan Mahasiswa <span class="text-danger">*</span></label>
-                        <textarea type="number" step="0.01" min="0" max="100"
+                        <input type="number" step="0.01" min="0" max="100"
                             name="batas_kelulusan_mhs"
-                            class="form-control"
-                            placeholder="contoh: 50.01">{{ old('batas_kelulusan_mhs', session('step4_dataRps.batas_kelulusan_mhs')) }}</textarea>
+                            id="batas_kelulusan_mhs"
+                            class="form-control bg-light"
+                            value="{{ old('batas_kelulusan_mhs', session('step4_dataRps.batas_kelulusan_mhs')) }}"
+                            readonly required>
+                        <small class="text-muted">Nilai ditentukan oleh Koordinator Program Studi</small>
                         @error('batas_kelulusan_mhs')
                             <div class="alert alert-danger">
                                 {{ $message }}
@@ -135,10 +138,13 @@
                             </svg>
                         </button>
                         <label for="batas_kelulusan_mk" class="form-label">Ambang Batas Kelulusan Mata Kuliah <span class="text-danger">*</span></label>
-                        <textarea type="number" step="0.01" min="0" max="100"
+                        <input type="number" step="0.01" min="0" max="100"
                             name="batas_kelulusan_mk"
-                            class="form-control"
-                            placeholder="contoh: 75.50">{{ old('batas_kelulusan_mk', session('step4_dataRps.batas_kelulusan_mk')) }}</textarea>
+                            id="batas_kelulusan_mk"
+                            class="form-control bg-light"
+                            value="{{ old('batas_kelulusan_mk', session('step4_dataRps.batas_kelulusan_mk')) }}"
+                            readonly required>
+                        <small class="text-muted">Nilai ditentukan oleh Koordinator Program Studi</small>
                         @error('batas_kelulusan_mk')
                             <div class="alert alert-danger">
                                 {{ $message }}

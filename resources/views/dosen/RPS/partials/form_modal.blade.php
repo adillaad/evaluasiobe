@@ -172,13 +172,15 @@
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="batas_kelulusan_mhs" class="form-label">Ambang Batas Kelulusan Mahasiswa <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" min="0" max="100" name="batas_kelulusan_mhs" id="batas_kelulusan_mhs" class="form-control form-control-sm" placeholder="contoh: 50.01" required>
+                <input type="number" step="0.01" min="0" max="100" name="batas_kelulusan_mhs" id="batas_kelulusan_mhs" class="form-control form-control-sm bg-light" placeholder="Otomatis dari MK" readonly required>
+                <small class="text-muted">Nilai ditentukan oleh Koordinator Program Studi</small>
             </div>
         </div>
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="batas_kelulusan_mk" class="form-label">Ambang Batas Kelulusan Mata Kuliah <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" min="0" max="100" name="batas_kelulusan_mk" id="batas_kelulusan_mk" class="form-control form-control-sm" placeholder="contoh: 75.50" required>
+                <input type="number" step="0.01" min="0" max="100" name="batas_kelulusan_mk" id="batas_kelulusan_mk" class="form-control form-control-sm bg-light" placeholder="Otomatis dari MK" readonly required>
+                <small class="text-muted">Nilai ditentukan oleh Koordinator Program Studi</small>
             </div>
         </div>
     </div>

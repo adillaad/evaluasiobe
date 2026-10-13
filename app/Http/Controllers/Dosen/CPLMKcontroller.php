@@ -136,7 +136,7 @@ class CPLMKcontroller extends Controller
         //     $mk = MK::where('kode', $rps->kode_mk)->firstOrFail();
         //     $mks->push($mk);
         // }
-        $cplmks = DB::table('mk_cpl')->whereIn('mk_kode',$kode_mks)->get();
+        $cplmks = DB::table('mk_cpl')->whereIn('mk_kode', $kode_mks)->orderBy('mk_kode')->orderBy('created_at')->get();
         // foreach ($mks as $mk) {
         //     $kode_mk = $mk->kode;
         //     $temp = CPLMK::where('kode_mk', $kode_mk)->get();
