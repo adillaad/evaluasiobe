@@ -71,6 +71,14 @@
             color: #ffffff !important;
         }
     @endif
+
+    /* Center alignment untuk kolom No, Kurikulum, dan Kode CPL */
+    #tableCplmkList thead th.text-center {
+        text-align: center !important;
+    }
+    #tableCplmkList tbody td.text-center {
+        text-align: center !important;
+    }
 </style>
 
     <div class="col-lg-12 grid-margin stretch-card">
@@ -84,19 +92,7 @@
                     $userOtoritas = $userOtoritas ?? (auth()->user()->otoritas->otoritas ?? 'Dosen');
                 @endphp
 
-                @if ($userOtoritas === 'Dosen')
-                    <!-- Alert Peringatan Integrasi Pemetaan CPL-MK -->
-                    <div class="alert alert-warning border-0 shadow-sm mb-4 d-flex align-items-start gap-3" style="border-left: 5px solid #f59e0b !important; background-color: #fffbeb; color: #92400e; border-radius: 10px; padding: 16px 20px;">
-                        <i class="ti-alert me-1 mt-1" style="font-size: 1.5rem; color: #d97706; flex-shrink: 0;"></i>
-                        <div>
-                            <h6 class="fw-bold mb-1" style="color: #92400e; font-size: 0.95rem;">PERHATIAN PENTING - INTEGRASI PEMETAAN CPL-MK</h6>
-                            <p class="mb-0" style="font-size: 0.85rem; line-height: 1.5; color: #b45309;">
-                                Data <strong>Pemetaan CPL ke Mata Kuliah (CPLMK)</strong> ini terintegrasi langsung dengan seluruh sistem kurikulum Program Studi (termasuk modul penyusunan <strong>RPS</strong>, kuis/soal evaluasi, serta penilaian evaluasi OBE). 
-                                Menghapus data pemetaan akan berdampak langsung pada pemetaan CPL-CPMK-MK dan nilai evaluasi yang sudah tercatat. Mohon berhati-hati saat menghapus data.
-                            </p>
-                        </div>
-                    </div>
-                @endif
+
 
                 <x-filter-form
                     :universities="$universities"
@@ -153,21 +149,17 @@
                 <div class="table-responsive">
                     <table class="table table-hover dataTable" id="tableCplmkList">
                         <thead class="bg-light">
-                            <tr>
-                                <th style="width: 50px;">No</th>
-                                <th>Kode MK</th>
+                            <tr class="align-middle">
+                                <th style="width: 60px;" class="text-center">No</th>
+                                <th style="width: 150px;">Kode MK</th>
                                 <th>Nama MK</th>
-                                <th>Kurikulum</th>
-                                <th>Tanggal</th>
-                                <th>Kode CPL</th>
+                                <th style="width: 140px;" class="text-center">Kurikulum</th>
+                                <th style="width: 130px;" class="text-center">Kode CPL</th>
                                 @if (in_array(auth()->user()->otoritas->otoritas, ['Wakil Rektor', 'Wakil Dekan']))
                                     <th>Prodi</th>
                                 @endif
                                 @if (in_array(auth()->user()->otoritas->otoritas, ['Wakil Rektor']))
                                     <th>Fakultas</th>
-                                @endif
-                                @if (auth()->user()->otoritas->otoritas == 'Dosen')
-                                    <th style="width: 80px;">Action</th>
                                 @endif
                             </tr>
                         </thead>
@@ -212,21 +204,12 @@
                                             break;
                                         }
                                     }
-
-                                    $tanggalRaw = (!empty($cplmk->created_at) && $cplmk->created_at != '0000-00-00 00:00:00')
-                                        ? $cplmk->created_at
-                                        : ((!empty($cplmk->updated_at) && $cplmk->updated_at != '0000-00-00 00:00:00') ? $cplmk->updated_at : null);
-                                    // Tanggal 2023-01-01 adalah backfill untuk data lama tanpa timestamp
-                                    $isBackfill = $tanggalRaw && date('Y-m-d', strtotime($tanggalRaw)) === '2023-01-01';
-                                    $tanggalFormatted = ($tanggalRaw && !$isBackfill) ? date('d-m-Y', strtotime($tanggalRaw)) : '-';
-                                    $tanggalOrder = ($tanggalRaw && !$isBackfill) ? date('Y-m-d', strtotime($tanggalRaw)) : '0000-00-00';
                                 @endphp
                                 <tr data-kurikulum="{{ $tahunKurikulum }}" class="row-cplmk">
                                     <td class="text-center align-middle">{{ $no++ }}</td>
                                     <td class="align-middle fw-bold">{{ $mkKode }}</td>
                                     <td class="align-middle">{{ $nama_mk }}</td>
                                     <td class="align-middle text-center">{{ $tahunKurikulum }}</td>
-                                    <td class="align-middle text-center" data-order="{{ $tanggalOrder }}">{{ $tanggalFormatted }}</td>
                                     <td class="align-middle text-center fw-bold">{{ $kode_cpl }}</td>
                                     @if (in_array(auth()->user()->otoritas->otoritas, ['Wakil Rektor', 'Wakil Dekan']))
                                         <td class="align-middle">{{ $nama_prodi }}</td>
@@ -234,23 +217,10 @@
                                     @if (in_array(auth()->user()->otoritas->otoritas, ['Wakil Rektor']))
                                         <td class="align-middle">{{ $nama_fakultas }}</td>
                                     @endif
-                                    @if (auth()->user()->otoritas->otoritas == 'Dosen')
-                                        <td class="align-middle text-center">
-                                            <form action="{{ route('dosen.cplmk-delete', $cplmk->id) }}" method="post" class="d-inline m-0 p-0">
-                                                @csrf
-                                                @method('delete')
-                                                <button type="submit" class="btn btn-danger btn-icons"
-                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
-                                                    onclick="return confirm('Are you sure to delete CPL {{ $kode_cpl }} from CPLMK {{ $mkKode }} ?')">
-                                                    <i class="ti-trash"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    @endif
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">Data pemetaan CPLMK belum ada.</td>
+                                    <td colspan="7" class="text-center text-muted py-4">Data pemetaan CPLMK belum ada.</td>
                                 </tr>
                             @endforelse
                         </tbody>

@@ -238,6 +238,9 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('cpmk/edit-cpmk/{id}', 'Edit')->name('cpmk-edit');
                 Route::put('cpmk/edit-cpmk/{id}', 'Update')->name('cpmk-update');
                 Route::delete('cpmk/delete-cpmk/{id}', 'Delete')->name('cpmk-delete');
+                Route::put('/sub-cpmk/update/{id}', 'updateSubCpmk')->name('sub-cpmk-update');
+                Route::put('update-subcpmk/{id}', 'updateSubCpmk')->name('subCpmk-update');
+                Route::post('/sub-cpmk/store-for-cpmk/{cpmkId}', 'storeSubCpmkForCpmk')->name('sub-cpmk-store-for-cpmk');
                 Route::delete('/sub-cpmk/delete/{id}', 'hapusSubCpmk')->name('sub-cpmk-delete');
             });
 
@@ -491,6 +494,9 @@ Route::middleware(['auth'])->group(function () {
                         Route::get('cpmk/edit-cpmk/{id}', 'Edit')->name('cpmk-edit');
                         Route::put('cpmk/edit-cpmk/{id}', 'Update')->name('cpmk-update');
                         Route::delete('cpmk/delete-cpmk/{id}', 'Delete')->name('cpmk-delete');
+                        Route::put('/sub-cpmk/update/{id}', 'updateSubCpmk')->name('sub-cpmk-update');
+                        Route::put('update-subcpmk/{id}', 'updateSubCpmk')->name('subCpmk-update');
+                        Route::post('/sub-cpmk/store-for-cpmk/{cpmkId}', 'storeSubCpmkForCpmk')->name('sub-cpmk-store-for-cpmk');
                         Route::delete('/sub-cpmk/delete/{id}', 'hapusSubCpmk')->name('sub-cpmk-delete');
                     });
 

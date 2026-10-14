@@ -31,6 +31,21 @@
         }
         return '#';
     };
+
+    $getSubCpmkRoute = function($action, $id = null) use ($currentPrefix) {
+        $names = [
+            $currentPrefix . 'sub-cpmk-' . $action,
+            $currentPrefix . 'subCpmk-' . $action,
+            'dosen.sub-cpmk-' . $action,
+            'dosen.subCpmk-' . $action,
+        ];
+        foreach ($names as $name) {
+            if (\Illuminate\Support\Facades\Route::has($name)) {
+                return $id !== null ? route($name, $id) : route($name);
+            }
+        }
+        return '#';
+    };
 @endphp
 
 @extends('dosen.template')
@@ -285,16 +300,25 @@
                                         @if ($canManageCpmk)
                                             <td class="text-center align-middle cell-nowrap">
                                                 <div class="d-flex align-items-center justify-content-center gap-1">
-                                                    <a href="{{ $getRouteUrl('edit', $cpmk->id) }}" class="btn btn-warning btn-icons text-white me-1"
-                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Edit CPMK">
+                                                    <button type="button" class="btn btn-warning btn-icons text-white me-1 btn-edit-subcpmk"
+                                                        title="Edit Sub-CPMK"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#modalEditSubCpmk"
+                                                        data-toggle="modal"
+                                                        data-target="#modalEditSubCpmk"
+                                                        data-id="{{ $sub->id }}"
+                                                        data-kode="{{ $sub->kode }}"
+                                                        data-uraian="{{ $sub->uraian }}"
+                                                        data-cpmk-kode="{{ $cpmk->kode }}"
+                                                        data-cpmk-judul="{{ $cpmk->judul }}">
                                                         <i class="ti-pencil"></i>
-                                                    </a>
-                                                    <form action="{{ $getRouteUrl('delete', $cpmk->id) }}" method="post" class="d-inline m-0 p-0">
+                                                    </button>
+                                                    <form action="{{ $getSubCpmkRoute('delete', $sub->id) }}" method="post" class="d-inline m-0 p-0">
                                                         @csrf
                                                         @method('delete')
                                                         <button type="submit" class="btn btn-danger btn-icons"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus CPMK"
-                                                            onclick="return confirm('PERHATIAN: Menghapus CPMK {{ $cpmk->kode }} akan menghapus SEMUA Sub-CPMK di dalamnya dan berdampak pada pemetaan Kaprodi & Penjamin Mutu. Yakin ingin melanjutkan?')">
+                                                            title="Hapus Sub-CPMK"
+                                                            onclick="return confirm('Apakah Anda yakin ingin menghapus Sub-CPMK {{ $sub->kode }}?')">
                                                             <i class="ti-trash"></i>
                                                         </button>
                                                     </form>
@@ -327,16 +351,23 @@
                                     @if ($canManageCpmk)
                                         <td class="text-center align-middle cell-nowrap">
                                             <div class="d-flex align-items-center justify-content-center gap-1">
-                                                <a href="{{ $getRouteUrl('edit', $cpmk->id) }}" class="btn btn-warning btn-icons text-white me-1"
-                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Edit CPMK">
-                                                    <i class="ti-pencil"></i>
-                                                </a>
+                                                <button type="button" class="btn btn-success btn-icons text-white me-1 btn-add-subcpmk"
+                                                    title="Tambah Sub-CPMK"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalAddSubCpmk"
+                                                    data-toggle="modal"
+                                                    data-target="#modalAddSubCpmk"
+                                                    data-cpmk-id="{{ $cpmk->id }}"
+                                                    data-cpmk-kode="{{ $cpmk->kode }}"
+                                                    data-cpmk-judul="{{ $cpmk->judul }}">
+                                                    <i class="ti-plus"></i>
+                                                </button>
                                                 <form action="{{ $getRouteUrl('delete', $cpmk->id) }}" method="post" class="d-inline m-0 p-0">
                                                     @csrf
                                                     @method('delete')
                                                     <button type="submit" class="btn btn-danger btn-icons"
-                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus CPMK"
-                                                        onclick="return confirm('PERHATIAN: Menghapus CPMK {{ $cpmk->kode }} akan menghapus SEMUA Sub-CPMK di dalamnya dan berdampak pada pemetaan Kaprodi & Penjamin Mutu. Yakin ingin melanjutkan?')">
+                                                        title="Hapus CPMK Kosong"
+                                                        onclick="return confirm('Apakah Anda yakin ingin menghapus CPMK {{ $cpmk->kode }} yang belum memiliki Sub-CPMK?')">
                                                         <i class="ti-trash"></i>
                                                     </button>
                                                 </form>
@@ -357,9 +388,194 @@
     </div>
 </div>
 
+<!-- Modal Edit Sub-CPMK -->
+<div class="modal fade" id="modalEditSubCpmk" tabindex="-1" aria-labelledby="modalEditSubCpmkLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form id="formEditSubCpmk" action="" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold" id="modalEditSubCpmkLabel">
+                        <i class="ti-pencil-alt text-warning me-2"></i>Edit Sub-CPMK
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-light border mb-3 p-2.5 d-flex align-items-center gap-2 rounded-3">
+                        <span class="badge bg-primary px-2 py-1">CPMK Induk</span>
+                        <span class="fw-semibold small text-dark" id="edit_sub_cpmk_info">-</span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_sub_kode" class="form-label fw-bold">Kode Sub-CPMK <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_sub_kode" name="kode" required placeholder="Contoh: Sub-CPMK011">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_sub_uraian" class="form-label fw-bold">Uraian Sub-CPMK <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="edit_sub_uraian" name="uraian" rows="4" required placeholder="Tuliskan uraian capaian Sub-CPMK..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold">
+                        <i class="ti-save me-1"></i> Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tambah Sub-CPMK (Untuk CPMK yang belum memiliki Sub-CPMK) -->
+<div class="modal fade" id="modalAddSubCpmk" tabindex="-1" aria-labelledby="modalAddSubCpmkLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form id="formAddSubCpmk" action="" method="POST">
+                @csrf
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold" id="modalAddSubCpmkLabel">
+                        <i class="ti-plus text-success me-2"></i>Tambah Sub-CPMK
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-light border mb-3 p-2.5 d-flex align-items-center gap-2 rounded-3">
+                        <span class="badge bg-primary px-2 py-1">CPMK Induk</span>
+                        <span class="fw-semibold small text-dark" id="add_sub_cpmk_info">-</span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_sub_kode" class="form-label fw-bold">Kode Sub-CPMK <small class="text-muted fw-normal">(Opsional, otomatis dari sistem jika kosong)</small></label>
+                        <input type="text" class="form-control" id="add_sub_kode" name="kode" placeholder="Kosongkan untuk penomoran otomatis">
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_sub_uraian" class="form-label fw-bold">Uraian Sub-CPMK <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="add_sub_uraian" name="uraian" rows="4" required placeholder="Tuliskan uraian capaian Sub-CPMK..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success text-white px-4 fw-bold">
+                        <i class="ti-plus me-1"></i> Tambah Sub-CPMK
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
     <script src="{{ asset('assets/js/dynamic-filters.js') }}"></script>
     <script>
+        function getModalInstance(modalEl) {
+            if (!modalEl) return null;
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                if (typeof bootstrap.Modal.getOrCreateInstance === 'function') {
+                    return bootstrap.Modal.getOrCreateInstance(modalEl);
+                }
+                if (typeof bootstrap.Modal.getInstance === 'function') {
+                    var inst = bootstrap.Modal.getInstance(modalEl);
+                    if (inst) return inst;
+                }
+                return new bootstrap.Modal(modalEl);
+            }
+            return null;
+        }
+
+        function showModalSafely(modalEl, modalSelector) {
+            var bsModal = getModalInstance(modalEl);
+            if (bsModal && typeof bsModal.show === 'function') {
+                bsModal.show();
+            } else if (typeof $ !== 'undefined' && typeof $(modalSelector).modal === 'function') {
+                $(modalSelector).modal('show');
+            }
+        }
+
+        function populateEditSubCpmk(id, kode, uraian, cpmkKode, cpmkJudul) {
+            var routeTemplate = "{{ $getSubCpmkRoute('update', ':id') }}";
+            var actionUrl = routeTemplate.replace(':id', id);
+            $('#formEditSubCpmk').attr('action', actionUrl);
+            $('#edit_sub_kode').val(kode || '');
+            $('#edit_sub_uraian').val(uraian || '');
+            $('#edit_sub_cpmk_info').text((cpmkKode || '-') + ' – ' + (cpmkJudul || '-'));
+        }
+
+        function openEditSubCpmkModal(id, kode, uraian, cpmkKode, cpmkJudul) {
+            populateEditSubCpmk(id, kode, uraian, cpmkKode, cpmkJudul);
+            var modalEl = document.getElementById('modalEditSubCpmk');
+            showModalSafely(modalEl, '#modalEditSubCpmk');
+        }
+        window.openEditSubCpmkModal = openEditSubCpmkModal;
+
+        function populateAddSubCpmk(cpmkId, cpmkKode, cpmkJudul) {
+            var routeTemplate = "{{ $getSubCpmkRoute('store-for-cpmk', ':cpmkId') }}";
+            var actionUrl = routeTemplate.replace(':cpmkId', cpmkId);
+            $('#formAddSubCpmk').attr('action', actionUrl);
+            $('#add_sub_kode').val('');
+            $('#add_sub_uraian').val('');
+            $('#add_sub_cpmk_info').text((cpmkKode || '-') + ' – ' + (cpmkJudul || '-'));
+        }
+
+        function openAddSubCpmkModal(cpmkId, cpmkKode, cpmkJudul) {
+            populateAddSubCpmk(cpmkId, cpmkKode, cpmkJudul);
+            var modalEl = document.getElementById('modalAddSubCpmk');
+            showModalSafely(modalEl, '#modalAddSubCpmk');
+        }
+        window.openAddSubCpmkModal = openAddSubCpmkModal;
+
+        // Delegated click handlers for Sub-CPMK action buttons
+        $(document).on('click', '.btn-edit-subcpmk', function(e) {
+            var $btn = $(this).closest('.btn-edit-subcpmk');
+            var id = $btn.attr('data-id') || $btn.data('id');
+            var kode = $btn.attr('data-kode') || $btn.data('kode');
+            var uraian = $btn.attr('data-uraian') || $btn.data('uraian');
+            var cpmkKode = $btn.attr('data-cpmk-kode') || $btn.data('cpmk-kode');
+            var cpmkJudul = $btn.attr('data-cpmk-judul') || $btn.data('cpmk-judul');
+            openEditSubCpmkModal(id, kode, uraian, cpmkKode, cpmkJudul);
+        });
+
+        $(document).on('click', '.btn-add-subcpmk', function(e) {
+            var $btn = $(this).closest('.btn-add-subcpmk');
+            var cpmkId = $btn.attr('data-cpmk-id') || $btn.data('cpmk-id');
+            var cpmkKode = $btn.attr('data-cpmk-kode') || $btn.data('cpmk-kode');
+            var cpmkJudul = $btn.attr('data-cpmk-judul') || $btn.data('cpmk-judul');
+            openAddSubCpmkModal(cpmkId, cpmkKode, cpmkJudul);
+        });
+
+        // Bootstrap show.bs.modal listeners for native data-bs-toggle
+        var editModalEl = document.getElementById('modalEditSubCpmk');
+        if (editModalEl) {
+            editModalEl.addEventListener('show.bs.modal', function(event) {
+                var btn = event.relatedTarget;
+                if (btn) {
+                    var $btn = $(btn).closest('.btn-edit-subcpmk');
+                    var id = $btn.attr('data-id') || $btn.data('id');
+                    var kode = $btn.attr('data-kode') || $btn.data('kode');
+                    var uraian = $btn.attr('data-uraian') || $btn.data('uraian');
+                    var cpmkKode = $btn.attr('data-cpmk-kode') || $btn.data('cpmk-kode');
+                    var cpmkJudul = $btn.attr('data-cpmk-judul') || $btn.data('cpmk-judul');
+                    if (id) {
+                        populateEditSubCpmk(id, kode, uraian, cpmkKode, cpmkJudul);
+                    }
+                }
+            });
+        }
+
+        var addModalEl = document.getElementById('modalAddSubCpmk');
+        if (addModalEl) {
+            addModalEl.addEventListener('show.bs.modal', function(event) {
+                var btn = event.relatedTarget;
+                if (btn) {
+                    var $btn = $(btn).closest('.btn-add-subcpmk');
+                    var cpmkId = $btn.attr('data-cpmk-id') || $btn.data('cpmk-id');
+                    var cpmkKode = $btn.attr('data-cpmk-kode') || $btn.data('cpmk-kode');
+                    var cpmkJudul = $btn.attr('data-cpmk-judul') || $btn.data('cpmk-judul');
+                    if (cpmkId) {
+                        populateAddSubCpmk(cpmkId, cpmkKode, cpmkJudul);
+                    }
+                }
+            });
+        }
+
         $(document).ready(function() {
             var selectedCplFilter = 'all';
 

@@ -46,6 +46,8 @@ class CPMKcontroller extends Controller
             'cpl' => 'required',
             'cpmk_selection' => 'required',
             'uraian_sub.*' => 'required|string',
+            'mode_penomoran' => 'nullable|in:auto,manual',
+            'kode_sub.*' => 'nullable|string|max:255',
         ]);
 
         if ($request->cpmk_selection === 'new') {
@@ -151,13 +153,27 @@ class CPMKcontroller extends Controller
                     $startNumber = $lastSubNumber + 1;
                 }
 
+                $isManualMode = $request->input('mode_penomoran') === 'manual';
+                $autoIndexOffset = 0;
+
                 foreach ($request->uraian_sub as $index => $uraian) {
                     if (!empty($uraian)) {
-                        $subKode = 'Sub-' . $kodeCpmkInduk . ($startNumber + $index);
+                        $customKode = isset($request->kode_sub[$index]) ? trim($request->kode_sub[$index]) : '';
+
+                        if ($isManualMode && !empty($customKode)) {
+                            $subKode = $customKode;
+                        } else {
+                            do {
+                                $candidateKode = 'Sub-' . $kodeCpmkInduk . ($startNumber + $autoIndexOffset);
+                                $exists = SubCpmk::where('cpmk_id', $cpmkToUse->id)->where('kode', $candidateKode)->exists();
+                                $autoIndexOffset++;
+                            } while ($exists);
+                            $subKode = $candidateKode;
+                        }
 
                         SubCpmk::create([
                             'cpmk_id'  => $cpmkToUse->id,
-                            'id_prodi' => auth()->user()->id_prodiUser,
+                            'id_prodi' => auth()->user()->id_prodiUser ?? $cpmkToUse->id_prodi,
                             'kode'     => $subKode,
                             'uraian'   => $uraian,
                         ]);
@@ -377,4 +393,62 @@ class CPMKcontroller extends Controller
             return redirect()->back()->with('error', 'Gagal menghapus Sub-CPMK: ' . $e->getMessage());
         }
     }
+
+    public function updateSubCpmk(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'kode' => 'required|string|max:255',
+            'uraian' => 'required|string',
+        ]);
+
+        try {
+            $subCpmk = SubCpmk::findOrFail($id);
+            $subCpmk->update([
+                'kode' => $validated['kode'],
+                'uraian' => $validated['uraian'],
+            ]);
+
+            return redirect()->back()->with('success', "Sub-CPMK {$subCpmk->kode} berhasil diperbarui.");
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Gagal memperbarui Sub-CPMK: ' . $e->getMessage());
+        }
+    }
+
+    public function storeSubCpmkForCpmk(Request $request, $cpmkId)
+    {
+        $validated = $request->validate([
+            'uraian' => 'required|string',
+            'kode' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $cpmk = CPMK::findOrFail($cpmkId);
+
+            $subKode = $validated['kode'];
+            if (empty($subKode)) {
+                $lastSub = SubCpmk::where('cpmk_id', $cpmk->id)
+                    ->where('kode', 'like', 'Sub-' . $cpmk->kode . '%')
+                    ->orderByRaw("CAST(SUBSTRING(kode, LENGTH('Sub-{$cpmk->kode}') + 1) AS UNSIGNED) DESC")
+                    ->first();
+                $nextNum = 1;
+                if ($lastSub) {
+                    $lastNum = (int) preg_replace('/\D/', '', substr($lastSub->kode, strlen('Sub-' . $cpmk->kode)));
+                    $nextNum = $lastNum + 1;
+                }
+                $subKode = 'Sub-' . $cpmk->kode . $nextNum;
+            }
+
+            SubCpmk::create([
+                'cpmk_id' => $cpmk->id,
+                'id_prodi' => auth()->user()->id_prodiUser ?? $cpmk->id_prodi,
+                'kode' => $subKode,
+                'uraian' => $validated['uraian'],
+            ]);
+
+            return redirect()->back()->with('success', "Sub-CPMK $subKode berhasil ditambahkan.");
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Gagal menambahkan Sub-CPMK: ' . $e->getMessage());
+        }
+    }
 }
+

@@ -52,7 +52,7 @@
 
             {{-- BAGIAN 2: RINCIAN SUB-CPMK --}}
             <div class="d-flex justify-content-between align-items-center mt-4 border-bottom pb-2 mb-3">
-                <h5 class="mb-0"><i class="ti-list me-2"></i>Rincian Sub-CPMK</h5>
+                <h6 class="mb-0 fw-bold" style="font-size: 0.95rem;"><i class="ti-list me-2"></i>Rincian Sub-CPMK</h6>
                 {{-- Tombol Toggle Panduan (UX: Memberi bantuan tanpa mengganggu layout) --}}
                 <button class="btn btn-sm btn-info text-white" type="button" data-bs-toggle="collapse" data-bs-target="#guideKKO" aria-expanded="false">
                     <i class="bi bi-lightbulb-fill me-1"></i> Panduan & KKO Bloom
@@ -230,13 +230,37 @@
                 </div>
             </div>
 
+            {{-- PILIHAN MODE PENOMORAN SUB-CPMK (STANDAR ROLE KOORDINATOR PRODI) --}}
+            <div class="form-group mb-3 p-3 bg-light border rounded">
+                <label class="font-weight-bold d-block text-dark mb-1" style="font-size: 0.85rem;">
+                    Penomoran Kode Sub-CPMK:
+                </label>
+                <div class="d-flex flex-wrap align-items-center mt-2">
+                    <div class="form-check me-4 mb-0">
+                        <label class="form-check-label font-weight-bold" style="cursor: pointer;">
+                            <input type="radio" class="form-check-input" name="mode_penomoran" id="mode_penomoran_auto" value="auto" checked>
+                            Otomatis (Sistem)
+                        </label>
+                    </div>
+                    <div class="form-check mb-0">
+                        <label class="form-check-label font-weight-bold" style="cursor: pointer;">
+                            <input type="radio" class="form-check-input" name="mode_penomoran" id="mode_penomoran_manual" value="manual">
+                            Namai Sendiri (Manual)
+                        </label>
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2" style="font-size: 0.78rem;">
+                    <i class="ti-info-circle me-1"></i> Pilih <strong>Otomatis</strong> agar sistem membuatkan kode berurutan (misal: Sub-CPMK011), atau <strong>Namai Sendiri</strong> untuk memasukkan kode kustom (otomatis jika dikosongkan).
+                </small>
+            </div>
+
             {{-- INPUT SUB-CPMK DINAMIS --}}
             <div id="dynamic-subcpmk-container">
                 {{-- Baris Pertama (Default) --}}
                 <div class="subcpmk-item mb-2">
                     <div class="input-group">
-                        <span class="input-group-text py-0 px-2 bg-light text-muted" style="font-size: 0.8rem;">Sub</span>
-                        {{-- Tambahkan ID untuk target copy paste jika diperlukan nanti --}}
+                        <span class="input-group-text py-0 px-2 bg-light text-muted sub-badge-label" style="font-size: 0.8rem; min-width: 48px; justify-content: center;">Sub</span>
+                        <input type="text" name="kode_sub[]" class="form-control form-control-sm kode-subcpmk-input" placeholder="Kode (otomatis jika kosong)" style="max-width: 230px; display: none;">
                         <input type="text" name="uraian_sub[]" class="form-control form-control-sm subcpmk-input" placeholder="Contoh: Mampu merancang (C6) database relasional..." required>
                         <button class="btn btn-sm btn-outline-danger remove-subcpmk-btn" type="button">Hapus</button>
                     </div>
@@ -303,6 +327,22 @@ $(document).ready(function() {
         }
     });
 
+    // LOGIKA MODE PENOMORAN SUB-CPMK (OTOMATIS VS MANUAL)
+    function applyModePenomoran() {
+        const isManual = $('input[name="mode_penomoran"]:checked').val() === 'manual';
+        if (isManual) {
+            $('.kode-subcpmk-input').show();
+            $('.sub-badge-label').text('Kode:');
+        } else {
+            $('.kode-subcpmk-input').hide().val('');
+            $('.sub-badge-label').text('Sub');
+        }
+    }
+
+    $(document).on('change', 'input[name="mode_penomoran"]', function() {
+        applyModePenomoran();
+    });
+
     // LOGIKA TAMBAH/HAPUS SUB-CPMK
     const containerId = '#dynamic-subcpmk-container';
     const itemClass = '.subcpmk-item';
@@ -313,6 +353,16 @@ $(document).ready(function() {
         if (!firstItem.length) return;
         const newItem = firstItem.clone();
         newItem.find('input').val(''); 
+        
+        const isManual = $('input[name="mode_penomoran"]:checked').val() === 'manual';
+        if (isManual) {
+            newItem.find('.kode-subcpmk-input').show();
+            newItem.find('.sub-badge-label').text('Kode:');
+        } else {
+            newItem.find('.kode-subcpmk-input').hide();
+            newItem.find('.sub-badge-label').text('Sub');
+        }
+
         $(containerId).append(newItem);
         checkRemoveButton();
     });

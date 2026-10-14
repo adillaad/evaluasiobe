@@ -36,6 +36,16 @@
 <script src="{{ asset('/assets/template/js/Chart.roundedBarCharts.js') }}"></script>
 <script src="{{ asset('/node_modules/datatables/media/js/jquery.dataTables.min.js') }}"></script>
 <script>
+    if (typeof bootstrap !== 'undefined') {
+        ['Modal', 'Tab', 'Tooltip', 'Popover', 'Dropdown', 'Collapse'].forEach(function(comp) {
+            if (bootstrap[comp] && !bootstrap[comp].getOrCreateInstance) {
+                bootstrap[comp].getOrCreateInstance = function(element, config) {
+                    return (this.getInstance ? this.getInstance(element) : null) || new this(element, config);
+                };
+            }
+        });
+    }
+
     $(document).ready(function() {
         if (typeof $.fn.DataTable !== 'undefined') {
             $.fn.dataTable.ext.errMode = 'none';

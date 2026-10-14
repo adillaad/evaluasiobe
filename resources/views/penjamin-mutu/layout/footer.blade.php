@@ -40,6 +40,16 @@
 {{-- tinymce --}}
 <script src="https://cdn.tiny.cloud/1/kwzqw4jpycdrl77quqeorhz4zb0cugsn3aelc28261lsg2d3/tinymce/6/tinymce.min.js"referrerpolicy="origin"></script>
 <script>
+    if (typeof bootstrap !== 'undefined') {
+        ['Modal', 'Tab', 'Tooltip', 'Popover', 'Dropdown', 'Collapse'].forEach(function(comp) {
+            if (bootstrap[comp] && !bootstrap[comp].getOrCreateInstance) {
+                bootstrap[comp].getOrCreateInstance = function(element, config) {
+                    return (this.getInstance ? this.getInstance(element) : null) || new this(element, config);
+                };
+            }
+        });
+    }
+
     $(document).ready(function() {
         if (typeof $.fn.DataTable !== 'undefined') {
             $.fn.dataTable.ext.errMode = 'none';
