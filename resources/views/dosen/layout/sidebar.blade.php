@@ -31,13 +31,7 @@
             </div>
         </li> -->
 
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route($currentPrefix . 'rps-list') }}">
-                <i class="menu-icon mdi mdi-view-headline"></i>
-                <span class="menu-title">RPS</span>
-            </a>
-        </li>
-
+        
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#cpl" aria-expanded="false" aria-controls="cpl">
                 <i class="menu-icon mdi mdi-checkbox-multiple-blank"></i>
@@ -96,13 +90,13 @@
                 </ul>
             </div>
         </li> -->
-        
         <li class="nav-item">
-            <a class="nav-link" href="{{ route($currentPrefix . 'Jenis-list') }}">
-                <i class="menu-icon mdi mdi-message-text-outline"></i>
-                <span class="menu-title">Kriteria Penilaian</span>
+            <a class="nav-link" href="{{ route($currentPrefix . 'rps-list') }}">
+                <i class="menu-icon mdi mdi-view-headline"></i>
+                <span class="menu-title">RPS</span>
             </a>
         </li>
+
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#rubrik" aria-expanded="false" aria-controls="rubrik">
                 <i class="menu-icon mdi mdi-book-open"></i>
@@ -123,6 +117,13 @@
                 </ul>
             </div>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route($currentPrefix . 'Jenis-list') }}">
+                <i class="menu-icon mdi mdi-message-text-outline"></i>
+                <span class="menu-title">Kriteria Penilaian</span>
+            </a>
+        </li>
+        
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="collapse" href="#soal" aria-expanded="false" aria-controls="soal">
                 <i class="menu-icon mdi mdi-pen"></i>

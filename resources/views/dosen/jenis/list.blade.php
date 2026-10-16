@@ -17,7 +17,7 @@
                             <label for="jenis" class="form-label fw-semibold small mb-1">
                                 Nama Kriteria <span class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control form-control-sm" id="jenis" name="jenis" placeholder="Contoh: Tugas / Quiz / UTS" required>
+                            <input type="text" class="form-control form-control-sm" id="jenis" name="jenis" placeholder="Contoh: Ketepatan Analisis / Penguasaan Materi / Sistematika" required>
                         </div>
                         <div class="col-md-auto">
                             <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold">

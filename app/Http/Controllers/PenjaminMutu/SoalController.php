@@ -23,44 +23,29 @@ class SoalController extends Controller
     {
         $otoritas = auth()->user()->otoritas->otoritas;
 
-        // Ambil kombinasi unik (kode_mk, dosen) dari tabel soals dan tanpa_soal
-        $soalsPairs = DB::table('soals')
-            ->leftJoin('users as u_id', function ($join) {
-                $join->on('u_id.id', '=', 'soals.dosen')
-                    ->whereRaw('soals.dosen REGEXP "^[0-9]+$"');
-            })
-            ->leftJoin('users as u_name', 'u_name.name', '=', 'soals.dosen')
+        // Ambil daftar unik kode_mk yang memiliki soal atau instrumen tanpa soal
+        $soalsMk = DB::table('soals')
             ->whereIn('soals.status', ['Menunggu', 'Valid', 'Tolak'])
-            ->select(
-                'soals.kode_mk',
-                DB::raw("COALESCE(u_id.id, u_name.id, soals.dosen) as dosen_key"),
-                DB::raw("COALESCE(u_id.name, u_name.name, soals.dosen, 'Dosen Tidak Diketahui') as nama_dosen")
-            );
+            ->select('soals.kode_mk');
 
-        $tanpaSoalPairs = DB::table('tanpa_soal')
-            ->leftJoin('users', 'tanpa_soal.dosen_id', '=', 'users.id')
+        $tanpaSoalMk = DB::table('tanpa_soal')
             ->whereIn('tanpa_soal.status', ['Menunggu Validasi', 'Valid', 'Ditolak'])
-            ->select(
-                'tanpa_soal.kode_mk',
-                DB::raw("COALESCE(users.id, tanpa_soal.dosen_id) as dosen_key"),
-                DB::raw("COALESCE(users.name, 'Dosen Tidak Diketahui') as nama_dosen")
-            );
+            ->select('tanpa_soal.kode_mk');
 
-        $pairs = $soalsPairs
-            ->union($tanpaSoalPairs)
-            ->get()
-            ->unique(fn($item) => $item->kode_mk . '|' . $item->dosen_key)
+        $mkCodes = $soalsMk
+            ->union($tanpaSoalMk)
+            ->pluck('kode_mk')
+            ->unique()
+            ->filter()
             ->values();
 
-        if ($pairs->isEmpty()) {
+        if ($mkCodes->isEmpty()) {
             $filterData = $this->getFilterData($request);
             return view('penjamin-mutu.soal.list', array_merge(
                 ['mkList' => collect()],
                 $filterData
             ));
         }
-
-        $mkCodes = $pairs->pluck('kode_mk')->unique();
 
         $mkQuery = DB::table('mks')
             ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
@@ -93,15 +78,11 @@ class SoalController extends Controller
         }
 
         $filterData = $this->getFilterData($request);
-        $mksMap     = $mkQuery->orderBy('mks.kode')->get()->keyBy('kode');
+        $mks = $mkQuery->orderBy('mks.kode')->get();
 
         $mkList = collect();
-        foreach ($pairs as $pair) {
-            if (!$mksMap->has($pair->kode_mk)) {
-                continue;
-            }
-            $mkInfo = $mksMap->get($pair->kode_mk);
-            $summary = $this->buildMkSummary($pair->kode_mk, $mkInfo, $pair->dosen_key, $pair->nama_dosen);
+        foreach ($mks as $mkInfo) {
+            $summary = $this->buildMkSummary($mkInfo->kode, $mkInfo);
             $mkList->push($summary);
         }
 
@@ -113,8 +94,6 @@ class SoalController extends Controller
 
     public function detail(Request $request, $kode_mk)
     {
-        /*
-        // ===== KODINGAN VERSIS SEBELUMNYA (DIJADIKAN KOMENTAR) =====
         $mk = DB::table('mks')
             ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
             ->where('mks.kode', $kode_mk)
@@ -140,26 +119,17 @@ class SoalController extends Controller
             ->select('cpmks.id', 'cpmks.kode', 'cpmks.judul')
             ->get();
 
-        $detailMetodes = $metodes->map(function ($metode) use ($kode_mk) {
+        $detailMetodes = $metodes->map(function ($metode) use ($kode_mk, $cpmkMk) {
             $totalBobotMetode = (float) $metode->total_bobot_metode;
-
-            $cpmkMkMetode = DB::table('cpl_mk_cpmk_penilaian as cmcp')
-                ->join('penilaian_metode as pm', 'pm.cpl_mk_cpmk_penilaian_id', '=', 'cmcp.id')
-                ->join('cpmks', 'cmcp.cpmk_id', '=', 'cpmks.id')
-                ->where('cmcp.mk_kode', $kode_mk)
-                ->where('pm.metode_id', $metode->metode_id)
-                ->select(
-                    'cpmks.id',
-                    'cpmks.kode',
-                    'cpmks.judul',
-                    DB::raw('SUM(pm.bobot) as bobot_cpmk_metode')
-                )
-                ->groupBy('cpmks.id', 'cpmks.kode', 'cpmks.judul')
-                ->get();
 
             $soals = DB::table('soals')
                 ->leftJoin('cpls', 'soals.cpl', '=', 'cpls.id')
                 ->leftJoin('cpmks', 'soals.cpmk', '=', 'cpmks.id')
+                ->leftJoin('users as u_id', function ($join) {
+                    $join->on('u_id.id', '=', 'soals.dosen')
+                        ->whereRaw('soals.dosen REGEXP "^[0-9]+$"');
+                })
+                ->leftJoin('users as u_name', 'u_name.name', '=', 'soals.dosen')
                 ->where('soals.kode_mk', $kode_mk)
                 ->where('soals.jenis', $metode->metode_id)
                 ->whereIn('soals.status', ['Menunggu', 'Valid', 'Tolak'])
@@ -170,6 +140,7 @@ class SoalController extends Controller
                     'soals.persentase_cpmk',
                     'soals.status',
                     'soals.komentar',
+                    DB::raw("COALESCE(u_id.name, u_name.name, soals.dosen) as nama_dosen"),
                     'cpls.kode as kode_cpl',
                     'cpmks.id as cpmk_id',
                     'cpmks.kode as kode_cpmk',
@@ -181,223 +152,17 @@ class SoalController extends Controller
             $tanpaSoals = DB::table('tanpa_soal')
                 ->leftJoin('cpls', 'tanpa_soal.cpl_id', '=', 'cpls.id')
                 ->leftJoin('cpmks', 'tanpa_soal.cpmk_id', '=', 'cpmks.id')
+                ->leftJoin('users', 'tanpa_soal.dosen_id', '=', 'users.id')
                 ->where('tanpa_soal.kode_mk', $kode_mk)
                 ->where('tanpa_soal.metode_id', $metode->metode_id)
+                ->whereIn('tanpa_soal.status', ['Menunggu Validasi', 'Valid', 'Ditolak'])
                 ->select(
                     'tanpa_soal.id',
                     'tanpa_soal.nama_instrumen',
                     'tanpa_soal.bobot_TS as bobotSoal',
                     'tanpa_soal.persentase_cpmk',
                     'tanpa_soal.status',
-                    'cpls.kode as kode_cpl',
-                    'cpmks.id as cpmk_id',
-                    'cpmks.kode as kode_cpmk',
-                    'cpmks.judul as judul_cpmk'
-                )
-                ->orderBy('tanpa_soal.cpmk_id')
-                ->get();
-
-            $totalSoalPerCpmk = $soals->groupBy('cpmk_id');
-            $totalTanpaPerCpmk = $tanpaSoals->groupBy('cpmk_id');
-
-            $soals->transform(function ($soal) use ($cpmkMkMetode, $totalSoalPerCpmk, $totalTanpaPerCpmk) {
-                $cpmkBobot = (float)($cpmkMkMetode->where('id', $soal->cpmk_id)->first()->bobot_cpmk_metode ?? 0);
-                $soal->bobot_cpmk = $cpmkBobot;
-
-                if ((float)$soal->bobotSoal == 0) {
-                    if ((float)$soal->persentase_cpmk > 0) {
-                        $soal->bobotSoal = round(($soal->persentase_cpmk / 100) * $cpmkBobot, 2);
-                    } else {
-                        $countSoal = isset($totalSoalPerCpmk[$soal->cpmk_id]) ? $totalSoalPerCpmk[$soal->cpmk_id]->count() : 0;
-                        $countTanpa = isset($totalTanpaPerCpmk[$soal->cpmk_id]) ? $totalTanpaPerCpmk[$soal->cpmk_id]->count() : 0;
-                        $totalItem = $countSoal + $countTanpa;
-                        if ($totalItem > 0 && $cpmkBobot > 0) {
-                            $soal->bobotSoal = round($cpmkBobot / $totalItem, 2);
-                            $soal->persentase_cpmk = round(100 / $totalItem, 1);
-                        }
-                    }
-                }
-                return $soal;
-            });
-
-            $tanpaSoals->transform(function ($ts) use ($cpmkMkMetode, $totalSoalPerCpmk, $totalTanpaPerCpmk) {
-                $cpmkBobot = (float)($cpmkMkMetode->where('id', $ts->cpmk_id)->first()->bobot_cpmk_metode ?? 0);
-                $ts->bobot_cpmk = $cpmkBobot;
-
-                if ((float)$ts->bobotSoal == 0) {
-                    if ((float)$ts->persentase_cpmk > 0) {
-                        $ts->bobotSoal = round(($ts->persentase_cpmk / 100) * $cpmkBobot, 2);
-                    } else {
-                        $countSoal = isset($totalSoalPerCpmk[$ts->cpmk_id]) ? $totalSoalPerCpmk[$ts->cpmk_id]->count() : 0;
-                        $countTanpa = isset($totalTanpaPerCpmk[$ts->cpmk_id]) ? $totalTanpaPerCpmk[$ts->cpmk_id]->count() : 0;
-                        $totalItem = $countSoal + $countTanpa;
-                        if ($totalItem > 0 && $cpmkBobot > 0) {
-                            $ts->bobotSoal = round($cpmkBobot / $totalItem, 2);
-                            $ts->persentase_cpmk = round(100 / $totalItem, 1);
-                        }
-                    }
-                }
-                return $ts;
-            });
-
-            $totalBobotSoal    = $soals->sum('bobotSoal');
-            $totalBobotTanpa   = $tanpaSoals->sum('bobotSoal');
-            $totalBobotTerisi  = $totalBobotSoal + $totalBobotTanpa;
-            $persenKelengkapan = $totalBobotMetode > 0
-                ? round(($totalBobotTerisi / $totalBobotMetode) * 100, 1)
-                : 0;
-
-            $cpmkTerpetakan = collect($soals->pluck('cpmk_id'))
-                ->merge($tanpaSoals->pluck('cpmk_id'))
-                ->filter()->unique()->values();
-
-            $cpmkBelum = $cpmkMkMetode->filter(fn($c) => !$cpmkTerpetakan->contains($c->id))->values();
-
-            $cpmkKelengkapan = $cpmkMkMetode->map(function ($cpmk) use ($soals, $tanpaSoals) {
-                $pctSoal  = $soals->where('cpmk_id', $cpmk->id)->sum('persentase_cpmk');
-                $pctTanpa = $tanpaSoals->where('cpmk_id', $cpmk->id)->sum('persentase_cpmk');
-                $total    = $pctSoal + $pctTanpa;
-
-                if ($total == 0 && (float)$cpmk->bobot_cpmk_metode > 0) {
-                    $bobotSoal  = $soals->where('cpmk_id', $cpmk->id)->sum('bobotSoal');
-                    $bobotTanpa = $tanpaSoals->where('cpmk_id', $cpmk->id)->sum('bobotSoal');
-                    $totalBobot = $bobotSoal + $bobotTanpa;
-                    if ($totalBobot > 0) {
-                        $total = round(($totalBobot / $cpmk->bobot_cpmk_metode) * 100, 1);
-                    }
-                }
-
-                return [
-                    'id'        => $cpmk->id,
-                    'kode'      => $cpmk->kode,
-                    'judul'     => $cpmk->judul,
-                    'total_pct' => $total,
-                    'lengkap'   => $total >= 100,
-                ];
-            });
-
-            $semuaCpmkLengkap = $cpmkKelengkapan->every(fn($c) => $c['lengkap']);
-            $bobotLengkap     = abs($totalBobotTerisi - $totalBobotMetode) < 0.01;
-
-            return [
-                'metode_id'          => $metode->metode_id,
-                'nama_metode'        => $metode->nama_metode,
-                'total_bobot_metode' => $totalBobotMetode,
-                'total_bobot_terisi' => round($totalBobotTerisi, 2),
-                'persen_kelengkapan' => $persenKelengkapan,
-                'bobot_lengkap'      => $bobotLengkap,
-                'cpmk_lengkap'       => $semuaCpmkLengkap,
-                'semua_lengkap'      => $bobotLengkap && $semuaCpmkLengkap,
-                'soals'              => $soals,
-                'tanpa_soals'        => $tanpaSoals,
-                'cpmk_kelengkapan'   => $cpmkKelengkapan,
-                'cpmk_belum'         => $cpmkBelum,
-            ];
-        });
-
-        $mkLengkap = $detailMetodes->every(fn($m) => $m['semua_lengkap']);
-
-        $statusSoal = DB::table('soals')
-            ->where('kode_mk', $kode_mk)
-            ->whereIn('status', ['Menunggu', 'Valid', 'Tolak'])
-            ->select('status', DB::raw('COUNT(*) as jumlah'))
-            ->groupBy('status')
-            ->pluck('jumlah', 'status');
-
-        return view('penjamin-mutu.soal.detail', compact(
-            'mk',
-            'detailMetodes',
-            'cpmkMk',
-            'mkLengkap',
-            'statusSoal',
-            'kode_mk'
-        ));
-        */
-
-        // ===== KODINGAN DARI SOALCONTROLLER2 (AKTIF DENGAN TAMPILAN SESUAI SCREENSHOT) =====
-        $dosenParam = $request->query('dosen');
-        $namaDosen  = null;
-        if ($dosenParam) {
-            $userObj   = DB::table('users')->where('id', $dosenParam)->orWhere('name', $dosenParam)->first();
-            $namaDosen = $userObj->name ?? $dosenParam;
-        }
-
-        $mk = DB::table('mks')
-            ->join('prodi', 'mks.id_prodi', '=', 'prodi.id')
-            ->where('mks.kode', $kode_mk)
-            ->select('mks.*', 'prodi.nama as nama_prodi')
-            ->first();
-
-        if (!$mk) {
-            return redirect()->back()->with('error', 'Mata Kuliah tidak ditemukan.');
-        }
-
-        $metodes = DB::table('cpl_mk_cpmk_penilaian as cmcp')
-            ->join('penilaian_metode as pm', 'pm.cpl_mk_cpmk_penilaian_id', '=', 'cmcp.id')
-            ->join('metode_penilaian as mp', 'mp.id', '=', 'pm.metode_id')
-            ->where('cmcp.mk_kode', $kode_mk)
-            ->select('mp.id as metode_id', 'mp.nama as nama_metode', DB::raw('SUM(pm.bobot) as total_bobot_metode'))
-            ->groupBy('mp.id', 'mp.nama')
-            ->orderBy('mp.nama')
-            ->get();
-
-        $cpmkMk = DB::table('cpmk_mk')
-            ->join('cpmks', 'cpmk_mk.cpmk_id', '=', 'cpmks.id')
-            ->where('cpmk_mk.mk_kode', $kode_mk)
-            ->select('cpmks.id', 'cpmks.kode', 'cpmks.judul')
-            ->get();
-
-        $detailMetodes = $metodes->map(function ($metode) use ($kode_mk, $cpmkMk, $dosenParam, $namaDosen) {
-            $totalBobotMetode = (float) $metode->total_bobot_metode;
-
-            $soalsQuery = DB::table('soals')
-                ->leftJoin('cpls', 'soals.cpl', '=', 'cpls.id')
-                ->leftJoin('cpmks', 'soals.cpmk', '=', 'cpmks.id')
-                ->where('soals.kode_mk', $kode_mk)
-                ->where('soals.jenis', $metode->metode_id)
-                ->whereIn('soals.status', ['Menunggu', 'Valid', 'Tolak']);
-
-            if ($dosenParam) {
-                $soalsQuery->where(function ($q) use ($dosenParam, $namaDosen) {
-                    $q->where('soals.dosen', $dosenParam);
-                    if ($namaDosen) {
-                        $q->orWhere('soals.dosen', $namaDosen);
-                    }
-                });
-            }
-
-            $soals = $soalsQuery->select(
-                    'soals.id',
-                    'soals.pertanyaan',
-                    'soals.bobotSoal',
-                    'soals.persentase_cpmk',
-                    'soals.status',
-                    'soals.komentar',
-                    'cpls.kode as kode_cpl',
-                    'cpmks.id as cpmk_id',
-                    'cpmks.kode as kode_cpmk',
-                    'cpmks.judul as judul_cpmk'
-                )
-                ->orderBy('soals.cpmk')->orderBy('soals.id')
-                ->get();
-
-            $tanpaSoalsQuery = DB::table('tanpa_soal')
-                ->leftJoin('cpls', 'tanpa_soal.cpl_id', '=', 'cpls.id')
-                ->leftJoin('cpmks', 'tanpa_soal.cpmk_id', '=', 'cpmks.id')
-                ->where('tanpa_soal.kode_mk', $kode_mk)
-                ->where('tanpa_soal.metode_id', $metode->metode_id)
-                ->whereIn('tanpa_soal.status', ['Menunggu Validasi', 'Valid', 'Ditolak']);
-
-            if ($dosenParam) {
-                $tanpaSoalsQuery->where('tanpa_soal.dosen_id', $dosenParam);
-            }
-
-            $tanpaSoals = $tanpaSoalsQuery->select(
-                    'tanpa_soal.id',
-                    'tanpa_soal.nama_instrumen',
-                    'tanpa_soal.bobot_TS as bobotSoal',
-                    'tanpa_soal.persentase_cpmk',
-                    'tanpa_soal.status',
+                    DB::raw("COALESCE(users.name, tanpa_soal.dosen_id) as nama_dosen"),
                     'cpls.kode as kode_cpl',
                     'cpmks.id as cpmk_id',
                     'cpmks.kode as kode_cpmk',
@@ -530,20 +295,14 @@ class SoalController extends Controller
         // mkLengkap hanya untuk info/peringatan, tidak memblokir validasi
         $mkLengkap = $detailMetodes->every(fn($m) => $m['semua_lengkap']);
 
-        $statusSoalQuery = DB::table('soals')
+        $statusSoal = DB::table('soals')
             ->where('kode_mk', $kode_mk)
-            ->whereIn('status', ['Menunggu', 'Valid', 'Tolak']);
-        if ($dosenParam) {
-            $statusSoalQuery->where(function ($q) use ($dosenParam, $namaDosen) {
-                $q->where('dosen', $dosenParam);
-                if ($namaDosen) {
-                    $q->orWhere('dosen', $namaDosen);
-                }
-            });
-        }
-        $statusSoal = $statusSoalQuery->select('status', DB::raw('COUNT(*) as jumlah'))
+            ->whereIn('status', ['Menunggu', 'Valid', 'Tolak'])
+            ->select('status', DB::raw('COUNT(*) as jumlah'))
             ->groupBy('status')
             ->pluck('jumlah', 'status');
+
+        $dosenParam = null;
 
         return view('penjamin-mutu.soal.detail', compact(
             'mk',
@@ -551,9 +310,7 @@ class SoalController extends Controller
             'cpmkMk',
             'mkLengkap',
             'statusSoal',
-            'kode_mk',
-            'namaDosen',
-            'dosenParam'
+            'kode_mk'
         ));
     }
 
@@ -564,32 +321,17 @@ class SoalController extends Controller
             return redirect()->back()->with('error', 'MK tidak ditemukan.');
         }
 
-        $dosenParam = $request->input('dosen') ?? $request->query('dosen');
-        $namaDosen  = $dosenParam ? DB::table('users')->where('id', $dosenParam)->orWhere('name', $dosenParam)->value('name') : null;
-
-        $soalQuery = DB::table('soals')
+        DB::table('soals')
             ->where('kode_mk', $kode_mk)
-            ->whereIn('status', ['Menunggu', 'Tolak']);
-        if ($dosenParam) {
-            $soalQuery->where(function ($q) use ($dosenParam, $namaDosen) {
-                $q->where('dosen', $dosenParam);
-                if ($namaDosen) {
-                    $q->orWhere('dosen', $namaDosen);
-                }
-            });
-        }
-        $soalQuery->update(['status' => 'Valid', 'komentar' => null]);
+            ->whereIn('status', ['Menunggu', 'Tolak'])
+            ->update(['status' => 'Valid', 'komentar' => null]);
 
-        $tanpaQuery = DB::table('tanpa_soal')
+        DB::table('tanpa_soal')
             ->where('kode_mk', $kode_mk)
-            ->whereIn('status', ['Menunggu Validasi', 'Ditolak']);
-        if ($dosenParam) {
-            $tanpaQuery->where('dosen_id', $dosenParam);
-        }
-        $tanpaQuery->update(['status' => 'Valid']);
+            ->whereIn('status', ['Menunggu Validasi', 'Ditolak'])
+            ->update(['status' => 'Valid']);
 
-        $msgDosen = $namaDosen ? " (Dosen: {$namaDosen})" : "";
-        return $this->redirectToList("Semua soal MK {$kode_mk}{$msgDosen} berhasil divalidasi.");
+        return $this->redirectToList("Semua soal & instrumen MK {$kode_mk} berhasil divalidasi.");
     }
 
     public function tolakMK(Request $request, $kode_mk)
@@ -606,32 +348,17 @@ class SoalController extends Controller
             return redirect()->back()->with('error', 'MK tidak ditemukan.');
         }
 
-        $dosenParam = $request->input('dosen') ?? $request->query('dosen');
-        $namaDosen  = $dosenParam ? DB::table('users')->where('id', $dosenParam)->orWhere('name', $dosenParam)->value('name') : null;
-
-        $soalQuery = DB::table('soals')
+        DB::table('soals')
             ->where('kode_mk', $kode_mk)
-            ->whereIn('status', ['Menunggu']);
-        if ($dosenParam) {
-            $soalQuery->where(function ($q) use ($dosenParam, $namaDosen) {
-                $q->where('dosen', $dosenParam);
-                if ($namaDosen) {
-                    $q->orWhere('dosen', $namaDosen);
-                }
-            });
-        }
-        $soalQuery->update(['status' => 'Tolak', 'komentar' => $request->komentar]);
+            ->whereIn('status', ['Menunggu', 'Valid'])
+            ->update(['status' => 'Tolak', 'komentar' => $request->komentar]);
 
-        $tanpaQuery = DB::table('tanpa_soal')
+        DB::table('tanpa_soal')
             ->where('kode_mk', $kode_mk)
-            ->whereIn('status', ['Menunggu Validasi']);
-        if ($dosenParam) {
-            $tanpaQuery->where('dosen_id', $dosenParam);
-        }
-        $tanpaQuery->update(['status' => 'Ditolak']);
+            ->whereIn('status', ['Menunggu Validasi', 'Valid'])
+            ->update(['status' => 'Ditolak']);
 
-        $msgDosen = $namaDosen ? " (Dosen: {$namaDosen})" : "";
-        return $this->redirectToList("Soal MK {$kode_mk}{$msgDosen} ditolak. Komentar dikirim ke dosen.");
+        return $this->redirectToList("Soal & instrumen MK {$kode_mk} ditolak. Komentar dikirim ke dosen.");
     }
 
     public function pesanMK(Request $request, $kode_mk)
@@ -647,21 +374,10 @@ class SoalController extends Controller
             return redirect()->back()->with('error', 'MK tidak ditemukan.');
         }
 
-        $dosenParam = $request->input('dosen') ?? $request->query('dosen');
-        $namaDosen  = $dosenParam ? DB::table('users')->where('id', $dosenParam)->orWhere('name', $dosenParam)->value('name') : null;
-
-        $soalQuery = DB::table('soals')
+        DB::table('soals')
             ->where('kode_mk', $kode_mk)
-            ->whereIn('status', ['Menunggu', 'Valid']);
-        if ($dosenParam) {
-            $soalQuery->where(function ($q) use ($dosenParam, $namaDosen) {
-                $q->where('dosen', $dosenParam);
-                if ($namaDosen) {
-                    $q->orWhere('dosen', $namaDosen);
-                }
-            });
-        }
-        $soalQuery->update(['komentar' => '[Catatan PM] ' . $request->pesan]);
+            ->whereIn('status', ['Menunggu', 'Valid'])
+            ->update(['komentar' => '[Catatan PM] ' . $request->pesan]);
 
         return redirect()->back()
             ->with('success', "Pesan berhasil dikirim ke dosen MK {$kode_mk}. Status soal tidak berubah.");
@@ -683,7 +399,7 @@ class SoalController extends Controller
         return redirect()->route($routeName)->with('success', $message);
     }
 
-    private function buildMkSummary($kode_mk, $mkInfo, $dosenKey = null, $namaDosen = null)
+    private function buildMkSummary($kode_mk, $mkInfo)
     {
         $metodes = DB::table('cpl_mk_cpmk_penilaian as cmcp')
             ->join('penilaian_metode as pm', 'pm.cpl_mk_cpmk_penilaian_id', '=', 'cmcp.id')
@@ -699,22 +415,11 @@ class SoalController extends Controller
             ->where('kode_mk', $kode_mk)
             ->whereNotNull('cpmk')
             ->whereIn('status', ['Menunggu', 'Valid']);
-        if ($dosenKey) {
-            $cpmkTerpetakanSoal->where(function ($q) use ($dosenKey, $namaDosen) {
-                $q->where('dosen', $dosenKey);
-                if ($namaDosen) {
-                    $q->orWhere('dosen', $namaDosen);
-                }
-            });
-        }
 
         $cpmkTerpetakanTanpa = DB::table('tanpa_soal')
             ->where('kode_mk', $kode_mk)
             ->whereNotNull('cpmk_id')
             ->whereIn('status', ['Menunggu Validasi', 'Valid']);
-        if ($dosenKey) {
-            $cpmkTerpetakanTanpa->where('dosen_id', $dosenKey);
-        }
 
         $cpmkTerpetakan = $cpmkTerpetakanSoal->select('cpmk as cpmk_id')
             ->union($cpmkTerpetakanTanpa->select('cpmk_id'))
@@ -724,46 +429,24 @@ class SoalController extends Controller
         $soalQuery = DB::table('soals')
             ->where('kode_mk', $kode_mk)
             ->whereIn('status', ['Menunggu', 'Valid', 'Tolak']);
-        if ($dosenKey) {
-            $soalQuery->where(function ($q) use ($dosenKey, $namaDosen) {
-                $q->where('dosen', $dosenKey);
-                if ($namaDosen) {
-                    $q->orWhere('dosen', $namaDosen);
-                }
-            });
-        }
 
         $tanpaQuery = DB::table('tanpa_soal')
             ->where('kode_mk', $kode_mk)
             ->whereIn('status', ['Menunggu Validasi', 'Valid', 'Ditolak']);
-        if ($dosenKey) {
-            $tanpaQuery->where('dosen_id', $dosenKey);
-        }
 
         $jumlahDiajukan = $soalQuery->count() + $tanpaQuery->count();
 
-        $statusSoalQuery = DB::table('soals')
+        $statusSoal = DB::table('soals')
             ->where('kode_mk', $kode_mk)
-            ->whereIn('status', ['Menunggu', 'Valid', 'Tolak']);
-        if ($dosenKey) {
-            $statusSoalQuery->where(function ($q) use ($dosenKey, $namaDosen) {
-                $q->where('dosen', $dosenKey);
-                if ($namaDosen) {
-                    $q->orWhere('dosen', $namaDosen);
-                }
-            });
-        }
-        $statusSoal = $statusSoalQuery->select('status', DB::raw('COUNT(*) as jumlah'))
+            ->whereIn('status', ['Menunggu', 'Valid', 'Tolak'])
+            ->select('status', DB::raw('COUNT(*) as jumlah'))
             ->groupBy('status')
             ->pluck('jumlah', 'status');
 
-        $statusTanpaQuery = DB::table('tanpa_soal')
+        $statusTanpa = DB::table('tanpa_soal')
             ->where('kode_mk', $kode_mk)
-            ->whereIn('status', ['Menunggu Validasi', 'Valid', 'Ditolak']);
-        if ($dosenKey) {
-            $statusTanpaQuery->where('dosen_id', $dosenKey);
-        }
-        $statusTanpa = $statusTanpaQuery->select('status', DB::raw('COUNT(*) as jumlah'))
+            ->whereIn('status', ['Menunggu Validasi', 'Valid', 'Ditolak'])
+            ->select('status', DB::raw('COUNT(*) as jumlah'))
             ->groupBy('status')
             ->pluck('jumlah', 'status');
 
@@ -771,27 +454,16 @@ class SoalController extends Controller
         $adaSoalMenunggu = ($statusSoal->get('Menunggu', 0) + $statusTanpa->get('Menunggu Validasi', 0)) > 0;
         $adaSoalTolak    = ($statusSoal->get('Tolak', 0) + $statusTanpa->get('Ditolak', 0)) > 0;
 
-        $bobotLengkap = $metodes->every(function ($metode) use ($kode_mk, $dosenKey, $namaDosen) {
-            $bSoalQ = DB::table('soals')
+        $bobotLengkap = $metodes->every(function ($metode) use ($kode_mk) {
+            $bobotSoal = DB::table('soals')
                 ->where('kode_mk', $kode_mk)->where('jenis', $metode->id)
-                ->whereIn('status', ['Menunggu', 'Valid']);
-            if ($dosenKey) {
-                $bSoalQ->where(function ($q) use ($dosenKey, $namaDosen) {
-                    $q->where('dosen', $dosenKey);
-                    if ($namaDosen) {
-                        $q->orWhere('dosen', $namaDosen);
-                    }
-                });
-            }
-            $bobotSoal = $bSoalQ->sum('bobotSoal');
+                ->whereIn('status', ['Menunggu', 'Valid'])
+                ->sum('bobotSoal');
 
-            $bTanpaQ = DB::table('tanpa_soal')
+            $bobotTanpa = DB::table('tanpa_soal')
                 ->where('kode_mk', $kode_mk)->where('metode_id', $metode->id)
-                ->whereIn('status', ['Menunggu Validasi', 'Valid']);
-            if ($dosenKey) {
-                $bTanpaQ->where('dosen_id', $dosenKey);
-            }
-            $bobotTanpa = $bTanpaQ->sum('bobot_TS');
+                ->whereIn('status', ['Menunggu Validasi', 'Valid'])
+                ->sum('bobot_TS');
 
             return abs(($bobotSoal + $bobotTanpa) - $metode->total_bobot) < 0.01;
         });
@@ -811,8 +483,7 @@ class SoalController extends Controller
 
         return (object) [
             'kode'             => $kode_mk,
-            'dosen_key'        => $dosenKey,
-            'nama_dosen'       => $namaDosen ?? 'Dosen Tidak Diketahui',
+            'dosen_key'        => null,
             'nama_mk'          => $mkInfo->nama_mk,
             'nama_prodi'       => $mkInfo->nama_prodi,
             'nama_fakultas'    => $mkInfo->nama_fakultas ?? null,

@@ -1,6 +1,27 @@
 @extends(auth()->user()->otoritas->otoritas === 'Dosen' ? 'dosen.template' : 'penjamin-mutu.template')
 @section('content')
 
+<style>
+    /* Selang-seling warna per grup MK */
+    .bg-row-white,
+    table.table-hover tbody tr.bg-row-white td,
+    table.table-hover tbody tr.bg-row-white th {
+        background-color: #ffffff !important;
+    }
+    .bg-row-alternate,
+    table.table-hover tbody tr.bg-row-alternate td,
+    table.table-hover tbody tr.bg-row-alternate th {
+        background-color: #f8fafc !important;
+    }
+    table.table-hover tbody tr.bg-row-white:hover td,
+    table.table-hover tbody tr.bg-row-alternate:hover td {
+        background-color: #f1f5f9 !important;
+    }
+    .table-total-mk td {
+        border-bottom: 2px solid #cbd5e1 !important;
+    }
+</style>
+
 <div class="container-fluid">
   <div class="card">
       <div class="card-body">
@@ -65,11 +86,12 @@
                           </tr>
                       </thead>
                       <tbody>
-                          @foreach ($paginatedMKs as $mkItem)
+                          @foreach ($paginatedMKs as $mkLoopIndex => $mkItem)
                               @php
                                   $mk_kode = $mkItem->mk_kode;
                                   $rows = $groupedMKs->get($mk_kode, collect());
                                   $validInstrumens = $rows->isNotEmpty() ? $instrumens->whereIn('id', $rows->pluck('id')) : collect();
+                                  $bgClass = ($mkLoopIndex % 2 === 1) ? 'bg-row-alternate' : 'bg-row-white';
                               @endphp
 
                               @if ($rows->isNotEmpty() && $validInstrumens->isNotEmpty())
@@ -77,8 +99,8 @@
                                       $rowspan = $rows->count();
                                       $totalBobot = $instrumens->whereIn('id', $rows->pluck('id'))->sum('bobot_metode');
                                   @endphp
-                                  <tr>
-                                      <td rowspan="{{ $rowspan }}">
+                                  <tr class="{{ $bgClass }}">
+                                      <td rowspan="{{ $rowspan }}" class="{{ $bgClass }} align-middle">
                                           <strong>{{ $mk_kode }}</strong>
                                           @if(!empty($mkItem->mk_nama))
                                               <br><small class="text-muted">{{ $mkItem->mk_nama }}</small>
@@ -89,29 +111,29 @@
                                               $bobotPerRow = $instrumens->where('id', $row->id)->sum('bobot_metode');        
                                           @endphp
                                           @if ($index > 0)
-                                              <tr>
+                                              <tr class="{{ $bgClass }}">
                                           @endif
-                                          <td>{{ $row->cpl_kode }}</td>
-                                          <td>{{ $row->cpmk_kode }}</td>
-                                          <td>{{ $bobotPerRow }}</td>
+                                          <td class="{{ $bgClass }}">{{ $row->cpl_kode }}</td>
+                                          <td class="{{ $bgClass }}">{{ $row->cpmk_kode }}</td>
+                                          <td class="{{ $bgClass }}">{{ $bobotPerRow }}</td>
                                           @if ($index < $rows->count() - 1)
                                               </tr>
                                           @endif
                                       @endforeach
                                   </tr>
-                                  <tr class="table-light">
-                                      <td colspan="3" class="text-end fw-bold">Nilai {{ $mk_kode }} :</td>
-                                      <td class="fw-bold text-primary">{{ $totalBobot }}</td>
+                                  <tr class="table-total-mk {{ $bgClass }}">
+                                      <td colspan="3" class="text-end fw-bold {{ $bgClass }}">Nilai {{ $mk_kode }} :</td>
+                                      <td class="fw-bold text-primary {{ $bgClass }}">{{ $totalBobot }}</td>
                                   </tr>
                               @else
-                                  <tr>
-                                      <td>
+                                  <tr class="{{ $bgClass }}">
+                                      <td class="{{ $bgClass }} align-middle">
                                           <strong>{{ $mk_kode }}</strong>
                                           @if(!empty($mkItem->mk_nama))
                                               <br><small class="text-muted">{{ $mkItem->mk_nama }}</small>
                                           @endif
                                       </td>
-                                      <td colspan="3" class="text-muted italic">Belum ada data asesmen/instrumen</td>
+                                      <td colspan="3" class="text-muted italic {{ $bgClass }}">Belum ada data asesmen/instrumen</td>
                                   </tr>
                               @endif
                           @endforeach

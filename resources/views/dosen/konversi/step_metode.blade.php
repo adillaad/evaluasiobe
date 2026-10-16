@@ -248,6 +248,14 @@ select:disabled {
                                 {{ $isComplete ? '' : 'disabled' }}>
                             <i class="mdi mdi-upload fs-6 me-1"></i> Upload Excel Nilai
                         </button>
+                        <button type="button" class="btn btn-secondary btn-sm p-1 d-inline-flex align-items-center justify-content-center" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                            title="Setelah pemetaan selesai, Anda dapat mengunduh template Excel penilaian dan mengunggah kembali nilai mahasiswa yang telah diisi.">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+                                <path
+                                    d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -295,7 +303,7 @@ select:disabled {
 
         {{-- Form Pemilihan Metode & Pemetaan CPMK --}}
         <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white py-2 border-bottom">
+            <div class="card-header bg-white py-2 border-bottom d-flex justify-content-between align-items-center">
                 <ul class="nav nav-pills card-header-pills" id="modeTab" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active fw-bold small py-2 px-3 me-2" id="tab-ab-mode" type="button">
@@ -308,6 +316,14 @@ select:disabled {
                         </button>
                     </li>
                 </ul>
+                <button type="button" class="btn btn-secondary btn-sm p-1 d-inline-flex align-items-center justify-content-center" data-bs-toggle="tooltip" data-bs-placement="left"
+                    title="Pilih mode penilaian yang diinginkan: 'Nilai Per Metode' untuk input nilai total per komponen (misal: Tugas, UTS, UAS), atau 'Nilai Per Soal' jika ingin memasukkan nilai dan bobot yang dirinci per butir soal.">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+                        <path
+                            d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2" />
+                    </svg>
+                </button>
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -325,6 +341,14 @@ select:disabled {
                         @endif
                         <button type="button" class="btn-add-metode btn btn-sm btn-outline-primary shadow-sm" style="{{ $hasExisting ? 'display: none !important;' : '' }}">
                             <i class="mdi mdi-plus me-1"></i> Tambah Metode Penilaian
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm p-1 d-inline-flex align-items-center justify-content-center" data-bs-toggle="tooltip" data-bs-placement="left"
+                            title="Tentukan metode penilaian dan bobotnya (total seluruh metode harus 100%), lalu centang CPMK yang diujikan pada tiap metode.">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+                                <path
+                                    d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2" />
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -1488,6 +1512,13 @@ select:disabled {
         applyLockState(isLocked);
         // Terapkan Mode AB secara tegas saat pertama kali dimuat
         applyModeUI('AB');
+
+        // Inisialisasi tooltip Bootstrap
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+                new bootstrap.Tooltip(el);
+            });
+        }
     });
 })(jQuery);
 </script>

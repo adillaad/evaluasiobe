@@ -14,6 +14,7 @@ class Mutu extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'user_id',
         'id_mahasiswa',
         'universitas_id',
         'tahun',
@@ -81,6 +82,11 @@ class Mutu extends Model
         } catch (\Throwable $e) {
             Log::warning('Auto sync visualisasi error: ' . $e->getMessage());
         }
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function prodi()

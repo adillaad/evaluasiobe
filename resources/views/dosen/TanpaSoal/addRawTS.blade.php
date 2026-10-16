@@ -106,18 +106,6 @@
                             <span class="tooltiptext">Pilih sesuai dengan kurikulum</span>
                         </div>
 
-                        <!-- Prodi -->
-                        <div class="form-group mb-3 tooltipa">
-                            <label for="prodi" class="form-label fw-semibold">Pilih Prodi <span class="text-danger">*</span></label>
-                            <select id="prodi" name="prodi" class="form-select" required>
-                                <option value="" disabled selected>-- Pilih Prodi --</option>
-                                @foreach ($prodi as $p)
-                                    <option value="{{ $p->id }}" {{ old('prodi') == $p->id ? 'selected' : '' }}>
-                                        {{ $p->nama }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
 
                         <!-- Mata Kuliah -->
                         <div class="form-group mb-3 tooltipa">

@@ -336,6 +336,22 @@
             width: 100% !important;
             margin-bottom: 0 !important;
         }
+
+        /* Table Bordered Separator Lines */
+        table.table-bordered,
+        .table-bordered {
+            border: 1px solid #dee2e6 !important;
+            border-collapse: collapse !important;
+        }
+        table.table-bordered th,
+        table.table-bordered td,
+        table.dataTable.table-bordered th,
+        table.dataTable.table-bordered td {
+            border: 1px solid #dee2e6 !important;
+        }
+        table.dataTable.no-footer {
+            border-bottom: 1px solid #dee2e6 !important;
+        }
         .dataTables_wrapper .dataTables_length {
             float: left !important;
             margin-bottom: 0.75rem !important;

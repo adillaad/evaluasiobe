@@ -145,8 +145,21 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                         </div>
                     </div>
                 </form>
+                <style>
+                    .toggle-soal-btn[aria-expanded="true"] .mdi-chevron-down {
+                        transform: rotate(180deg);
+                    }
+                    .toggle-soal-btn .mdi-chevron-down {
+                        transition: transform 0.2s ease-in-out;
+                    }
+                </style>
+
+                @php
+                    $totalCols = $isUnivLevel ? 10 : ($isFacultyLevel ? 9 : 8);
+                @endphp
+
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
                                 @if ($isUnivLevel)
@@ -155,20 +168,22 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                 @elseif ($isFacultyLevel)
                                     <th>Prodi</th>
                                 @endif
-                                <th>Tahun Akademik</th>
-                                <th>Angkatan</th>
+                                <th style="width: 140px;">Tahun Akademik</th>
+                                <th style="width: 70px;" class="text-center">Angkatan</th>
+                                <th style="width: 120px;">NPM</th>
                                 <th>Nama</th>
-                                <th>NPM</th>
-                                <th>Nama Mata Kuliah</th>
-                                <th>Metode Penilaian</th>
-                                <th>Nilai Metode</th>
-                                <th class="text-center">Aksi</th>
+                                <th>Mata Kuliah</th>
+                                <th>Jenis</th>
+                                <th class="text-center" style="width: 120px;">Nilai</th>
+                                <th class="text-center" style="width: 150px;">Rincian Soal</th>
                             </tr>
                         </thead>
                         <tbody>
                             @if ($mutus->isEmpty())
                                 <tr>
-                                    <td colspan="{{ $isUnivLevel ? 10 : ($isFacultyLevel ? 9 : 8) }}" class="text-center text-muted py-4">Tidak ada data penilaian</td>
+                                    <td colspan="{{ $totalCols }}" class="text-center text-muted py-5">
+                                        <i class="mdi mdi-folder-open-outline me-2"></i>Tidak ada data penilaian
+                                    </td>
                                 </tr>
                             @else
                                 @php $groupIndex = 0; @endphp
@@ -179,73 +194,122 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                         $metodeName = $first->Jenis ?? '-';
                                         $nilaiMetode = $first->Nilai ?? $items->avg('nilaiSoal') ?? 0;
                                         $taLabel = isset($first->ta_tahun) 
-                                            ? ($first->ta_tahun . ($first->ta_semester ? ' - ' . $first->ta_semester : '')) 
-                                            : ($first->tahunAjaran?->tahun ? ($first->tahunAjaran->tahun . ' - ' . $first->tahunAjaran->jenis_semester) : ($first->tahun ?? '-'));
+                                            ? ($first->ta_tahun . ($first->ta_semester ? ' (' . $first->ta_semester . ')' : '')) 
+                                            : ($first->tahunAjaran?->tahun ? ($first->tahunAjaran->tahun . ' (' . $first->tahunAjaran->jenis_semester . ')') : ($first->tahun ?: '-'));
                                         // Hindari duplikasi baris soal yang sama jika ada kaitan multiple CPMK/CPL di DB
                                         $uniqueSubItems = $items->unique(function($sub) {
                                             return ($sub->idSoal ?? 'no_id') . '_' . trim($sub->soal ?? '');
                                         });
                                     @endphp
                                     {{-- Main Row Per Mahasiswa + Mata Kuliah + Metode + Tahun Ajaran --}}
-                                    <tr class="table-light border-top">
+                                    <tr>
                                         @if ($isUnivLevel)
                                             <td class="fw-semibold">{{ $first->nama_fakultas ?? '-' }}</td>
                                             <td class="fw-semibold">{{ $first->nama_prodi }}</td>
                                         @elseif ($isFacultyLevel)
                                             <td class="fw-semibold">{{ $first->nama_prodi }}</td>
                                         @endif
-                                        <td class="fw-semibold small">{{ $taLabel }}</td>
-                                        <td>{{ $first->angkatan }}</td>
-                                        <td class="fw-semibold">{{ $first->nama_mhs }}</td>
-                                        <td class="fw-semibold">{{ $first->npm }}</td>
-                                        <td class="fw-semibold">{{ $first->nama_mk }}</td>
-                                        <td class="fw-semibold">
-                                                {{ $metodeName }}
+                                        <td class="small fw-semibold text-secondary">{{ $taLabel }}</td>
+                                        <td class="text-center text-muted">{{ $first->angkatan ?: '-' }}</td>
+                                        <td>
+                                            <span class="font-monospace fw-semibold">{{ $first->npm }}</span>
                                         </td>
-                                        <td class="fw-semibold">
-                                                {{ number_format((float)$nilaiMetode, 1) }}
+                                        <td>
+                                            <div class="fw-semibold text-dark">{{ $first->nama_mhs ?: 'Tanpa Nama' }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="small fw-semibold text-dark">{{ $first->nama_mk ?: $first->Course }}</div>
+                                            <div class="text-muted small">{{ $first->Course }}</div>
+                                        </td>
+                                        <td>
+                                            {{ strtoupper($metodeName) }}{{ !empty($first->examWeight) && $first->examWeight > 0 ? ' (' . $first->examWeight . '%)' : '' }}
                                         </td>
                                         <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-primary py-0 px-2 text-nowrap" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGroup{{ $groupIndex }}" aria-expanded="false">
-                                                <i class="mdi mdi-chevron-down me-1"></i> Detail ({{ $uniqueSubItems->count() }})
+                                            {{ is_numeric($nilaiMetode) ? number_format((float)$nilaiMetode, 2) : ($nilaiMetode ?: '0') }}
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 toggle-soal-btn d-inline-flex align-items-center gap-1 shadow-none"
+                                                type="button" 
+                                                data-bs-toggle="collapse" 
+                                                data-bs-target="#collapseGroup{{ $groupIndex }}" 
+                                                aria-expanded="false" 
+                                                aria-controls="collapseGroup{{ $groupIndex }}">
+                                                <i class="mdi mdi-format-list-bulleted"></i>
+                                                <span>{{ $uniqueSubItems->count() }} Soal</span>
+                                                <i class="mdi mdi-chevron-down ms-1"></i>
                                             </button>
                                         </td>
                                     </tr>
 
-                                     {{-- Collapsible Rows Per Soal --}}
-                                     <tr class="p-0 border-0">
-                                         <td colspan="{{ $isUnivLevel ? 10 : ($isFacultyLevel ? 9 : 8) }}" class="p-0 border-0">
-                                             <div class="collapse" id="collapseGroup{{ $groupIndex }}">
-                                                 <div class="p-3 bg-light border-bottom border-secondary border-2">
-                                                     <div class="text-muted fw-semibold mb-2" style="font-size: 0.9rem;">Rincian per soal</div>
-                                                     <div class="d-flex justify-content-between align-items-center text-secondary fw-bold border-bottom pb-1 mb-2" style="font-size: 0.85rem;">
-                                                         <div>Soal</div>
-                                                         <div class="pe-3">Nilai</div>
-                                                     </div>
-                                                     <div class="d-flex flex-column gap-2">
-                                                         @foreach ($uniqueSubItems as $subItem)
-                                                             <div class="d-flex justify-content-between align-items-center" style="font-size: 0.95rem;">
-                                                                 <div>
-                                                                     @if (isset($subItem->idSoal))
-                                                                         <a href="{{ route($currentPrefix . 'cetakSoal', ['id' => $subItem->idSoal]) }}" target="_blank" class="fw-semibold text-dark text-decoration-underline">
-                                                                             {{ $subItem->soal }}
-                                                                         </a>
-                                                                     @else
-                                                                         <span class="fw-semibold text-dark">{{ $subItem->soal ?? '-' }}</span>
-                                                                     @endif
-                                                                 </div>
-                                                                 <div class="pe-3 d-flex align-items-center gap-2">
-                                                                     <span class="fw-bold text-dark" style="font-size: 0.95rem;">
-                                                                         {{ number_format((float)($subItem->nilaiSoal ?? $subItem->Nilai ?? 0), 2) }}
-                                                                     </span>
-                                                                 </div>
-                                                             </div>
-                                                         @endforeach
-                                                     </div>
-                                                 </div>
-                                             </div>
-                                         </td>
-                                     </tr>
+                                    {{-- Collapsible Rows Per Soal --}}
+                                    <tr class="collapse bg-light bg-opacity-50" id="collapseGroup{{ $groupIndex }}">
+                                        <td colspan="{{ $totalCols }}" class="p-3 border-top-0">
+                                            <div class="card border-0 shadow-sm rounded-3">
+                                                <div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
+                                                    <span class="fw-bold small text-primary">
+                                                        <i class="mdi mdi-file-document-outline me-1"></i> Rincian Nilai per Soal / Instrumen &mdash; {{ strtoupper($metodeName) }}
+                                                    </span>
+                                                    <span class="badge bg-light text-secondary border small">
+                                                        Total Item: {{ $uniqueSubItems->count() }}
+                                                    </span>
+                                                </div>
+                                                <div class="table-responsive p-0">
+                                                    <table class="table table-sm table-bordered align-middle mb-0 small">
+                                                        <thead class="table-light">
+                                                            <tr class="text-muted">
+                                                                <th class="text-center" style="width: 45px;">No</th>
+                                                                <th>Nama Soal / Instrumen</th>
+                                                                <th class="text-center" style="width: 130px;">CPMK</th>
+                                                                <th class="text-center" style="width: 130px;">CPL</th>
+                                                                <th class="text-center" style="width: 120px;">Bobot (%)</th>
+                                                                <th class="text-center" style="width: 120px;">Nilai Soal</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @forelse ($uniqueSubItems as $subItem)
+                                                                <tr>
+                                                                    <td class="text-center text-muted">{{ $loop->iteration }}</td>
+                                                                    <td>
+                                                                        @if (isset($subItem->idSoal))
+                                                                            <a href="{{ route($currentPrefix . 'cetakSoal', ['id' => $subItem->idSoal]) }}" target="_blank" class="fw-semibold text-primary text-decoration-none d-inline-flex align-items-center gap-1">
+                                                                                <i class="mdi mdi-open-in-new small"></i> {{ $subItem->soal }}
+                                                                            </a>
+                                                                        @else
+                                                                            <span class="fw-semibold text-dark">{{ $subItem->soal ?? '-' }}</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        @if (!empty($subItem->cpmk_kode))
+                                                                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">{{ $subItem->cpmk_kode }}</span>
+                                                                        @else
+                                                                            <span class="text-muted">-</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        @if (!empty($subItem->cpl_kode))
+                                                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border">{{ $subItem->cpl_kode }}</span>
+                                                                        @else
+                                                                            <span class="text-muted">-</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td class="text-center fw-semibold text-muted">
+                                                                        {{ $subItem->BobotSoal !== null ? $subItem->BobotSoal . '%' : '-' }}
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <span class="fw-bold text-dark">{{ is_numeric($subItem->nilaiSoal ?? $subItem->Nilai) ? number_format((float)($subItem->nilaiSoal ?? $subItem->Nilai), 2) : ($subItem->nilaiSoal ?? $subItem->Nilai ?? '0') }}</span>
+                                                                    </td>
+                                                                </tr>
+                                                            @empty
+                                                                <tr>
+                                                                    <td colspan="6" class="text-center text-muted py-2">Tidak ada rincian soal.</td>
+                                                                </tr>
+                                                            @endforelse
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @endforeach
                             @endif
                         </tbody>

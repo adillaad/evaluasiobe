@@ -21,6 +21,7 @@ use App\Models\MetodePenilaian;
 use App\Models\Mahasiswa;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use PDF;
 use Illuminate\Support\Facades\Log;
@@ -395,12 +396,25 @@ class SoalController extends Controller
         $latestData = Soal::latest()->first();
         return view('dosen.mutu.addMutuTanpaSoal', compact('soals', 'rpss', 'cpls', 'mks', 'course', 'komponen', 'universitas', 'prodi', 'latestData'));
     }
-    public function listTanpaSoal()
+    public function listTanpaSoal(Request $request)
     {
-        $tanpaSoalList = TanpaSoal::with(['mk', 'cpl', 'cpmk'])
-            ->where('dosen_id', auth()->id())
-            ->orderByDesc('created_at')
-            ->paginate(10);
+        $user = auth()->user();
+        $query = TanpaSoal::with(['mk', 'cpl', 'cpmk', 'metode'])
+            ->where('dosen_id', $user->id);
+
+        if ($request->filled('kode_mk')) {
+            $query->where('kode_mk', $request->kode_mk);
+        }
+
+        if ($request->filled('jenis')) {
+            $query->where('metode_id', $request->jenis);
+        } elseif ($request->filled('metode_id')) {
+            $query->where('metode_id', $request->metode_id);
+        }
+
+        $tanpaSoalList = $query->orderByDesc('created_at')
+            ->paginate(10)
+            ->appends($request->query());
 
         foreach ($tanpaSoalList->items() as $item) {
 
@@ -429,7 +443,18 @@ class SoalController extends Controller
             $item->total_cpmk  = $total;
         }
 
-        return view('dosen.TanpaSoal.list-tanpa-soal', compact('tanpaSoalList'));
+        $prodiId = $user->id_prodiUser;
+        $mksFilter = MK::where('id_prodi', $prodiId)->orderBy('nama', 'asc')->get();
+        if ($mksFilter->isEmpty()) {
+            $mksFilter = MK::orderBy('nama', 'asc')->get();
+        }
+
+        $metodeFilter = MetodePenilaian::where('id_prodi', $prodiId)->orderBy('nama', 'asc')->get();
+        if ($metodeFilter->isEmpty()) {
+            $metodeFilter = MetodePenilaian::orderBy('nama', 'asc')->get();
+        }
+
+        return view('dosen.TanpaSoal.list-tanpa-soal', compact('tanpaSoalList', 'mksFilter', 'metodeFilter'));
     }
 
     public function editTanpaSoal($id)
@@ -708,17 +733,22 @@ class SoalController extends Controller
             $columnIndex++;
             $no++;
         }
-        $formulaParts = [];
-        $colIdx = 12;
-        foreach ($soalsWithBobot as $soal) {
-            $colLetter = Coordinate::stringFromColumnIndex($colIdx);
-            $bobot = $soal->bobotSoal;
-            $formulaParts[] = "({$colLetter}2*{$bobot})";
-            $colIdx++;
+        if ($soalsWithBobot->isNotEmpty() && $totalBobotMetode > 0) {
+            // Loop pembuatan rumus baris 2 s/d 100 secara otomatis
+            for ($r = 2; $r <= 100; $r++) {
+                $rowFormulaParts = [];
+                $colIdx = 12;
+                foreach ($soalsWithBobot as $soal) {
+                    $colLetter = Coordinate::stringFromColumnIndex($colIdx);
+                    $bobot = $soal->bobotSoal;
+                    $rowFormulaParts[] = "({$colLetter}{$r}*{$bobot})";
+                    $colIdx++;
+                }
+                $calc = '(' . implode('+', $rowFormulaParts) . ")/{$totalBobotMetode}";
+                // Jika NPM (kolom D) kosong, kosongkan cell; jika ada NPM, hitung nilainya
+                $sheet->setCellValue("K{$r}", "=IF(D{$r}=\"\",\"\",{$calc})");
+            }
         }
-
-        $formula = '=(' . implode('+', $formulaParts) . ")/{$totalBobotMetode}";
-        $sheet->setCellValue('K2', $formula);
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save(storage_path("app/public/template_penilaian.xlsx"));
 
@@ -727,12 +757,16 @@ class SoalController extends Controller
     public function ExcelTanpaSoal(Request $request)
     {
         $request->validate([
-            'univ'     => 'required',
             'semester' => 'required',
-            'prodi'    => 'required',
             'kode_mk'  => 'required',
             'jenis'    => 'required',
         ]);
+
+        $user = auth()->user();
+        $univName = $request->univ 
+            ?: (Universitas::where('id', $user->id_universitasUser)->value('nama') ?? '-');
+        $prodiName = $request->prodi 
+            ?: (Prodi::where('id', $user->id_prodiUser)->value('nama') ?? '-');
 
         $kode_mk = $request->kode_mk;
         $jenis   = $request->jenis;
@@ -760,12 +794,10 @@ class SoalController extends Controller
         $sheet       = $spreadsheet->getActiveSheet();
 
         $headers = [
-            'Universitas',
             'Tahun Akademik',
             'Angkatan',
             'NPM',
             'Nama',
-            'Prodi',
             'Kode MK',
             'Nama MK',
             'Jenis',
@@ -774,16 +806,14 @@ class SoalController extends Controller
         ];
         $sheet->fromArray($headers, null, 'A1');
 
-        $sheet->setCellValue('A2', $request->univ);
-        $sheet->setCellValue('B2', $request->semester);
-        $sheet->setCellValue('F2', $request->prodi);
-        $sheet->setCellValue('G2', $kode_mk);
-        $sheet->setCellValue('H2', $namaMK);
-        $sheet->setCellValue('I2', MetodePenilaian::find($jenis)->nama);
-        $sheet->setCellValue('J2', $totalBobotMetode);
+        $sheet->setCellValue('A2', $request->semester);
+        $sheet->setCellValue('E2', $kode_mk);
+        $sheet->setCellValue('F2', $namaMK);
+        $sheet->setCellValue('G2', MetodePenilaian::find($jenis)->nama);
+        $sheet->setCellValue('H2', $totalBobotMetode);
 
-        $columnIndex  = 12;
-        $formulaParts = [];
+        $columnIndex       = 10;
+        $tsItemsWithBobot  = [];
 
         foreach ($instrumen as $item) {
             $col   = Coordinate::stringFromColumnIndex($columnIndex);
@@ -807,13 +837,44 @@ class SoalController extends Controller
             $validation->setPrompt('Masukkan nilai 0 sampai 100');
             $sheet->setDataValidation("{$col}:{$col}", $validation);
 
-            $formulaParts[] = "({$col}2*{$bobot})";
+            $tsItemsWithBobot[] = ['col' => $col, 'bobot' => $bobot];
             $columnIndex++;
         }
 
-        if (!empty($formulaParts) && $totalBobotMetode > 0) {
-            $formula = '=(' . implode('+', $formulaParts) . ")/{$totalBobotMetode}";
-            $sheet->setCellValue('K2', $formula);
+        if (!empty($tsItemsWithBobot) && $totalBobotMetode > 0) {
+            // Loop pembuatan rumus baris 2 s/d 100 secara otomatis
+            for ($r = 2; $r <= 100; $r++) {
+                $rowFormulaParts = [];
+                foreach ($tsItemsWithBobot as $tsItem) {
+                    $rowFormulaParts[] = "({$tsItem['col']}{$r}*{$tsItem['bobot']})";
+                }
+                $calc = '(' . implode('+', $rowFormulaParts) . ")/{$totalBobotMetode}";
+                // Jika NPM (kolom C) kosong, kosongkan cell; jika ada NPM, hitung nilainya
+                $sheet->setCellValue("I{$r}", "=IF(C{$r}=\"\",\"\",{$calc})");
+            }
+        }
+
+        $lastCol = Coordinate::stringFromColumnIndex($columnIndex - 1);
+        $sheet->getStyle('A1:' . $lastCol . '1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:I1')->applyFromArray([
+            'fill' => [
+                'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'D9EAD3'],
+            ]
+        ]);
+
+        if ($columnIndex > 10) {
+            $sheet->getStyle('J1:' . $lastCol . '1')->applyFromArray([
+                'fill' => [
+                    'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'CFE2F3'],
+                ]
+            ]);
+        }
+
+        for ($c = 1; $c < $columnIndex; $c++) {
+            $colLetter = Coordinate::stringFromColumnIndex($c);
+            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
         }
 
         $fileName = 'Template_Tanpa_Soal_' . $kode_mk . '.xlsx';
@@ -831,36 +892,20 @@ class SoalController extends Controller
 
     public function import(Request $request)
     {
+        $this->ensureMutuUserIdColumn();
         $user = auth()->user();
         $mks = MK::where('id_prodi', $user->id_prodiUser)->orderBy('nama', 'asc')->get();
         $tahunAjarans = \App\Models\TahunAjaran::orderBy('tahun', 'desc')->get();
+        $angkatans = $this->getAngkatansList($user);
 
-        $query = Mutu::query()
-            ->with('mahasiswa')
-            ->join('prodi', 'mutus.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->join('mks', 'mutus.Course', '=', 'mks.kode')
-            ->select('mutus.*', 'prodi.nama as nama_prodi', 'mks.nama as nama_mk')
-            ->where(function ($q) {
-                $q->whereNull('mutus.sumber')
-                  ->orWhere('mutus.sumber', '!=', 'konversi');
-            });
+        $mutus = $this->getGroupedMutusData($request, $user);
 
-        if (in_array($user->otoritas->otoritas, ['Penjamin Mutu Universitas', 'Wakil Rektor'])) {
-            $query->where('fakultas.id_universitas', $user->id_universitasUser);
-        } elseif (in_array($user->otoritas->otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
-            $query->where('prodi.id_fakultas', $user->id_fakultasUser);
-        } else {
-            $query->where('mutus.id_prodi', $user->id_prodiUser);
-        }
-
-        $mutus = $query->paginate(10);
-
-        return view('dosen.mutu.importMutu', compact('mutus', 'mks', 'tahunAjarans'));
+        return view('dosen.mutu.importMutu', compact('mutus', 'mks', 'tahunAjarans', 'angkatans'));
     }
 
     public function import1()
     {
+        $this->ensureMutuUserIdColumn();
         $query = Mutu::query()
             ->with('mahasiswa')
             ->join('prodi', 'mutus.id_prodi', '=', 'prodi.id')
@@ -883,7 +928,10 @@ class SoalController extends Controller
             $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $query->where('prodi.id_fakultas', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
+        } else if (auth()->user()->otoritas->otoritas === 'Dosen') {
+            $query->where('mutus.user_id', auth()->id())
+                  ->where('mutus.id_prodi', auth()->user()->id_prodiUser);
+        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
             $query->where('mutus.id_prodi', auth()->user()->id_prodiUser);
         }
 
@@ -895,16 +943,70 @@ class SoalController extends Controller
 
     public function filter(Request $request)
     {
+        $this->ensureMutuUserIdColumn();
         $user = auth()->user();
         $mks = MK::where('id_prodi', $user->id_prodiUser)->orderBy('nama', 'asc')->get();
         $tahunAjarans = \App\Models\TahunAjaran::orderBy('tahun', 'desc')->get();
+        $angkatans = $this->getAngkatansList($user);
 
+        $mutus = $this->getGroupedMutusData($request, $user);
+
+        return view('dosen.mutu.importMutu', compact('mutus', 'mks', 'tahunAjarans', 'angkatans'));
+    }
+
+    private function getAngkatansList($user)
+    {
+        $queryMutu = Mutu::query()
+            ->whereNotNull('angkatan')
+            ->where('angkatan', '!=', '')
+            ->where('angkatan', '!=', '-')
+            ->where(function ($q) {
+                $q->whereNull('sumber')->orWhere('sumber', '!=', 'konversi');
+            });
+
+        if (in_array($user->otoritas->otoritas ?? '', ['Penjamin Mutu Universitas', 'Wakil Rektor'])) {
+            $queryMutu->leftJoin('prodi', 'mutus.id_prodi', '=', 'prodi.id')
+                ->leftJoin('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+                ->where('fakultas.id_universitas', $user->id_universitasUser);
+        } elseif (in_array($user->otoritas->otoritas ?? '', ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
+            $queryMutu->leftJoin('prodi', 'mutus.id_prodi', '=', 'prodi.id')
+                ->where('prodi.id_fakultas', $user->id_fakultasUser);
+        } elseif (trim(strtolower($user->otoritas->otoritas ?? '')) === 'dosen') {
+            $queryMutu->where('mutus.user_id', $user->id)
+                      ->where('mutus.id_prodi', $user->id_prodiUser);
+        } else {
+            $queryMutu->where('mutus.id_prodi', $user->id_prodiUser);
+        }
+
+        $mutuAngkatans = $queryMutu->distinct()->pluck('mutus.angkatan')->toArray();
+
+        $mhsQuery = Mahasiswa::query()
+            ->whereNotNull('angkatan')
+            ->where('angkatan', '!=', '')
+            ->where('angkatan', '!=', '-');
+
+        if (!empty($user->id_prodiUser)) {
+            $mhsQuery->where('id_prodi', $user->id_prodiUser);
+        }
+
+        $mhsAngkatans = $mhsQuery->distinct()->pluck('angkatan')->toArray();
+
+        $allAngkatan = array_values(array_filter(array_unique(array_merge($mutuAngkatans, $mhsAngkatans)), function ($val) {
+            return !empty(trim((string)$val));
+        }));
+
+        rsort($allAngkatan);
+
+        return collect($allAngkatan);
+    }
+
+    private function getGroupedMutusData(Request $request, $user)
+    {
         $query = Mutu::query()
-            ->with('mahasiswa')
-            ->join('prodi', 'mutus.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->join('mks', 'mutus.Course', '=', 'mks.kode')
-            ->select('mutus.*', 'prodi.nama as nama_prodi', 'mks.nama as nama_mk')
+            ->leftJoin('prodi', 'mutus.id_prodi', '=', 'prodi.id')
+            ->leftJoin('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->leftJoin('mks', 'mutus.Course', '=', 'mks.kode')
+            ->leftJoin('tahun_ajaran', 'mutus.tahun_ajaran_id', '=', 'tahun_ajaran.id')
             ->where(function ($q) {
                 $q->whereNull('mutus.sumber')
                   ->orWhere('mutus.sumber', '!=', 'konversi');
@@ -914,6 +1016,9 @@ class SoalController extends Controller
             $query->where('fakultas.id_universitas', $user->id_universitasUser);
         } elseif (in_array($user->otoritas->otoritas, ['Penjamin Mutu Fakultas', 'Wakil Dekan'])) {
             $query->where('prodi.id_fakultas', $user->id_fakultasUser);
+        } elseif (trim(strtolower($user->otoritas->otoritas ?? '')) === 'dosen') {
+            $query->where('mutus.user_id', $user->id)
+                  ->where('mutus.id_prodi', $user->id_prodiUser);
         } else {
             $query->where('mutus.id_prodi', $user->id_prodiUser);
         }
@@ -932,24 +1037,95 @@ class SoalController extends Controller
             });
         }
 
-        $query->when($request->course, function ($q) use ($request) {
+        if ($request->filled('angkatan')) {
+            $query->where('mutus.angkatan', trim($request->angkatan));
+        }
+
+        if ($request->filled('course')) {
             $keyword = $request->course;
-            return $q->where(function ($sub) use ($keyword) {
-                $sub->where('nama_mhs', 'like', '%' . $keyword . '%')
-                    ->orWhere('Nama_mhs', 'like', '%' . $keyword . '%')
-                    ->orWhereHas('mahasiswa', function ($mhsQuery) use ($keyword) {
-                        $mhsQuery->where('Nama', 'like', '%' . $keyword . '%');
-                    })
-                    ->orWhereRaw(
-                        'EXISTS (SELECT 1 FROM mahasiswa WHERE mahasiswa.NPM = COALESCE(NULLIF(mutus.npm, 0), mutus.NPM) AND mahasiswa.Nama LIKE ?)',
-                        ['%' . $keyword . '%']
-                    );
+            $query->where(function ($sub) use ($keyword) {
+                $sub->where('mutus.nama_mhs', 'like', '%' . $keyword . '%')
+                    ->orWhere('mutus.Nama_mhs', 'like', '%' . $keyword . '%')
+                    ->orWhere('mutus.npm', 'like', '%' . $keyword . '%')
+                    ->orWhere('mutus.NPM', 'like', '%' . $keyword . '%');
             });
-        });
+        }
 
-        $mutus = $query->paginate(10);
+        // Grouping 1 baris per mahasiswa di metode & MK yang sama
+        $groupedQuery = (clone $query)
+            ->select(
+                DB::raw('MAX(mutus.id) as max_id'),
+                DB::raw('COALESCE(NULLIF(mutus.npm, 0), mutus.NPM) as npm'),
+                DB::raw('COALESCE(MAX(mutus.nama_mhs), MAX(mutus.Nama_mhs)) as nama_mhs'),
+                DB::raw('MAX(mutus.angkatan) as angkatan'),
+                'mutus.Course',
+                'mutus.Jenis',
+                DB::raw('COALESCE(MAX(mks.nama), MAX(mutus.namaCourse), mutus.Course) as nama_mk'),
+                DB::raw('MAX(mutus.Nilai) as nilai_akhir'),
+                DB::raw('MAX(mutus.examWeight) as exam_weight'),
+                DB::raw('MAX(mutus.tahun) as tahun'),
+                DB::raw('MAX(mutus.tahun_ajaran_id) as tahun_ajaran_id'),
+                DB::raw('COALESCE(MAX(tahun_ajaran.tahun), MAX(mutus.tahun), "-") as ta_tahun'),
+                DB::raw('MAX(tahun_ajaran.jenis_semester) as ta_semester'),
+                DB::raw('COUNT(mutus.id) as total_soal')
+            )
+            ->groupBy(
+                DB::raw('COALESCE(NULLIF(mutus.npm, 0), mutus.NPM)'),
+                'mutus.Course',
+                'mutus.Jenis',
+                DB::raw('COALESCE(mutus.tahun_ajaran_id, mutus.tahun)')
+            )
+            ->orderBy('max_id', 'desc');
 
-        return view('dosen.mutu.importMutu', compact('mutus', 'mks', 'tahunAjarans'));
+        $mutus = $groupedQuery->paginate(15)->appends($request->query());
+
+        // Ambil rincian soal untuk setiap baris mahasiswa & metode pada halaman aktif
+        if ($mutus->isNotEmpty()) {
+            $details = Mutu::query()
+                ->leftJoin('cpls', 'mutus.Cpl', '=', 'cpls.id')
+                ->leftJoin('cpmks', 'mutus.Cpmk', '=', 'cpmks.id')
+                ->select(
+                    'mutus.id',
+                    DB::raw('COALESCE(NULLIF(mutus.npm, 0), mutus.NPM) as npm'),
+                    'mutus.Course',
+                    'mutus.Jenis',
+                    DB::raw('COALESCE(mutus.tahun_ajaran_id, mutus.tahun) as ta_key'),
+                    'mutus.soal',
+                    'mutus.idSoal',
+                    'mutus.BobotSoal',
+                    'mutus.nilaiSoal',
+                    'cpls.kode as kode_cpl',
+                    'cpmks.kode as kode_cpmk'
+                )
+                ->where(function($q) use ($mutus) {
+                    foreach ($mutus as $m) {
+                        $q->orWhere(function($sub) use ($m) {
+                            $sub->where(DB::raw('COALESCE(NULLIF(mutus.npm, 0), mutus.NPM)'), $m->npm)
+                                ->where('mutus.Course', $m->Course)
+                                ->where('mutus.Jenis', $m->Jenis);
+                            if ($m->tahun_ajaran_id) {
+                                $sub->where('mutus.tahun_ajaran_id', $m->tahun_ajaran_id);
+                            } elseif ($m->tahun) {
+                                $sub->where('mutus.tahun', $m->tahun);
+                            }
+                        });
+                    }
+                })
+                ->orderBy('mutus.id')
+                ->get();
+
+            $groupedDetails = $details->groupBy(function($d) {
+                return $d->npm . '|' . $d->Course . '|' . $d->Jenis . '|' . $d->ta_key;
+            });
+
+            $mutus->getCollection()->transform(function($item) use ($groupedDetails) {
+                $key = $item->npm . '|' . $item->Course . '|' . $item->Jenis . '|' . ($item->tahun_ajaran_id ?: $item->tahun);
+                $item->detail_soals = $groupedDetails->get($key, collect());
+                return $item;
+            });
+        }
+
+        return $mutus;
     }
 
     public function filterSoal(Request $request)
@@ -963,6 +1139,7 @@ class SoalController extends Controller
 
     public function mutuimport(Request $request)
     {
+        $this->ensureMutuUserIdColumn();
         $actionOption = $request->input('action_option');
         $parsedRowsData = $request->input('parsed_rows_data') ?: session('temp_parsed_rows');
         $user = auth()->user();
@@ -971,6 +1148,13 @@ class SoalController extends Controller
         $headers = $request->input('headers_data') ?: session('temp_headers');
         if ($headers && is_string($headers)) {
             $headers = json_decode($headers, true) ?: [];
+        }
+        $displayHeaders = $request->input('display_headers_data') ?: session('temp_display_headers');
+        if ($displayHeaders && is_string($displayHeaders)) {
+            $displayHeaders = json_decode($displayHeaders, true) ?: [];
+        }
+        if (empty($displayHeaders)) {
+            $displayHeaders = $headers;
         }
         $unregisteredMhs = [];
 
@@ -999,21 +1183,91 @@ class SoalController extends Controller
                 return redirect()->back()->with('error', 'File Excel kosong atau hanya berisi data header.');
             }
 
-            $headers = array_map(fn($h) => trim((string)$h), $dataRows[0]);
-            unset($dataRows[0]); // Sisakan baris data
+            $row1 = array_map(fn($h) => trim((string)$h), $dataRows[0] ?? []);
+            $row2 = isset($dataRows[1]) ? array_map(fn($h) => trim((string)$h), $dataRows[1]) : [];
+
+            // Cek apakah Row 2 adalah baris metadata (format SOAL|... atau TS|... atau pipe/slash)
+            $hasRow2Metadata = false;
+            foreach ($row2 as $val) {
+                if (str_contains($val, '|') || str_contains($val, '/')) {
+                    $hasRow2Metadata = true;
+                    break;
+                }
+            }
+
+            if ($hasRow2Metadata) {
+                $headers        = $row2; // metadata untuk parsing teknis
+                $displayHeaders = $row1; // label tampil untuk dosen ("Soal 1 - CPMK 1")
+                unset($dataRows[0]);
+                unset($dataRows[1]);
+            } else {
+                $headers        = $row1;
+                $displayHeaders = $row1;
+                unset($dataRows[0]); // Sisakan baris data
+            }
+
+            $mapHeaders = function ($headersList, $metaList = []) {
+                $map = [];
+                $itemStart = null;
+                foreach ($headersList as $idx => $hName) {
+                    $cleanH = strtolower(trim((string)$hName));
+                    if ($cleanH === '') continue;
+                    if (str_contains($hName, '|') || str_contains($hName, '/')) {
+                        if ($itemStart === null) {
+                            $itemStart = $idx;
+                        }
+                        continue;
+                    }
+                    $map[$cleanH] = $idx;
+                }
+
+                if ($itemStart === null && !empty($metaList)) {
+                    foreach ($metaList as $idx => $mVal) {
+                        $mStr = (string)$mVal;
+                        if (str_contains($mStr, '|') || str_contains($mStr, '/')) {
+                            $itemStart = $idx;
+                            break;
+                        }
+                    }
+                }
+
+                $hasUniv = isset($map['universitas']);
+                if ($itemStart === null) {
+                    $itemStart = $hasUniv ? 11 : 9;
+                }
+
+                return [
+                    'hasUniv'   => $hasUniv,
+                    'itemStart' => $itemStart,
+                    'colNpm'    => $map['npm'] ?? ($hasUniv ? 3 : 2),
+                    'colNama'   => $map['nama'] ?? ($hasUniv ? 4 : 3),
+                    'colAngk'   => $map['angkatan'] ?? ($hasUniv ? 2 : 1),
+                    'colTahun'  => $map['tahun akademik'] ?? ($map['tahun'] ?? ($hasUniv ? 1 : 0)),
+                    'colProdi'  => $map['prodi'] ?? ($hasUniv ? 5 : null),
+                    'colUniv'   => $map['universitas'] ?? ($hasUniv ? 0 : null),
+                    'colCourse' => $map['kode mk'] ?? ($map['kode'] ?? ($hasUniv ? 6 : 4)),
+                    'colNamaMk' => $map['nama mk'] ?? ($hasUniv ? 7 : 5),
+                    'colJenis'  => $map['jenis'] ?? ($hasUniv ? 8 : 6),
+                    'colBobot'  => $map['bobot jenis (%)'] ?? ($map['bobot jenis'] ?? ($hasUniv ? 9 : 7)),
+                    'colNilai'  => $map['nilai total'] ?? ($map['nilai'] ?? ($hasUniv ? 10 : 8)),
+                ];
+            };
+
+            $colMap = $mapHeaders($displayHeaders, $headers);
 
             // Analisis mahasiswa belum terdaftar
-            $rowLine = 1;
+            $rowLine = $hasRow2Metadata ? 2 : 1;
 
             foreach ($dataRows as $row) {
                 $rowLine++;
-                if (empty($row[3])) continue;
+                $npmRaw = $row[$colMap['colNpm']] ?? null;
+                if (empty($npmRaw)) continue;
 
-                $npm = preg_replace('/[^0-9]/', '', (string) $row[3]);
+                $npm = preg_replace('/[^0-9]/', '', (string) $npmRaw);
                 if (empty($npm)) continue;
 
-                $nama = isset($row[4]) ? trim((string)$row[4]) : 'Tanpa Nama';
-                $angkatan = isset($row[2]) ? trim((string)$row[2]) : '';
+                $nama = isset($row[$colMap['colNama']]) ? trim((string)$row[$colMap['colNama']]) : 'Tanpa Nama';
+                $angkatan = isset($row[$colMap['colAngk']]) ? trim((string)$row[$colMap['colAngk']]) : '';
 
                 $mhs = Mahasiswa::where('NPM', $npm)->first();
 
@@ -1041,6 +1295,7 @@ class SoalController extends Controller
                 session()->flash('unregistered_mhs', $unregisteredMhs);
                 session()->flash('temp_parsed_rows', $parsedRows);
                 session()->flash('temp_headers', $headers);
+                session()->flash('temp_display_headers', $displayHeaders);
                 return redirect()->back()->with('warning_unregistered', true);
             }
         } else {
@@ -1050,13 +1305,51 @@ class SoalController extends Controller
         // Jalankan import data ke database
         DB::beginTransaction();
         try {
+            $mapHeaders = function ($headersList) {
+                $map = [];
+                $itemStart = null;
+                foreach ($headersList as $idx => $hName) {
+                    $cleanH = strtolower(trim((string)$hName));
+                    if ($cleanH === '') continue;
+                    if (str_contains($hName, '|') || str_contains($hName, '/')) {
+                        if ($itemStart === null) {
+                            $itemStart = $idx;
+                        }
+                        continue;
+                    }
+                    $map[$cleanH] = $idx;
+                }
+
+                $hasUniv = isset($map['universitas']);
+                if ($itemStart === null) {
+                    $itemStart = $hasUniv ? 11 : 9;
+                }
+
+                return [
+                    'hasUniv'   => $hasUniv,
+                    'itemStart' => $itemStart,
+                    'colNpm'    => $map['npm'] ?? ($hasUniv ? 3 : 2),
+                    'colNama'   => $map['nama'] ?? ($hasUniv ? 4 : 3),
+                    'colAngk'   => $map['angkatan'] ?? ($hasUniv ? 2 : 1),
+                    'colTahun'  => $map['tahun akademik'] ?? ($map['tahun'] ?? ($hasUniv ? 1 : 0)),
+                    'colProdi'  => $map['prodi'] ?? ($hasUniv ? 5 : null),
+                    'colUniv'   => $map['universitas'] ?? ($hasUniv ? 0 : null),
+                    'colCourse' => $map['kode mk'] ?? ($map['kode'] ?? ($hasUniv ? 6 : 4)),
+                    'colNamaMk' => $map['nama mk'] ?? ($hasUniv ? 7 : 5),
+                    'colJenis'  => $map['jenis'] ?? ($hasUniv ? 8 : 6),
+                    'colBobot'  => $map['bobot jenis (%)'] ?? ($map['bobot jenis'] ?? ($hasUniv ? 9 : 7)),
+                    'colNilai'  => $map['nilai total'] ?? ($map['nilai'] ?? ($hasUniv ? 10 : 8)),
+                ];
+            };
+
+            $colMap = $mapHeaders($headers);
             $prodiDefault = $user->id_prodiUser;
 
             // Validasi Konflik Jalur Import (1 Kombinasi MK & Tahun Ajaran hanya boleh 1 Jalur)
             if (!empty($parsedRows)) {
                 $sampleRow = $parsedRows[0]['row_data'];
-                $sampleCourse = $sampleRow[6] ?? null;
-                $sampleTahun = $sampleRow[1] ?? null;
+                $sampleCourse = $sampleRow[$colMap['colCourse']] ?? null;
+                $sampleTahun = $sampleRow[$colMap['colTahun']] ?? null;
 
                 if ($sampleCourse && $sampleTahun) {
                     $hasKonversiImport = Mutu::where('Course', $sampleCourse)
@@ -1076,6 +1369,36 @@ class SoalController extends Controller
                 }
             }
 
+            /*
+            // Opsional (diaktifkan jika diperlukan): Sinkronkan bobot dan persentase soal pada master soals / tanpa_soal berdasarkan template
+            for ($k = $colMap['itemStart']; $k < count($headers); $k++) {
+                $hdr = trim((string) ($headers[$k] ?? ''));
+                if (str_contains($hdr, '|')) {
+                    $hdrParts = explode('|', $hdr);
+                    if (count($hdrParts) >= 5) {
+                        $hdrTipe   = strtoupper(trim($hdrParts[0]));
+                        $hdrId     = trim($hdrParts[1]);
+                        $hdrBobot  = (float) trim($hdrParts[2]);
+                        $hdrPersen = isset($hdrParts[5]) ? (float) trim($hdrParts[5]) : null;
+
+                        if ($hdrTipe === 'SOAL' && is_numeric($hdrId)) {
+                            $upd = ['bobotSoal' => $hdrBobot];
+                            if ($hdrPersen !== null && $hdrPersen > 0) {
+                                $upd['persentase_cpmk'] = $hdrPersen;
+                            }
+                            DB::table('soals')->where('id', $hdrId)->update($upd);
+                        } elseif ($hdrTipe === 'TS' && is_numeric($hdrId)) {
+                            $upd = ['bobot_TS' => $hdrBobot];
+                            if ($hdrPersen !== null && $hdrPersen > 0) {
+                                $upd['persentase_cpmk'] = $hdrPersen;
+                            }
+                            DB::table('tanpa_soal')->where('id', $hdrId)->update($upd);
+                        }
+                    }
+                }
+            }
+            */
+
             foreach ($parsedRows as $item) {
                 $row = $item['row_data'];
                 $npm = $item['npm'];
@@ -1085,8 +1408,10 @@ class SoalController extends Controller
 
                 if (!$mhsId) {
                     if ($actionOption === 'register') {
-                        $prodiNama = trim((string)($row[5] ?? ''));
-                        $prodiObj = Prodi::where('nama', $prodiNama)->first();
+                        $prodiNama = ($colMap['colProdi'] !== null && isset($row[$colMap['colProdi']])) 
+                            ? trim((string)$row[$colMap['colProdi']]) 
+                            : '';
+                        $prodiObj = !empty($prodiNama) ? Prodi::where('nama', $prodiNama)->first() : null;
                         $prodiId = $prodiObj ? $prodiObj->id : $prodiDefault;
 
                         $newMhs = Mahasiswa::create([
@@ -1107,11 +1432,13 @@ class SoalController extends Controller
                 }
 
                 // Simpan item mutu
-                for ($i = 11; $i < count($headers); $i++) {
+                for ($i = $colMap['itemStart']; $i < count($headers); $i++) {
                     $header = trim((string) ($headers[$i] ?? ''));
                     if ($header === '') continue;
 
                     $idSoal = null;
+                    $displayLabel = trim((string) ($displayHeaders[$i] ?? ''));
+
                     if (str_contains($header, '|')) {
                         $parts = explode('|', $header);
                         if (count($parts) < 5) continue;
@@ -1123,9 +1450,9 @@ class SoalController extends Controller
                         $cpmk   = trim($parts[4]);
 
                         if ($tipe === 'SOAL') {
-                            $namaSoal = 'Soal #' . $idSoal;
+                            $namaSoal = $displayLabel !== '' ? $displayLabel : ('Soal #' . $idSoal);
                         } elseif ($tipe === 'TS') {
-                            $namaSoal = 'Instrumen #' . $idSoal;
+                            $namaSoal = $displayLabel !== '' ? $displayLabel : ('Instrumen #' . $idSoal);
                             $idSoal   = null;
                         } else {
                             continue;
@@ -1134,7 +1461,7 @@ class SoalController extends Controller
                         $parts = explode('/', $header);
                         if (count($parts) < 5) continue;
 
-                        $namaSoal = trim($parts[0]);
+                        $namaSoal = $displayLabel !== '' ? $displayLabel : trim($parts[0]);
                         $idSoal   = trim($parts[1]);
                         $bobot    = trim($parts[2]);
                         $cpl      = trim($parts[3]);
@@ -1146,18 +1473,26 @@ class SoalController extends Controller
                     $nilai = $row[$i] ?? null;
                     if ($nilai === null || $nilai === '') continue;
 
+                    $univIdRow = ($colMap['colUniv'] !== null && !empty($row[$colMap['colUniv']])) 
+                        ? Universitas::where('nama', $row[$colMap['colUniv']])->value('id') 
+                        : null;
+                    $prodiIdRow = ($colMap['colProdi'] !== null && !empty($row[$colMap['colProdi']])) 
+                        ? Prodi::where('nama', $row[$colMap['colProdi']])->value('id') 
+                        : null;
+
                     Mutu::create([
+                        'user_id'        => $user->id,
                         'id_mahasiswa'   => $mhsId,
-                        'universitas_id' => Universitas::where('nama', $row[0])->value('id'),
-                        'tahun'          => $row[1],
-                        'angkatan'       => $row[2],
+                        'universitas_id' => $univIdRow ?: ($user->id_universitasUser ?? null),
+                        'tahun'          => $row[$colMap['colTahun']] ?? '',
+                        'angkatan'       => $row[$colMap['colAngk']] ?? '',
                         'npm'            => $npm,
                         'nama_mhs'       => $nama,
-                        'id_prodi'       => Prodi::where('nama', $row[5])->value('id'),
-                        'Course'         => $row[6],
-                        'Jenis'          => $row[8],
-                        'examWeight'     => $row[9],
-                        'Nilai'          => $row[10],
+                        'id_prodi'       => $prodiIdRow ?: ($user->id_prodiUser ?? null),
+                        'Course'         => $row[$colMap['colCourse']] ?? '',
+                        'Jenis'          => $row[$colMap['colJenis']] ?? '',
+                        'examWeight'     => $row[$colMap['colBobot']] ?? 0,
+                        'Nilai'          => $row[$colMap['colNilai']] ?? 0,
                         'soal'           => $namaSoal,
                         'idSoal'         => $idSoal,
                         'BobotSoal'      => $bobot,
@@ -1182,7 +1517,7 @@ class SoalController extends Controller
                 Storage::delete($tempRelativePath);
             }
 
-            return redirect()->back()->with('success', 'Data nilai berhasil diimport dan disimpan ke database.');
+            return redirect()->route('dosen.import-mutu')->with('success', 'Data nilai berhasil diimport dan disimpan ke database.');
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Gagal import mutu: ' . $e->getMessage());
@@ -1192,6 +1527,7 @@ class SoalController extends Controller
 
     public function importTanpaSoal(Request $request)
     {
+        $this->ensureMutuUserIdColumn();
         $actionOption = $request->input('action_option');
         $user = auth()->user();
 
@@ -1333,6 +1669,7 @@ class SoalController extends Controller
                     if ($nilai === null || $nilai === '') continue;
 
                     Mutu::create([
+                        'user_id'        => $user->id,
                         'id_mahasiswa'   => $mhsId,
                         'universitas_id' => $univId,
                         'tahun'          => ucwords($row[1]),
@@ -1364,7 +1701,7 @@ class SoalController extends Controller
                 Storage::disk('local')->delete($tempRelativePath);
             }
 
-            return redirect()->back()->with('success', "File imported successfully");
+            return redirect()->route('dosen.import-mutu')->with('success', "File imported successfully");
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Gagal import tanpa soal: ' . $e->getMessage());
@@ -1387,13 +1724,18 @@ class SoalController extends Controller
             ->select(
                 'soals.id',
                 'soals.kode_mk',
+                'soals.minggu',
                 'soals.bobotSoal',
+                'soals.persentase_cpmk',
+                'soals.pertanyaan',
                 'soals.status',
                 'soals.komentar',
                 'mks.nama as nama_mk',
                 'metode_penilaian.nama as nama_kriteria',
                 'cpls.kode as cpl_kode',
-                'cpmks.kode as cpmk_kode'
+                'cpls.judul as cpl_judul',
+                'cpmks.kode as cpmk_kode',
+                'cpmks.judul as cpmk_judul'
             )
             ->where('soals.dosen', $user->name);
 
@@ -1455,7 +1797,7 @@ class SoalController extends Controller
             'minggu'     => 'required|integer|min:1|max:16',
             'pertanyaan' => 'required|string',
             'kurikulum'  => 'required|exists:kurikulums,id',
-            'prodi'      => 'required|exists:prodi,id',
+            'prodi'      => 'nullable|exists:prodi,id',
             // persentase_cpmk SENGAJA tidak divalidasi dari sini
             // karena diatur nanti saat download template di addMutu
         ]);
@@ -1476,6 +1818,10 @@ class SoalController extends Controller
                     ->with('error', 'Bobot metode tidak ditemukan. Pastikan mapping CPL-MK-CPMK-Penilaian sudah diatur.');
             }
 
+            $prodiId = $request->prodi 
+                ?? MK::where('kode', $request->kode_mk)->value('id_prodi') 
+                ?? auth()->user()->id_prodiUser;
+
             Soal::create([
                 'kode_mk'         => $request->kode_mk,
                 'minggu'          => $request->minggu,
@@ -1484,7 +1830,7 @@ class SoalController extends Controller
                 'kurikulumId'     => $request->kurikulum,
                 'pertanyaan'      => $request->pertanyaan,
                 'status'          => 'Belum',
-                'prodiId'         => $request->prodi,
+                'prodiId'         => $prodiId,
                 'bobotSoal'       => 0,       // ← sementara 0, dihitung ulang di ExcelGabungan
                 'persentase_cpmk' => 0,       // ← sementara 0, diatur saat addMutu/download template
                 'cpl'             => $request->cpl,
@@ -1695,12 +2041,16 @@ class SoalController extends Controller
     public function ExcelGabungan(Request $request)
     {
         $request->validate([
-            'univ'     => 'required',
             'semester' => 'required',
-            'prodi'    => 'required',
             'kode_mk'  => 'required',
             'jenis'    => 'required',
         ]);
+
+        $user = auth()->user();
+        $univName = $request->univ 
+            ?: (Universitas::where('id', $user->id_universitasUser)->value('nama') ?? '-');
+        $prodiName = $request->prodi 
+            ?: (Prodi::where('id', $user->id_prodiUser)->value('nama') ?? '-');
 
         $kodeMk   = $request->kode_mk;
         $metodeId = $request->jenis;
@@ -1736,6 +2086,7 @@ class SoalController extends Controller
                     'soals.cpmk as cpmk_id_raw',
                     'soals.cpl  as cpl_id_raw',
                     'cpmks.id   as cpmk_id',
+                    'cpmks.kode as cpmk_kode',
                     'cpls.id    as cpl_id'
                 )
                 ->orderBy('soals.id')
@@ -1771,33 +2122,31 @@ class SoalController extends Controller
         $sheet       = $spreadsheet->getActiveSheet();
 
         $fixedHeaders = [
-            'A1' => 'Universitas',
-            'B1' => 'Tahun Akademik',
-            'C1' => 'Angkatan',
-            'D1' => 'NPM',
-            'E1' => 'Nama',
-            'F1' => 'Prodi',
-            'G1' => 'Kode MK',
-            'H1' => 'Nama MK',
-            'I1' => 'Jenis',
-            'J1' => 'Bobot Jenis (%)',
-            'K1' => 'Nilai Total',
+            'A1' => 'Tahun Akademik',
+            'B1' => 'Angkatan',
+            'C1' => 'NPM',
+            'D1' => 'Nama',
+            'E1' => 'Kode MK',
+            'F1' => 'Nama MK',
+            'G1' => 'Jenis',
+            'H1' => 'Bobot Jenis (%)',
+            'I1' => 'Nilai Total',
         ];
         foreach ($fixedHeaders as $cell => $text) {
             $sheet->setCellValue($cell, $text);
             $sheet->getStyle($cell)->getFont()->setBold(true);
         }
 
-        $sheet->setCellValue('A2', $request->univ);
-        $sheet->setCellValue('B2', $request->semester);
-        $sheet->setCellValue('F2', $request->prodi);
-        $sheet->setCellValue('G2', $kodeMk);
-        $sheet->setCellValue('H2', $namaMK);
-        $sheet->setCellValue('I2', $namaMetode);
-        $sheet->setCellValue('J2', $totalBobotMetode);
+        // Baris 3: Baris data awal (template/dosen isi nilai mulai baris ini)
+        $sheet->setCellValue('A3', $request->semester);
+        $sheet->setCellValue('E3', $kodeMk);
+        $sheet->setCellValue('F3', $namaMK);
+        $sheet->setCellValue('G3', $namaMetode);
+        $sheet->setCellValue('H3', $totalBobotMetode);
 
-        $columnIndex  = 12;   
-        $formulaParts = [];
+        $columnIndex       = 10;   
+        $itemsWithBobot    = [];
+        $noSoal            = 1;
 
         foreach ($soals as $soal) {
             $cpmkId    = $soal->cpmk_id ?? $soal->cpmk_id_raw;
@@ -1816,18 +2165,27 @@ class SoalController extends Controller
 
             $col = Coordinate::stringFromColumnIndex($columnIndex);
 
-            $headerText = 'SOAL|' . $soal->id . '|' . $bobotFinal . '|' . $cplId . '|' . $cpmkId . '|' . $persen;
-            $sheet->setCellValue($col . '1', $headerText);
+            $cpmkLabel      = !empty($soal->cpmk_kode) ? $soal->cpmk_kode : ('CPMK ' . $cpmkId);
+            $displayHeader  = 'Soal ' . $noSoal . ' - ' . $cpmkLabel;
+            $metadataHeader = 'SOAL|' . $soal->id . '|' . $bobotFinal . '|' . $cplId . '|' . $cpmkId . '|' . $persen;
+
+            // Baris 1: Header bersih untuk tampilan dosen
+            $sheet->setCellValue($col . '1', $displayHeader);
             $sheet->getStyle($col . '1')->applyFromArray([
                 'font' => ['color' => ['rgb' => '0000FF'], 'underline' => true],
             ]);
             $sheet->getCell($col . '1')->getHyperlink()->setUrl(url('/dosen/soal/cetakSoal/' . $soal->id));
 
+            // Baris 2: Metadata teknis (disembunyikan)
+            $sheet->setCellValue($col . '2', $metadataHeader);
+
             $this->addCellValidation($sheet, $col);
-            $formulaParts[] = '(' . $col . '2*' . $bobotFinal . ')';
+            $itemsWithBobot[] = ['col' => $col, 'bobot' => $bobotFinal];
             $columnIndex++;
+            $noSoal++;
         }
 
+        $noTs = 1;
         foreach ($instrumens as $item) {
             $cpmkId    = $item->cpmk_id;
             $bobotCpmk = $bobotCpmkMap[$cpmkId] ?? 0;
@@ -1844,33 +2202,62 @@ class SoalController extends Controller
 
             $col = Coordinate::stringFromColumnIndex($columnIndex);
 
-            $headerText = 'TS|' . $item->id . '|' . $bobotFinal . '|' . $item->cpl_id . '|' . $cpmkId . '|' . $persen;
-            $sheet->setCellValue($col . '1', $headerText);
+            $tsCpmkLabel    = optional($item->cpmk)->kode ?: ('CPMK ' . $item->cpmk_id);
+            $displayHeader  = 'Instrumen ' . $noTs . ' - ' . $tsCpmkLabel;
+            $metadataHeader = 'TS|' . $item->id . '|' . $bobotFinal . '|' . $item->cpl_id . '|' . $cpmkId . '|' . $persen;
+
+            // Baris 1: Header bersih untuk tampilan dosen
+            $sheet->setCellValue($col . '1', $displayHeader);
             $sheet->getStyle($col . '1')->applyFromArray([
                 'font' => ['color' => ['rgb' => '6f42c1']],
             ]);
 
+            // Baris 2: Metadata teknis (disembunyikan)
+            $sheet->setCellValue($col . '2', $metadataHeader);
+
             $this->addCellValidation($sheet, $col);
-            $formulaParts[] = '(' . $col . '2*' . $bobotFinal . ')';
+            $itemsWithBobot[] = ['col' => $col, 'bobot' => $bobotFinal];
             $columnIndex++;
+            $noTs++;
         }
 
-        if (!empty($formulaParts) && $totalBobotMetode > 0) {
-            $formula = '=(' . implode('+', $formulaParts) . ')/' . $totalBobotMetode;
-            $sheet->setCellValue('K2', $formula);
+        if (!empty($itemsWithBobot) && $totalBobotMetode > 0) {
+            // Loop pembuatan rumus baris 3 s/d 100 secara otomatis
+            for ($r = 3; $r <= 100; $r++) {
+                $rowFormulaParts = [];
+                foreach ($itemsWithBobot as $it) {
+                    $rowFormulaParts[] = '(' . $it['col'] . $r . '*' . $it['bobot'] . ')';
+                }
+                $calc = '(' . implode('+', $rowFormulaParts) . ')/' . $totalBobotMetode;
+                // Jika NPM (kolom C) kosong, kosongkan cell; jika ada NPM, hitung nilainya
+                $sheet->setCellValue('I' . $r, '=IF(C' . $r . '="","", ' . $calc . ')');
+            }
         }
+
+        // Sembunyikan baris 2 (metadata teknis)
+        $sheet->getRowDimension(2)->setVisible(false);
 
         $lastCol = Coordinate::stringFromColumnIndex($columnIndex - 1);
         $sheet->getStyle('A1:' . $lastCol . '1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:K1')->applyFromArray([
+        $sheet->getStyle('A1:I1')->applyFromArray([
             'fill' => [
                 'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
                 'startColor' => ['rgb' => 'D9EAD3'],
             ]
         ]);
 
-        foreach (range('A', 'K') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
+        if ($columnIndex > 10) {
+            $sheet->getStyle('J1:' . $lastCol . '1')->applyFromArray([
+                'fill' => [
+                    'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'CFE2F3'],
+                ]
+            ]);
+        }
+
+        for ($c = 1; $c < $columnIndex; $c++) {
+            $colLetter = Coordinate::stringFromColumnIndex($c);
+            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
         }
 
         $fileName = 'Template_Penilaian_' . $kodeMk . '_' . $namaMetode . '.xlsx';
@@ -1881,6 +2268,115 @@ class SoalController extends Controller
         }, $fileName, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
+    }
+
+    public function cetakNaskahSoal(Request $request)
+    {
+        $request->validate([
+            'kode_mk' => 'required',
+        ]);
+
+        $user = auth()->user();
+        $kodeMk = $request->kode_mk;
+        $metodeId = $request->jenis;
+        $semester = $request->semester ?? '-';
+        $soalIds = $request->input('soal_ids', []);
+        $persenSoal = $request->input('persen_soal', []);
+
+        if (empty($soalIds)) {
+            return back()->with('error', 'Tidak ada butir soal yang dipilih untuk dicetak.');
+        }
+
+        $mk = MK::where('kode', $kodeMk)->first();
+        $namaMetode = DB::table('metode_penilaian')->where('id', $metodeId)->value('nama') ?? ($request->metode_nama ?? 'Ujian / Asesmen');
+
+        // Ambil info prodi, fakultas, universitas
+        $prodi = Prodi::with(['fakultas.universitas'])->find($user->id_prodiUser);
+        if (!$prodi && $mk && $mk->id_prodi) {
+            $prodi = Prodi::with(['fakultas.universitas'])->find($mk->id_prodi);
+        }
+
+        $univ = $prodi->fakultas->universitas ?? null;
+
+        // Logo universitas dinamis (ambil dari universitas.img atau fallback logo)
+        $logoUniv = null;
+        if ($univ && !empty($univ->img)) {
+            $logoUniv = asset($univ->img);
+        } else {
+            $logoUniv = asset('assets/img/logo_unila.png');
+        }
+
+        // Alamat universitas dinamis (ambil dari data register_universitas jika ada atau fallback)
+        $alamatUniv = null;
+        if ($univ) {
+            $regUniv = DB::table('register_universitas')
+                ->where('nama_universitas', $univ->nama)
+                ->first();
+            if ($regUniv && !empty($regUniv->alamat_kontak_universitas)) {
+                $parts = [];
+                $parts[] = $regUniv->alamat_kontak_universitas;
+                if (!empty($regUniv->nomor_telepon_universitas)) {
+                    $parts[] = 'Telp. ' . $regUniv->nomor_telepon_universitas;
+                }
+                if (!empty($regUniv->website)) {
+                    $parts[] = $regUniv->website;
+                }
+                $alamatUniv = implode(' &bull; ', $parts);
+            }
+        }
+
+        if (empty($alamatUniv)) {
+            if ($univ && str_contains(strtoupper($univ->nama), 'LAMPUNG')) {
+                $alamatUniv = 'Jl. Prof. Dr. Sumantri Brojonegoro No. 1 Gedong Meneng, Bandar Lampung 35145 Telp. (0721) 701609';
+            } else {
+                $alamatUniv = 'Kampus ' . ($univ->nama ?? 'Universitas');
+            }
+        }
+
+        // Ambil data soal yang dipilih
+        $soals = DB::table('soals')
+            ->leftJoin('cpmks', 'soals.cpmk', '=', 'cpmks.id')
+            ->leftJoin('cpls', 'soals.cpl', '=', 'cpls.id')
+            ->whereIn('soals.id', $soalIds)
+            ->select(
+                'soals.id',
+                'soals.pertanyaan',
+                'soals.minggu',
+                'soals.dosen',
+                'soals.cpmk as cpmk_id_raw',
+                'soals.cpl as cpl_id_raw',
+                'cpmks.id as cpmk_id',
+                'cpmks.kode as cpmk_kode',
+                'cpmks.judul as cpmk_judul',
+                'cpls.id as cpl_id',
+                'cpls.kode as cpl_kode',
+                'cpls.judul as cpl_judul'
+            )
+            ->orderBy('soals.id')
+            ->get();
+
+        // Kumpulkan CPMK unik yang terkait
+        $cpmkList = $soals->pluck('cpmk_kode')->filter()->unique()->values();
+
+        // Ambil data RPS untuk info pendukung (seperti nama Kaprodi di lembar pengesahan)
+        $rps = RPS::where('kode_mk', $kodeMk)->latest()->first();
+
+        // Dosen pengampu diambil dari nama user yang mendownload/mencetak soal
+        $dosenNama = $user->name;
+
+        return view('dosen.soal.cetakNaskah', compact(
+            'mk',
+            'soals',
+            'semester',
+            'namaMetode',
+            'prodi',
+            'cpmkList',
+            'persenSoal',
+            'dosenNama',
+            'rps',
+            'logoUniv',
+            'alamatUniv'
+        ));
     }
 
 
@@ -1900,5 +2396,23 @@ class SoalController extends Controller
         $validation->setPromptTitle('Input Nilai');
         $validation->setPrompt('Masukkan nilai 0 sampai 100');
         $sheet->setDataValidation($col . ':' . $col, $validation);
+    }
+
+    private function ensureMutuUserIdColumn(): void
+    {
+        if (Schema::hasTable('mutus') && !Schema::hasColumn('mutus', 'user_id')) {
+            Schema::table('mutus', function ($table) {
+                $table->unsignedBigInteger('user_id')->nullable()->index();
+            });
+
+            try {
+                DB::statement("UPDATE mutus 
+                    JOIN soals ON mutus.idSoal = soals.id 
+                    SET mutus.user_id = soals.dosen 
+                    WHERE mutus.user_id IS NULL AND soals.dosen REGEXP '^[0-9]+$'");
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
     }
 }

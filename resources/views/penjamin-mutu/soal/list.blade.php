@@ -106,13 +106,12 @@
                         <thead class="table-light">
                             <tr>
                                 <th width="4%">No</th>
-                                <th width="12%">Kode MK</th>
+                                <th width="14%">Kode MK</th>
                                 <th>Nama MK</th>
-                                <th width="16%">Dosen Pengaju</th>
-                                <th width="16%">Prodi</th>
-                                <th width="10%" class="text-center">Diajukan</th>
-                                <th width="11%" class="text-center">Status</th>
-                                <th width="12%" class="text-center">Aksi</th>
+                                <th width="18%">Prodi</th>
+                                <th width="12%" class="text-center">Diajukan</th>
+                                <th width="12%" class="text-center">Status</th>
+                                <th width="14%" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -123,7 +122,7 @@
                                     {{-- Kode MK --}}
                                     <td>
                                         <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold">
-                                            {{ $mk->kode }}
+                                             {{ $mk->kode }}
                                         </span>
                                     </td>
 
@@ -134,13 +133,6 @@
                                             <div class="text-muted" style="font-size:0.78rem;">{{ $mk->nama_fakultas }}
                                             </div>
                                         @endif
-                                    </td>
-
-                                    {{-- Dosen Pengaju --}}
-                                    <td>
-                                        <span class="fw-semibold text-dark small">
-                                            <i class="ti-user me-1 text-muted"></i>{{ $mk->nama_dosen }}
-                                        </span>
                                     </td>
 
                                     {{-- Prodi --}}
@@ -171,7 +163,7 @@
                                         <div class="d-flex justify-content-center align-items-center gap-1">
 
                                             {{-- Periksa --}}
-                                            <a href="{{ route($rolePrefix . 'soal-detail', ['kode_mk' => $mk->kode, 'dosen' => $mk->dosen_key]) }}"
+                                            <a href="{{ route($rolePrefix . 'soal-detail', ['kode_mk' => $mk->kode]) }}"
                                                 class="btn btn-info btn-icons" data-bs-toggle="tooltip" data-bs-placement="top"
                                                 title="Periksa detail soal">
                                                 <i class="ti-eye"></i>
@@ -181,15 +173,15 @@
                                             @php
                                                 $canAction = ($mk->status_label === 'siap');
                                             @endphp
-                                            <form action="{{ route($rolePrefix . 'soal-validasi-mk', ['kode_mk' => $mk->kode, 'dosen' => $mk->dosen_key]) }}"
+                                            <form action="{{ route($rolePrefix . 'soal-validasi-mk', ['kode_mk' => $mk->kode]) }}"
                                                 method="POST" class="d-inline m-0 p-0">
                                                 @csrf
                                                 <button type="submit"
                                                     class="btn btn-success btn-icons {{ !$canAction ? 'disabled' : '' }}" 
                                                     {{ !$canAction ? 'disabled' : '' }}
                                                     data-bs-toggle="tooltip" data-bs-placement="top"
-                                                    title="{{ $mk->status_label === 'valid' ? 'Soal dosen ini divalidasi' : ($mk->status_label === 'ditolak' ? 'Soal ditolak, menunggu dosen mengajukan ulang' : ($canAction ? 'Setujui soal dosen ini' : 'Belum ada soal diajukan')) }}"
-                                                    onclick="return confirm('Validasi soal MK {{ $mk->kode }} dari dosen {{ addslashes($mk->nama_dosen) }}?')">
+                                                    title="{{ $mk->status_label === 'valid' ? 'Soal MK ini divalidasi' : ($mk->status_label === 'ditolak' ? 'Soal ditolak, menunggu dosen mengajukan ulang' : ($canAction ? 'Setujui semua soal MK ini' : 'Belum ada soal diajukan')) }}"
+                                                    onclick="return confirm('Validasi semua soal MK {{ $mk->kode }} ({{ addslashes($mk->nama_mk) }})?')">
                                                     <i class="ti-check"></i>
                                                 </button>
                                             </form>
@@ -199,8 +191,8 @@
                                                 class="btn btn-danger btn-icons {{ !$canAction ? 'disabled' : '' }}" 
                                                 {{ !$canAction ? 'disabled' : '' }}
                                                 data-bs-toggle="tooltip" data-bs-placement="top"
-                                                title="{{ $mk->status_label === 'valid' ? 'Soal dosen ini divalidasi' : ($mk->status_label === 'ditolak' ? 'Soal ditolak, menunggu dosen mengajukan ulang' : ($canAction ? 'Tolak soal dosen ini' : 'Belum ada soal diajukan')) }}"
-                                                onclick="openTolakModal('{{ $mk->kode }}', '{{ $mk->dosen_key }}', '{{ addslashes($mk->nama_dosen) }}')">
+                                                title="{{ $mk->status_label === 'valid' ? 'Soal MK ini divalidasi' : ($mk->status_label === 'ditolak' ? 'Soal ditolak, menunggu dosen mengajukan ulang' : ($canAction ? 'Tolak semua soal MK ini' : 'Belum ada soal diajukan')) }}"
+                                                onclick="openTolakModal('{{ $mk->kode }}', '{{ addslashes($mk->nama_mk) }}')">
                                                 <i class="ti-close"></i>
                                             </button>
 
@@ -209,7 +201,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-5 text-muted">
+                                    <td colspan="7" class="text-center py-5 text-muted">
                                         <i class="ti-folder me-2"></i>
                                         Belum ada MK yang memiliki soal diajukan.
                                     </td>
@@ -259,17 +251,16 @@
     </div>
 
     <script>
-        // Peta route tolak per MK dan Dosen
+        // Peta route tolak per MK
         const tolakRoutes = {
             @foreach ($mkList as $mk)
-                "{{ $mk->kode }}_{{ $mk->dosen_key }}": "{{ route($rolePrefix . 'soal-tolak-mk', ['kode_mk' => $mk->kode, 'dosen' => $mk->dosen_key]) }}",
+                "{{ $mk->kode }}": "{{ route($rolePrefix . 'soal-tolak-mk', ['kode_mk' => $mk->kode]) }}",
             @endforeach
         };
 
-        function openTolakModal(kodeMk, dosenKey, namaDosen) {
-            document.getElementById('modalTolakKode').textContent = kodeMk + ' (' + namaDosen + ')';
-            const key = kodeMk + '_' + dosenKey;
-            document.getElementById('formTolak').action = tolakRoutes[key] || "{{ route($rolePrefix . 'soal-tolak-mk', '') }}/" + kodeMk + "?dosen=" + dosenKey;
+        function openTolakModal(kodeMk, namaMk) {
+            document.getElementById('modalTolakKode').textContent = kodeMk + (namaMk ? ' - ' + namaMk : '');
+            document.getElementById('formTolak').action = tolakRoutes[kodeMk] || ("{{ route($rolePrefix . 'soal-tolak-mk', '') }}/" + kodeMk);
             document.getElementById('formTolak').querySelector('textarea').value = '';
             new bootstrap.Modal(document.getElementById('modalTolak')).show();
         }

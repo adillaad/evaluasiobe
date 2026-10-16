@@ -258,18 +258,13 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                 </a>
                 <div class="collapse" id="rps">
                     <ul class="nav flex-column sub-menu">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route($currentPrefix . 'rps.list') }}">Daftar RPS</a>
+                        </li>
                         @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi']))
                             <li class="nav-item">
                                 <a class="nav-link"
                                     href="{{ route('koordinator-program-studi.rps.validation.list') }}">Validasi RPS</a>
-                            </li>
-                        @elseif (in_array($userOtoritas, [
-                                'Penjamin Mutu Program Studi',
-                                'Penjamin Mutu Fakultas',
-                                'Penjamin Mutu Universitas',
-                            ]))
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route($currentPrefix . 'rps.list') }}">Daftar RPS</a>
                             </li>
                         @endif
                     </ul>

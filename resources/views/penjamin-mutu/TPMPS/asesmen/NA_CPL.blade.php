@@ -1,4 +1,4 @@
-@php
+﻿@php
     $selectedProdiId = request('prodi_id');
     if (!$selectedProdiId && request('kurikulum_id')) {
         $selectedProdiId = \Illuminate\Support\Facades\DB::table('kurikulums')->where('id', request('kurikulum_id'))->value('id_prodi');
@@ -105,7 +105,20 @@
         word-break: break-word !important;
     }
     .table-pemetaan tbody tr:hover {
+        background-color: #f1f5f9 !important;
+    }
+    .table-pemetaan tbody tr.bg-row-white td {
+        background-color: #ffffff !important;
+    }
+    .table-pemetaan tbody tr.bg-row-alternate td {
         background-color: #f8fafc !important;
+    }
+    .table-pemetaan tbody tr.bg-row-white:hover td,
+    .table-pemetaan tbody tr.bg-row-alternate:hover td {
+        background-color: #f1f5f9 !important;
+    }
+    .table-total-cpl td {
+        border-bottom: 2px solid #cbd5e1 !important;
     }
 </style>
 
@@ -198,6 +211,7 @@
                                   </tr>
                               </thead>
                               <tbody>
+                                  @php $cplLoopIndex = 0; @endphp
                                   @foreach ($groupedCPLs as $cpl_kode => $rows)
                                       @php
                                           $validRows = $rows->filter(function($row) use ($instrumens) {
@@ -209,26 +223,28 @@
                                               $cplRowspan = $validRows->count();
                                               $cplTotalBobot = $instrumens->whereIn('id', $validRows->pluck('id'))->sum('bobot_metode');
                                               $isFirstRow = true;
+                                              $bgClass = ($cplLoopIndex % 2 === 1) ? 'bg-row-alternate' : 'bg-row-white';
+                                              $cplLoopIndex++;
                                           @endphp
                                           @foreach ($validRows as $row)
                                               @php
                                                   $bobotPerRow = $instrumens->where('id', $row->id)->sum('bobot_metode');
                                               @endphp
-                                              <tr>
+                                              <tr class="{{ $bgClass }}">
                                                   @if ($isFirstRow)
-                                                      <td rowspan="{{ $cplRowspan }}" class="fw-bold align-middle bg-light text-center">
+                                                      <td rowspan="{{ $cplRowspan }}" class="fw-bold align-middle text-center {{ $bgClass }}">
                                                           {{ $cpl_kode }}
                                                       </td>
                                                       @php $isFirstRow = false; @endphp
                                                   @endif
-                                                  <td class="fw-semibold">{{ $row->cpmk_kode }}</td>
-                                                  <td>{{ $row->mk_kode }}</td>
-                                                  <td>{{ $bobotPerRow }}</td>
+                                                  <td class="fw-semibold {{ $bgClass }}">{{ $row->cpmk_kode }}</td>
+                                                  <td class="{{ $bgClass }}">{{ $row->mk_kode }}</td>
+                                                  <td class="{{ $bgClass }}">{{ $bobotPerRow }}</td>
                                               </tr>
                                           @endforeach
-                                          <tr class="table-light">
-                                              <td colspan="3" class="text-end fw-bold">Nilai {{ $cpl_kode }} :</td>
-                                              <td class="fw-bold text-primary-accent">{{ $cplTotalBobot }}</td>
+                                          <tr class="{{ $bgClass }} table-total-cpl">
+                                              <td colspan="3" class="text-end fw-bold {{ $bgClass }}">Nilai {{ $cpl_kode }} :</td>
+                                              <td class="fw-bold text-primary-accent {{ $bgClass }}">{{ $cplTotalBobot }}</td>
                                           </tr>
                                       @endif
                                   @endforeach
@@ -259,14 +275,15 @@
                                           </tr>
                                       </thead>
                                       <tbody>
-                                          @foreach ($rows as $row)
+                                          @foreach ($rows as $rIndex => $row)
                                               @php
                                                   $bobotPerRow = $instrumens->where('id', $row->id)->sum('bobot_metode');
+                                                  $rowBg = ($rIndex % 2 === 1) ? 'bg-row-alternate' : 'bg-row-white';
                                               @endphp
-                                              <tr>
-                                                  <td class="fw-semibold">{{ $row->cpmk_kode }}</td>
-                                                  <td>{{ $row->mk_kode }}</td>
-                                                  <td>{{ $bobotPerRow }}</td>
+                                              <tr class="{{ $rowBg }}">
+                                                  <td class="fw-semibold {{ $rowBg }}">{{ $row->cpmk_kode }}</td>
+                                                  <td class="{{ $rowBg }}">{{ $row->mk_kode }}</td>
+                                                  <td class="{{ $rowBg }}">{{ $bobotPerRow }}</td>
                                               </tr>
                                           @endforeach
                                       </tbody>

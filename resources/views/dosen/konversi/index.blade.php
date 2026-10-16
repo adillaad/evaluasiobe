@@ -40,7 +40,7 @@
                             <tr>
                                 <td class="text-center small">{{ ($konversis->currentPage() - 1) * $konversis->perPage() + $i + 1 }}</td>
                                 <td>
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary fw-bold">
+                                    <span class="badge badge-kode-mk">
                                         {{ $konversi->mk_kode }}
                                     </span>
                                 </td>
@@ -56,16 +56,29 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-inline-flex gap-1 justify-content-center">
-                                        <a href="{{ route($currentPrefix . 'konversi-nilai.step-metode', $konversi->id) }}" class="btn btn-sm btn-info text-white px-2 py-1" title="Lihat Detail MK">
+                                        <a href="{{ route($currentPrefix . 'konversi-nilai.step-metode', $konversi->id) }}"
+                                           class="btn btn-action-table btn-action-outline-blue"
+                                           data-bs-toggle="tooltip"
+                                           title="Lihat Detail MK">
                                             <i class="ti ti-eye"></i>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-primary px-2 py-1" data-bs-toggle="modal" data-bs-target="#editSetupModal{{ $konversi->id }}" title="Edit Setup MK Kurikulum">
+                                        <button type="button"
+                                                class="btn btn-action-table btn-action-solid-blue"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editSetupModal{{ $konversi->id }}"
+                                                title="Edit Setup MK Kurikulum">
                                             <i class="ti ti-settings"></i>
                                         </button>
-                                        <form action="{{ route($currentPrefix . 'konversi-nilai.destroy', $konversi->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data konversi untuk MK {{ $konversi->mk_kode }} ini? Seluruh data nilai konversi mahasiswa terkait akan ikut terhapus.')">
+                                        <form action="{{ route($currentPrefix . 'konversi-nilai.destroy', $konversi->id) }}"
+                                              method="POST"
+                                              class="d-inline"
+                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus data konversi untuk MK {{ $konversi->mk_kode }} ini? Seluruh data nilai konversi mahasiswa terkait akan ikut terhapus.')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1" title="Hapus Konversi">
+                                            <button type="submit"
+                                                    class="btn btn-action-table btn-action-outline-red"
+                                                    data-bs-toggle="tooltip"
+                                                    title="Hapus Konversi">
                                                 <i class="ti ti-trash"></i>
                                             </button>
                                         </form>
@@ -145,4 +158,107 @@
             </div>
         </div>
     </div>
+
+    <style>
+        @php
+            $themeColorKonversi = \App\Support\AptikomTheme::resolve(auth()->user());
+        @endphp
+        /* Badge Kode MK (matching validasi soal) */
+        .badge-kode-mk {
+            background-color: {{ $themeColorKonversi }} !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            padding: 4px 12px !important;
+            border-radius: 50rem !important;
+            font-size: 11.5px !important;
+            display: inline-block !important;
+            letter-spacing: 0.02em !important;
+        }
+
+        /* Action Buttons Sesuai Model Gambar (#006199 & #dc3545) */
+        .btn-action-table {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            padding: 0 !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 13.5px;
+            line-height: 1;
+            border: 1.5px solid transparent;
+            transition: all 0.2s ease-in-out;
+            text-decoration: none;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        .btn-action-table:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .btn-action-table:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        /* 1. Outline Biru (Detail) - Background putih, border biru #006199 */
+        .btn-action-outline-blue {
+            background-color: #ffffff !important;
+            border-color: #006199 !important;
+            color: #006199 !important;
+        }
+        .btn-action-outline-blue:hover:not(:disabled),
+        .btn-action-outline-blue:focus:not(:disabled) {
+            background-color: #006199 !important;
+            border-color: #006199 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 10px rgba(0, 97, 153, 0.28) !important;
+        }
+
+        /* 2. Solid Biru (Edit Setup) - Background biru #006199, icon putih */
+        .btn-action-solid-blue {
+            background-color: #006199 !important;
+            border-color: #006199 !important;
+            color: #ffffff !important;
+        }
+        .btn-action-solid-blue:hover:not(:disabled),
+        .btn-action-solid-blue:focus:not(:disabled) {
+            background-color: #004c78 !important;
+            border-color: #004c78 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 10px rgba(0, 76, 120, 0.32) !important;
+        }
+
+        /* 3. Outline Merah (Hapus) - Background putih, border merah #dc3545 */
+        .btn-action-outline-red {
+            background-color: #ffffff !important;
+            border-color: #dc3545 !important;
+            color: #dc3545 !important;
+        }
+        .btn-action-outline-red:hover:not(:disabled),
+        .btn-action-outline-red:focus:not(:disabled) {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 10px rgba(220, 53, 69, 0.28) !important;
+        }
+
+        .btn-action-table:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.bootstrap && window.bootstrap.Tooltip) {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new window.bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+        });
+    </script>
 @endsection

@@ -1,6 +1,9 @@
 @php
     $isAptikom = auth()->check() && auth()->user()->prodi ? (bool) auth()->user()->prodi->is_aptikom : true;
 @endphp
+@extends('penjamin-mutu.template')
+
+@section('content')
 <style>
     @if ($isAptikom)
         /* ── APTIKOM Theme (Ocean Blue #006199 Accent) ── */
@@ -64,12 +67,14 @@
         background-color: #dc3545 !important;
         border-color: #dc3545 !important;
     }
+
+    /* Padding baris data tabel detail asesmen yang proporsional & tidak terlalu mepet */
+    .detail-asesmen-table tbody td {
+        padding: 12px 14px !important;
+        line-height: 1.45 !important;
+    }
+
 </style>
-
-
-@extends('penjamin-mutu.template')
-
-@section('content')
 @php
     $routePrefix = [
         'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
@@ -161,27 +166,25 @@
                             </div>
                         </div>
 
-                        {{-- Dropdown CPMK Belum Terpetakan/Belum Punya Asesmen --}}
-                        <div class="d-flex align-items-center ms-md-2">
-                            <select class="form-select form-select-sm border-warning text-dark" style="max-width: 280px; font-size: 0.8rem;">
-                                @if($unassessedCpmks->isNotEmpty())
-                                    <option value="" disabled selected>⚠️ {{ $unassessedCpmks->count() }} CPMK Belum Punya Asesmen...</option>
-                                    @foreach($unassessedCpmks as $uCpmk)
-                                        <option value="{{ $uCpmk->id }}">
-                                            {{ $uCpmk->kode }} - {{ Str::limit($uCpmk->judul ?? $uCpmk->deskripsi ?? '', 45) }}
-                                        </option>
-                                    @endforeach
-                                @else
-                                    <option value="" disabled selected>✓ Semua CPMK Sudah Terpetakan</option>
-                                @endif
-                            </select>
+                        {{-- Status CPMK Belum Terpetakan/Belum Punya Asesmen --}}
+                        <div class="d-flex align-items-center flex-wrap gap-1 ms-md-2">
+                            @if($unassessedCpmks->isNotEmpty())
+                                <span class="badge bg-warning bg-opacity-10 text-dark border border-warning px-2.5 py-1.5 rounded-pill d-inline-flex align-items-center" style="font-size: 0.78rem; font-weight: 500;">
+                                    <i class="mdi mdi-alert-circle-outline text-warning me-1"></i> {{ $unassessedCpmks->count() }} CPMK Belum Ada Asesmen:
+                                </span>
+                                @foreach($unassessedCpmks as $uCpmk)
+                                    <span class="badge bg-light text-secondary border px-2 py-1 rounded-pill" style="font-size: 0.75rem;" title="{{ $uCpmk->judul ?? $uCpmk->deskripsi ?? '' }}">
+                                        {{ $uCpmk->kode }}
+                                    </span>
+                                @endforeach
+                            @else
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded-pill d-inline-flex align-items-center" style="font-size: 0.78rem; font-weight: 500;">
+                                    <i class="mdi mdi-check-circle me-1"></i> Semua CPMK Sudah Terpetakan
+                                </span>
+                            @endif
                         </div>
                     </div>
-                    <div>
-                        <span class="badge {{ $usedCpmkCount == $totalCpmk && $totalCpmk > 0 ? 'bg-success' : ($usedCpmkCount > 0 ? 'bg-info text-dark' : 'bg-warning text-dark') }} px-2 py-1" style="font-size: 0.78rem; font-weight: 500;">
-                            <i class="mdi mdi-check-decagram me-1"></i> {{ $usedCpmkCount }} / {{ $totalCpmk }} CPMK Terpakai ({{ $percentageUsed }}%)
-                        </span>
-                    </div>
+                    
                 </div>
             </div>
         @endif
@@ -265,7 +268,7 @@
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover mb-0 align-middle">
+                    <table class="table table-bordered table-hover mb-0 align-middle detail-asesmen-table">
                         <thead class="table-light text-center align-middle">
                             <tr>
                                 <th style="width: 4%">No</th>

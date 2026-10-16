@@ -56,22 +56,29 @@ class RubrikController extends Controller
             'rubrik_file' => 'required|file|mimes:xlsx,xls'
         ]);
 
-        $import = new ImportRubrik();
-        Excel::import($import, $request->file('rubrik_file'));
+        try {
+            $import = ImportRubrik::fromFile($request->file('rubrik_file'));
 
-        if (!$import->type) {
+            if (!$import->type) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Template rubrik tidak dikenali. Pastikan file menggunakan salah satu dari 3 template yang disediakan.'
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'type'    => $import->type,
+                'headers' => $import->headers,
+                'data'    => $import->data,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('previewRubrik error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Template rubrik tidak dikenali. Pastikan file menggunakan salah satu dari 3 template yang disediakan.'
-            ], 422);
+                'message' => 'Gagal membaca file Excel rubrik: ' . $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'type' => $import->type,
-            'headers' => $import->headers,
-            'data' => $import->data,
-        ]);
     }
 
     public function Store(Request $request)
@@ -83,8 +90,14 @@ class RubrikController extends Controller
         ]);
 
         // deteksi type dulu dari file yang diupload
-        $import = new ImportRubrik();
-        Excel::import($import, $request->file('rubrik_file'));
+        try {
+            $import = ImportRubrik::fromFile($request->file('rubrik_file'));
+        } catch (\Throwable $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['rubrik_file' => 'Gagal membaca file Excel: ' . $e->getMessage()])
+                ->withInput();
+        }
 
         if (!$import->type) {
             return redirect()
@@ -101,7 +114,23 @@ class RubrikController extends Controller
             ->first();
 
         $file = $request->file('rubrik_file');
-        $path = $file->store('rubrics', 'public');
+        $fileName = $file->hashName();
+        $filePath = $file->getRealPath() ?: $file->getPathname();
+
+        try {
+            $stream = fopen($filePath, 'r');
+            Storage::disk('public')->put('rubrics/' . $fileName, $stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        } catch (\Throwable $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['rubrik_file' => 'Gagal menyimpan file: ' . $e->getMessage()])
+                ->withInput();
+        }
+
+        $path = 'rubrics/' . $fileName;
 
         if ($existing) {
             if ($existing->file_path && Storage::disk('public')->exists($existing->file_path)) {

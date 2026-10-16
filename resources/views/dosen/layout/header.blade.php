@@ -162,6 +162,26 @@
             fill: #ffffff !important;
         }
 
+        /* UNIFIED GLOBAL ACCENT STYLES FOR BADGES & UI ELEMENTS */
+        .bg-primary,
+        .badge.bg-primary,
+        .badge-primary,
+        .badge-info,
+        .badge-cyan,
+        .badge-system,
+        span.bg-primary {
+            background-color: {{ $themeHeaderColor }} !important;
+            background: {{ $themeHeaderColor }} !important;
+            color: #ffffff !important;
+        }
+
+        .text-primary,
+        th .text-primary,
+        td .text-primary,
+        .text-theme-accent {
+            color: {{ $themeHeaderColor }} !important;
+        }
+
         .btn-danger, a.btn-danger, button.btn-danger {
             background-color: #dc3545 !important;
             border-color: #dc3545 !important;

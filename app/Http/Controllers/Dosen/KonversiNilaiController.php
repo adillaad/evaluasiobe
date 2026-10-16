@@ -81,6 +81,7 @@ class KonversiNilaiController extends Controller
                     if (!Schema::hasColumn('mutus', 'BobotSoal')) $table->float('BobotSoal')->nullable();
                     if (!Schema::hasColumn('mutus', 'examWeight')) $table->float('examWeight')->nullable();
                     if (!Schema::hasColumn('mutus', 'id_mahasiswa')) $table->unsignedBigInteger('id_mahasiswa')->nullable();
+                    if (!Schema::hasColumn('mutus', 'user_id')) $table->unsignedBigInteger('user_id')->nullable();
                 });
 
                 // Drop foreign key on mutus that depends on mutus_konversi_unique index first
@@ -447,7 +448,6 @@ class KonversiNilaiController extends Controller
 
                 // Update record di mutus jika metode ini sebelumnya pernah di-import nilainya
                 Mutu::where('konversi_metode_id', $km->id)->update([
-                    'BobotSoal' => $bobotVal,
                     'examWeight' => $bobotVal,
                 ]);
 
@@ -478,17 +478,29 @@ class KonversiNilaiController extends Controller
                                     'nama_soal' => $namaSoal,
                                     'bobot_soal' => $effBobotSoal,
                                 ]);
+
+                                Mutu::where('konversi_metode_id', $km->id)
+                                    ->where('Cpmk', $cpmkId)
+                                    ->where('soal', $namaSoal)
+                                    ->update(['BobotSoal' => $effBobotSoal]);
                             }
                         } else {
-                            // Standard pemetaan CPMK langsung
+                            // Standard pemetaan CPMK langsung (default 1 soal = 'Soal #1')
                             $effBobotSoal = round($cpmkPortion, 4);
                             KonversiCpmkMetode::create([
                                 'konversi_metode_id' => $km->id,
                                 'cpmk_id' => $cpmkId,
                                 'sub_cpmk_id' => null,
-                                'nama_soal' => null,
+                                'nama_soal' => 'Soal #1',
                                 'bobot_soal' => $effBobotSoal,
                             ]);
+
+                            Mutu::where('konversi_metode_id', $km->id)
+                                ->where('Cpmk', $cpmkId)
+                                ->update([
+                                    'soal' => 'Soal #1',
+                                    'BobotSoal' => $effBobotSoal,
+                                ]);
                         }
                     }
                 }
@@ -1118,6 +1130,15 @@ class KonversiNilaiController extends Controller
                         ->delete();
                 }
 
+                $calcEffBobot = function ($cmItem, $kmItem) {
+                    if ($cmItem && (float)$cmItem->bobot_soal > 0) {
+                        return (float)$cmItem->bobot_soal;
+                    }
+                    $cpmkCount = $kmItem->cpmkMetode ? $kmItem->cpmkMetode->pluck('cpmk_id')->unique()->count() : 1;
+                    $cpmkCount = $cpmkCount > 0 ? $cpmkCount : 1;
+                    return round(((float)$kmItem->bobot) / $cpmkCount, 4);
+                };
+
                 // 2. Simpan data baru per kolom Excel
                 foreach ($columnMap as $colIdx => $info) {
                     $scoreVal = isset($item['scores'][$colIdx]) ? (float) $item['scores'][$colIdx] : 0;
@@ -1169,6 +1190,7 @@ class KonversiNilaiController extends Controller
                                 'sumber' => 'konversi',
                             ],
                             [
+                                'user_id' => auth()->id(),
                                 'id_mahasiswa' => $mhsId,
                                 'universitas_id' => $univId,
                                 'Nama_mhs' => $nama,
@@ -1179,7 +1201,7 @@ class KonversiNilaiController extends Controller
                                 'Cpl' => $cplId,
                                 'Nilai' => $finalNilaiMetode,  // Nilai Akhir Metode
                                 'nilaiSoal' => $scoreVal,       // Nilai per soal CPMK
-                                'BobotSoal' => ($cm->bobot_soal > 0) ? $cm->bobot_soal : $km->bobot,
+                                'BobotSoal' => $calcEffBobot($cm, $km),
                                 'examWeight' => $km->bobot,
                                 'tahun_ajaran_id' => $konversi->tahun_ajaran_id,
                                 'tahun' => $konversi->tahunAjaran->tahun ?? null,
@@ -1206,10 +1228,11 @@ class KonversiNilaiController extends Controller
                                     'Course' => $konversi->mk_kode,
                                     'konversi_metode_id' => $km->id,
                                     'Cpmk' => $cm->cpmk_id,
-                                    'soal' => $cm->nama_soal,
+                                    'soal' => !empty($cm->nama_soal) ? $cm->nama_soal : 'Soal #1',
                                     'sumber' => 'konversi',
                                 ],
                                 [
+                                    'user_id' => auth()->id(),
                                     'id_mahasiswa' => $mhsId,
                                     'universitas_id' => $univId,
                                     'Nama_mhs' => $nama,
@@ -1220,7 +1243,7 @@ class KonversiNilaiController extends Controller
                                     'Cpl' => $cplId,
                                     'Nilai' => $finalNilaiMetode,  // Nilai Akhir Metode murni dari kolom Nilai Metode
                                     'nilaiSoal' => $scoreVal,       // Nilai per CPMK
-                                    'BobotSoal' => ($cm->bobot_soal > 0) ? $cm->bobot_soal : $km->bobot,
+                                    'BobotSoal' => $calcEffBobot($cm, $km),
                                     'examWeight' => $km->bobot,
                                     'tahun_ajaran_id' => $konversi->tahun_ajaran_id,
                                     'tahun' => $konversi->tahunAjaran->tahun ?? null,
@@ -1243,10 +1266,11 @@ class KonversiNilaiController extends Controller
                                         'Course' => $konversi->mk_kode,
                                         'konversi_metode_id' => $km->id,
                                         'Cpmk' => $cm->cpmk_id,
-                                        'soal' => $cm->nama_soal,
+                                        'soal' => !empty($cm->nama_soal) ? $cm->nama_soal : 'Soal #1',
                                         'sumber' => 'konversi',
                                     ],
                                     [
+                                        'user_id' => auth()->id(),
                                         'id_mahasiswa' => $mhsId,
                                         'universitas_id' => $univId,
                                         'Nama_mhs' => $nama,
@@ -1257,7 +1281,7 @@ class KonversiNilaiController extends Controller
                                         'Cpl' => $cplId,
                                         'Nilai' => $scoreVal,
                                         'nilaiSoal' => $scoreVal,
-                                        'BobotSoal' => ($cm->bobot_soal > 0) ? $cm->bobot_soal : $km->bobot,
+                                        'BobotSoal' => $calcEffBobot($cm, $km),
                                         'examWeight' => $km->bobot,
                                         'tahun_ajaran_id' => $konversi->tahun_ajaran_id,
                                         'tahun' => $konversi->tahunAjaran->tahun ?? null,
@@ -1270,9 +1294,11 @@ class KonversiNilaiController extends Controller
                                     'NPM' => $npm,
                                     'Course' => $konversi->mk_kode,
                                     'konversi_metode_id' => $km->id,
+                                    'soal' => 'Soal #1',
                                     'sumber' => 'konversi',
                                 ],
                                 [
+                                    'user_id' => auth()->id(),
                                     'id_mahasiswa' => $mhsId,
                                     'universitas_id' => $univId,
                                     'Nama_mhs' => $nama,
@@ -1280,7 +1306,7 @@ class KonversiNilaiController extends Controller
                                     'id_prodi' => $prodiId,
                                     'namaCourse' => $konversi->mk?->nama ?? '',
                                     'Jenis' => $metodeNama,
-                                    'soal' => null,
+                                    'soal' => 'Soal #1',
                                     'Nilai' => $scoreVal,
                                     'nilaiSoal' => $scoreVal,
                                     'BobotSoal' => $km->bobot,

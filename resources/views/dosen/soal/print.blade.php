@@ -116,14 +116,14 @@
                     <div class="desc-contain">Soal CPMK {{$no+1}}:</div>
                     <ol class="start">
                         @foreach($soalforcpmks as $sfc)
-                        <li>{{$sfc->pertanyaan}}</li>
+                        <li>{!! $sfc->pertanyaan !!}</li>
                         @endforeach
                     </ol>
                     @else
                     <div class="desc-contain" style="margin-top: 15px">Soal CPMK {{$no+1}}</div>
                     <ol class="start">
                         @foreach($soalforcpmks as $sfc)
-                        <li>{{$sfc->pertanyaan}}</li>
+                        <li>{!! $sfc->pertanyaan !!}</li>
                         @endforeach
                     </ol>
                     @endif

@@ -40,12 +40,12 @@
                 <h3>Tambah Kriteria Penilaian</h3>
             </div>
         </div>
-        <span class="tooltiptext">Format: Contoh ke-1</span>
+        <span class="tooltiptext">Contoh: Ketepatan Analisis</span>
         <div class="card-body">
             <form action="add-Jenis" method="post">
                 @csrf
                 <label> Kriteria <span class="text-danger"> *</span></label>
-                <input type="text" class="form-control" id="jenis" name="jenis" required>
+                <input type="text" class="form-control" id="jenis" name="jenis" placeholder="Contoh: Ketepatan Analisis / Penguasaan Materi / Sistematika" required>
                 <br>
                 <button type="submit" class="btn btn-primary">Submit</button>
             </form>

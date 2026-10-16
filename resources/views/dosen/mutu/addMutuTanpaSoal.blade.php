@@ -21,23 +21,24 @@
                 <form action="{{ route('dosen.ExcelTanpaSoal') }}" method="GET">
                     @csrf
 
-                    <div class="row">
+                    {{-- Data Universitas & Prodi Otomatis Sesuai Akun User --}}
+                    <input type="hidden" name="univ" value="{{ $universitas->first()->nama ?? '' }}">
+                    <input type="hidden" name="prodi" value="{{ $prodi->first()->nama ?? '' }}">
 
-                        {{-- Universitas --}}
-                        <div class="col-5">
-                            <div class="form-group">
-                                <label>Universitas <span class="text-danger">*</span></label>
-                                <select name="univ" class="form-control" required>
-                                    <option value="">Pilih...</option>
-                                    @foreach ($universitas as $u)
-                                        <option value="{{ $u->nama }}">{{ $u->nama }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                    <div class="alert alert-light border d-flex flex-wrap gap-4 align-items-center py-2 px-3 mb-3 text-muted small">
+                        <div>
+                            <i class="bi bi-building me-1 text-primary"></i>
+                            <strong>Universitas:</strong> {{ $universitas->first()->nama ?? '-' }}
                         </div>
+                        <div>
+                            <i class="bi bi-mortarboard me-1 text-primary"></i>
+                            <strong>Program Studi:</strong> {{ $prodi->first()->nama ?? '-' }}
+                        </div>
+                    </div>
 
+                    <div class="row">
                         {{-- Semester --}}
-                        <div class="col-5">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label>Semester <span class="text-danger">*</span></label>
                                 <select name="semester" class="form-control" required>
@@ -48,20 +49,8 @@
                             </div>
                         </div>
 
-                        {{-- Prodi --}}
-                        <div class="col-5">
-                            <div class="form-group">
-                                <label>Prodi <span class="text-danger">*</span></label>
-                                <select name="prodi" class="form-control" required>
-                                    @foreach ($prodi as $p)
-                                        <option value="{{ $p->nama }}">{{ $p->nama }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
                         {{-- MK --}}
-                        <div class="col-5">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label>Nama MK <span class="text-danger">*</span></label>
                                 <select name="kode_mk" id="kode_mk" class="form-control" required>
@@ -76,7 +65,7 @@
                         </div>
 
                         {{-- Jenis --}}
-                        <div class="col-5">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label>Jenis <span class="text-danger">*</span></label>
                                 <select name="jenis" id="jenis" class="form-control" required disabled>
@@ -84,7 +73,6 @@
                                 </select>
                             </div>
                         </div>
-
                     </div>
 
                     {{-- TABLE --}}

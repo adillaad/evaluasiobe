@@ -32,7 +32,7 @@
             {{-- Info box --}}
             <div class="alert alert-info py-2 mb-3 small">
                 <i class="ti ti-info-circle me-1"></i>
-                <strong>Catatan:</strong> Template gabungan (kolom <code>SOAL|…</code> dan <code>TS|…</code>)
+                <strong>Catatan:</strong> Template penilaian gabungan (kolom <code>Soal - CPMK</code> dan instrumen)
                 diproses dalam satu import. Pastikan file yang diunggah adalah template yang diunduh dari
                 menu <em>Download Template Penilaian</em> dan sudah diisi lengkap.
             </div>
@@ -81,6 +81,19 @@
                                 </select>
                             </div>
                         @endif
+                        @if (isset($angkatans) && $angkatans->isNotEmpty())
+                            <div style="max-width: 170px; width: 100%;">
+                                <label class="form-label fw-semibold small mb-1">Angkatan</label>
+                                <select name="angkatan" class="form-select form-select-sm filter-auto-submit" style="height: 38px;">
+                                    <option value="">-- Semua Angkatan --</option>
+                                    @foreach ($angkatans as $angk)
+                                        <option value="{{ $angk }}" {{ request('angkatan') == (string)$angk ? 'selected' : '' }}>
+                                            {{ $angk }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
                         @if (isset($mks) && $mks->isNotEmpty())
                             <div style="max-width: 320px; width: 100%;">
                                 <label class="form-label fw-semibold small mb-1">Mata Kuliah</label>
@@ -94,7 +107,7 @@
                                 </select>
                             </div>
                         @endif
-                        @if (request('course') || request('mk_kode') || request('tahun_ajaran_id'))
+                        @if (request('course') || request('mk_kode') || request('tahun_ajaran_id') || request('angkatan'))
                             <div>
                                 <a href="{{ route($currentPrefix . 'import-mutu') }}" class="btn btn-secondary btn-sm px-4 fw-semibold d-flex align-items-center justify-content-center" style="height: 38px;">
                                     <i class="ti ti-refresh me-1"></i> Reset
@@ -112,49 +125,154 @@
                 </div>
             </form>
 
+            <style>
+                .toggle-soal-btn[aria-expanded="true"] .ti-chevron-down {
+                    transform: rotate(180deg);
+                }
+                .toggle-soal-btn .ti-chevron-down {
+                    transition: transform 0.2s ease-in-out;
+                }
+            </style>
+
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Angkatan</th>
+                            <!-- <th style="width: 45px;" class="text-center">#</th> -->
+                            <th style="width: 140px;">Tahun</th>
+                            <th style="width: 70px;" class="text-center">Angkatan</th>
+                            <th style="width: 120px;">NPM</th>
                             <th>Nama</th>
-                            <th>NPM</th>
-                            <th>Nama Mata Kuliah</th>
+                            <th>Mata Kuliah</th>
                             <th>Jenis</th>
-                            <th>Soal / Instrumen</th>
-                            <th>Nilai</th>
+                            <th class="text-center" style="width: 120px;">Nilai</th>
+                            <th class="text-center" style="width: 150px;">Rincian Soal</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if ($mutus->isEmpty())
                             <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
+                                <td colspan="8" class="text-center py-5 text-muted">
                                     <i class="ti ti-folder me-2"></i>Belum ada data nilai yang diimport.
                                 </td>
                             </tr>
                         @else
                             @foreach ($mutus as $item)
+                                @php
+                                    $detailId = 'detailSoal-' . $loop->index;
+                                    $detailSoals = $item->detail_soals ?? collect();
+                                    $taLabel = $item->ta_tahun && $item->ta_tahun != '-'
+                                        ? ($item->ta_tahun . ($item->ta_semester ? ' (' . $item->ta_semester . ')' : ''))
+                                        : ($item->tahun ?: '-');
+                                @endphp
                                 <tr>
-                                    <td class="small">{{ $item->angkatan }}</td>
-                                    <td class="small fw-semibold">{{ $item->nama_mhs }}</td>
-                                    <td class="small">{{ $item->npm }}</td>
-                                    <td class="small">{{ $item->nama_mk }}</td>
+                                    <!-- <td class="text-center text-muted small">
+                                        {{ method_exists($mutus, 'firstItem') ? $mutus->firstItem() + $loop->index : $loop->iteration }}
+                                    </td> -->
+                                    <td class="small fw-semibold text-secondary">
+                                        {{ $taLabel }}
+                                    </td>
+                                    <td class="text-center text-muted">
+                                        {{ $item->angkatan ?: '-' }}
+                                    </td>
                                     <td>
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                                            {{ $item->Jenis }}
-                                        </span>
+                                        <span class="font-monospace fw-semibold">{{ $item->npm }}</span>
                                     </td>
-                                    <td class="small">
-                                        @if (isset($item->idSoal))
-                                            <a href="soal/cetakSoal/{{ $item->idSoal }}" target="_blank"
-                                                class="text-primary">
-                                                {{ $item->soal }}
-                                            </a>
-                                        @else
-                                            {{ $item->soal }}
-                                        @endif
+                                    <td>
+                                        <div class="fw-semibold text-dark">{{ $item->nama_mhs ?: 'Tanpa Nama' }}</div>
                                     </td>
-                                    <td class="fw-bold">{{ $item->nilaiSoal }}</td>
+                                    <td>
+                                        <div class="small fw-semibold text-dark">{{ $item->nama_mk ?: $item->Course }}</div>
+                                        <div class="text-muted small">{{ $item->Course }}</div>
+                                    </td>
+                                    <td>
+                                        {{ strtoupper($item->Jenis) }}{{ !empty($item->exam_weight) && $item->exam_weight > 0 ? ' (' . $item->exam_weight . '%)' : '' }}
+                                    </td>
+                                    <td class="text-center">
+                                        {{ is_numeric($item->nilai_akhir) ? number_format((float)$item->nilai_akhir, 2) : ($item->nilai_akhir ?: '0') }}
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 toggle-soal-btn d-inline-flex align-items-center gap-1 shadow-none"
+                                            type="button" 
+                                            data-bs-toggle="collapse" 
+                                            data-bs-target="#{{ $detailId }}" 
+                                            aria-expanded="false" 
+                                            aria-controls="{{ $detailId }}">
+                                            <i class="ti ti-list"></i>
+                                            <span>{{ $detailSoals->count() }} Soal</span>
+                                            <i class="ti ti-chevron-down ms-1"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                {{-- Baris Dropdown / Collapse: Rincian Soal & Nilai Per Item --}}
+                                <tr class="collapse bg-light bg-opacity-50" id="{{ $detailId }}">
+                                    <td colspan="8" class="p-3 border-top-0">
+                                        <div class="card border-0 shadow-sm rounded-3">
+                                            <div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
+                                                <span class="fw-bold small text-primary">
+                                                    <i class="ti ti-file-text me-1"></i> Rincian Nilai per Soal / Instrumen &mdash; {{ strtoupper($item->Jenis) }}
+                                                </span>
+                                                <span class="badge bg-light text-secondary border small">
+                                                    Total Item: {{ $detailSoals->count() }}
+                                                </span>
+                                            </div>
+                                            <div class="table-responsive p-0">
+                                                <table class="table table-sm table-bordered align-middle mb-0 small">
+                                                    <thead class="table-light">
+                                                        <tr class="text-muted">
+                                                            <th class="text-center" style="width: 45px;">No</th>
+                                                            <th>Nama Soal / Instrumen</th>
+                                                            <th class="text-center" style="width: 130px;">CPMK</th>
+                                                            <th class="text-center" style="width: 130px;">CPL</th>
+                                                            <th class="text-center" style="width: 120px;">Bobot (%)</th>
+                                                            <th class="text-center" style="width: 120px;">Nilai Soal</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @forelse ($detailSoals as $idx => $soal)
+                                                            <tr>
+                                                                <td class="text-center text-muted">{{ $idx + 1 }}</td>
+                                                                <td>
+                                                                    @if (!empty($soal->idSoal))
+                                                                        <a href="{{ url('dosen/soal/cetakSoal/' . $soal->idSoal) }}" target="_blank" class="fw-semibold text-primary text-decoration-none d-inline-flex align-items-center gap-1">
+                                                                            <i class="ti ti-external-link small"></i> {{ $soal->soal }}
+                                                                        </a>
+                                                                    @else
+                                                                        <span class="fw-semibold text-dark">{{ $soal->soal }}</span>
+                                                                    @endif
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    @if (!empty($soal->kode_cpmk))
+                                                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">{{ $soal->kode_cpmk }}</span>
+                                                                    @else
+                                                                        <span class="text-muted">-</span>
+                                                                    @endif
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    @if (!empty($soal->kode_cpl))
+                                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border">{{ $soal->kode_cpl }}</span>
+                                                                    @else
+                                                                        <span class="text-muted">-</span>
+                                                                    @endif
+                                                                </td>
+                                                                <td class="text-center fw-semibold text-muted">
+                                                                    {{ $soal->BobotSoal !== null ? $soal->BobotSoal . '%' : '-' }}
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    <span class="fw-bold text-dark">{{ $soal->nilaiSoal }}</span>
+                                                                </td>
+                                                            </tr>
+                                                        @empty
+                                                            <tr>
+                                                                <td colspan="6" class="text-center text-muted py-2">Tidak ada rincian soal.</td>
+                                                            </tr>
+                                                        @endforelse
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </td>
                                 </tr>
                             @endforeach
                         @endif
@@ -162,7 +280,9 @@
                 </table>
             </div>
 
-            {{ $mutus->links() }}
+            <div class="mt-3">
+                {{ $mutus->links() }}
+            </div>
         </div>
     </div>
 
@@ -180,6 +300,7 @@
                         @csrf
                         <input type="hidden" name="parsed_rows_data" value="{{ json_encode($tempParsedRows) }}">
                         <input type="hidden" name="headers_data" value="{{ json_encode($tempHeaders) }}">
+                        <input type="hidden" name="display_headers_data" value="{{ json_encode(session('temp_display_headers', [])) }}">
                         <div class="modal-header py-2 px-3 bg-warning text-dark">
                             <h5 class="modal-title fs-6 fw-bold">
                                 <i class="ti ti-alert-circle me-1"></i> Perhatian: {{ count($unregisteredList) }} NPM Belum Terdaftar

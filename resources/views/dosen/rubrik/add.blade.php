@@ -361,6 +361,10 @@ $templateRubriks = [
         let formData = new FormData();
         formData.append('rubrik_file', fileInput.files[0]);
 
+        const originalHtml = previewBtn.innerHTML;
+        previewBtn.disabled = true;
+        previewBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Memuat...';
+
         try {
             const response = await fetch("{{ route('dosen.rubrik.preview') }}",{
                 method:'POST',
@@ -380,8 +384,11 @@ $templateRubriks = [
             renderPreview(res.type, res.headers, res.data);
             show(uploadSuccess);
         } catch (error) {
-            console.error(error);
-            alert('Terjadi kesalahan saat preview file.');
+            console.error('Preview error:', error);
+            alert('Terjadi kesalahan saat preview file: ' + (error.message || 'Silakan coba lagi.'));
+        } finally {
+            previewBtn.disabled = false;
+            previewBtn.innerHTML = originalHtml;
         }
     });
 

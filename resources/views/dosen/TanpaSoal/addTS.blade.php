@@ -88,19 +88,6 @@
                             <div class="form-text mb-3"></div>
                         </div>
 
-                        <div class="form-floating tooltipa">
-                            <select id="prodi" name="prodi" class="form-select form-control-lg"
-                                aria-label="select Prodi" required readonly>
-                                <option>{{ $latestData->prodi }}</option>
-                                @foreach ($prodi as $prodi)
-                                    <option value="{{ $prodi->nama }}">{{ $prodi->nama }}</option>
-                                @endforeach
-                            </select>
-                            <span class="tooltiptext">Kolom ini terisi otomatis sesuai dengan yang di submit
-                                sebelumnnya</span>
-                            <label for="prodi"> Pilih Prodi <span class="text-danger"> *</span></label>
-                            <div class="form-text mb-3"></div>
-                        </div>
 
                         <div class="form-floating tooltipa">
                             <select id="kode_mk" name="kode_mk" class="form-select form-control-lg"

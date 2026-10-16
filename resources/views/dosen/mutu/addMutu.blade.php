@@ -1,3 +1,9 @@
+@php
+    $userOtoritas = auth()->user()->otoritas->otoritas ?? '';
+    $currentPrefix = $userOtoritas
+        ? str_replace(' ', '-', strtolower($userOtoritas)) . '.'
+        : 'dosen.';
+@endphp
 @extends('dosen.template')
 @section('content')
     <style>
@@ -107,19 +113,24 @@
 
                 <form action="{{ route('dosen.excelGabungan') }}" method="GET" id="form-download">
                     @csrf
-                    <div class="row">
-                        <div class="col-5">
-                            <div class="form-group">
-                                <label>Universitas <span class="text-danger">*</span></label>
-                                <select class="form-control" name="univ" id="univ" required>
-                                    <option value="" disabled selected>Select...</option>
-                                    @foreach ($universitas as $u)
-                                        <option value="{{ $u->nama }}">{{ $u->nama }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+
+                    {{-- Data Universitas & Prodi Otomatis Sesuai Akun User --}}
+                    <input type="hidden" name="univ" value="{{ $universitas->first()->nama ?? '' }}">
+                    <input type="hidden" name="prodi" value="{{ $prodi->first()->nama ?? '' }}">
+
+                    <div class="alert alert-light border d-flex flex-wrap gap-4 align-items-center py-2 px-3 mb-3 text-muted small">
+                        <div>
+                            <i class="ti ti-building me-1 text-primary"></i>
+                            <strong>Universitas:</strong> {{ $universitas->first()->nama ?? '-' }}
                         </div>
-                        <div class="col-5">
+                        <div>
+                            <i class="ti ti-school me-1 text-primary"></i>
+                            <strong>Program Studi:</strong> {{ $prodi->first()->nama ?? '-' }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label>Tahun Akademik <span class="text-danger">*</span></label>
                                 <select class="form-control" name="semester" id="semester" required>
@@ -137,18 +148,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-5">
-                            <div class="form-group">
-                                <label>Prodi <span class="text-danger">*</span></label>
-                                <select class="form-control" name="prodi" id="prodi" required>
-                                    <option value="" disabled selected>Select...</option>
-                                    @foreach ($prodi as $p)
-                                        <option value="{{ $p->nama }}">{{ $p->nama }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-5">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label>Nama MK <span class="text-danger">*</span></label>
                                 <select class="form-control" name="kode_mk" id="kode_mk" required>
@@ -161,7 +161,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-5">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label>Jenis / Metode Penilaian <span class="text-danger">*</span></label>
                                 <select class="form-control" name="jenis" id="jenis" required disabled>
@@ -240,9 +240,14 @@
                                 <div id="cpmk-warning-banner" class="alert alert-warning d-none">
                                     <span id="cpmk-warning-text"></span>
                                 </div>
-                                <button type="submit" class="btn btn-primary" id="btn-download" disabled>
-                                    Download Template Gabungan
-                                </button>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <button type="submit" class="btn btn-primary" id="btn-download" disabled>
+                                        <i class="ti ti-download me-1"></i> Download Template Penilaian
+                                    </button>
+                                    {{-- <button type="button" class="btn btn-outline-primary" id="btn-cetak-soal" style="display: none;">
+                                        <i class="ti ti-printer me-1"></i> Cetak / Download Naskah Soal
+                                    </button> --}}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -313,6 +318,7 @@
                     '<p class="text-muted">Pilih Mata Kuliah dan Jenis terlebih dahulu.</p>');
                 $('#totalDipilih').text('0 item');
                 $('#btn-download').prop('disabled', true).hide();
+                $('#btn-cetak-soal').hide();
                 $('#hidden-inputs-container').empty();
                 $('#cpmk-warning-banner').addClass('d-none');
                 $('#global-warning').addClass('d-none');
@@ -562,9 +568,11 @@
                 $('#cpmk-summary').text(mappedCount + ' dari ' + cpmks.length + ' CPMK sudah terpetakan 100%.');
 
                 var anyChecked = $('.item-checkbox:checked:not(:disabled)').length > 0;
+                var countSoalChecked = $('.item-checkbox:checked:not(:disabled)[data-type="soal"]').length;
                 var downloadOk = anyChecked && allMapped;
                 $('#totalDipilih').text($('.item-checkbox:checked:not(:disabled)').length + ' item');
                 $('#btn-download').prop('disabled', !downloadOk).toggle(anyChecked);
+                // $('#btn-cetak-soal').toggle(countSoalChecked > 0);
 
                 if (anyChecked && !allMapped) {
                     var unmapped = cpmks
@@ -605,6 +613,35 @@
                 });
             }
 
+            /*
+            // Handler tombol Cetak / Download Naskah Soal
+            $('#btn-cetak-soal').on('click', function(e) {
+                e.preventDefault();
+                var countSoal = $('.item-checkbox:checked:not(:disabled)[data-type="soal"]').length;
+                if (countSoal === 0) {
+                    alert('Silakan pilih minimal satu butir soal untuk dicetak.');
+                    return;
+                }
+
+                var $form = $('#form-download');
+                var originalAction = $form.attr('action');
+                var originalTarget = $form.attr('target');
+
+                $form.attr('action', "{{ route($currentPrefix . 'soal-cetak-naskah') }}");
+                $form.attr('target', '_blank');
+                $form[0].submit();
+
+                // Kembalikan action & target semula untuk download template Excel
+                setTimeout(function() {
+                    $form.attr('action', originalAction);
+                    if (originalTarget) {
+                        $form.attr('target', originalTarget);
+                    } else {
+                        $form.removeAttr('target');
+                    }
+                }, 300);
+            });
+            */
         });
     </script>
 @endsection
