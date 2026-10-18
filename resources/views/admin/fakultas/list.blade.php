@@ -60,16 +60,23 @@
                                         <td>{{ $fakultas->universitas->nama }}</td>
                                     @endif
                                     <td>
-                                        <form action="{{ route($currentPrefix . 'delete-fakultas', ['id' => $fakultas->id]) }}"
-                                            method="post" class="d-inline m-0 p-0">
-                                            @csrf
-                                            @method('delete')
-                                            <button type="submit" class="btn btn-danger btn-icons"
-                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
-                                                onclick="return confirm('Are you sure to delete ?')">
-                                                <i class="ti-trash"></i>
-                                            </button>
-                                        </form>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <a href="{{ route($currentPrefix . 'edit-fakultas', ['id' => $fakultas->id]) }}"
+                                                class="btn btn-warning btn-icons text-white"
+                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
+                                                <i class="ti-pencil"></i>
+                                            </a>
+                                            <form action="{{ route($currentPrefix . 'delete-fakultas', ['id' => $fakultas->id]) }}"
+                                                method="post" class="d-inline m-0 p-0">
+                                                @csrf
+                                                @method('delete')
+                                                <button type="submit" class="btn btn-danger btn-icons"
+                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus"
+                                                    onclick="return confirm('Are you sure to delete ?')">
+                                                    <i class="ti-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

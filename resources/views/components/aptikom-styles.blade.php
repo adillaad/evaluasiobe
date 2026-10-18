@@ -4,9 +4,9 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 0.35rem 0.85rem;
+            padding: 0.2rem 0.65rem;
             border-radius: 999px;
-            font-size: 0.82rem;
+            font-size: 0.72rem;
             font-weight: 600;
             line-height: 1.2;
             border: 1px solid transparent;

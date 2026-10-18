@@ -90,6 +90,74 @@ class FakultasController extends Controller
         }
     }
 
+    public function Edit($id)
+    {
+        $fakultas = Fakultas::with('universitas')->findOrFail($id);
+
+        if (auth()->user()->otoritas->otoritas === 'Admin Universitas') {
+            if ($fakultas->id_universitas != auth()->user()->id_universitasUser) {
+                abort(403, 'Akses ditolak.');
+            }
+        }
+
+        $universitas = Universitas::select('id', 'nama')->distinct()->get();
+
+        return view('admin.fakultas.edit', compact('fakultas', 'universitas'));
+    }
+
+    public function Update(Request $request, $id)
+    {
+        $fakultas = Fakultas::findOrFail($id);
+
+        if (auth()->user()->otoritas->otoritas === 'Admin Universitas') {
+            if ($fakultas->id_universitas != auth()->user()->id_universitasUser) {
+                abort(403, 'Akses ditolak.');
+            }
+        }
+
+        $idUniversitas = auth()->user()->otoritas->otoritas === 'Admin Universitas'
+            ? auth()->user()->id_universitasUser
+            : ($request->id_universitas ?? $fakultas->id_universitas);
+
+        $validator = Validator::make(array_merge($request->all(), ['id_universitas' => $idUniversitas]), [
+            'id_universitas' => 'required',
+            'fakultas' => 'required',
+        ], [
+            'id_universitas.required' => 'Universitas wajib dipilih',
+            'fakultas.required' => 'Fakultas wajib diisi',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            $fakultas->update([
+                'id_universitas' => $idUniversitas,
+                'nama' => $request->fakultas,
+            ]);
+
+            return redirect()
+                ->route($this->getRouteByAuthority())
+                ->with('success', 'Fakultas berhasil diperbarui');
+        } catch (\Exception $e) {
+            if ($e->getCode() === '23000') {
+                return redirect()
+                    ->back()
+                    ->with('error', 'Fakultas dengan nama yang sama sudah ada di universitas ini.')
+                    ->withInput();
+            }
+
+            return redirect()
+                ->back()
+                ->with('error', 'Terjadi kesalahan saat memperbarui data: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
     public function Delete($id)
     {
         try {

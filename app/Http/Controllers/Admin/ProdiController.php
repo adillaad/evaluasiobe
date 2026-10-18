@@ -159,6 +159,80 @@ class ProdiController extends Controller
         }
     }
 
+    public function Edit($id)
+    {
+        $prodi = Prodi::with(['fakultas', 'fakultas.universitas'])->findOrFail($id);
+
+        if (auth()->user()->otoritas->otoritas === 'Admin Universitas') {
+            if ($prodi->fakultas && $prodi->fakultas->id_universitas != auth()->user()->id_universitasUser) {
+                abort(403, 'Akses ditolak.');
+            }
+        }
+
+        $universitas = Universitas::select('id', 'nama')->distinct()->get();
+
+        $selectedUniversitasId = auth()->user()->otoritas->otoritas === 'Admin Universitas'
+            ? auth()->user()->id_universitasUser
+            : ($prodi->fakultas->id_universitas ?? null);
+
+        $fakultasQuery = Fakultas::select('id', 'nama', 'id_universitas');
+        if ($selectedUniversitasId) {
+            $fakultasQuery->where('id_universitas', $selectedUniversitasId);
+        }
+        $fakultas = $fakultasQuery->get();
+
+        return view('admin.prodi.edit', compact('prodi', 'universitas', 'fakultas', 'selectedUniversitasId'));
+    }
+
+    public function Update(Request $request, $id)
+    {
+        $prodi = Prodi::with('fakultas')->findOrFail($id);
+
+        if (auth()->user()->otoritas->otoritas === 'Admin Universitas') {
+            if ($prodi->fakultas && $prodi->fakultas->id_universitas != auth()->user()->id_universitasUser) {
+                abort(403, 'Akses ditolak.');
+            }
+        }
+
+        $validator = Validator::make($request->all(), [
+            'id_fakultas' => 'required',
+            'prodi' => 'required',
+            'is_aptikom' => 'required|in:0,1',
+            'jenjang' => 'required',
+        ], [
+            'id_fakultas.required' => 'Fakultas wajib dipilih',
+            'prodi.required' => 'Prodi wajib diisi',
+            'is_aptikom.required' => 'Status Aptikom wajib dipilih',
+            'jenjang.required' => 'Jenjang pendidikan wajib dipilih',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        try {
+            $namaProdi = $request->prodi;
+            $jenjang = $request->jenjang;
+
+            $prodi->update([
+                'id_fakultas' => $request->id_fakultas,
+                'nama' => $namaProdi,
+                'is_aptikom' => $request->is_aptikom,
+                'jenjang' => $jenjang,
+            ]);
+
+            return redirect()->route($this->getRouteByAuthority())->with('success', 'Prodi berhasil diperbarui');
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() == 23000) {
+                return redirect()->back()->with('error', 'Prodi dengan nama yang sama sudah ada dalam fakultas tersebut.')->withInput();
+            }
+
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage())->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi Sebuah kesalahan: ' . $e->getMessage())->withInput();
+        }
+    }
+
     public function Delete($id)
     {
         try {

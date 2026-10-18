@@ -168,6 +168,8 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('add-fakultas', 'Add')->name('add-fakultas');
                 Route::post('add-fakultas', 'Store')->name('store-fakultas');
                 Route::get('list-fakultas', 'List')->name('list-fakultas');
+                Route::get('edit-fakultas/{id}', 'Edit')->name('edit-fakultas');
+                Route::match(['put', 'post'], 'update-fakultas/{id}', 'Update')->name('update-fakultas');
                 Route::delete('delete-fakultas/{id}', 'Delete')->name('delete-fakultas');
             });
 
@@ -176,6 +178,8 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('add-Prodi', 'Store')->name('store-prodi');
                 Route::get('list-Prodi', 'List')->name('list-prodi');
                 Route::get('daftar-akun-prodi', 'daftarAkunProdi')->name('daftar-akun-prodi');
+                Route::get('edit-Prodi/{id}', 'Edit')->name('edit-prodi');
+                Route::match(['put', 'post'], 'update-Prodi/{id}', 'Update')->name('update-prodi');
                 Route::delete('delete-Prodi/{id}', 'Delete')->name('delete-prodi');
             });
 
