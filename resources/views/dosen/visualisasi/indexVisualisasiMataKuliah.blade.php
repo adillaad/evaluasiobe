@@ -1736,34 +1736,43 @@
                             datasets: [{
                                     label: 'Skor CPMK',
                                     data: dataCapaianCpmkAvg,
-                                    backgroundColor: 'rgba(31, 59, 179, 0.2)',
-                                    borderColor: 'rgba(31, 59, 179, 1)',
+                                    backgroundColor: 'rgba(31, 59, 179, 0.15)',
+                                    borderColor: '#1F3BB3',
                                     borderWidth: 2.5,
-                                    pointBackgroundColor: 'rgba(31, 59, 179, 1)',
+                                    pointBackgroundColor: '#1F3BB3',
+                                    pointBorderColor: '#ffffff',
+                                    pointBorderWidth: 1.5,
                                     pointRadius: 4,
-                                    pointHoverRadius: 6
+                                    pointHoverRadius: 6,
+                                    pointHitRadius: 10
                                 },
                                 {
                                     label: 'Min CPMK',
                                     data: dataCapaianCpmkMin,
-                                    backgroundColor: 'rgba(216, 33, 33, 0.05)',
-                                    borderColor: 'rgba(216, 33, 33, 0.8)',
-                                    borderWidth: 1.5,
-                                    borderDash: [4, 4],
-                                    pointBackgroundColor: 'rgba(216, 33, 33, 1)',
-                                    pointRadius: 3,
-                                    pointHoverRadius: 5
+                                    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                                    borderColor: '#ef4444',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    pointBackgroundColor: '#ef4444',
+                                    pointBorderColor: '#ffffff',
+                                    pointBorderWidth: 1.5,
+                                    pointRadius: 4.5,
+                                    pointHoverRadius: 6.5,
+                                    pointHitRadius: 10
                                 },
                                 {
                                     label: 'Max CPMK',
                                     data: dataCapaianCpmkMax,
-                                    backgroundColor: 'rgba(33, 216, 95, 0.05)',
-                                    borderColor: 'rgba(33, 216, 95, 0.8)',
-                                    borderWidth: 1.5,
-                                    borderDash: [4, 4],
-                                    pointBackgroundColor: 'rgba(33, 216, 95, 1)',
-                                    pointRadius: 3,
-                                    pointHoverRadius: 5
+                                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                                    borderColor: '#10b981',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    pointBackgroundColor: '#10b981',
+                                    pointBorderColor: '#ffffff',
+                                    pointBorderWidth: 1.5,
+                                    pointRadius: 4.5,
+                                    pointHoverRadius: 6.5,
+                                    pointHitRadius: 10
                                 }
                             ]
                         },
@@ -1775,6 +1784,19 @@
                                     max: 100,
                                     min: 0,
                                     stepSize: 20
+                                }
+                            },
+                            tooltips: {
+                                mode: 'index',
+                                intersect: true,
+                                callbacks: {
+                                    title: function(tooltipItems, data) {
+                                        return data.labels[tooltipItems[0].index] || '';
+                                    },
+                                    label: function(tooltipItem, data) {
+                                        var datasetLabel = data.datasets[tooltipItem.datasetIndex].label || '';
+                                        return datasetLabel + ': ' + tooltipItem.yLabel;
+                                    }
                                 }
                             }
                         }

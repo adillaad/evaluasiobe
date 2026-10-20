@@ -170,7 +170,7 @@
                             href="{{ route('mahasiswa.transkrip-kompetensi.print') }}">
                             <i class="bi bi-printer"></i> Cetak
                         </a>
-                        <a id="pdfBtn" class="modern-btn-outline" target="_blank"
+                        <a id="pdfBtn" class="modern-btn-outline"
                             href="{{ route('mahasiswa.transkrip-kompetensi.pdf') }}">
                             <i class="bi bi-file-earmark-pdf text-danger"></i> Unduh PDF
                         </a>

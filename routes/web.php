@@ -1335,8 +1335,12 @@ Route::get('readListProfesi', [ProfilController::class, 'readListProfesi'])->nam
                 Route::post('/transkrip-kompetensi/data', [\App\Http\Controllers\Mahasiswa\TranskripKompetensiController::class, 'getCompetencyData'])
                     ->name('get-competency-data');
  
+                Route::get('/pemetaan-cpmk-profesi/print', [\App\Http\Controllers\Mahasiswa\PemetaanCpmkProfesiController::class, 'print'])
+                    ->name('pemetaan-cpmk-profesi.print');
                 Route::get('/pemetaan-cpmk-profesi/pdf', [\App\Http\Controllers\Mahasiswa\PemetaanCpmkProfesiController::class, 'pdf'])
                     ->name('pemetaan-cpmk-profesi.pdf');
+                Route::get('/rekomendasi-mk/print', [\App\Http\Controllers\Mahasiswa\RekomendasiMkController::class, 'print'])
+                    ->name('rekomendasi-mk.print');
                 Route::get('/rekomendasi-mk/pdf', [\App\Http\Controllers\Mahasiswa\RekomendasiMkController::class, 'pdf'])
                     ->name('rekomendasi-mk.pdf');
             });

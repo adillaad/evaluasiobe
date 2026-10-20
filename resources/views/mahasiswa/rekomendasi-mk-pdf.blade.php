@@ -5,11 +5,13 @@
     <meta charset="UTF-8">
     <title>Rekomendasi Mata Kuliah - {{ $mahasiswaData->Nama ?? $mahasiswaData->nama ?? 'Mahasiswa' }}</title>
     <style>
+        /* ===== PAGE SETUP ===== */
         @page {
-            margin: 10mm 10mm 12mm 10mm;
+            margin: 10mm 10mm 15mm 10mm;
             size: A4 portrait;
         }
 
+        /* ===== BASE ===== */
         * {
             box-sizing: border-box;
         }
@@ -23,10 +25,11 @@
             padding: 0;
         }
 
+        /* ===== PRINT BROWSER ===== */
         @media print {
             @page {
                 size: A4 portrait;
-                margin: 10mm 10mm 12mm 10mm;
+                margin: 10mm 10mm 15mm 10mm;
             }
 
             body {
@@ -39,11 +42,12 @@
             }
         }
 
-        /* ── KOP ── */
+        /* ===== KOP ===== */
         .kop {
             border-bottom: 2px double #000;
-            padding-bottom: 5px;
-            margin-bottom: 8px;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+            text-align: center;
         }
 
         .kop-table {
@@ -57,11 +61,12 @@
         }
 
         .kop-logo {
-            width: 62px;
+            width: 65px;
+            text-align: left;
         }
 
         .kop-logo img {
-            width: 52px;
+            width: 55px;
             height: auto;
         }
 
@@ -71,7 +76,7 @@
 
         .kementerian {
             font-weight: bold;
-            font-size: 9.5pt;
+            font-size: 10pt;
             text-transform: uppercase;
             line-height: 1.1;
         }
@@ -84,34 +89,33 @@
         }
 
         .alamat {
-            font-size: 7.5pt;
+            font-size: 8pt;
             line-height: 1.1;
         }
 
-        /* ── JUDUL ── */
+        /* ===== JUDUL & INFO ===== */
         .judul {
             text-align: center;
             font-weight: bold;
             font-size: 11pt;
             text-transform: uppercase;
-            margin: 8px 0 10px;
+            margin: 10px 0 12px;
         }
 
-        /* ── INFO ── */
         .info-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             font-size: 9pt;
         }
 
         .info-table td {
-            padding: 1.5px 3px;
+            padding: 2px 3px;
             vertical-align: top;
         }
 
         .info-label {
-            width: 120px;
+            width: 130px;
             font-weight: bold;
         }
 
@@ -119,121 +123,199 @@
             width: 8px;
         }
 
-        /* ── SECTION ── */
+        /* ===== SECTION & BOX ===== */
         .section-title {
             font-weight: bold;
-            font-size: 9.5pt;
+            font-size: 10pt;
             text-transform: uppercase;
-            margin: 10px 0 5px;
-            padding-bottom: 2px;
+            margin: 12px 0 6px;
+            padding-bottom: 3px;
             border-bottom: 1px solid #000;
         }
 
-        /* ── TABEL REKOMENDASI ── */
-        .mk-table {
+        .box {
+            border: 1px solid #000;
+            padding: 6px;
+            margin-bottom: 8px;
+            page-break-inside: avoid;
+        }
+
+        /* ===== MK HEADER ===== */
+        .mk-header {
+            font-weight: bold;
+            font-size: 9.5pt;
+            margin-bottom: 5px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #000;
+        }
+
+        .mk-meta {
+            font-size: 8.5pt;
+            margin-top: 2px;
+            font-weight: normal;
+        }
+
+        /* ===== TABEL CPMK/CPL - SIMPLE & DOMPDF-FRIENDLY ===== */
+        .list-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 8.5pt;
-            margin-bottom: 8px;
         }
 
-        .mk-table th,
-        .mk-table td {
-            border: 1px solid #333;
-            padding: 4px 5px;
-            vertical-align: middle;
+        .list-table tr {
+            border-bottom: 1px dotted #999;
         }
 
-        .mk-table th {
-            background-color: #f0f0f0;
+        .list-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .list-table td {
+            padding: 3px 4px;
+            vertical-align: top;
+        }
+
+        .td-kode {
+            width: 18%;
             font-weight: bold;
-            text-align: center;
+            white-space: nowrap;
         }
 
-        .cpmk-subtable {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 7.5pt;
-            margin-top: 3px;
+        .td-desc {
+            width: 52%;
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.15;
         }
 
-        .cpmk-subtable td {
-            border: none;
-            padding: 1px 2px;
+        .td-nilai {
+            width: 13%;
+            text-align: right;
+            white-space: nowrap;
+            font-weight: bold;
         }
 
-        /* ── BADGE ── */
+        .td-status {
+            width: 17%;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        /* ===== BADGE ===== */
         .badge {
             display: inline-block;
             padding: 1px 5px;
             font-size: 7.5pt;
-            font-weight: bold;
-            border-radius: 2px;
-            border: 1px solid #333;
+            border: 1px solid #000;
+            text-align: center;
+            white-space: nowrap;
         }
 
-        .badge-kurang {
-            background-color: #fce8e6;
-            color: #c5221f;
+        .bg-baik,
+        .bg-sangat-baik {
+            background-color: #0072B2 !important;
+            color: #fff !important;
         }
 
-        .badge-cukup {
-            background-color: #fef7e0;
-            color: #b06000;
+        .bg-cukup {
+            background-color: #E69F00 !important;
+            color: #fff !important;
         }
 
-        .badge-baik {
-            background-color: #e6f4ea;
-            color: #137333;
+        .bg-kurang,
+        .bg-perlu-peningkatan {
+            background-color: #D55E00 !important;
+            color: #fff !important;
         }
 
-        .ttd-table {
+        /* ===== SUMMARY BOX ===== */
+        .ipk-summary {
+            margin: 12px 0 10px;
+            padding: 6px;
+            border: 1px solid #000;
+            background: #f9f9f9;
+            page-break-inside: avoid;
+        }
+
+        .ipk-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 8.5pt;
         }
 
-        .ttd-table td {
-            vertical-align: top;
-            padding: 2px;
+        .ipk-table td {
+            padding: 3px 5px;
+            font-size: 9pt;
+        }
+
+        .ipk-label {
+            font-weight: bold;
+            width: 180px;
+        }
+
+        .ipk-value {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            margin-top: 12px;
+            padding-top: 6px;
+            border-top: 1px solid #999;
+            font-size: 8pt;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .empty-msg {
+            font-style: italic;
+            color: #666;
         }
     </style>
 </head>
 
-<body>
+<body @if (!empty($isPrint)) onload="window.print()" @endif>
 
-    {{-- ── KOP SURAT ── --}}
+    @php
+        $logoPath = public_path('assets/img/logo_unila.png');
+        $logoBase64 = null;
+        if (file_exists($logoPath)) {
+            $ext = strtolower(pathinfo($logoPath, PATHINFO_EXTENSION));
+            $data = file_get_contents($logoPath);
+            $mime = in_array($ext, ['png', 'jpg', 'jpeg']) ? $ext : 'png';
+            $logoBase64 = 'data:image/' . $mime . ';base64,' . base64_encode($data);
+        }
+    @endphp
+
+    {{-- KOP --}}
     <div class="kop">
         <table class="kop-table">
             <tr>
                 <td class="kop-logo">
-                    @php
-                        $logoPath = public_path('assets/img/logo-unila.png');
-                        if (!file_exists($logoPath)) {
-                            $logoPath = public_path('assets/images/logo.png');
-                        }
-                    @endphp
-                    @if (file_exists($logoPath))
-                        <img src="data:image/png;base64,{{ base64_encode(file_get_contents($logoPath)) }}" alt="Logo">
+                    @if ($logoBase64)
+                        <img src="{{ $logoBase64 }}" alt="Logo">
+                    @else
+                        <div style="font-size:7pt;color:#999;">[LOGO]</div>
                     @endif
                 </td>
                 <td class="kop-text">
                     <div class="kementerian">KEMENTERIAN PENDIDIKAN TINGGI, SAINS, DAN TEKNOLOGI</div>
                     <div class="universitas">UNIVERSITAS LAMPUNG</div>
-                    <div class="alamat">
-                        Jalan Prof. Dr. Sumantri Brojonegoro No. 1 Bandar Lampung 35145<br>
-                        Telepon (0721) 701609, Fax (0721) 702767 | Laman: www.unila.ac.id
-                    </div>
+                    <div class="alamat">Jl. Prof. Dr. Soemantri Brojonegoro No. 1 Bandar Lampung</div>
+                    <div class="alamat">Telp: 702767, 702971, 703475, 702673, 701252, 701609</div>
                 </td>
             </tr>
         </table>
     </div>
 
-    {{-- ── JUDUL ── --}}
+    {{-- JUDUL --}}
     <div class="judul">REKOMENDASI PENGAMBILAN MATA KULIAH</div>
 
-    {{-- ── INFO MAHASISWA ── --}}
+    {{-- INFO --}}
     <table class="info-table">
         <tr>
             <td class="info-label">Nama Mahasiswa</td>
@@ -249,7 +331,7 @@
             <td>{{ $mahasiswaData->NPM ?? $mahasiswaData->npm ?? '-' }}</td>
             <td class="info-label">Jenjang Pendidikan</td>
             <td class="info-sep">:</td>
-            <td>{{ $prodi->jenjang ?? 'S1' }}</td>
+            <td><strong>{{ method_exists($prodi, 'getJenjangFullLabel') ? $prodi->getJenjangFullLabel() : ($prodi->jenjang ?? 'S1') }}</strong></td>
         </tr>
         <tr>
             <td class="info-label">Tahun Masuk / Angkatan</td>
@@ -257,79 +339,150 @@
             <td>{{ $mahasiswaData->angkatan ?? '-' }}</td>
             <td class="info-label">Progres SKS Lulus</td>
             <td class="info-sep">:</td>
-            <td>{{ $sksLulus }} / {{ $prodi?->getTargetSks() ?? 144 }} SKS</td>
+            <td><strong>{{ $sksLulus }}</strong> / {{ (method_exists($prodi, 'getTargetSks') ? $prodi->getTargetSks() : ($prodi->target_sks ?? 144)) }} SKS</td>
         </tr>
     </table>
 
-    {{-- ── DAFTAR REKOMENDASI MK ── --}}
+    {{-- DAFTAR REKOMENDASI MATA KULIAH --}}
     <div class="section-title">Daftar Mata Kuliah yang Direkomendasikan</div>
-    <table class="mk-table">
-        <thead>
-            <tr>
-                <th style="width: 25px;">No</th>
-                <th style="width: 65px;">Kode MK</th>
-                <th>Nama Mata Kuliah</th>
-                <th style="width: 45px;">Smt</th>
-                <th style="width: 40px;">SKS</th>
-                <th style="width: 65px;">Rata-rata CPMK</th>
-                <th>CPMK Terkait & Kebutuhan</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($rekomendasiMk as $index => $mk)
-                @php
-                    $avg = $mk['avg_cpmk'];
-                    $badgeClass = $avg <= 50 ? 'badge-kurang' : ($avg <= 74 ? 'badge-cukup' : 'badge-baik');
-                @endphp
-                <tr>
-                    <td style="text-align: center;">{{ $index + 1 }}</td>
-                    <td style="text-align: center; font-weight: bold;">{{ $mk['kode'] }}</td>
-                    <td>
-                        <strong>{{ $mk['nama'] }}</strong>
-                        @if (!empty($mk['rumpun']))
-                            <br><small style="color: #555;">Rumpun: {{ $mk['rumpun'] }}</small>
-                        @endif
-                    </td>
-                    <td style="text-align: center;">{{ $mk['semester'] }}</td>
-                    <td style="text-align: center;">{{ $mk['sks'] }}</td>
-                    <td style="text-align: center;">
-                        <span class="badge {{ $badgeClass }}">{{ number_format($avg, 2) }}%</span>
-                    </td>
-                    <td>
-                        <table class="cpmk-subtable">
-                            @foreach ($mk['cpmk_terkait'] as $c)
-                                <tr>
-                                    <td style="width: 70px; font-weight: bold;">{{ $c['kode'] }}</td>
-                                    <td>{{ $c['deskripsi'] }}</td>
-                                    <td style="width: 45px; text-align: right; font-weight: bold;">{{ $c['persentase'] }}%</td>
-                                </tr>
-                            @endforeach
-                        </table>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 15px;">
-                        Tidak ada mata kuliah rekomendasi lanjutan.
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+    @forelse ($rekomendasiMk as $mk)
+        @php
+            $cpmks = $mk['cpmk_terkait'] ?? [];
+            $avg = $mk['avg_cpmk'] ?? 0;
+            $prasyarat = $mk['prasyarat'] ?? null;
+            $prasyaratTerpenuhi = $mk['prasyarat_terpenuhi'] ?? true;
+        @endphp
+        <div class="box">
+            <div class="mk-header">
+                {{ $mk['kode'] ?? '-' }} - {{ strtoupper($mk['nama'] ?? '-') }}
+                <div class="mk-meta">
+                    @if (!empty($mk['semester']))
+                        Semester {{ $mk['semester'] }}
+                    @endif
+                    @if (!empty($mk['sks']))
+                        | SKS: {{ $mk['sks'] }}
+                    @endif
+                    @if (!empty($mk['rumpun']))
+                        | Rumpun: {{ $mk['rumpun'] }}
+                    @endif
+                    | Rata-rata Kebutuhan CPMK: <strong>{{ number_format($avg, 2) }}%</strong>
+                    @if (!empty($prasyarat) && $prasyarat !== '-')
+                        | Prasyarat: {{ $prasyarat }} ({{ $prasyaratTerpenuhi ? 'Terpenuhi' : 'Belum Terpenuhi' }})
+                    @endif
+                </div>
+            </div>
+            @if (count($cpmks) > 0)
+                @foreach ($cpmks as $cpmk)
+                    @php
+                        $cKode = is_array($cpmk) ? ($cpmk['kode'] ?? '-') : ($cpmk->kode ?? '-');
+                        $cDesc = is_array($cpmk) ? ($cpmk['deskripsi'] ?? '-') : ($cpmk->deskripsi ?? '-');
+                        $cNilai = is_array($cpmk) ? ($cpmk['persentase'] ?? 0) : ($cpmk->persentase ?? 0);
+                        $cStatus = is_array($cpmk) ? ($cpmk['status'] ?? null) : ($cpmk->status ?? null);
+                        if (!$cStatus) {
+                            $cStatus = $cNilai >= 75 ? 'Baik' : ($cNilai >= 51 ? 'Cukup' : 'Perlu Peningkatan');
+                        }
+                        $badgeClass = ($cStatus === 'Baik' || $cStatus === 'Sangat Baik') 
+                            ? 'bg-baik' 
+                            : (($cStatus === 'Cukup') ? 'bg-cukup' : 'bg-kurang');
+                    @endphp
+                    <table class="list-table">
+                        <tr>
+                            <td class="td-kode">{{ $cKode }}</td>
+                            <td class="td-desc">{{ $cDesc }}</td>
+                            <td class="td-nilai">{{ number_format($cNilai, 2) }}%</td>
+                            <td class="td-status">
+                                <span class="badge {{ $badgeClass }}">
+                                    {{ $cStatus }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                @endforeach
+            @else
+                <div class="empty-msg text-center">Tidak ada data CPMK terkait</div>
+            @endif
+        </div>
+    @empty
+        <div class="box text-center empty-msg">Tidak ada mata kuliah rekomendasi lanjutan</div>
+    @endforelse
 
-    {{-- ── TANDA TANGAN ── --}}
-    <table class="ttd-table">
+    {{-- RINGKASAN REKOMENDASI --}}
+    @php
+        $totalMk = $stats['total_mk_rekomendasi'] ?? count($rekomendasiMk);
+        $totalSks = collect($rekomendasiMk)->sum('sks');
+        $avgKeseluruhan = $stats['avg_keseluruhan'] ?? (count($rekomendasiMk) > 0 ? collect($rekomendasiMk)->avg('avg_cpmk') : 0);
+    @endphp
+    <div class="ipk-summary">
+        <table class="ipk-table">
+            <tr>
+                <td class="ipk-label">Total MK Direkomendasikan</td>
+                <td class="ipk-value">{{ $totalMk }} Mata Kuliah</td>
+            </tr>
+            <tr>
+                <td class="ipk-label">Total SKS Rekomendasi</td>
+                <td class="ipk-value">{{ $totalSks }} SKS</td>
+            </tr>
+            <tr>
+                <td class="ipk-label"><strong>Rata-rata Kebutuhan CPMK</strong></td>
+                <td class="ipk-value"><strong>{{ number_format($avgKeseluruhan, 2) }}%</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    {{-- PETUNJUK PENILAIAN --}}
+    @php
+        $jenjang = strtoupper(trim($prodi->jenjang ?? ''));
+        $isDoktor = in_array($jenjang, ['S3', 'S-3', 'DOKTOR', 'SUB SPESIALIS', 'SP-2', 'SP2', 'S3 TERAPAN']) || str_contains($jenjang, 'DOKTOR') || str_contains($jenjang, 'S3');
+        $isMagister = in_array($jenjang, ['S2', 'S-2', 'MAGISTER', 'SPESIALIS', 'SP-1', 'SP1', 'S2 TERAPAN']) || str_contains($jenjang, 'MAGISTER') || str_contains($jenjang, 'S2') || str_contains($jenjang, 'SPESIALIS');
+        $labelJenjang = $isDoktor ? 'Doktor / Subspesialis' : ($isMagister ? 'Magister / Spesialis' : ($jenjang === 'D3' ? 'Diploma III' : ($jenjang === 'D4' ? 'Sarjana Terapan (D4)' : 'Sarjana / Diploma')));
+    @endphp
+    <div class="section-title">Keterangan & Indikator Penilaian</div>
+    <div class="box" style="font-size: 8pt; margin-bottom: 10px;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; padding-right: 8px;">
+                    <strong>Predikat Kompetensi OBE (CPL & CPMK):</strong>
+                    <ul style="margin: 3px 0 0 15px; padding: 0; line-height: 1.3;">
+                        <li><strong>Baik:</strong> &ge; 75.00%</li>
+                        <li><strong>Cukup:</strong> 51.00% - &lt; 75.00%</li>
+                        <li><strong>Perlu Peningkatan:</strong> &le; 50.00%</li>
+                    </ul>
+                </td>
+                <td style="width: 50%; vertical-align: top; padding-left: 8px; border-left: 1px solid #ccc;">
+                    <strong>Prinsip Rekomendasi Pengambilan Mata Kuliah:</strong>
+                    <ul style="margin: 3px 0 0 15px; padding: 0; line-height: 1.3;">
+                        <li>Mata kuliah diprioritaskan berdasarkan CPMK yang masih memerlukan peningkatan (&lt; 70.00%).</li>
+                        <li>Mata kuliah memperhatikan prasyarat akademik yang telah lulus ditempuh.</li>
+                    </ul>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {{-- TANDA TANGAN --}}
+    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; page-break-inside: avoid; font-size: 8.5pt;">
         <tr>
-            <td style="width: 60%;"></td>
-            <td style="width: 40%; text-align: center;">
+            <td style="width: 55%; font-size: 7.5pt; color: #555; line-height: 1.3; vertical-align: top; padding-right: 15px;">
+                <strong>Catatan Akademik:</strong><br>
+                Daftar rekomendasi mata kuliah ini dihitung secara dinamis berdasarkan pemetaan ketercapaian kompetensi CPMK yang telah ditempuh untuk mendukung penyelesaian kurikulum tepat waktu.
+            </td>
+            <td style="width: 45%; text-align: center; vertical-align: top;">
                 Bandar Lampung, {{ date('d F Y') }}<br>
-                Ketua Program Studi {{ $prodi->nama ?? '' }},<br>
-                <br><br><br><br>
+                Mengetahui,<br>
+                Ketua Program Studi {{ $prodi->nama ?? '' }}<br>
+                <div style="height: 50px;"></div>
                 <strong><u>( ________________________ )</u></strong><br>
-                NIP.
+                NIP. ....................................................
             </td>
         </tr>
     </table>
+
+    {{-- FOOTER --}}
+    <div class="footer">
+        Dokumen ini dicetak otomatis oleh sistem Rekomendasi Pengambilan Mata Kuliah.<br>
+        Dicetak pada: {{ date('d F Y H:i:s') }}<br>
+        <em>Universitas Lampung - Sistem Penilaian Berbasis Kompetensi</em>
+    </div>
 
 </body>
 

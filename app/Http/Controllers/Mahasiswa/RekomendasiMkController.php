@@ -13,14 +13,14 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class RekomendasiMkController extends Controller
 {
-    public function pdf()
+    private function resolveRekomendasiData(): array
     {
         $user      = Auth::user();
         $mahasiswa = $this->guardMahasiswa($user);
         $npm       = $mahasiswa->NPM;
 
         $mahasiswaData = DB::table('mahasiswa')->where('NPM', $npm)->first();
-        $prodi         = DB::table('prodi')->where('id', $user->id_prodiUser)->first();
+        $prodi         = Prodi::find($user->id_prodiUser);
 
         $competencyData = $mahasiswa->getCompetencyData();
         $cpmkMap        = $competencyData['cpmks']->keyBy('id');
@@ -56,6 +56,20 @@ class RekomendasiMkController extends Controller
             'avg_keseluruhan'      => $avgCpmkKeseluruhan,
             'mk_prioritas'         => $rekomendasiMk->filter(fn($m) => $m['avg_cpmk'] < 70)->count(),
         ];
+
+        return [$rekomendasiMk, $stats, $sksLulus, $mahasiswaData, $prodi, $npm];
+    }
+
+    public function index()
+    {
+        [$rekomendasiMk, $stats, $sksLulus] = $this->resolveRekomendasiData();
+
+        return view('mahasiswa.rekomendasi-mk', compact('rekomendasiMk', 'stats', 'sksLulus'));
+    }
+
+    public function pdf()
+    {
+        [$rekomendasiMk, $stats, $sksLulus, $mahasiswaData, $prodi, $npm] = $this->resolveRekomendasiData();
 
         $pdf = Pdf::loadView('mahasiswa.rekomendasi-mk-pdf', compact(
             'rekomendasiMk',
@@ -65,49 +79,20 @@ class RekomendasiMkController extends Controller
             'prodi'
         ))->setPaper('a4', 'portrait');
 
-        return $pdf->stream('Rekomendasi-MK-' . ($npm ?? 'mahasiswa') . '.pdf');
+        return $pdf->download('Rekomendasi-MK-' . ($npm ?? 'mahasiswa') . '.pdf');
     }
-    public function index()
+
+    public function print()
     {
-        $user      = Auth::user();
-        $mahasiswa = $this->guardMahasiswa($user);
+        [$rekomendasiMk, $stats, $sksLulus, $mahasiswaData, $prodi, $npm] = $this->resolveRekomendasiData();
 
-        $competencyData = $mahasiswa->getCompetencyData();
-        $cpmkMap        = $competencyData['cpmks']->keyBy('id');
-        $takenCourses   = $mahasiswa->getTakenCourses();
-        $sksLulus       = $mahasiswa->calculateSksLulus();
-        $avgCpmkKeseluruhan = round($competencyData['cpmks']->avg('nilai') ?? 0, 2);
-
-        $mkList = DB::table('cpmk_mk')
-            ->join('mks', 'cpmk_mk.mk_kode', '=', 'mks.kode')
-            ->whereIn('cpmk_mk.cpmk_id', $cpmkMap->keys())
-            ->where('mks.id_prodi', $user->id_prodiUser)
-            ->whereNotIn('mks.kode', $takenCourses)
-            ->select(
-                'mks.kode',
-                'mks.nama',
-                'mks.semester',
-                'mks.bobot_teori',
-                'mks.bobot_praktikum',
-                'mks.rumpun',
-                'mks.prasyarat',
-                'mks.deskripsi'
-            )
-            ->distinct()
-            ->get();
-
-        $rekomendasiMk = $mkList
-            ->map(fn($mk) => $this->buildRekomendasiItem($mk, $cpmkMap, $takenCourses))
-            ->sortBy(fn($mk) => [$mk['prasyarat_terpenuhi'] ? 0 : 1, $mk['avg_cpmk']])
-            ->values();
-
-        $stats = [
-            'total_mk_rekomendasi' => $rekomendasiMk->count(),
-            'avg_keseluruhan'      => $avgCpmkKeseluruhan,
-            'mk_prioritas'         => $rekomendasiMk->filter(fn($m) => $m['avg_cpmk'] < 70)->count(),
-        ];
-
-        return view('mahasiswa.rekomendasi-mk', compact('rekomendasiMk', 'stats', 'sksLulus'));
+        return view('mahasiswa.rekomendasi-mk-pdf', compact(
+            'rekomendasiMk',
+            'stats',
+            'sksLulus',
+            'mahasiswaData',
+            'prodi'
+        ) + ['isPrint' => true]);
     }
 
     private function buildRekomendasiItem(

@@ -169,10 +169,10 @@
 
                 <div class="col-lg-4 text-lg-end">
                     <div class="d-flex align-items-center justify-content-lg-end gap-2 flex-wrap">
-                        <button class="modern-btn-primary" onclick="printRekomendasi()">
+                        <a href="{{ route('mahasiswa.rekomendasi-mk.print') }}" target="_blank" class="modern-btn-primary">
                             <i class="bi bi-printer"></i> Cetak
-                        </button>
-                        <a href="{{ route('mahasiswa.rekomendasi-mk.pdf') }}" target="_blank" class="modern-btn-outline">
+                        </a>
+                        <a href="{{ route('mahasiswa.rekomendasi-mk.pdf') }}" class="modern-btn-outline">
                             <i class="bi bi-file-earmark-pdf text-danger"></i> Unduh PDF
                         </a>
                     </div>
@@ -433,14 +433,8 @@
 @push('scripts')
     <script>
         function printRekomendasi() {
-            const url = "{{ route('mahasiswa.rekomendasi-mk.pdf') }}";
-            const w = window.open(url, '_blank');
-            setTimeout(() => {
-                if (w) {
-                    w.focus();
-                    w.print();
-                }
-            }, 800);
+            const url = "{{ route('mahasiswa.rekomendasi-mk.print') }}";
+            window.open(url, '_blank');
         }
 
         function applyFilters() {

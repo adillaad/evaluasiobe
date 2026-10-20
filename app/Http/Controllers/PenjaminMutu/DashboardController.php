@@ -230,7 +230,11 @@ class DashboardController extends Controller
                         'judul' => $cpl->judul ?? $cpl->deskripsi ?? '-',
                         'deskripsi' => $cpl->deskripsi ?? $cpl->judul ?? '-',
                         'avg_skor' => 0.0,
+                        'min_skor' => 0.0,
+                        'max_skor' => 0.0,
                         'avg_capaian' => 0.0,
+                        'min_capaian' => 0.0,
+                        'max_capaian' => 0.0,
                         'status' => 'Belum Ada Nilai',
                         'status_class' => 'secondary'
                     ];
@@ -255,8 +259,10 @@ class DashboardController extends Controller
 
             // 1. Capaian CPL (% ketercapaian MK pendukung CPL)
             $allCplCapaianTotal = [];
+            $studentCplCapaians = [];
             foreach ($cpls as $cpl) {
                 $allCplCapaianTotal[$cpl->id] = 0;
+                $studentCplCapaians[$cpl->id] = [];
             }
 
             foreach ($allNpm as $npm) {
@@ -313,6 +319,7 @@ class DashboardController extends Controller
 
                     if (isset($allCplCapaianTotal[$id_cpl])) {
                         $allCplCapaianTotal[$id_cpl] += $persentase;
+                        $studentCplCapaians[$id_cpl][] = $persentase;
                     }
                 }
             }
@@ -391,11 +398,13 @@ class DashboardController extends Controller
                         $cplScores[$row->cpl] = [
                             'kode' => $row->kode_cpl,
                             'total_score' => 0,
-                            'count' => 0
+                            'count' => 0,
+                            'student_scores' => []
                         ];
                     }
                     $cplScores[$row->cpl]['total_score'] += (float) $row->avg_score;
                     $cplScores[$row->cpl]['count']++;
+                    $cplScores[$row->cpl]['student_scores'][] = (float) $row->avg_score;
                 }
             }
 
@@ -406,13 +415,30 @@ class DashboardController extends Controller
 
             foreach ($cpls as $cpl) {
                 $avgSkor = 0.0;
+                $minSkor = 0.0;
+                $maxSkor = 0.0;
                 if (isset($cplScores[$cpl->id]) && $cplScores[$cpl->id]['count'] > 0) {
                     $avgSkor = round($cplScores[$cpl->id]['total_score'] / $totalMhs, 1);
+                    $scoresList = $cplScores[$cpl->id]['student_scores'] ?? [];
+                    if (!empty($scoresList)) {
+                        $ratio = $cplScores[$cpl->id]['count'] / $totalMhs;
+                        $minSkor = round(min($scoresList) * $ratio, 1);
+                        $maxSkor = round(max($scoresList) * $ratio, 1);
+                    }
                 }
 
                 $avgCapaian = 0.0;
+                $minCapaian = 0.0;
+                $maxCapaian = 0.0;
                 if (isset($allCplCapaianTotal[$cpl->id])) {
                     $avgCapaian = round($allCplCapaianTotal[$cpl->id] / $totalMhs, 1);
+                    $capList = $studentCplCapaians[$cpl->id] ?? [];
+                    $posCap = array_filter($capList, fn($v) => (float)$v > 0);
+                    if (!empty($posCap)) {
+                        $ratioCap = count($posCap) / $totalMhs;
+                        $minCapaian = round(min($posCap) * $ratioCap, 1);
+                        $maxCapaian = round(max($posCap) * $ratioCap, 1);
+                    }
                 }
 
                 if ($avgSkor >= 65.0) {
@@ -440,7 +466,11 @@ class DashboardController extends Controller
                     'judul' => $cpl->judul ?? ($cpl->deskripsi ?? '-'),
                     'deskripsi' => $cpl->judul ?? ($cpl->deskripsi ?? '-'),
                     'avg_skor' => $avgSkor,
+                    'min_skor' => $minSkor,
+                    'max_skor' => $maxSkor,
                     'avg_capaian' => $avgCapaian,
+                    'min_capaian' => $minCapaian,
+                    'max_capaian' => $maxCapaian,
                     'status' => $statusCpl,
                     'status_class' => $statusCplClass
                 ];

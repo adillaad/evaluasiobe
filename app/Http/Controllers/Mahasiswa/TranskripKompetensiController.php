@@ -855,7 +855,7 @@ private function buildCpmkData(
             'isPrint'        => false,
         ])->setPaper('a4', 'portrait');
 
-        return $pdf->stream('Transkrip-Kompetensi-' . ($mahasiswaData->npm ?? 'mahasiswa') . '.pdf');
+        return $pdf->download('Transkrip-Kompetensi-' . ($mahasiswaData->npm ?? 'mahasiswa') . '.pdf');
     }
 
     private function emptyStructure(): array

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Mahasiswa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Mahasiswa;
+use App\Models\Prodi;
 use App\Models\profesi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,24 +14,35 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class PemetaanCpmkProfesiController extends Controller
 {
-
-    public function index()
+    private function resolvePemetaanData(): array
     {
         $user      = Auth::user();
         $mahasiswa = $this->guardMahasiswa($user);
         $npm       = $mahasiswa->NPM;
 
-        $mahasiswaData   = DB::table('mutus')->where('npm', $npm)->first();
+        $mahasiswaData = DB::table('mahasiswa')->where('NPM', $npm)->first();
+        if (!$mahasiswaData) {
+            $mahasiswaData = DB::table('mutus')->where('npm', $npm)->first();
+        }
+
+        $prodi = Prodi::find($user->id_prodiUser);
+
+        $competencyData      = $mahasiswa->getCompetencyData();
+        $allCpmks            = $competencyData['cpmks'];
+        $takenCourses        = $mahasiswa->getTakenCourses();
+
+        $profesiDenganDetail = Profesi::getPemetaanForMahasiswa($allCpmks, $takenCourses);
+
+        return [$profesiDenganDetail, $allCpmks, $mahasiswaData, $prodi, $takenCourses, $npm];
+    }
+
+    public function index()
+    {
+        [$profesiDenganDetail, $allCpmks, $mahasiswaData, $prodi, $takenCourses] = $this->resolvePemetaanData();
 
         if (!$mahasiswaData) {
             abort(404, 'Data akademik tidak ditemukan.');
         }
-
-        $competencyData  = $mahasiswa->getCompetencyData();
-        $allCpmks        = $competencyData['cpmks'];           // Collection
-        $takenCourses    = $mahasiswa->getTakenCourses();
-
-        $profesiDenganDetail = Profesi::getPemetaanForMahasiswa($allCpmks, $takenCourses);
 
         $chartProfesi = $profesiDenganDetail->take(5)->map(fn($p) => [
             'label'     => Str::limit($p['nama'], 25),
@@ -49,18 +61,7 @@ class PemetaanCpmkProfesiController extends Controller
 
     public function pdf()
     {
-        $user      = Auth::user();
-        $mahasiswa = $this->guardMahasiswa($user);
-        $npm       = $mahasiswa->NPM;
-
-        $mahasiswaData       = DB::table('mahasiswa')->where('NPM', $npm)->first();
-        $prodi               = DB::table('prodi')->where('id', $user->id_prodiUser)->first();
-
-        $competencyData      = $mahasiswa->getCompetencyData();
-        $allCpmks            = $competencyData['cpmks'];
-        $takenCourses        = $mahasiswa->getTakenCourses();
-
-        $profesiDenganDetail = Profesi::getPemetaanForMahasiswa($allCpmks, $takenCourses);
+        [$profesiDenganDetail, $allCpmks, $mahasiswaData, $prodi, $takenCourses, $npm] = $this->resolvePemetaanData();
 
         $pdf = Pdf::loadView('mahasiswa.pemetaan-cpmk-profesi-pdf', compact(
             'profesiDenganDetail',
@@ -69,7 +70,19 @@ class PemetaanCpmkProfesiController extends Controller
             'prodi'
         ))->setPaper('a4', 'portrait');
 
-        return $pdf->stream('Pemetaan-CPMK-Profesi-' . ($npm ?? 'mahasiswa') . '.pdf');
+        return $pdf->download('Pemetaan-CPMK-Profesi-' . ($npm ?? 'mahasiswa') . '.pdf');
+    }
+
+    public function print()
+    {
+        [$profesiDenganDetail, $allCpmks, $mahasiswaData, $prodi, $takenCourses, $npm] = $this->resolvePemetaanData();
+
+        return view('mahasiswa.pemetaan-cpmk-profesi-pdf', compact(
+            'profesiDenganDetail',
+            'allCpmks',
+            'mahasiswaData',
+            'prodi'
+        ) + ['isPrint' => true]);
     }
 
     private function guardMahasiswa(\App\Models\User $user): Mahasiswa

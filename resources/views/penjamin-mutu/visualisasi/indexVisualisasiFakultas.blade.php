@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
-        /* Layout fix to ensure sticky elements work properly */
+        /* Smooth layout fixes */
         html,
         body,
         .container-scroller,
@@ -30,7 +30,7 @@
             overflow: visible !important;
         }
 
-        /* Modern Dashboard Styling Consistent with other modules */
+        /* Modern Dashboard Cards */
         .modern-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -57,7 +57,7 @@
             border-top-right-radius: 14px;
         }
 
-        /* Section Titles & Subtitles with Consistent Typography */
+        /* Section Titles & Subtitles */
         .section-title {
             font-size: 1.0rem !important;
             font-weight: 700 !important;
@@ -92,50 +92,50 @@
             font-size: 1.0rem !important;
         }
 
-        /* Hero Header Profile (Fixed / Sticky when scrolling, Prominent, Neat Alignment) */
-        .faculty-profile-hero {
+        /* Hero Profile Card (Compact & Sleek) */
+        .student-profile-hero {
             position: relative !important;
             top: auto !important;
             z-index: 1 !important;
             background: #ffffff !important;
             border: 1px solid #e2e8f0;
-            border-left: 5px solid #1F3BB3 !important;
-            border-radius: 14px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            padding: 20px 28px;
-            margin-bottom: 24px;
+            border-left: 4px solid #1F3BB3 !important;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+            padding: 10px 18px;
+            margin-bottom: 16px;
         }
 
-        .faculty-label-tag {
-            font-size: 0.75rem;
+        .student-label-tag {
+            font-size: 0.65rem;
             font-weight: 700;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
             color: #1F3BB3;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
-        .faculty-name-text {
-            font-size: 1.5rem;
+        .student-name-text {
+            font-size: 1.15rem;
             font-weight: 700;
             color: #0f172a;
             line-height: 1.25;
-            margin-bottom: 8px;
+            margin-bottom: 3px;
             letter-spacing: -0.01em;
         }
 
-        .faculty-meta-row {
+        .student-meta-row {
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 6px 12px;
         }
 
         .meta-item {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.88rem;
+            gap: 4px;
+            font-size: 0.78rem;
         }
 
         .meta-label {
@@ -154,99 +154,37 @@
             user-select: none;
         }
 
-        /* 4 Summary Highlight Metric Cards */
-        .summary-box-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 18px 20px;
-            display: flex;
+        /* Interactive Year Badge */
+        .badge-interactive-year {
+            display: inline-flex;
             align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
-            transition: all 0.2s ease;
-            height: 100%;
-        }
-
-        .summary-box-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
-        }
-
-        .summary-box-label {
-            font-size: 0.8rem;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: #64748b;
-            margin-bottom: 4px;
+            background: #eff6ff;
+            color: #1F3BB3;
+            border: 1px solid #bfdbfe;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        .summary-box-val {
-            font-size: 1.65rem;
-            font-weight: 800;
-            line-height: 1.1;
+        .badge-interactive-year:hover {
+            background: #dbeafe;
         }
 
-        .summary-icon-wrapper {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.35rem;
-            flex-shrink: 0;
+        .badge-close-icon {
+            font-size: 0.75rem;
+            opacity: 0.7;
         }
 
-        /* Buttons & Badges */
-        .modern-btn-primary {
-            background: #1F3BB3 !important;
-            color: #ffffff !important;
-            border: none !important;
-            font-weight: 600 !important;
-            font-size: 0.84rem !important;
-            padding: 8px 18px !important;
-            border-radius: 8px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            box-shadow: 0 4px 12px rgba(31, 59, 179, 0.2) !important;
-            transition: all 0.2s ease !important;
-            text-decoration: none !important;
-            cursor: pointer !important;
-            white-space: nowrap !important;
+        .badge-interactive-year:hover .badge-close-icon {
+            opacity: 1;
+            color: #dc2626;
         }
 
-        .modern-btn-primary:hover {
-            background: #182e8e !important;
-            box-shadow: 0 6px 16px rgba(31, 59, 179, 0.3) !important;
-            transform: translateY(-1px) !important;
-            color: #ffffff !important;
-        }
-
-        .btn-detail-action {
-            background: #eff6ff !important;
-            color: #1F3BB3 !important;
-            border: 1px solid rgba(31, 59, 179, 0.2) !important;
-            font-weight: 600 !important;
-            font-size: 0.8rem !important;
-            padding: 6px 14px !important;
-            border-radius: 6px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            transition: all 0.2s ease !important;
-            cursor: pointer !important;
-            text-decoration: none !important;
-        }
-
-        .btn-detail-action:hover {
-            background: #1F3BB3 !important;
-            color: #ffffff !important;
-        }
-
-        /* Modern & Formal Tables */
+        /* Modern Tables */
         .modern-table-container {
             border: 1px solid #e2e8f0;
             border-radius: 10px;
@@ -264,7 +202,7 @@
         .modern-table thead th {
             background: #f8fafc;
             color: #475569;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.04em;
@@ -279,7 +217,7 @@
             background: #f8fafc;
             color: #1e293b;
             font-weight: 700;
-            font-size: 0.84rem;
+            font-size: 0.85rem;
             padding: 12px 14px;
             border-top: 2px solid #cbd5e1;
             vertical-align: middle;
@@ -297,624 +235,497 @@
             background-color: #f8fafc;
         }
 
-        /* Smooth Custom Scrollbar & Seamless Sticky Columns (No, Fakultas, Total Prodi) */
-        .table-scrollable-years {
-            position: relative;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            max-width: 100%;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            background: #ffffff;
-        }
-
-        .table-scrollable-years::-webkit-scrollbar {
-            height: 7px;
-        }
-
-        .table-scrollable-years::-webkit-scrollbar-track {
-            background: #f8fafc;
-            border-radius: 4px;
-        }
-
-        .table-scrollable-years::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        .table-scrollable-years::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        /* Sticky Column 1: No */
-        .col-sticky-no {
-            position: sticky !important;
-            left: 0px !important;
-            width: 50px !important;
-            min-width: 50px !important;
-            max-width: 50px !important;
-            box-sizing: border-box !important;
-            z-index: 5 !important;
-            text-align: center !important;
-        }
-
-        /* Sticky Column 2: Fakultas */
-        .col-sticky-fakultas {
-            position: sticky !important;
-            left: 50px !important;
-            width: 240px !important;
-            min-width: 240px !important;
-            max-width: 240px !important;
-            box-sizing: border-box !important;
-            z-index: 5 !important;
-        }
-
-        /* Sticky Column 3: Total Prodi (Seamless border) */
-        .col-sticky-prodi-count {
-            position: sticky !important;
-            left: 290px !important;
-            width: 110px !important;
-            min-width: 110px !important;
-            max-width: 110px !important;
-            box-sizing: border-box !important;
-            z-index: 5 !important;
-            text-align: center !important;
-            border-right: 2px solid #cbd5e1 !important;
-            box-shadow: 3px 0 6px -2px rgba(0, 0, 0, 0.08);
-        }
-
-        .modern-table thead th.col-sticky-no,
-        .modern-table thead th.col-sticky-fakultas,
-        .modern-table thead th.col-sticky-prodi-count {
-            background-color: #f8fafc !important;
-            padding: 10px 8px !important;
-        }
-
-        .modern-table tbody td.col-sticky-no,
-        .modern-table tbody td.col-sticky-fakultas,
-        .modern-table tbody td.col-sticky-prodi-count {
-            background-color: #ffffff !important;
-            padding: 10px 8px !important;
-        }
-
-        .modern-table tbody tr:hover td.col-sticky-no,
-        .modern-table tbody tr:hover td.col-sticky-fakultas,
-        .modern-table tbody tr:hover td.col-sticky-prodi-count {
-            background-color: #f8fafc !important;
-        }
-
-        .modern-table tfoot th.col-sticky-no,
-        .modern-table tfoot th.col-sticky-fakultas,
-        .modern-table tfoot th.col-sticky-prodi-count {
-            background-color: #f8fafc !important;
-            padding: 10px 8px !important;
-        }
-
-        .progress-custom-bar {
-            height: 6px;
-            border-radius: 6px;
-            background-color: #f1f5f9;
-            overflow: hidden;
-        }
-
-        .progress-custom-bar .progress-fill {
-            height: 100%;
-            border-radius: 6px;
-            transition: width 0.6s ease;
-        }
-
-        /* High-End Modern Segmented Year Filter Control */
-        .segmented-filter-bar {
-            display: inline-flex;
-            align-items: center;
-            background: #f1f5f9;
-            padding: 3px;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            gap: 3px;
-        }
-
-        .segmented-filter-btn {
-            border: none;
-            background: transparent;
-            color: #475569;
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 6px 14px;
-            border-radius: 8px;
+        /* Interactive Year Column in Tables (Mirip Gambar) */
+        .interactive-year-th {
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .interactive-year-th:hover {
+            background-color: #e0e7ff !important;
+            color: #1F3BB3 !important;
+        }
+
+        .interactive-year-th.interactive-year-active,
+        .interactive-year-th.active-year-col {
+            background-color: #1F3BB3 !important;
+            color: #ffffff !important;
+        }
+
+        .interactive-year-td {
+            transition: all 0.15s ease;
+            cursor: pointer;
+            color: #1e293b;
+        }
+
+        .interactive-year-td.is-zero-cell {
+            color: #64748b;
+        }
+
+        .interactive-year-td:hover {
+            background-color: #eff6ff !important;
+        }
+
+        .interactive-year-td.interactive-year-active,
+        .interactive-year-td.active-year-col {
+            background-color: #e0e7ff !important;
+            color: #1F3BB3 !important;
+            font-weight: 700 !important;
+        }
+
+        .interactive-year-tf {
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: #1F3BB3;
+        }
+
+        .interactive-year-tf.is-zero-cell {
+            color: #64748b;
+        }
+
+        .interactive-year-tf:hover {
+            background-color: #dbeafe !important;
+        }
+
+        .interactive-year-tf.interactive-year-active,
+        .interactive-year-tf.active-year-col {
+            background-color: #1F3BB3 !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+        }
+
+        /* Guide Banner */
+        .modern-guide-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #1F3BB3;
+            border-radius: 8px;
+            padding: 14px 18px;
+            line-height: 1.5;
+        }
+
+        /* Structured CPL Description Cards (Grid Mirip Gambar) */
+        .cpl-desc-container {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 10px;
+            max-height: 230px;
+            overflow-y: auto;
+        }
+
+        .cpl-desc-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 2px;
+        }
+
+        @media (max-width: 1199px) {
+            .cpl-desc-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 767px) {
+            .cpl-desc-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .cpl-desc-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            transition: all 0.15s ease;
+        }
+
+        .cpl-desc-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .cpl-desc-badge {
+            background-color: #004c87 !important;
+            color: #ffffff !important;
+            font-size: 0.72rem !important;
+            font-weight: 700;
+            border-radius: 4px !important;
+            padding: 3px 7px !important;
             white-space: nowrap;
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+        }
+
+        .cpl-desc-text {
+            font-size: 0.78rem !important;
+            line-height: 1.4;
+            color: #334155;
+            font-weight: 500;
+        }
+
+        .badge-cpl-count {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            padding: 2px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px;
         }
 
-        .segmented-filter-btn:hover {
-            color: #1F3BB3;
-            background: rgba(255, 255, 255, 0.6);
-        }
-
-        .segmented-filter-btn.active {
+        .btn-toggle-cpl-desc {
+            width: 32px;
+            height: 30px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
             background: #ffffff;
-            color: #1F3BB3;
-            font-weight: 700;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-toggle-cpl-desc:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+
+        /* Form Controls & Buttons (Consistent with Visualisasi Angkatan & Prodi) */
+        .modern-label {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .modern-select {
+            height: 42px !important;
+            border-radius: 8px !important;
+            border: 1px solid #cbd5e1 !important;
+            font-size: 0.9rem !important;
+            padding: 8px 14px !important;
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+            transition: all 0.2s ease;
+        }
+
+        .modern-select:focus {
+            border-color: #1F3BB3 !important;
+            box-shadow: 0 0 0 3px rgba(31, 59, 179, 0.12) !important;
+        }
+
+        .modern-btn-primary {
+            height: 38px;
+            padding: 0 18px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            background: #1F3BB3;
+            color: #ffffff;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            box-shadow: 0 2px 6px rgba(31, 59, 179, 0.2);
+            transition: all 0.2s ease;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .modern-btn-primary:hover {
+            background: #172d88;
+            box-shadow: 0 4px 10px rgba(31, 59, 179, 0.3);
+            color: #ffffff;
+        }
+
+        .modern-btn-outline {
+            height: 38px;
+            padding: 0 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .modern-btn-outline:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #1e293b;
         }
     </style>
 
     <div class="container-fluid px-3 my-2">
-        @if (isset($universitasCplData) && $universitasCplData && !empty($universitasCplData['fakultas_stats']))
+        @if (isset($universitasCplData) && $universitasCplData)
+
             {{-- ========================================================================= --}}
-            {{-- 1. HERO HEADER PROFILE (Fixed / Sticky saat scroll ke bawah) --}}
+            {{-- 1. INPUT FILTER FORM (Halaman Awal Pemilihan Fakultas) --}}
             {{-- ========================================================================= --}}
-            <div class="faculty-profile-hero" id="facultyHeroCard">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <div>
-                        <div class="faculty-label-tag">EVALUASI CAPAIAN PEMBELAJARAN LULUSAN (CPL) TINGKAT UNIVERSITAS</div>
-                        <h3 class="faculty-name-text">
-                            {{ $universitas->nama ?? 'Universitas' }}
-                        </h3>
-                        <div class="faculty-meta-row">
-                            <div class="meta-item">
-                                <span class="meta-label">Total Fakultas:</span>
-                                <span class="meta-value">{{ $universitasCplData['summary']['total_fakultas_count'] }} Fakultas</span>
-                            </div>
-                            <span class="meta-pipe">|</span>
-                            <div class="meta-item">
-                                <span class="meta-label">Total Program Studi:</span>
-                                <span class="meta-value">{{ $universitasCplData['summary']['total_prodi_count'] }} Program Studi</span>
-                            </div>
-                            <span class="meta-pipe">|</span>
-                            <div class="meta-item">
-                                <span class="meta-label">Mahasiswa Dinilai:</span>
-                                <span class="meta-value">
-                                    {{ $universitasCplData['summary']['total_mhs_evaluated'] }} Mahasiswa
-                                </span>
-                            </div>
+            <div id="tugas">
+                <div class="card modern-card mb-4">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <h5 class="section-title mb-1">
+                                <i class="bi bi-building"></i> Visualisasi CPL Per Fakultas
+                            </h5>
+                            <p class="text-muted small mb-0">Silahkan pilih data fakultas untuk menampilkan visualisasi OBE.</p>
                         </div>
-                    </div>
 
-                    {{-- Toolbar Tombol Aksi --}}
-                    <div class="d-flex align-items-center flex-wrap gap-2">
-                        <form id="formCetakPdfUniv" method="POST" action="{{ route($currentPrefix . 'visualisasi.generate-pdfVisualFakultas') }}" target="_blank">
+                        <form id="hasilVisual" method="POST" action="javascript:void(0);">
                             @csrf
-                            <input type="hidden" name="universitas_id" value="{{ $universitasId }}">
-                            <input type="hidden" name="chartImg" id="inputChartImg" value="">
-                            <input type="hidden" name="trendChartImg" id="inputTrendChartImg" value="">
+                            <input type="hidden" name="universitas" id="universitas" value="{{ $universitas->id ?? '' }}">
 
-                            <button type="button" id="btnPrintPdf" class="modern-btn-primary">
-                                <i class="bi bi-file-earmark-pdf fs-6"></i>
-                                Unduh PDF
-                            </button>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="modern-label">
+                                        <i class="bi bi-building text-primary me-1"></i> Fakultas <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="fakultasForm" class="form-control form-select modern-select" name="fakultas" required>
+                                        <option value="">Pilih Fakultas</option>
+                                        @foreach ($fakultasList as $f)
+                                            <option value="{{ $f['id'] }}">
+                                                {{ $f['nama'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2 mt-4">
+                                <button type="submit" id="btnSubmitVisual" class="modern-btn-primary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                                    </svg>
+                                    Tampilkan Visualisasi OBE
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
 
             {{-- ========================================================================= --}}
-            {{-- 2. 4 SUMMARY STAT CARDS (Clean Title & Numbers Only) --}}
+            {{-- 2. DEDICATED RESULTS VIEW (Tampilan Hasil Visualisasi Fakultas) --}}
             {{-- ========================================================================= --}}
-            <div class="row g-3 mb-4">
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="summary-box-card" style="border-top: 3px solid #3b82f6;">
-                        <div>
-                            <div class="summary-box-label">Rata-rata Skor CPL</div>
-                            <div class="summary-box-val" style="color: #2563eb;">
-                                {{ number_format($universitasCplData['summary']['univ_avg_skor'], 1) }}
-                                <span style="font-size: 0.9rem; font-weight: 500; color: #64748b;">/ 100</span>
-                            </div>
-                        </div>
-                        <div class="summary-icon-wrapper" style="background: rgba(59, 130, 246, 0.1); color: #2563eb;">
-                            <i class="bi bi-award-fill"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="summary-box-card" style="border-top: 3px solid #10b981;">
-                        <div>
-                            <div class="summary-box-label">Rata-rata Capaian CPL</div>
-                            <div class="summary-box-val" style="color: #059669;">
-                                {{ number_format($universitasCplData['summary']['univ_avg_capaian'], 1) }}%
-                            </div>
-                        </div>
-                        <div class="summary-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: #059669;">
-                            <i class="bi bi-pie-chart-fill"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="summary-box-card" style="border-top: 3px solid #8b5cf6;">
-                        <div>
-                            <div class="summary-box-label">Total Fakultas</div>
-                            <div class="summary-box-val" style="color: #7c3aed;">
-                                {{ $universitasCplData['summary']['total_fakultas_count'] }}
-                                <span style="font-size: 0.9rem; font-weight: 500; color: #64748b;">Fakultas</span>
-                            </div>
-                        </div>
-                        <div class="summary-icon-wrapper" style="background: rgba(139, 92, 246, 0.1); color: #7c3aed;">
-                            <i class="bi bi-buildings-fill"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="summary-box-card" style="border-top: 3px solid #0ea5e9;">
-                        <div>
-                            <div class="summary-box-label">Total Program Studi</div>
-                            <div class="summary-box-val" style="color: #0284c7;">
-                                {{ $universitasCplData['summary']['total_prodi_count'] }}
-                                <span style="font-size: 0.9rem; font-weight: 500; color: #64748b;">Prodi</span>
-                            </div>
-                        </div>
-                        <div class="summary-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: #0284c7;">
-                            <i class="bi bi-mortarboard-fill"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div id="visualContainer" style="display: none;">
 
-            {{-- ========================================================================= --}}
-            {{-- 3. CARD 1: PERKEMBANGAN SKOR CPL ANTAR TAHUN (TINGKAT FAKULTAS) --}}
-            {{-- ========================================================================= --}}
-            <div class="card modern-card mb-4">
-                <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <div>
-                        <h5 class="section-title mb-1">
-                            <i class="bi bi-graph-up-arrow"></i> Perkembangan Skor CPL Antar Tahun
-                        </h5>
-                        <p class="text-muted small mb-0">Pemantauan riwayat perkembangan skor evaluasi CPL seluruh fakultas pada {{ $universitas->nama ?? 'Universitas' }} lintas tahun.</p>
-                    </div>
-
-                    {{-- High-End Modern, Formal, Neat & Responsive Year Filter Toolbar --}}
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <div id="yearFilterStatusBadge" class="d-inline-flex align-items-center gap-1.5 px-3 py-1.5 bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill font-monospace fw-bold" style="font-size: 0.82rem;">
-                            <i class="bi bi-calendar3"></i>
-                            <span id="yearFilterStatusText">
-                                @if(count($availableYears) > 0)
-                                    {{ $availableYears[0] }} - {{ $availableYears[count($availableYears) - 1] }}
-                                @else
-                                    -
-                                @endif
-                            </span>
+                {{-- HERO PROFILE CARD (Compact & Sleek) --}}
+                <div class="student-profile-hero">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div class="me-auto">
+                            <div class="student-label-tag">VISUALISASI CPL PER FAKULTAS</div>
+                            <h4 class="student-name-text" id="displayNamaFakultas">-</h4>
+                            <div class="student-meta-row">
+                                <div class="meta-item">
+                                    <span class="meta-label">Universitas:</span>
+                                    <span class="meta-value text-secondary" id="displayUniversitasFakultas">{{ $universitas->nama ?? 'Universitas Lampung' }}</span>
+                                </div>
+                                <span class="meta-pipe">|</span>
+                                <div class="meta-item">
+                                    <span class="meta-label">Total Program Studi:</span>
+                                    <span class="meta-value font-monospace text-primary fw-bold" id="displayTotalProdiFakultas">-</span>
+                                </div>
+                                <span class="meta-pipe">|</span>
+                                <div class="meta-item">
+                                    <span class="meta-label">Mahasiswa Dinilai:</span>
+                                    <span class="meta-value text-dark" id="displayMhsFakultas">-</span>
+                                </div>
+                                <span class="meta-pipe">|</span>
+                                <div class="meta-item">
+                                    <span class="meta-label">Total CPL:</span>
+                                    <span class="meta-value text-dark" id="displayCplFakultas">-</span>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- Segmented Pill Filters --}}
-                        <div class="segmented-filter-bar">
-                            <button type="button" class="segmented-filter-btn active" data-filter="all">
-                                <i class="bi bi-grid-fill"></i> Semua Tahun
+                        {{-- Toolbar Tombol Aksi --}}
+                        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                            <button type="button" class="modern-btn-outline btn-sm px-3" id="btnBackToFilter" style="height: 32px; font-size: 0.82rem;">
+                                <i class="bi bi-arrow-left me-1"></i> Ganti Fakultas
                             </button>
-                            @if (count($availableYears) >= 3)
-                                <button type="button" class="segmented-filter-btn" data-filter="3">
-                                    3 Tahun Terakhir
-                                </button>
-                            @endif
-                            @if (count($availableYears) >= 5)
-                                <button type="button" class="segmented-filter-btn" data-filter="5">
-                                    5 Tahun Terakhir
-                                </button>
-                            @endif
-                        </div>
-
-                        {{-- Specific Single Year Selector --}}
-                        <select id="selectSingleYearFilter" class="form-select form-select-sm" style="border-radius: 8px; font-weight: 600; font-size: 0.82rem; height: 35px; border: 1px solid #cbd5e1; width: auto; background-color: #ffffff;">
-                            <option value="all">Pilih Tahun Tertentu...</option>
-                            @foreach ($availableYears as $yr)
-                                <option value="{{ $yr }}">Tahun {{ $yr }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="card-body p-4">
-                    {{-- Diagram Garis Tren Tahunan --}}
-                    <div class="mb-4">
-                        <div style="position: relative; height: 260px; width: 100%;">
-                            <canvas id="yearlyTrendChart"></canvas>
-                        </div>
-                    </div>
-
-                    {{-- Tabel Perkembangan Per Tahun (Seamless Sticky Columns: No, Fakultas, Total Prodi) --}}
-                    <div class="table-scrollable-years">
-                        <table class="table modern-table align-middle" id="tableYearlyProgression" style="border-collapse: separate !important; border-spacing: 0 !important; margin-bottom: 0;">
-                            <thead>
-                                <tr>
-                                    <th class="text-center col-sticky-no">No</th>
-                                    <th class="col-sticky-fakultas">Fakultas</th>
-                                    <th class="text-center col-sticky-prodi-count">Total Prodi</th>
-                                    @foreach ($availableYears as $yr)
-                                        <th style="width: 110px; min-width: 110px;" class="text-center col-year col-year-{{ $yr }}">Tahun {{ $yr }}</th>
-                                    @endforeach
-                                    <th style="width: 130px; min-width: 130px;" class="text-center">Skor Akhir</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($yearlyProgression as $idx => $yp)
-                                    <tr>
-                                        <td class="text-center fw-bold text-muted col-sticky-no">{{ $idx + 1 }}</td>
-                                        <td class="col-sticky-fakultas">
-                                            <div class="fw-bold text-dark text-truncate" title="{{ $yp['nama'] }}">{{ $yp['nama'] }}</div>
-                                        </td>
-                                        <td class="text-center col-sticky-prodi-count"><span class="badge bg-light text-secondary border">{{ $yp['total_prodi'] }} Prodi</span></td>
-                                        @foreach ($availableYears as $yr)
-                                            <td class="text-center col-year col-year-{{ $yr }}">
-                                                @if (isset($yp['scores'][$yr]) && $yp['scores'][$yr] > 0)
-                                                    <span class="fw-bold text-dark">
-                                                        {{ number_format($yp['scores'][$yr], 1) }}
-                                                    </span>
-                                                @else
-                                                    <span class="text-muted small">-</span>
-                                                @endif
-                                            </td>
-                                        @endforeach
-                                        <td class="text-center">
-                                            <span class="fw-bold text-primary">{{ number_format($yp['overall_skor'], 1) }}</span>
-                                            <small class="text-muted">/ 100</small>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="{{ 4 + count($availableYears) }}" class="text-center py-4 text-muted">Belum ada data evaluasi tahunan.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th class="text-center col-sticky-no"></th>
-                                    <th class="text-end fw-bold col-sticky-fakultas">Rata-rata Skor Universitas:</th>
-                                    <th class="text-center col-sticky-prodi-count"></th>
-                                    @foreach ($availableYears as $yr)
-                                        <th class="text-center fw-bold text-primary col-year col-year-{{ $yr }}">
-                                            {{ number_format($yearlyAverages[$yr]['avg_skor'] ?? 0, 1) }}
-                                        </th>
-                                    @endforeach
-                                    <th class="text-center fw-bold text-primary">
-                                        {{ number_format($universitasCplData['summary']['univ_avg_skor'], 1) }}
-                                    </th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            {{-- ========================================================================= --}}
-            {{-- 4. CARD 2: KOMPARASI EVALUASI CPL SELURUH FAKULTAS --}}
-            {{-- ========================================================================= --}}
-            <div class="card modern-card mb-4">
-                <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h5 class="section-title mb-0">
-                        <i class="bi bi-bar-chart-line-fill"></i> Komparasi Evaluasi CPL Seluruh Fakultas
-                    </h5>
-                    <div class="d-flex align-items-center gap-3 small text-muted">
-                        <span class="d-flex align-items-center gap-1.5"><span style="width: 12px; height: 12px; background: #3b82f6; border-radius: 3px; display: inline-block;"></span> Skor CPL (0-100)</span>
-                        <span class="d-flex align-items-center gap-1.5"><span style="width: 12px; height: 12px; background: #10b981; border-radius: 3px; display: inline-block;"></span> Capaian CPL (%)</span>
-                    </div>
-                </div>
-                <div class="card-body p-4">
-                    {{-- Diagram Batang Komparasi --}}
-                    <div class="mb-4">
-                        <div style="position: relative; height: 300px; width: 100%;">
-                            <canvas id="facultyCplChart"></canvas>
-                        </div>
-                    </div>
-
-                    {{-- Tabel Komparasi Seluruh Fakultas --}}
-                    <div class="modern-table-container">
-                        <div class="table-responsive">
-                            <table class="table modern-table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 50px;" class="text-center">No</th>
-                                        <th style="min-width: 220px;">Fakultas</th>
-                                        <th class="text-center" style="width: 130px;">Program Studi</th>
-                                        <th class="text-center" style="width: 130px;">Mahasiswa Dinilai</th>
-                                        <th style="width: 210px;">
-                                            Rata-rata Skor CPL
-                                        </th>
-                                        <th style="width: 190px;">
-                                            Rata-rata Capaian CPL
-                                            <small class="text-muted d-block fw-normal" style="font-size: 0.68rem;">(Persentase MK Lulus)</small>
-                                        </th>
-                                        <th class="text-center" style="width: 140px;">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($universitasCplData['fakultas_stats'] as $index => $fakItem)
-                                        <tr>
-                                            <td class="text-center fw-bold text-muted">{{ $index + 1 }}</td>
-                                            <td>
-                                                <div class="fw-bold text-dark">{{ $fakItem['nama'] }}</div>
-                                            </td>
-                                            <td class="text-center">
-                                                <span class="badge bg-light text-secondary border fw-bold px-2.5 py-1.5" style="font-size: 0.8rem; border-radius: 8px;">
-                                                    {{ $fakItem['total_prodi'] }} Prodi
-                                                </span>
-                                            </td>
-                                            <td class="text-center">
-                                                @if ($fakItem['total_mhs'] > 0)
-                                                    <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-2.5 py-1.5" style="font-size: 0.8rem; border-radius: 8px;">
-                                                        <i class="bi bi-person-fill me-1"></i>{{ $fakItem['total_mhs'] }} Mhs
-                                                    </span>
-                                                @else
-                                                    <span class="text-muted small">0 Mhs</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if ($fakItem['avg_skor_cpl'] > 0 || $fakItem['avg_capaian_cpl'] > 0)
-                                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                                        <span class="fw-bold text-dark small">{{ number_format($fakItem['avg_skor_cpl'], 1) }} <span class="text-muted font-monospace">/ 100</span></span>
-                                                    </div>
-                                                    <div class="progress-custom-bar">
-                                                        <div class="progress-fill" style="width: {{ min(100, $fakItem['avg_skor_cpl']) }}%; background-color: #3b82f6;"></div>
-                                                    </div>
-                                                @else
-                                                    <span class="text-muted small">Belum Ada Data</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if ($fakItem['avg_skor_cpl'] > 0 || $fakItem['avg_capaian_cpl'] > 0)
-                                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                                        <span class="fw-bold text-dark small">{{ number_format($fakItem['avg_capaian_cpl'], 1) }}%</span>
-                                                    </div>
-                                                    <div class="progress-custom-bar">
-                                                        <div class="progress-fill" style="width: {{ min(100, $fakItem['avg_capaian_cpl']) }}%; background-color: #10b981;"></div>
-                                                    </div>
-                                                @else
-                                                    <span class="text-muted small">Belum Ada Data</span>
-                                                @endif
-                                            </td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn-detail-action btn-select-fakultas-detail" 
-                                                    data-fakultas-id="{{ $fakItem['id'] }}"
-                                                    title="Lihat Rincian Fakultas pada Halaman Ini">
-                                                    <i class="bi bi-eye"></i> Rincian CPL
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center py-4 text-muted">Belum ada data fakultas.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                            <button id="btnPrintPdf" type="button" class="modern-btn-primary btn-sm px-3" style="height: 32px; font-size: 0.82rem;">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> Unduh PDF
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- ========================================================================= --}}
-            {{-- 5. CARD 3: RINCIAN CAPAIAN CPL PER FAKULTAS (Full Inline Section with Reliable Select) --}}
-            {{-- ========================================================================= --}}
-            <div class="card modern-card mb-4" id="sectionRincianFakultas">
-                <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <div>
-                        <h5 class="section-title mb-1">
-                            <i class="bi bi-list-check"></i> Rincian Capaian CPL Per Fakultas
+                {{-- CARD 1: Achievement of CPL Scores (Skor Capaian CPL Disusun Per Tahun) --}}
+                <div class="card modern-card mb-4">
+                    <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="section-title mb-0 d-flex align-items-center flex-wrap gap-2">
+                            <span><i class="bi bi-bar-chart-line"></i> Achievement of CPL Scores</span>
+                            <span id="badgeYearSkorCpl" class="badge-interactive-year" style="display: none;" title="Klik untuk menghapus filter dan kembali ke tampilan awal">
+                                <i class="bi bi-calendar-event"></i>
+                                <span class="badge-year-text">2024</span>
+                                <i class="bi bi-x-lg badge-close-icon"></i>
+                            </span>
                         </h5>
-                        <p class="text-muted small mb-0">Evaluasi komparasi program studi dan perolehan skor asesmen per butir CPL pada fakultas yang dipilih</p>
-                    </div>
-
-                    {{-- Form Cetak PDF Fakultas Aktif --}}
-                    <form id="formCetakPdfFakultasAktif" method="POST" action="{{ route($currentPrefix . 'visualisasi.generate-pdfVisualFakultas') }}" target="_blank">
-                        @csrf
-                        <input type="hidden" name="universitas_id" value="{{ $universitasId }}">
-                        <input type="hidden" name="fakultas_id" id="inputFakultasIdInline" value="">
-                        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1.5" style="border-radius: 8px; font-weight: 600; font-size: 0.8rem; padding: 6px 14px;">
-                            <i class="bi bi-file-earmark-pdf"></i> Unduh PDF
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#guideCplScores" aria-expanded="false" style="border-radius: 6px; font-size: 12px; padding: 4px 10px;">
+                            <i class="bi bi-info-circle me-1"></i> Petunjuk Membaca Diagram
                         </button>
-                    </form>
-                </div>
-                <div class="card-body p-4">
-                    {{-- Standard, Solid & Searchable Fakultas Selector --}}
-                    <div class="row g-3 mb-4">
-                        <div class="col-12 col-md-6 col-lg-5">
-                            <label for="selectFakultasInline" class="small fw-bold text-muted mb-1.5 d-block text-uppercase" style="letter-spacing: 0.5px;">
-                                <i class="bi bi-buildings-fill text-primary me-1"></i> Pilih Fakultas:
-                            </label>
-                            <select id="selectFakultasInline" class="form-select" style="height: 42px; border-radius: 8px; font-weight: 600; font-size: 0.88rem; border: 1px solid #cbd5e1; background-color: #ffffff; color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                                @foreach ($universitasCplData['fakultas_stats'] as $fOption)
-                                    <option value="{{ $fOption['id'] }}">
-                                        {{ $fOption['nama'] }} ({{ $fOption['total_prodi'] }} Prodi) {{ $fOption['total_mhs'] == 0 ? '- [Belum Ada Mahasiswa]' : '' }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
                     </div>
-
-                    {{-- 3 Metric Highlight Box untuk Fakultas yang Aktif --}}
-                    <div class="row g-3 mb-4">
-                        <div class="col-12 col-md-4">
-                            <div class="p-3 bg-light border rounded-3 text-center">
-                                <div class="text-muted small fw-bold text-uppercase">Rata-rata Skor CPL</div>
-                                <div class="fs-4 fw-bold text-primary mt-1" id="inlineFakultasSkorBadge">0 / 100</div>
+                    <div class="card-body p-4">
+                        {{-- Petunjuk Collapse --}}
+                        <div class="collapse mb-3" id="guideCplScores">
+                            <div class="modern-guide-box small">
+                                <h6 class="fw-bold text-primary mb-1"><i class="bi bi-compass me-1"></i> Panduan Membaca Diagram & Tabel Skor CPL:</h6>
+                                <ul class="mb-0 ps-3 text-muted">
+                                    <li><strong>Bentuk Jaring (Radar):</strong> Setiap sudut mewakili satu <strong>CPL (Capaian Pembelajaran Lulusan)</strong> pada kurikulum fakultas.</li>
+                                    <li><span class="badge" style="background-color: #1F3BB3; color:#fff;">Skor Capaian CPL</span>: Skor rata-rata perolehan asesmen mahasiswa (skala 0 &ndash; 100).</li>
+                                    <li><span class="badge" style="background-color: #10b981; color:#fff;">Max Skor CPL</span>: Skor capaian tertinggi mahasiswa pada butir CPL di fakultas.</li>
+                                    <li><span class="badge" style="background-color: #ef4444; color:#fff;">Min Skor CPL</span>: Skor capaian terendah mahasiswa pada butir CPL di fakultas.</li>
+                                    <li><strong>Tabel Skor Capaian CPL Per Tahun:</strong> Menampilkan skor capaian kompetensi CPL yang disusun per tahun akademik. <em>Klik pada kolom tahun di tabel untuk melihat diagram radar pada tahun tersebut.</em></li>
+                                </ul>
                             </div>
                         </div>
-                        <div class="col-12 col-md-4">
-                            <div class="p-3 bg-light border rounded-3 text-center">
-                                <div class="text-muted small fw-bold text-uppercase">Rata-rata Capaian CPL</div>
-                                <div class="fs-4 fw-bold text-success mt-1" id="inlineFakultasCapaianBadge">0%</div>
+
+                        {{-- Diagram Radar Canvas --}}
+                        <div class="d-flex justify-content-center mb-4">
+                            <div style="width: 100%; max-width: 600px;">
+                                <canvas id="radarChart"></canvas>
                             </div>
                         </div>
-                        <div class="col-12 col-md-4">
-                            <div class="p-3 bg-light border rounded-3 text-center">
-                                <div class="text-muted small fw-bold text-uppercase">Total Program Studi</div>
-                                <div class="fs-4 fw-bold text-dark mt-1" id="inlineFakultasTotalProdiBadge">0 Prodi</div>
-                                <div class="text-muted small" style="font-size: 0.72rem;" id="inlineFakultasMhsBadge">0 Mahasiswa Dinilai</div>
+
+                        {{-- Tabel Rincian Skor Capaian CPL Per Tahun --}}
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                <h6 class="section-subtitle mb-0"><i class="bi bi-table text-primary me-2"></i> Rincian Skor Capaian CPL:</h6>
                             </div>
-                        </div>
-                    </div>
-
-                    {{-- Tabel Program Studi dalam Fakultas Tersebut --}}
-                    <h6 class="fw-bold text-dark mb-2.5"><i class="bi bi-mortarboard-fill text-primary me-1.5"></i>Program Studi pada Fakultas Ini:</h6>
-                    <div class="modern-table-container mb-4">
-                        <div class="table-responsive">
-                            <table class="table modern-table align-middle mb-0" style="min-width: 700px; width: 100%;">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 50px;" class="text-center">No</th>
-                                        <th style="min-width: 200px;">Program Studi</th>
-                                        <th class="text-center" style="width: 100px;">Jenjang</th>
-                                        <th class="text-center" style="width: 120px;">Mahasiswa</th>
-                                        <th class="text-center" style="width: 100px;">Total CPL</th>
-                                        <th style="width: 160px;">Rata-rata Skor</th>
-                                        <th style="width: 160px;">Capaian (%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="inlineProdiTableBody">
-                                    {{-- Rendered dynamically via JS --}}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {{-- Filter Aspek & Search Bar untuk Butir CPL --}}
-                    <h6 class="fw-bold text-dark mb-2.5"><i class="bi bi-check2-circle text-success me-1.5"></i>Rincian Butir CPL Fakultas:</h6>
-                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 bg-light p-2.5 rounded-3 border">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="small fw-bold text-muted text-nowrap"><i class="bi bi-funnel text-primary me-1"></i>Filter Aspek:</span>
-                            <select id="inlineSelectAspek" class="form-select form-select-sm bg-white" style="min-width: 230px; border-radius: 8px;">
-                                <option value="all">Semua Aspek</option>
-                            </select>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="input-group input-group-sm" style="width: 250px;">
-                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                                <input type="text" id="inlineSearchCpl" class="form-control border-start-0 ps-0" placeholder="Cari kode atau judul CPL...">
+                            <div class="modern-table-container mb-4">
+                                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                                    <table class="table modern-table mb-0" id="tableRincianCplScores">
+                                        <thead>
+                                            <tr id="theadRincianCplScores">
+                                                <th style="min-width: 120px;">Kode CPL</th>
+                                                @foreach ($availableYears as $yr)
+                                                    <th class="text-center interactive-year-th" data-year="{{ $yr }}" style="min-width: 85px;" title="Klik untuk melihat diagram {{ $yr }}">{{ $yr }}</th>
+                                                @endforeach
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {{-- Dinamis via JS --}}
+                                        </tbody>
+                                        <tfoot>
+                                            {{-- Dinamis via JS --}}
+                                        </tfoot>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {{-- Tabel Butir CPL Inline --}}
-                    <div class="modern-table-container">
-                        <div class="table-responsive">
-                            <table class="table modern-table align-middle mb-0" style="min-width: 900px; width: 100%;">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 50px;" class="text-center">No</th>
-                                        <th style="width: 110px;">Kode CPL</th>
-                                        <th style="width: 160px;">Program Studi</th>
-                                        <th style="width: 140px;">Aspek</th>
-                                        <th style="min-width: 280px;">Deskripsi / Judul CPL</th>
-                                        <th style="width: 170px;">Rata-rata Skor</th>
-                                        <th style="width: 150px;">Capaian (%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="inlineCplTableBody">
-                                    {{-- Rendered dynamically via JS --}}
-                                </tbody>
-                            </table>
+                            {{-- Deskripsi CPL (Bisa di Buka Tutup Mirip Gambar) --}}
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-4 pt-3 border-top" id="headerToggleCplDesc" style="cursor: pointer; user-select: none;">
+                                <h6 class="keterangan fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+                                    <i class="bi bi-card-text text-primary" style="font-size: 1.15rem;"></i> Descriptions (Deskripsi CPL)
+                                    <span id="cplBadgeCount" class="badge-cpl-count ms-1"></span>
+                                </h6>
+                                <button class="btn-toggle-cpl-desc" type="button" id="btnToggleCplDesc" title="Buka / Tutup Deskripsi CPL">
+                                    <i class="bi bi-chevron-up" id="iconCplDescCollapse"></i>
+                                </button>
+                            </div>
+                            <div class="mt-2" id="collapseCplDescriptions">
+                                <div class="cpl-desc-container">
+                                    <div id="labelContainer" class="cpl-desc-grid">
+                                        {{-- Dinamis via JS --}}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                {{-- CARD 2: Achievement of CPL (Persentase Ketercapaian CPL Disusun Per Tahun) --}}
+                <div class="card modern-card mb-4">
+                    <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="section-title mb-0 d-flex align-items-center flex-wrap gap-2">
+                            <span><i class="bi bi-pie-chart"></i> Achievement of CPL</span>
+                            <span id="badgeYearKetercapaianCpl" class="badge-interactive-year" style="display: none;" title="Klik untuk menghapus filter dan kembali ke tampilan awal">
+                                <i class="bi bi-calendar-event"></i>
+                                <span class="badge-year-text">2024</span>
+                                <i class="bi bi-x-lg badge-close-icon"></i>
+                            </span>
+                        </h5>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#guideCplCourses" aria-expanded="false" style="border-radius: 6px; font-size: 12px; padding: 4px 10px;">
+                            <i class="bi bi-info-circle me-1"></i> Petunjuk Membaca Diagram
+                        </button>
+                    </div>
+                    <div class="card-body p-4">
+                        {{-- Petunjuk Collapse --}}
+                        <div class="collapse mb-3" id="guideCplCourses">
+                            <div class="modern-guide-box small">
+                                <h6 class="fw-bold text-primary mb-1"><i class="bi bi-compass me-1"></i> Panduan Membaca Diagram & Tabel Ketercapaian CPL (%):</h6>
+                                <ul class="mb-0 ps-3 text-muted">
+                                    <li><span class="badge" style="background-color: #1F3BB3; color:#fff;">CPL (Fakultas)</span>: Persentase ketercapaian per butir CPL berdasarkan kelulusan mata kuliah pendukung di fakultas.</li>
+                                    <li><span class="badge" style="background-color: #10b981; color:#fff;">Max CPL</span>: Persentase ketercapaian tertinggi mahasiswa pada butir CPL di fakultas.</li>
+                                    <li><span class="badge" style="background-color: #ef4444; color:#fff;">Min CPL</span>: Persentase ketercapaian terendah mahasiswa pada butir CPL di fakultas.</li>
+                                    <li><strong>Tabel Ketercapaian CPL Per Tahun (%):</strong> Menampilkan persentase kelulusan mata kuliah pendukung CPL secara kumulatif setiap tahun akademik. <em>Klik pada kolom tahun di tabel untuk melihat diagram pada tahun tersebut.</em></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- Diagram Radar Canvas --}}
+                        <div class="d-flex justify-content-center mb-4">
+                            <div style="width: 100%; max-width: 600px;">
+                                <canvas id="radarChartCapaianCpl"></canvas>
+                            </div>
+                        </div>
+
+                        {{-- Tabel Rincian Ketercapaian CPL (%) Per Tahun --}}
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                <h6 class="section-subtitle mb-0"><i class="bi bi-table text-primary me-2"></i> Rincian Ketercapaian CPL (%):</h6>
+                            </div>
+                            <div class="modern-table-container mb-4">
+                                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                                    <table class="table modern-table mb-0" id="tableKomparasiCplAngkatan">
+                                        <thead>
+                                            <tr id="theadKomparasiCplAngkatan">
+                                                <th style="min-width: 120px;">Kode CPL</th>
+                                                @foreach ($availableYears as $yr)
+                                                    <th class="text-center interactive-year-th" data-year="{{ $yr }}" style="min-width: 85px;" title="Klik untuk melihat diagram {{ $yr }}">{{ $yr }}</th>
+                                                @endforeach
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {{-- Dinamis via JS --}}
+                                        </tbody>
+                                        <tfoot>
+                                            {{-- Dinamis via JS --}}
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-
-
 
         @else
             <div class="card modern-card p-4 text-center">
                 <i class="bi bi-info-circle text-muted mb-2" style="font-size: 36px;"></i>
                 <h5 class="fw-bold text-dark">Data Universitas Tidak Ditemukan</h5>
-                <p class="text-muted small mb-0">Pastikan akun Anda terasosiasi dengan data Universitas yang valid untuk mengakses visualisasi evaluasi CPL per fakultas.</p>
+                <p class="text-muted small mb-0">Pastikan akun Anda terasosiasi dengan data Universitas/Fakultas yang valid untuk mengakses visualisasi evaluasi CPL per fakultas.</p>
             </div>
         @endif
     </div>
@@ -922,233 +733,369 @@
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
         <script>
-            var facultyChartInstance = null;
-            var trendChartInstance = null;
-
             var allAvailableYears = @json($availableYears ?? []);
-            var yearlyProgressionData = @json($yearlyProgression ?? []);
-            var allFakultasStats = @json($universitasCplData['fakultas_stats'] ?? []);
+            var allFakultasStats = @json($fakultasList ?? []);
+            var fakultasCplYearlyData = @json($fakultasCplYearlyData ?? []);
 
-            var selectedFakultasId = (allFakultasStats && allFakultasStats.length > 0) ? allFakultasStats[0].id : null;
-            var activeInlineAspekFilter = 'all';
-            var activeInlineSearchQuery = '';
-            var currentActiveFakultasData = null;
+            var currentActiveFakultas = null;
+            var currentActiveCplData = null;
+            var currentFakultasId = null;
+
+            var radarChartPerSoalInstance = null;
+            var radarChartCapaianCplInstance = null;
+
+            var activeYearSkorCpl = null;
+            var activeYearKetercapaianCpl = null;
 
             $(function() {
-                @if (isset($universitasCplData) && $universitasCplData && !empty($universitasCplData['fakultas_stats']))
-                    initYearlyTrendChart(allAvailableYears);
-                    initFacultyCplChart();
-                @endif
-                initYearFilterToolbar();
-                initFakultasSelector();
+                initSelectionForm();
+                initInteractiveYearHandlers();
+                initCplDescriptionToggle();
                 initPdfPrintHandler();
+
+                // Cek URL Query Parameter (untuk F5 refresh dan bookmark)
+                var urlParams = new URLSearchParams(window.location.search);
+                var savedFakultas = urlParams.get('fakultas') || urlParams.get('fakultas_id');
+
+                if (savedFakultas && fakultasCplYearlyData[savedFakultas]) {
+                    $('#fakultasForm').val(savedFakultas);
+                    renderVisualisasiFakultas(savedFakultas, true);
+                } else {
+                    $('#tugas').show();
+                    $('#visualContainer').hide();
+                }
             });
 
-            // 1. Chart Tren Tahunan
-            function initYearlyTrendChart(displayedYears) {
-                var ctx = document.getElementById('yearlyTrendChart');
-                if (!ctx) return;
-
-                if (trendChartInstance) {
-                    trendChartInstance.destroy();
-                }
-
-                var colors = ['#3b82f6', '#10b981', '#8b5cf6', '#0ea5e9', '#ec4899', '#06b6d4', '#14b8a6', '#f97316'];
-                var datasets = [];
-
-                yearlyProgressionData.forEach(function(item, idx) {
-                    var dataPoints = [];
-                    displayedYears.forEach(function(yr) {
-                        dataPoints.push(item.scores[yr] || 0);
-                    });
-
-                    var clr = colors[idx % colors.length];
-                    datasets.push({
-                        label: item.nama,
-                        data: dataPoints,
-                        borderColor: clr,
-                        backgroundColor: clr,
-                        fill: false,
-                        tension: 0.3,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        borderWidth: 2
-                    });
+            // ─── 1. FORM SUBMIT & NAVIGATION ───
+            function initSelectionForm() {
+                $('#hasilVisual').on('submit', function(e) {
+                    e.preventDefault();
+                    var fId = $('#fakultasForm').val();
+                    if (!fId) {
+                        alert('Silakan pilih Fakultas terlebih dahulu.');
+                        $('#fakultasForm').focus();
+                        return;
+                    }
+                    renderVisualisasiFakultas(fId, false);
                 });
 
-                trendChartInstance = new Chart(ctx.getContext('2d'), {
-                    type: 'line',
-                    data: {
-                        labels: displayedYears.map(function(y) { return 'Tahun ' + y; }),
-                        datasets: datasets
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            yAxes: [{
-                                ticks: {
-                                    beginAtZero: true,
-                                    max: 100,
-                                    stepSize: 20
-                                },
-                                gridLines: { color: '#f1f5f9' }
-                            }],
-                            xAxes: [{
-                                gridLines: { color: '#f1f5f9' }
-                            }]
-                        },
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                boxWidth: 12,
-                                fontSize: 11
-                            }
-                        },
-                        tooltips: {
-                            backgroundColor: '#1e293b',
-                            callbacks: {
-                                label: function(tooltipItem, data) {
-                                    var label = data.datasets[tooltipItem.datasetIndex].label || '';
-                                    return label + ': ' + tooltipItem.yLabel + ' / 100';
-                                }
-                            }
+                // Tombol Kembali / Ganti Fakultas
+                $('#btnBackToFilter').on('click', function() {
+                    $('#navVisualisasiSlot').empty();
+
+                    var cleanUrl = new URL(window.location.href);
+                    cleanUrl.searchParams.delete('fakultas');
+                    cleanUrl.searchParams.delete('fakultas_id');
+                    window.history.replaceState({}, '', cleanUrl.toString());
+
+                    $('#visualContainer').fadeOut(250, function() {
+                        $('#tugas').slideDown(300);
+                        $('html, body').animate({
+                            scrollTop: $('#tugas').offset().top - 70
+                        }, 300);
+                    });
+                });
+            }
+
+            function mountNavbarControls() {
+                if ($('#navVisualisasiSlot').length) {
+                    if (!$('#navbarVisualisasiControls').length) {
+                        var currentText = currentActiveFakultas ? currentActiveFakultas.nama : 'Pilih Fakultas';
+                        var html = '' +
+                            '<div class="d-flex align-items-center gap-2" id="navbarVisualisasiControls">' +
+                            '    <div class="nav-combobox-wrapper" id="navFakultasComboboxWrapper" style="width: 220px;">' +
+                            '        <input type="text" id="navFakultasDisplayInput" class="form-control nav-combobox-input" placeholder="Fakultas" autocomplete="off" title="Pilih Fakultas" style="cursor: pointer;" value="' + currentText + '">' +
+                            '        <input type="hidden" id="navFakultasValue" value="' + (currentFakultasId || '') + '">' +
+                            '        <button type="button" class="nav-combobox-toggle-btn" tabindex="-1" id="navFakultasToggleBtn" title="Daftar Fakultas"><i class="bi bi-chevron-down"></i></button>' +
+                            '        <div class="nav-combobox-dropdown-menu" id="navFakultasDropdownMenu" style="display: none; min-width: 240px;">' +
+                            '            <div class="nav-combobox-options-list" id="navFakultasOptionsList"></div>' +
+                            '        </div>' +
+                            '    </div>' +
+                            '</div>';
+                        $('#navVisualisasiSlot').html(html);
+                    }
+                    syncNavbarFakultasOptions('');
+                }
+            }
+
+            function syncNavbarFakultasOptions(filterText) {
+                if ($('#navFakultasDisplayInput').length) {
+                    var currentText = currentActiveFakultas ? currentActiveFakultas.nama : '';
+                    var currentVal = currentFakultasId || '';
+                    $('#navFakultasValue').val(currentVal);
+                    if (filterText === undefined || filterText === '') {
+                        $('#navFakultasDisplayInput').val(currentText).attr('title', currentText);
+                    }
+
+                    var $list = $('#navFakultasOptionsList');
+                    $list.empty();
+
+                    var q = (filterText || '').toLowerCase().trim();
+                    var filtered = allFakultasStats.filter(function(item) {
+                        if (!q) return true;
+                        return item.nama.toLowerCase().indexOf(q) !== -1;
+                    });
+
+                    if (filtered.length === 0) {
+                        $list.html('<div class="combobox-empty-state text-muted p-2" style="font-size: 0.8rem;">Tidak ada fakultas</div>');
+                        return;
+                    }
+
+                    allFakultasStats.forEach(function(item) {
+                        if (q && item.nama.toLowerCase().indexOf(q) === -1) {
+                            return;
                         }
-                    }
-                });
+                        var isSelected = (String(item.id).trim() === String(currentVal).trim());
+                        var displayName = item.nama;
+                        var $opt = $('<div>')
+                            .addClass('nav-combobox-option' + (isSelected ? ' is-selected' : ''))
+                            .attr('data-value', item.id)
+                            .attr('title', displayName)
+                            .text(displayName);
+
+                        $opt.on('mousedown', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            selectNavFakultasItem(item.id, item.nama);
+                        });
+
+                        $list.append($opt);
+                    });
+                }
             }
 
-            // Toolbar Filter Tahun: High-End Segmented Pills & Dropdown
-            function initYearFilterToolbar() {
-                var totalYears = allAvailableYears.length;
+            function selectNavFakultasItem(id, nama) {
+                $('#navFakultasValue').val(id);
+                $('#navFakultasDisplayInput').val(nama).attr('title', nama);
+                $('#fakultasForm').val(id);
+                $('#navFakultasDropdownMenu').hide();
+                renderVisualisasiFakultas(id, false);
+            }
 
-                function applyYearFilter(displayedYears) {
-                    // Update Status Badge dengan Rentang Tahun Langsung
-                    if (displayedYears.length === 1) {
-                        $('#yearFilterStatusText').text(displayedYears[0]);
-                    } else if (displayedYears.length > 1) {
-                        $('#yearFilterStatusText').text(displayedYears[0] + ' - ' + displayedYears[displayedYears.length - 1]);
-                    } else {
-                        $('#yearFilterStatusText').text('-');
-                    }
+            $(document).on('focus click', '#navFakultasDisplayInput', function() {
+                syncNavbarFakultasOptions('');
+                $('#navFakultasDropdownMenu').show();
+            }).on('input', '#navFakultasDisplayInput', function() {
+                var q = $(this).val();
+                syncNavbarFakultasOptions(q);
+                $('#navFakultasDropdownMenu').show();
+            });
 
-                    // Update Table Column Visibility
-                    $('.col-year').hide();
-                    displayedYears.forEach(function(yr) {
-                        $('.col-year-' + yr).show();
+            $(document).on('click', '#navFakultasToggleBtn', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if ($('#navFakultasDropdownMenu').is(':visible')) {
+                    $('#navFakultasDropdownMenu').hide();
+                } else {
+                    syncNavbarFakultasOptions('');
+                    $('#navFakultasDropdownMenu').show();
+                    $('#navFakultasDisplayInput').focus();
+                }
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#navFakultasComboboxWrapper').length) {
+                    $('#navFakultasDropdownMenu').hide();
+                }
+            });
+
+            // ─── 2. RENDER VISUALISASI DATA FAKULTAS ───
+            function renderVisualisasiFakultas(fakultasId, isAutoLoad) {
+                currentFakultasId = fakultasId;
+                currentActiveFakultas = allFakultasStats.find(function(f) { return f.id == fakultasId; });
+                currentActiveCplData = fakultasCplYearlyData[fakultasId] || null;
+
+                if (!currentActiveFakultas || !currentActiveCplData) {
+                    alert('Data evaluasi untuk fakultas terpilih tidak ditemukan.');
+                    return;
+                }
+
+                // Update URL query parameters tanpa reload
+                var currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('fakultas', fakultasId);
+                window.history.replaceState({}, '', currentUrl.toString());
+
+                // Reset filter tahun aktif ke default (akumulatif/keseluruhan)
+                activeYearSkorCpl = null;
+                activeYearKetercapaianCpl = null;
+                $('#badgeYearSkorCpl').hide();
+                $('#badgeYearKetercapaianCpl').hide();
+
+                // 1. Update Hero Profile Card
+                $('#displayNamaFakultas').text(currentActiveFakultas.nama);
+                $('#displayTotalProdiFakultas').text(currentActiveFakultas.total_prodi + ' Program Studi');
+                $('#displayMhsFakultas').text((currentActiveFakultas.total_mhs || 0) + ' Mahasiswa');
+                $('#displayCplFakultas').text((currentActiveFakultas.total_cpl || 0) + ' Butir CPL');
+
+                mountNavbarControls();
+
+                // 2. Render Tabel Skor & Radar Chart 1
+                renderTableSkorPerTahun();
+                renderRadarChartSkor(null);
+
+                // 3. Render Tabel Ketercapaian & Radar Chart 2
+                renderTableKetercapaianPerTahun();
+                renderRadarChartKetercapaian(null);
+
+                // 4. Render Deskripsi Butir CPL
+                renderDeskripsiCpl();
+
+                // Transisi Tampilan
+                if (isAutoLoad) {
+                    $('#tugas').hide();
+                    $('#visualContainer').show();
+                } else {
+                    $('#tugas').slideUp(300, function() {
+                        $('#visualContainer').fadeIn(350);
+                        $('html, body').animate({
+                            scrollTop: $('#visualContainer').offset().top - 70
+                        }, 300);
+                    });
+                }
+            }
+
+            // ─── 3. CARD 1: SKOR CAPAIAN CPL (TABEL & RADAR) ───
+            function renderTableSkorPerTahun() {
+                var $tbody = $('#tableRincianCplScores tbody');
+                var $tfoot = $('#tableRincianCplScores tfoot');
+                $tbody.empty();
+                $tfoot.empty();
+
+                var cplMeta = currentActiveCplData.cpl_meta || {};
+                var cplScores = currentActiveCplData.cpl_scores || {};
+                var yearlyAvgSkor = currentActiveCplData.yearly_avg_skor || {};
+
+                var keys = Object.keys(cplMeta);
+                if (keys.length === 0) {
+                    $tbody.html('<tr><td colspan="' + (allAvailableYears.length + 1) + '" class="text-center text-muted p-3">Belum ada data CPL untuk fakultas ini.</td></tr>');
+                    return;
+                }
+
+                keys.forEach(function(kode) {
+                    var meta = cplMeta[kode];
+                    var rowHtml = '<tr><td class="fw-bold text-dark">' + kode + '</td>';
+
+                    allAvailableYears.forEach(function(yr) {
+                        var scoreVal = (cplScores[kode] && cplScores[kode][yr] !== undefined) ? cplScores[kode][yr] : 0;
+                        var displayVal = (scoreVal !== null && scoreVal !== undefined && parseFloat(scoreVal) > 0) ? parseFloat(scoreVal).toFixed(2) : '0';
+                        var isZeroClass = (parseFloat(displayVal) === 0) ? ' is-zero-cell' : '';
+                        rowHtml += '<td class="text-center fw-semibold interactive-year-td td-year-skor-' + yr + isZeroClass + '" data-year="' + yr + '" style="cursor: pointer;" title="' + yr + '">' + displayVal + '</td>';
                     });
 
-                    // Update Line Chart
-                    initYearlyTrendChart(displayedYears);
-                }
-
-                // Initial status text
-                if (totalYears > 0) {
-                    var firstY = allAvailableYears[0];
-                    var lastY = allAvailableYears[totalYears - 1];
-                    $('#yearFilterStatusText').text(firstY === lastY ? firstY : firstY + ' - ' + lastY);
-                }
-
-                // Preset Buttons
-                $('.segmented-filter-btn').on('click', function() {
-                    $('.segmented-filter-btn').removeClass('active');
-                    $(this).addClass('active');
-                    $('#selectSingleYearFilter').val('all');
-
-                    var filter = $(this).data('filter');
-                    if (filter === 'all') {
-                        applyYearFilter(allAvailableYears);
-                    } else {
-                        var count = parseInt(filter);
-                        var sliced = allAvailableYears.slice(-count);
-                        applyYearFilter(sliced);
-                    }
+                    rowHtml += '</tr>';
+                    $tbody.append(rowHtml);
                 });
 
-                // Single Year Dropdown Select
-                $('#selectSingleYearFilter').on('change', function() {
-                    var val = $(this).val();
-                    if (val === 'all') {
-                        $('.segmented-filter-btn').removeClass('active');
-                        $('.segmented-filter-btn[data-filter="all"]').addClass('active');
-                        applyYearFilter(allAvailableYears);
-                    } else {
-                        $('.segmented-filter-btn').removeClass('active');
-                        applyYearFilter([val]);
-                    }
+                // Footer Row: Rata-rata Skor per Tahun
+                var footerHtml = '<tr style="background-color: #ebf5fb;"><th class="text-primary fw-bold" style="color: #1F3BB3 !important;">Rata-rata Skor</th>';
+                allAvailableYears.forEach(function(yr) {
+                    var avgYr = (yearlyAvgSkor[yr] !== undefined && parseFloat(yearlyAvgSkor[yr]) > 0) ? parseFloat(yearlyAvgSkor[yr]).toFixed(2) : '0';
+                    var isZeroClass = (parseFloat(avgYr) === 0) ? ' is-zero-cell' : '';
+                    footerHtml += '<th class="text-center interactive-year-tf tf-year-skor-' + yr + isZeroClass + '" data-year="' + yr + '" style="cursor: pointer;" title="' + yr + '">' + avgYr + '</th>';
                 });
+                footerHtml += '</tr>';
+                $tfoot.append(footerHtml);
             }
 
-            // 2. Chart Komparasi Antar Fakultas
-            function initFacultyCplChart() {
-                var ctx = document.getElementById('facultyCplChart');
-                if (!ctx) return;
+            function renderRadarChartSkor(filterYear) {
+                if (radarChartPerSoalInstance) {
+                    radarChartPerSoalInstance.destroy();
+                    radarChartPerSoalInstance = null;
+                }
 
-                if (!allFakultasStats || allFakultasStats.length === 0) return;
+                var cplMeta = currentActiveCplData.cpl_meta || {};
+                var cplScores = currentActiveCplData.cpl_scores || {};
+                var labels = Object.keys(cplMeta);
 
-                var labels = allFakultasStats.map(function(f) { return f.nama; });
-                var skorData = allFakultasStats.map(function(f) { return f.avg_skor_cpl || 0; });
-                var capaianData = allFakultasStats.map(function(f) { return f.avg_capaian_cpl || 0; });
+                if (labels.length === 0) {
+                    labels = ['Belum Ada CPL'];
+                }
 
-                facultyChartInstance = new Chart(ctx.getContext('2d'), {
-                    type: 'bar',
+                var skorValues = labels.map(function(k) {
+                    if (k === 'Belum Ada CPL') return 0;
+                    if (filterYear) {
+                        return (cplScores[k] && cplScores[k][filterYear] !== undefined) ? parseFloat(cplScores[k][filterYear]).toFixed(2) : 0;
+                    }
+                    return parseFloat(cplMeta[k].overall_skor || 0).toFixed(2);
+                });
+
+                var minSkorValues = labels.map(function(k) {
+                    return parseFloat(cplMeta[k] && cplMeta[k].min_skor !== undefined ? cplMeta[k].min_skor : 0).toFixed(2);
+                });
+                var maxSkorValues = labels.map(function(k) {
+                    return parseFloat(cplMeta[k] && cplMeta[k].max_skor !== undefined ? cplMeta[k].max_skor : 0).toFixed(2);
+                });
+
+                var canvas = document.getElementById('radarChart');
+                var ctx = canvas.getContext('2d');
+                radarChartPerSoalInstance = new Chart(ctx, {
+                    type: 'radar',
                     data: {
                         labels: labels,
                         datasets: [
                             {
-                                label: 'Rata-rata Skor CPL (0-100)',
-                                data: skorData,
-                                backgroundColor: 'rgba(59, 130, 246, 0.75)',
-                                borderColor: 'rgba(37, 99, 235, 1)',
-                                borderWidth: 1.5,
-                                borderRadius: 6
+                                label: 'Skor Capaian CPL' + (filterYear ? ' (' + filterYear + ')' : ''),
+                                data: skorValues,
+                                backgroundColor: 'rgba(31, 59, 179, 0.15)',
+                                borderColor: '#1F3BB3',
+                                borderWidth: 2.5,
+                                pointBackgroundColor: '#1F3BB3',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4,
+                                pointHoverRadius: 6,
+                                pointHitRadius: 10
                             },
                             {
-                                label: 'Rata-rata Capaian CPL (%)',
-                                data: capaianData,
-                                backgroundColor: 'rgba(16, 185, 129, 0.75)',
-                                borderColor: 'rgba(5, 150, 105, 1)',
-                                borderWidth: 1.5,
-                                borderRadius: 6
+                                label: 'Min Skor CPL',
+                                data: minSkorValues,
+                                backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                                borderColor: '#ef4444',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                pointBackgroundColor: '#ef4444',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4.5,
+                                pointHoverRadius: 6.5,
+                                pointHitRadius: 10
+                            },
+                            {
+                                label: 'Max Skor CPL',
+                                data: maxSkorValues,
+                                backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                                borderColor: '#10b981',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                pointBackgroundColor: '#10b981',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4.5,
+                                pointHoverRadius: 6.5,
+                                pointHitRadius: 10
                             }
                         ]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            yAxes: [{
-                                ticks: {
-                                    beginAtZero: true,
-                                    max: 100,
-                                    stepSize: 20
-                                },
-                                gridLines: { color: '#f1f5f9' }
-                            }],
-                            xAxes: [{
-                                gridLines: { display: false },
-                                ticks: {
-                                    fontSize: 11,
-                                    callback: function(val) {
-                                        return val.length > 22 ? val.substr(0, 20) + '...' : val;
-                                    }
-                                }
-                            }]
-                        },
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                boxWidth: 12,
-                                fontSize: 11
+                        maintainAspectRatio: true,
+                        scale: {
+                            ticks: {
+                                max: 100,
+                                min: 0,
+                                stepSize: 20
                             }
                         },
                         tooltips: {
-                            backgroundColor: '#1e293b',
+                            mode: 'index',
+                            intersect: true,
                             callbacks: {
+                                title: function(tooltipItems, data) {
+                                    return data.labels[tooltipItems[0].index] || '';
+                                },
                                 label: function(tooltipItem, data) {
-                                    var label = data.datasets[tooltipItem.datasetIndex].label || '';
-                                    var unit = tooltipItem.datasetIndex === 0 ? ' / 100' : '%';
-                                    return label + ': ' + tooltipItem.yLabel + unit;
+                                    var datasetLabel = data.datasets[tooltipItem.datasetIndex].label || '';
+                                    return datasetLabel + ': ' + tooltipItem.yLabel + ' / 100';
                                 }
                             }
                         }
@@ -1156,216 +1103,317 @@
                 });
             }
 
-            // 3. Inline Fakultas Selector & Rincian CPL
-            function initFakultasSelector() {
-                if (!allFakultasStats || allFakultasStats.length === 0) return;
+            // ─── 4. CARD 2: KETERCAPAIAN CPL (%) (TABEL & RADAR) ───
+            function renderTableKetercapaianPerTahun() {
+                var $tbody = $('#tableKomparasiCplAngkatan tbody');
+                var $tfoot = $('#tableKomparasiCplAngkatan tfoot');
+                $tbody.empty();
+                $tfoot.empty();
 
-                // Bind change event on Select dropdown
-                $('#selectFakultasInline').on('change', function() {
-                    var fId = $(this).val();
-                    loadFakultasDetails(fId);
-                });
+                var cplMeta = currentActiveCplData.cpl_meta || {};
+                var cplCapaians = currentActiveCplData.cpl_capaians || {};
+                var yearlyAvgCapaian = currentActiveCplData.yearly_avg_capaian || {};
 
-                // Bind click event on table "Rincian CPL" button
-                $(document).on('click', '.btn-select-fakultas-detail', function() {
-                    var fId = $(this).data('fakultas-id');
-                    $('#selectFakultasInline').val(fId).trigger('change');
-                    
-                    // Smooth scroll to inline detail section
-                    var target = document.getElementById('sectionRincianFakultas');
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                });
-
-                // Filter Aspek & Search Input
-                $('#inlineSelectAspek').on('change', function() {
-                    activeInlineAspekFilter = $(this).val();
-                    renderInlineCplTable();
-                });
-
-                $('#inlineSearchCpl').on('input', function() {
-                    activeInlineSearchQuery = $(this).val().toLowerCase().trim();
-                    renderInlineCplTable();
-                });
-
-                // Initial Load for first fakultas
-                if (selectedFakultasId) {
-                    loadFakultasDetails(selectedFakultasId);
+                var keys = Object.keys(cplMeta);
+                if (keys.length === 0) {
+                    $tbody.html('<tr><td colspan="' + (allAvailableYears.length + 1) + '" class="text-center text-muted p-3">Belum ada data ketercapaian CPL untuk fakultas ini.</td></tr>');
+                    return;
                 }
-            }
 
-            function loadFakultasDetails(fakultasId) {
-                var found = allFakultasStats.find(function(f) {
-                    return String(f.id) === String(fakultasId);
-                });
+                keys.forEach(function(kode) {
+                    var meta = cplMeta[kode];
+                    var rowHtml = '<tr><td class="fw-bold text-dark">' + kode + '</td>';
 
-                if (!found) return;
-
-                currentActiveFakultasData = found;
-                selectedFakultasId = found.id;
-                $('#inputFakultasIdInline').val(found.id);
-
-                // Update 3 Metrics
-                $('#inlineFakultasSkorBadge').text((found.avg_skor_cpl || 0).toFixed(1) + ' / 100');
-                $('#inlineFakultasCapaianBadge').text((found.avg_capaian_cpl || 0).toFixed(1) + '%');
-                $('#inlineFakultasTotalProdiBadge').text((found.total_prodi || 0) + ' Prodi');
-                $('#inlineFakultasMhsBadge').text((found.total_mhs || 0) + ' Mahasiswa Dinilai');
-
-                // Render Program Studi List in this Fakultas
-                renderInlineProdiTable(found.prodi_stats || []);
-
-                // Collect all CPL items across prodis in this fakultas
-                var allCplItems = [];
-                var aspekSet = new Set();
-
-                (found.prodi_stats || []).forEach(function(p) {
-                    (p.cpl_details || []).forEach(function(c) {
-                        allCplItems.push(Object.assign({}, c, { prodi_nama: p.nama }));
-                        if (c.aspek) {
-                            aspekSet.add(c.aspek);
-                        }
+                    allAvailableYears.forEach(function(yr) {
+                        var pctVal = (cplCapaians[kode] && cplCapaians[kode][yr] !== undefined) ? cplCapaians[kode][yr] : 0;
+                        var displayPct = (pctVal !== null && pctVal !== undefined && parseFloat(pctVal) > 0) ? parseFloat(pctVal).toFixed(2) + '%' : '0%';
+                        var isZeroClass = (parseFloat(pctVal) === 0) ? ' is-zero-cell' : '';
+                        rowHtml += '<td class="text-center fw-semibold interactive-year-td td-year-pct-' + yr + isZeroClass + '" data-year="' + yr + '" style="cursor: pointer;" title="' + yr + '">' + displayPct + '</td>';
                     });
+
+                    rowHtml += '</tr>';
+                    $tbody.append(rowHtml);
                 });
 
-                currentActiveFakultasData.all_cpl_items = allCplItems;
-
-                // Populate Aspek dropdown
-                var $aspekSelect = $('#inlineSelectAspek');
-                $aspekSelect.empty().append('<option value="all">Semua Aspek</option>');
-                aspekSet.forEach(function(asp) {
-                    $aspekSelect.append('<option value="' + asp + '">' + asp + '</option>');
+                // Footer Row: Rata-rata Capaian per Tahun
+                var footerPctHtml = '<tr style="background-color: #ebf5fb;"><th class="text-primary fw-bold" style="color: #1F3BB3 !important;">Rata-rata Ketercapaian</th>';
+                allAvailableYears.forEach(function(yr) {
+                    var avgPctYr = (yearlyAvgCapaian[yr] !== undefined && parseFloat(yearlyAvgCapaian[yr]) > 0) ? parseFloat(yearlyAvgCapaian[yr]).toFixed(2) + '%' : '0%';
+                    var isZeroClass = (parseFloat(avgPctYr) === 0) ? ' is-zero-cell' : '';
+                    footerPctHtml += '<th class="text-center interactive-year-tf tf-year-pct-' + yr + isZeroClass + '" data-year="' + yr + '" style="cursor: pointer;" title="' + yr + '">' + avgPctYr + '</th>';
                 });
-                activeInlineAspekFilter = 'all';
-                $aspekSelect.val('all');
-
-                renderInlineCplTable();
+                footerPctHtml += '</tr>';
+                $tfoot.append(footerPctHtml);
             }
 
-            function renderInlineProdiTable(prodiList) {
-                var $tbody = $('#inlineProdiTableBody');
-                $tbody.empty();
-
-                if (!prodiList || prodiList.length === 0) {
-                    $tbody.append('<tr><td colspan="7" class="text-center py-4 text-muted">Tidak ada program studi terdaftar pada fakultas ini.</td></tr>');
-                    return;
+            function renderRadarChartKetercapaian(filterYear) {
+                if (radarChartCapaianCplInstance) {
+                    radarChartCapaianCplInstance.destroy();
+                    radarChartCapaianCplInstance = null;
                 }
 
-                prodiList.forEach(function(p, idx) {
-                    var skor = parseFloat(p.avg_skor_cpl) || 0;
-                    var capaian = parseFloat(p.avg_capaian_cpl) || 0;
+                var cplMeta = currentActiveCplData.cpl_meta || {};
+                var cplCapaians = currentActiveCplData.cpl_capaians || {};
+                var labels = Object.keys(cplMeta);
 
-                    var html = '<tr>' +
-                        '<td class="text-center fw-bold text-muted">' + (idx + 1) + '</td>' +
-                        '<td><div class="fw-bold text-dark">' + p.nama + '</div></td>' +
-                        '<td class="text-center"><span class="badge bg-light text-secondary border">' + (p.jenjang || '-') + '</span></td>' +
-                        '<td class="text-center"><span class="badge bg-primary bg-opacity-10 text-primary fw-bold">' + (p.total_mhs || 0) + ' Mhs</span></td>' +
-                        '<td class="text-center"><span class="badge bg-light text-dark fw-bold border">' + (p.total_cpl || 0) + ' CPL</span></td>' +
-                        '<td>' +
-                            '<div class="d-flex justify-content-between align-items-center mb-1">' +
-                                '<span class="fw-bold text-dark small">' + skor.toFixed(1) + ' <span class="text-muted font-monospace">/ 100</span></span>' +
-                            '</div>' +
-                            '<div class="progress-custom-bar">' +
-                                '<div class="progress-fill" style="width: ' + Math.min(100, skor) + '%; background-color: #3b82f6;"></div>' +
-                            '</div>' +
-                        '</td>' +
-                        '<td>' +
-                            '<div class="d-flex justify-content-between align-items-center mb-1">' +
-                                '<span class="fw-bold text-dark small">' + capaian.toFixed(1) + '%</span>' +
-                            '</div>' +
-                            '<div class="progress-custom-bar">' +
-                                '<div class="progress-fill" style="width: ' + Math.min(100, capaian) + '%; background-color: #10b981;"></div>' +
-                            '</div>' +
-                        '</td>' +
-                    '</tr>';
-
-                    $tbody.append(html);
-                });
-            }
-
-            function renderInlineCplTable() {
-                var $tbody = $('#inlineCplTableBody');
-                $tbody.empty();
-
-                if (!currentActiveFakultasData || !currentActiveFakultasData.all_cpl_items || currentActiveFakultasData.all_cpl_items.length === 0) {
-                    $tbody.append('<tr><td colspan="7" class="text-center py-4 text-muted">Belum ada data butir CPL untuk fakultas ini.</td></tr>');
-                    return;
+                if (labels.length === 0) {
+                    labels = ['Belum Ada CPL'];
                 }
 
-                var filtered = currentActiveFakultasData.all_cpl_items.filter(function(item) {
-                    // Filter Aspek
-                    if (activeInlineAspekFilter !== 'all' && item.aspek !== activeInlineAspekFilter) {
-                        return false;
+                var capaianValues = labels.map(function(k) {
+                    if (k === 'Belum Ada CPL') return 0;
+                    if (filterYear) {
+                        return (cplCapaians[k] && cplCapaians[k][filterYear] !== undefined) ? parseFloat(cplCapaians[k][filterYear]).toFixed(2) : 0;
                     }
-                    // Filter Search
-                    if (activeInlineSearchQuery) {
-                        var kode = (item.kode || '').toLowerCase();
-                        var judul = (item.judul || '').toLowerCase();
-                        var prodi = (item.prodi_nama || '').toLowerCase();
-                        if (!kode.includes(activeInlineSearchQuery) && !judul.includes(activeInlineSearchQuery) && !prodi.includes(activeInlineSearchQuery)) {
-                            return false;
+                    return parseFloat(cplMeta[k].overall_capaian || 0).toFixed(2);
+                });
+
+                var minCplValues = labels.map(function(k) {
+                    return parseFloat(cplMeta[k] && cplMeta[k].min_capaian !== undefined ? cplMeta[k].min_capaian : 0).toFixed(2);
+                });
+                var maxCplValues = labels.map(function(k) {
+                    return parseFloat(cplMeta[k] && cplMeta[k].max_capaian !== undefined ? cplMeta[k].max_capaian : 0).toFixed(2);
+                });
+
+                var canvas = document.getElementById('radarChartCapaianCpl');
+                var ctx = canvas.getContext('2d');
+                radarChartCapaianCplInstance = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'CPL (Fakultas)' + (filterYear ? ' (' + filterYear + ')' : ''),
+                                data: capaianValues,
+                                backgroundColor: 'rgba(31, 59, 179, 0.15)',
+                                borderColor: '#1F3BB3',
+                                borderWidth: 2.5,
+                                pointBackgroundColor: '#1F3BB3',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4,
+                                pointHoverRadius: 6,
+                                pointHitRadius: 10
+                            },
+                            {
+                                label: 'Min CPL',
+                                data: minCplValues,
+                                backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                                borderColor: '#ef4444',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                pointBackgroundColor: '#ef4444',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4.5,
+                                pointHoverRadius: 6.5,
+                                pointHitRadius: 10
+                            },
+                            {
+                                label: 'Max CPL',
+                                data: maxCplValues,
+                                backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                                borderColor: '#10b981',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                pointBackgroundColor: '#10b981',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4.5,
+                                pointHoverRadius: 6.5,
+                                pointHitRadius: 10
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scale: {
+                            ticks: {
+                                max: 100,
+                                min: 0,
+                                stepSize: 20
+                            }
+                        },
+                        tooltips: {
+                            mode: 'index',
+                            intersect: true,
+                            callbacks: {
+                                title: function(tooltipItems, data) {
+                                    return data.labels[tooltipItems[0].index] || '';
+                                },
+                                label: function(tooltipItem, data) {
+                                    var datasetLabel = data.datasets[tooltipItem.datasetIndex].label || '';
+                                    return datasetLabel + ': ' + tooltipItem.yLabel + '%';
+                                }
+                            }
                         }
                     }
-                    return true;
-                });
-
-                if (filtered.length === 0) {
-                    $tbody.append('<tr><td colspan="7" class="text-center py-4 text-muted">Tidak ditemukan butir CPL yang cocok dengan filter.</td></tr>');
-                    return;
-                }
-
-                filtered.forEach(function(cpl, idx) {
-                    var skor = parseFloat(cpl.avg_skor) || 0;
-                    var capaian = parseFloat(cpl.avg_capaian) || 0;
-
-                    var badgeColor = '#64748b';
-                    if (cpl.aspek === 'Sikap') badgeColor = '#ef4444';
-                    else if (cpl.aspek === 'Pengetahuan') badgeColor = '#3b82f6';
-                    else if (cpl.aspek === 'Keterampilan Umum') badgeColor = '#10b981';
-                    else if (cpl.aspek === 'Keterampilan Khusus') badgeColor = '#0ea5e9';
-
-                    var html = '<tr>' +
-                        '<td class="text-center fw-bold text-muted">' + (idx + 1) + '</td>' +
-                        '<td><span class="badge bg-primary bg-opacity-10 text-primary fw-bold" style="font-size: 0.8rem; border-radius: 6px;">' + (cpl.kode || '-') + '</span></td>' +
-                        '<td><div class="fw-semibold text-dark text-truncate" style="max-width: 150px;" title="' + (cpl.prodi_nama || '') + '">' + (cpl.prodi_nama || '-') + '</div></td>' +
-                        '<td><span class="badge" style="background-color: ' + badgeColor + '15; color: ' + badgeColor + '; border: 1px solid ' + badgeColor + '30; font-size: 0.75rem; border-radius: 6px;">' + (cpl.aspek || 'Lainnya') + '</span></td>' +
-                        '<td><div class="text-dark small" style="line-height: 1.4;">' + (cpl.judul || '-') + '</div></td>' +
-                        '<td>' +
-                            '<div class="d-flex justify-content-between align-items-center mb-1">' +
-                                '<span class="fw-bold text-dark small">' + skor.toFixed(1) + ' <span class="text-muted font-monospace">/ 100</span></span>' +
-                            '</div>' +
-                            '<div class="progress-custom-bar">' +
-                                '<div class="progress-fill" style="width: ' + Math.min(100, skor) + '%; background-color: #3b82f6;"></div>' +
-                            '</div>' +
-                        '</td>' +
-                        '<td>' +
-                            '<div class="d-flex justify-content-between align-items-center mb-1">' +
-                                '<span class="fw-bold text-dark small">' + capaian.toFixed(1) + '%</span>' +
-                            '</div>' +
-                            '<div class="progress-custom-bar">' +
-                                '<div class="progress-fill" style="width: ' + Math.min(100, capaian) + '%; background-color: #10b981;"></div>' +
-                            '</div>' +
-                        '</td>' +
-                    '</tr>';
-
-                    $tbody.append(html);
                 });
             }
 
-            // 4. PDF Print Handler
+            // ─── 5. INTERACTIVE YEAR CLICKING (MATCHING MAHASISWA & PRODI) ───
+            function initInteractiveYearHandlers() {
+                // Table 1 (Skor CPL)
+                $(document).on('click', '#tableRincianCplScores [data-year]', function() {
+                    var clickedYear = $(this).data('year');
+                    if (!clickedYear) return;
+
+                    if (activeYearSkorCpl === clickedYear) {
+                        // Reset jika diklik ulang
+                        activeYearSkorCpl = null;
+                        $('#badgeYearSkorCpl').hide();
+                        $('#tableRincianCplScores .interactive-year-active').removeClass('interactive-year-active');
+                        renderRadarChartSkor(null);
+                    } else {
+                        activeYearSkorCpl = clickedYear;
+                        $('#badgeYearSkorCpl .badge-year-text').text(clickedYear);
+                        $('#badgeYearSkorCpl').show();
+
+                        $('#tableRincianCplScores .interactive-year-active').removeClass('interactive-year-active');
+                        $('#tableRincianCplScores [data-year="' + clickedYear + '"]').addClass('interactive-year-active');
+
+                        renderRadarChartSkor(clickedYear);
+                    }
+                });
+
+                // Close Badge Skor CPL
+                $('#badgeYearSkorCpl').on('click', function() {
+                    activeYearSkorCpl = null;
+                    $(this).hide();
+                    $('#tableRincianCplScores .interactive-year-active').removeClass('interactive-year-active');
+                    renderRadarChartSkor(null);
+                });
+
+                // Table 2 (Ketercapaian CPL)
+                $(document).on('click', '#tableKomparasiCplAngkatan [data-year]', function() {
+                    var clickedYear = $(this).data('year');
+                    if (!clickedYear) return;
+
+                    if (activeYearKetercapaianCpl === clickedYear) {
+                        activeYearKetercapaianCpl = null;
+                        $('#badgeYearKetercapaianCpl').hide();
+                        $('#tableKomparasiCplAngkatan .interactive-year-active').removeClass('interactive-year-active');
+                        renderRadarChartKetercapaian(null);
+                    } else {
+                        activeYearKetercapaianCpl = clickedYear;
+                        $('#badgeYearKetercapaianCpl .badge-year-text').text(clickedYear);
+                        $('#badgeYearKetercapaianCpl').show();
+
+                        $('#tableKomparasiCplAngkatan .interactive-year-active').removeClass('interactive-year-active');
+                        $('#tableKomparasiCplAngkatan [data-year="' + clickedYear + '"]').addClass('interactive-year-active');
+
+                        renderRadarChartKetercapaian(clickedYear);
+                    }
+                });
+
+                // Close Badge Ketercapaian CPL
+                $('#badgeYearKetercapaianCpl').on('click', function() {
+                    activeYearKetercapaianCpl = null;
+                    $(this).hide();
+                    $('#tableKomparasiCplAngkatan .interactive-year-active').removeClass('interactive-year-active');
+                    renderRadarChartKetercapaian(null);
+                });
+            }
+
+            // ─── 6. DESKRIPSI CPL (GRID DENGAN BADGE & TOGGLE) ───
+            function renderDeskripsiCpl() {
+                var $container = $('#labelContainer');
+                $container.empty();
+
+                var cplMeta = currentActiveCplData.cpl_meta || {};
+                var keys = Object.keys(cplMeta);
+
+                if (keys.length === 0) {
+                    $('#cplBadgeCount').hide();
+                    $container.append('<div class="text-muted small p-2">Tidak ada deskripsi CPL yang tersedia.</div>');
+                    return;
+                }
+
+                $('#cplBadgeCount').text(keys.length + ' CPL').show();
+
+                keys.forEach(function(kode) {
+                    var meta = cplMeta[kode];
+                    var cardHtml = 
+                        '<div class="cpl-desc-card">' +
+                        '  <span class="cpl-desc-badge">' + kode + '</span>' +
+                        '  <span class="cpl-desc-text">' + (meta.judul || '-') + '</span>' +
+                        '</div>';
+                    $container.append(cardHtml);
+                });
+            }
+
+            function initCplDescriptionToggle() {
+                $('#headerToggleCplDesc, #btnToggleCplDesc').off('click').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var $target = $('#collapseCplDescriptions');
+                    var $icon = $('#iconCplDescCollapse');
+
+                    if ($target.is(':visible')) {
+                        $target.slideUp(200);
+                        $icon.removeClass('bi-chevron-up').addClass('bi-chevron-down');
+                    } else {
+                        $target.slideDown(200);
+                        $icon.removeClass('bi-chevron-down').addClass('bi-chevron-up');
+                    }
+                });
+            }
+
+            // ─── 7. PDF PRINT HANDLER (FORMAL STYLE) ───
             function initPdfPrintHandler() {
-                $('#btnPrintPdf').on('click', function() {
-                    var barCanvas = document.getElementById('facultyCplChart');
-                    var trendCanvas = document.getElementById('yearlyTrendChart');
+                $('#btnPrintPdf').on('click', function(e) {
+                    e.preventDefault();
 
-                    if (barCanvas) {
-                        $('#inputChartImg').val(barCanvas.toDataURL('image/png'));
+                    var radarSkorImg = null;
+                    var radarCapaianImg = null;
+
+                    var c1 = document.getElementById('radarChart');
+                    if (c1) {
+                        try { radarSkorImg = c1.toDataURL('image/png'); } catch (err) {}
                     }
-                    if (trendCanvas) {
-                        $('#inputTrendChartImg').val(trendCanvas.toDataURL('image/png'));
+                    var c2 = document.getElementById('radarChartCapaianCpl');
+                    if (c2) {
+                        try { radarCapaianImg = c2.toDataURL('image/png'); } catch (err) {}
                     }
 
-                    $('#formCetakPdfUniv').submit();
+                    // Buat dynamic hidden form untuk submit PDF
+                    var form = document.createElement("form");
+                    form.method = "POST";
+                    form.action = "{{ route($currentPrefix . 'visualisasi.generate-pdfVisualFakultas') }}";
+                    form.target = "_blank";
+
+                    var csrfInput = document.createElement("input");
+                    csrfInput.type = "hidden";
+                    csrfInput.name = "_token";
+                    csrfInput.value = "{{ csrf_token() }}";
+                    form.appendChild(csrfInput);
+
+                    var fakInput = document.createElement("input");
+                    fakInput.type = "hidden";
+                    fakInput.name = "fakultas_id";
+                    fakInput.value = currentFakultasId;
+                    form.appendChild(fakInput);
+
+                    if (radarSkorImg) {
+                        var img1 = document.createElement("input");
+                        img1.type = "hidden";
+                        img1.name = "radarChartImg";
+                        img1.value = radarSkorImg;
+                        form.appendChild(img1);
+                    }
+
+                    if (radarCapaianImg) {
+                        var img2 = document.createElement("input");
+                        img2.type = "hidden";
+                        img2.name = "radarChartCapaianCplImg";
+                        img2.value = radarCapaianImg;
+                        form.appendChild(img2);
+                    }
+
+                    document.body.appendChild(form);
+                    form.submit();
+                    document.body.removeChild(form);
                 });
             }
         </script>

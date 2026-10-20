@@ -139,8 +139,11 @@ class VisualisasiController extends Controller
             ->join('prodi', 'm1.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
             ->select('m1.npm as npm', 'm1.nama_mhs as nama_mhs')
-            ->where('m1.angkatan', $angkatan)
-            ->where('m1.universitas_id', $universitas);
+            ->where('m1.angkatan', $angkatan);
+
+        if (!empty($universitas)) {
+            $mutuQuery->where('m1.universitas_id', $universitas);
+        }
 
         if (!empty($prodiId)) {
             $mutuQuery->where('m1.id_prodi', $prodiId);
@@ -486,8 +489,15 @@ class VisualisasiController extends Controller
                 $universitas = Universitas::where('nama', $universitas)->value('id') ?? $universitas;
             }
         }
+        if (empty($universitas)) {
+            $universitas = auth()->user()->id_universitasUser 
+                ?? (auth()->user()->prodi ? auth()->user()->prodi->fakultas->id_universitas ?? null : null) 
+                ?? DB::table('mutus')->where('npm', $npm)->value('universitas_id')
+                ?? (Universitas::first()->id ?? null);
+        }
         if (empty($universitasNama)) {
-            $universitasNama = auth()->user()->universitas->nama 
+            $universitasNama = Universitas::where('id', $universitas)->value('nama')
+                ?? auth()->user()->universitas->nama 
                 ?? (auth()->user()->prodi ? auth()->user()->prodi->fakultas->universitas->nama ?? null : null) 
                 ?? Universitas::first()->nama 
                 ?? 'Universitas';
@@ -827,6 +837,7 @@ class VisualisasiController extends Controller
         }
         $mutuNpms = $allNpmQuery->distinct()->pluck('npm')->toArray();
         $allNpm = array_values(array_unique(array_merge($mhsNpms, $mutuNpms)));
+        $evaluatedCohortNpms = !empty($mutuNpms) ? $mutuNpms : (!empty($allNpm) ? $allNpm : (!empty($npm) ? [$npm] : []));
         $persentaseTotalCplCapaianAngkatan = [];
 
         $allCplPerAngkatanQuery = DB::table('cpls')
@@ -860,7 +871,8 @@ class VisualisasiController extends Controller
 
         $allCplPerAngkatan['count'] = 0;
         $gabunganMkAngkatan = [];
-        foreach ($allNpm as $npmItem) {
+        $cohortCplPctCollector = [];
+        foreach ($evaluatedCohortNpms as $npmItem) {
             // Sama seperti perhitungan persentaseTotalCplCapaian sebelumnya untuk setiap npm
             $subQuery = $this->buildBestAttemptSubquery($npmItem, $semestersToFilter, $prodiId, $otoritas);
 
@@ -1013,6 +1025,7 @@ class VisualisasiController extends Controller
                 }
 
                 $allCplPerAngkatan['total'][$cplCode] += $persentase;
+                $cohortCplPctCollector[$cplCode][] = round($persentase, 2);
 
                 // MIN MAX
                 if ($allCplPerAngkatan['min'][$cplCode] >= round($persentase, 2)) {
@@ -1043,11 +1056,104 @@ class VisualisasiController extends Controller
                 $keyKodeCplAvgAngkatanMax = $cpl;
                 $cplAvgAngkatanMax = $allCplPerAngkatan['avg_cpl'][$cpl];
             }
-            if ($allCplPerAngkatan['min'][$cpl] > 100) {
-                $allCplPerAngkatan['min'][$cpl] = 0;
-            }
+
+            // Pastikan min dan max ketercapaian CPL mencerminkan batas capaian riil mahasiswa angkatan
+            $pctList = $cohortCplPctCollector[$cpl] ?? [];
+            $posList = array_filter($pctList, fn($v) => $v > 0);
+            $allCplPerAngkatan['min'][$cpl] = count($posList) > 0 ? min($posList) : (count($pctList) > 0 ? min($pctList) : 0);
+            $allCplPerAngkatan['max'][$cpl] = count($pctList) > 0 ? max($pctList) : 0;
         }
         $gabunganMkAngkatan = array_unique($gabunganMkAngkatan);
+
+        // Hitung Min dan Max Skor Capaian CPL (Skala 0-100) per Angkatan untuk Diagram Card 1
+        $allSkorCplPerAngkatan = [
+            'min' => [],
+            'max' => [],
+            'avg' => []
+        ];
+        if (!empty($evaluatedCohortNpms)) {
+            $npmListStrForSkor = "'" . implode("','", array_map('addslashes', $evaluatedCohortNpms)) . "'";
+            $yearExprQ2Skor = $this->getYearSemSqlExpr('m2', 'ta2');
+            $cplConditionSubSkor = "";
+            $cplConditionMainSkor = "";
+            if (!empty($semestersToFilter)) {
+                $semListStrSkor = implode(',', array_map('intval', $semestersToFilter));
+                $cplConditionSubSkor = " AND m2.Course IN (SELECT kode FROM mks WHERE semester IN ({$semListStrSkor})) ";
+                $cplConditionMainSkor = " AND m.Course IN (SELECT kode FROM mks WHERE semester IN ({$semListStrSkor})) ";
+            }
+
+            $querySkorAngkatan = "
+                SELECT q5.NPM, q5.Cpl, cpls.kode as kode, AVG(q5.hasil) as hasil FROM (
+                    SELECT NPM, Cpl, Course, SUM(hasil) as hasil 
+                    FROM (
+                        SELECT q1.NPM, q1.tahun, q1.Cpl, q1.Jenis, q1.Course, 
+                            (CASE WHEN q1.nilaiSoal IS NOT NULL AND q1.BobotSoal > 0 AND q2.BobotJenis > 0 THEN (q1.nilaiSoal * q1.BobotSoal / q2.BobotJenis) * q1.examWeight / COALESCE(NULLIF(q3.sumExamWeight, 0), 100) ELSE COALESCE(q1.Nilai, 0) * q1.examWeight / COALESCE(NULLIF(q3.sumExamWeight, 0), 100) END) as hasil 
+                        FROM (
+                            SELECT m.NPM, m.tahun, m.Cpl, m.Jenis, m.Course, m.nilaiSoal, m.Nilai, m.examWeight, m.BobotSoal 
+                            FROM mutus m 
+                            LEFT JOIN tahun_ajaran ta ON m.tahun_ajaran_id = ta.id
+                            JOIN (
+                                SELECT t_sub.NPM, t_sub.Course, t_sub.best_tahun
+                                FROM (
+                                    SELECT m2.NPM, m2.Course, m2.tahun as best_tahun,
+                                           ROW_NUMBER() OVER (
+                                               PARTITION BY m2.NPM, m2.Course 
+                                               ORDER BY SUM(m2.examWeight / 100 * m2.Nilai) DESC, MAX($yearExprQ2Skor) DESC
+                                           ) as rn
+                                    FROM mutus m2
+                                    LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
+                                    WHERE m2.NPM IN ({$npmListStrForSkor}) {$cplConditionSubSkor}
+                                    GROUP BY m2.NPM, m2.Course, m2.tahun, m2.tahun_ajaran_id
+                                ) t_sub
+                                WHERE t_sub.rn = 1
+                            ) t 
+                            ON m.NPM = t.NPM AND m.Course = t.Course AND m.tahun = t.best_tahun 
+                            WHERE m.NPM IN ({$npmListStrForSkor}) {$cplConditionMainSkor}
+                        ) q1 
+                        JOIN (
+                            SELECT NPM, Cpl, Jenis, Course, tahun, SUM(BobotSoal) as BobotJenis 
+                            FROM mutus 
+                            WHERE NPM IN ({$npmListStrForSkor})
+                            GROUP BY NPM, Cpl, Jenis, Course, tahun 
+                        ) q2 
+                        ON q1.NPM = q2.NPM AND q1.tahun = q2.tahun AND q1.Cpl = q2.Cpl AND q1.Course = q2.Course AND q1.Jenis = q2.Jenis 
+                        JOIN (
+                            SELECT NPM, tahun, Cpl, Course, SUM(examWeight) AS sumExamWeight 
+                            FROM (
+                                SELECT DISTINCT NPM, tahun, Cpl, Course, Jenis, examWeight 
+                                FROM mutus 
+                                WHERE NPM IN ({$npmListStrForSkor})
+                            ) AS subquery 
+                            GROUP BY NPM, tahun, Cpl, Course
+                        ) q3 
+                        ON q1.NPM = q3.NPM AND q1.tahun = q3.tahun AND q1.Cpl = q3.Cpl AND q1.Course = q3.Course
+                    ) q4 
+                    GROUP BY NPM, Cpl, Course
+                ) q5 
+                JOIN cpls ON cpls.id = q5.Cpl
+                JOIN prodi ON cpls.id_prodi = prodi.id
+                WHERE prodi.id = :id_prodi
+                GROUP BY q5.NPM, q5.Cpl;
+            ";
+
+            $scoresAngkatanResults = DB::select($querySkorAngkatan, ['id_prodi' => $prodiId]);
+            $scoresByCplCode = [];
+            foreach ($cplResultsAll as $c) {
+                $scoresByCplCode[$c->kode] = [];
+            }
+            foreach ($scoresAngkatanResults as $r) {
+                $val = round((float)$r->hasil, 2);
+                if ($val > 0) {
+                    $scoresByCplCode[$r->kode][] = $val;
+                }
+            }
+            foreach ($cplResultsAll as $c) {
+                $list = $scoresByCplCode[$c->kode] ?? [];
+                $allSkorCplPerAngkatan['min'][$c->kode] = count($list) > 0 ? min($list) : 0;
+                $allSkorCplPerAngkatan['max'][$c->kode] = count($list) > 0 ? max($list) : 0;
+                $allSkorCplPerAngkatan['avg'][$c->kode] = count($list) > 0 ? round(array_sum($list) / count($list), 2) : 0;
+            }
+        }
 
         // Ngisi radar sementara pencapaian cpl yg blm diiinput
         $cplAllTmp = DB::table('cpls')
@@ -1240,8 +1346,11 @@ class VisualisasiController extends Controller
             ->leftJoin('soals', 'mutus.idSoal', '=', 'soals.id')
             ->where('mutus.npm', $npm)
             ->where('mutus.cpl', $minCplKey)
-            ->where('mutus.universitas_id', $universitas)
             ->distinct();
+
+        if (!empty($universitas)) {
+            $soalDescQuery->where('mutus.universitas_id', $universitas);
+        }
 
         if (!empty($semestersToFilter)) {
             $soalDescQuery->whereIn('mks.semester', $semestersToFilter);
@@ -1613,6 +1722,7 @@ class VisualisasiController extends Controller
                 'cplResultsAll' => $cplResultsAll,
                 'cplTmp' => $cplTmp,
                 'allCplPerAngkatan' => $allCplPerAngkatan,
+                'allSkorCplPerAngkatan' => $allSkorCplPerAngkatan,
                 'cplPerSoalWithKodeAll' => $cplPerSoalWithKodeAll
             ],
             'showVisualContainer' => true
@@ -2510,7 +2620,8 @@ class VisualisasiController extends Controller
             }
         }
 
-        $allNpm = array_keys($studentMap);
+        $mutuNpmList = $mutuRows->pluck('npm')->filter()->unique()->toArray();
+        $allNpm = !empty($mutuNpmList) ? array_values($mutuNpmList) : array_keys($studentMap);
 
         $persentaseTotalCplCapaianAngkatan = [];
 
@@ -2541,6 +2652,7 @@ class VisualisasiController extends Controller
         $allCplPerAngkatan['count'] = 0;
         $gabunganMkAngkatan = [];
         $persenPerMhs = [];
+        $cohortAngkatanPctCollector = [];
 
         foreach ($allNpm as $npm) {
             $subQuery = DB::table('mutus')
@@ -2782,8 +2894,11 @@ class VisualisasiController extends Controller
             ->where('mutus.angkatan', $angkatan)
             ->where('mutus.id_prodi', $prodiId)
             ->where('mutus.cpl', $idCplAvgMinInt)
-            ->where('universitas_id', $universitas)
             ->distinct();
+
+        if (!empty($universitas)) {
+            $soalDescQuery->where('mutus.universitas_id', $universitas);
+        }
 
         if (!empty($semestersToFilter)) {
             $soalDescQuery->whereIn('mks.semester', $semestersToFilter);
@@ -3136,6 +3251,7 @@ class VisualisasiController extends Controller
                 ];
 
                 $allCplPerAngkatan['total'][$cpl->kode] += $persenHasil;
+                $cohortAngkatanPctCollector[$cpl->kode][] = round((float)$persenHasil, 2);
                 if ($allCplPerAngkatan['min'][$cpl->kode] >= round($persenHasil, 2)) {
                     $allCplPerAngkatan['min'][$cpl->kode] = round($persenHasil, 2);
                 }
@@ -3150,9 +3266,10 @@ class VisualisasiController extends Controller
         $totalAngkatanCount = max(1, $allCplPerAngkatan['count']);
         foreach ($allCplPerAngkatan['total'] as $cpl => $total) {
             $allCplPerAngkatan['avg_cpl'][$cpl] = round($total / $totalAngkatanCount, 2);
-            if ($allCplPerAngkatan['min'][$cpl] > 100) {
-                $allCplPerAngkatan['min'][$cpl] = 0;
-            }
+            $pctList = $cohortAngkatanPctCollector[$cpl] ?? [];
+            $posList = array_filter($pctList, fn($v) => $v > 0);
+            $allCplPerAngkatan['min'][$cpl] = count($posList) > 0 ? min($posList) : (count($pctList) > 0 ? min($pctList) : 0);
+            $allCplPerAngkatan['max'][$cpl] = count($pctList) > 0 ? max($pctList) : 0;
         }
 
         // Batch yearly ketercapaian (Monotonik: Tetap atau Naik, Tidak Mungkin Turun)

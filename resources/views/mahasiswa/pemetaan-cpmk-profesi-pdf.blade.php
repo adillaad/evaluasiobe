@@ -522,6 +522,13 @@
             Kompetensi</em>
     </div>
 
+@if (!empty($isPrint))
+<script>
+    window.addEventListener('load', function() {
+        window.print();
+    });
+</script>
+@endif
 </body>
 
 </html>

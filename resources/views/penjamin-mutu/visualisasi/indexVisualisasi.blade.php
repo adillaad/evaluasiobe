@@ -680,8 +680,8 @@
 
                 <form id="hasilVisual" method="POST" action="hasilvisual-mahasiswa" enctype="multipart/form-data">
                     @csrf
-                    <input type="hidden" id="universitas-img-path" name="universitas-img-path" value="{{ $user->universitas->logo ?? '' }}">
-                    <input type="hidden" id="universitas" name="universitas" value="{{ $user->universitas->nama ?? '' }}">
+                    <input type="hidden" id="universitas-img-path" name="universitas-img-path" value="{{ $universitas->logo ?? (auth()->user()->universitas->logo ?? '') }}">
+                    <input type="hidden" id="universitas" name="universitas" value="{{ $universitas->id ?? (auth()->user()->id_universitasUser ?? '') }}">
 
                     <div class="row g-3">
                         @if ($userOtoritas == 'Penjamin Mutu Universitas')
@@ -947,6 +947,9 @@
                         <h6 class="fw-bold text-primary mb-1"><i class="bi bi-compass me-1"></i> Panduan Membaca Diagram & Tabel Skor CPL:</h6>
                         <ul class="mb-0 ps-3 text-muted">
                             <li><strong>Bentuk Jaring (Radar):</strong> Setiap sudut mewakili satu <strong>CPL (Capaian Pembelajaran Lulusan)</strong>.</li>
+                            <li><span class="badge" style="background-color: #1F3BB3; color:#fff;">Skor Capaian CPL</span>: Skor capaian kompetensi CPL oleh mahasiswa (skala 0 - 100).</li>
+                            <li><span class="badge" style="background-color: #10b981; color:#fff;">Max Skor CPL</span>: Skor capaian tertinggi mahasiswa pada angkatan tersebut.</li>
+                            <li><span class="badge" style="background-color: #ef4444; color:#fff;">Min Skor CPL</span>: Skor capaian terendah mahasiswa pada angkatan tersebut.</li>
                             <li><strong>Skala Nilai (0 - 100):</strong> Titik tengah bernilai 0 dan lingkaran terluar bernilai 100. Semakin jauh titik ke arah luar, semakin tinggi skor ketercapaian kompetensi mahasiswa pada CPL tersebut.</li>
                             <li><strong>Tabel Skor Capaian CPL Per Tahun:</strong> Menampilkan skor capaian kompetensi CPL (skala 0 - 100) yang dihitung secara kumulatif untuk tiap tahun akademik sejak tahun angkatan mahasiswa. <em>Klik pada kolom tahun di tabel untuk melihat diagram pada tahun tersebut.</em></li>
                         </ul>
@@ -2397,6 +2400,7 @@
                     prodi: prodi,
                     angkatan: angkatan,
                     npm: npm,
+                    universitas: $('#universitas').val(),
                     _token: "{{ csrf_token() }}"
                 };
 
@@ -2619,6 +2623,7 @@
                 var cplResultsAll = response.result.cplResultsAll || [];
                 var cplTmp = response.result.cplTmp || {};
                 var allCplPerAngkatan = response.result.allCplPerAngkatan || {};
+                var allSkorCplPerAngkatan = response.result.allSkorCplPerAngkatan || {};
                 var cplPerSoalWithKodeAll = response.result.cplPerSoalWithKodeAll || [];
                 var hasilFinalProfil = response.result.hasilFinalProfil || [];
                 var chartDataProfil = response.result.chartDataProfil || [];
@@ -3088,8 +3093,8 @@
 
                 var labelsCapaianCpl = Object.values(cplTmp).map(item => item[1]);
                 var dataCapaianCpl = Object.values(cplTmp).map(item => roundToTwo(item[0]));
-                var dataMinCpl = Object.values(allCplPerAngkatan.min || {}).map(v => roundToTwo(v));
-                var dataMaxCpl = Object.values(allCplPerAngkatan.max || {}).map(v => roundToTwo(v));
+                var dataMinCpl = labelsCapaianCpl.map(k => roundToTwo((allCplPerAngkatan.min || {})[k] || 0));
+                var dataMaxCpl = labelsCapaianCpl.map(k => roundToTwo((allCplPerAngkatan.max || {})[k] || 0));
 
                 var canvas = document.getElementById('radarChartCapaianCpl');
                 var ctx = canvas.getContext('2d');
@@ -3104,30 +3109,39 @@
                                 borderColor: '#1F3BB3',
                                 borderWidth: 2.5,
                                 pointBackgroundColor: '#1F3BB3',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
                                 pointRadius: 4,
-                                pointHoverRadius: 6
+                                pointHoverRadius: 6,
+                                pointHitRadius: 10
                             },
                             {
                                 label: 'Min CPL',
                                 data: dataMinCpl,
-                                backgroundColor: 'rgba(239, 68, 68, 0.04)',
-                                borderColor: 'rgba(239, 68, 68, 0.85)',
-                                borderWidth: 1.5,
-                                borderDash: [4, 4],
+                                backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                                borderColor: '#ef4444',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
                                 pointBackgroundColor: '#ef4444',
-                                pointRadius: 3,
-                                pointHoverRadius: 5
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4.5,
+                                pointHoverRadius: 6.5,
+                                pointHitRadius: 10
                             },
                             {
                                 label: 'Max CPL',
                                 data: dataMaxCpl,
-                                backgroundColor: 'rgba(16, 185, 129, 0.04)',
-                                borderColor: 'rgba(16, 185, 129, 0.85)',
-                                borderWidth: 1.5,
-                                borderDash: [4, 4],
+                                backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                                borderColor: '#10b981',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
                                 pointBackgroundColor: '#10b981',
-                                pointRadius: 3,
-                                pointHoverRadius: 5
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4.5,
+                                pointHoverRadius: 6.5,
+                                pointHitRadius: 10
                             }
                         ]
                     },
@@ -3142,7 +3156,12 @@
                             }
                         },
                         tooltips: {
+                            mode: 'index',
+                            intersect: true,
                             callbacks: {
+                                title: function(tooltipItems, data) {
+                                    return data.labels[tooltipItems[0].index] || '';
+                                },
                                 label: function(tooltipItem, data) {
                                     var datasetLabel = data.datasets[tooltipItem.datasetIndex].label || '';
                                     return datasetLabel + ': ' + tooltipItem.yLabel + '%';
@@ -3160,22 +3179,57 @@
 
                 var labelsCplPerSoal = Object.values(cplPerSoalWithKodeAll).map(item => item.kode);
                 var dataCplPerSoal = Object.values(cplPerSoalWithKodeAll).map(item => roundToTwo(item.hasil));
+                var dataMinSkorCpl = labelsCplPerSoal.map(code => roundToTwo((allSkorCplPerAngkatan.min || {})[code] || 0));
+                var dataMaxSkorCpl = labelsCplPerSoal.map(code => roundToTwo((allSkorCplPerAngkatan.max || {})[code] || 0));
                 var canvas = document.getElementById('radarChart');
                 var ctx = canvas.getContext('2d');
                 radarChartPerSoalInstance = new Chart(ctx, {
                     type: 'radar',
                     data: {
                         labels: labelsCplPerSoal,
-                        datasets: [{
-                            label: 'Skor Capaian CPL',
-                            data: dataCplPerSoal,
-                            backgroundColor: 'rgba(31, 59, 179, 0.15)',
-                            borderColor: '#1F3BB3',
-                            borderWidth: 2.5,
-                            pointBackgroundColor: '#1F3BB3',
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        }]
+                        datasets: [
+                            {
+                                label: 'Skor Capaian CPL',
+                                data: dataCplPerSoal,
+                                backgroundColor: 'rgba(31, 59, 179, 0.15)',
+                                borderColor: '#1F3BB3',
+                                borderWidth: 2.5,
+                                pointBackgroundColor: '#1F3BB3',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4,
+                                pointHoverRadius: 6,
+                                pointHitRadius: 10
+                            },
+                            {
+                                label: 'Min Skor CPL',
+                                data: dataMinSkorCpl,
+                                backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                                borderColor: '#ef4444',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                pointBackgroundColor: '#ef4444',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4.5,
+                                pointHoverRadius: 6.5,
+                                pointHitRadius: 10
+                            },
+                            {
+                                label: 'Max Skor CPL',
+                                data: dataMaxSkorCpl,
+                                backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                                borderColor: '#10b981',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                pointBackgroundColor: '#10b981',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4.5,
+                                pointHoverRadius: 6.5,
+                                pointHitRadius: 10
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
@@ -3188,9 +3242,15 @@
                             }
                         },
                         tooltips: {
+                            mode: 'index',
+                            intersect: true,
                             callbacks: {
+                                title: function(tooltipItems, data) {
+                                    return data.labels[tooltipItems[0].index] || '';
+                                },
                                 label: function(tooltipItem, data) {
-                                    return 'Skor Capaian: ' + tooltipItem.yLabel + ' / 100';
+                                    var datasetLabel = data.datasets[tooltipItem.datasetIndex].label || '';
+                                    return datasetLabel + ': ' + tooltipItem.yLabel + ' / 100';
                                 }
                             }
                         }

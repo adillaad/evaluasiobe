@@ -518,10 +518,9 @@
                     <h6 class="fw-bold text-primary mb-1"><i class="bi bi-compass me-1"></i> Panduan Membaca Diagram Radar CPMK:</h6>
                     <ul class="mb-0 ps-3 text-muted">
                         <li><strong>Bentuk Jaring (Radar):</strong> Setiap sudut mewakili satu <strong>CPMK (Capaian Pembelajaran Mata Kuliah)</strong>.</li>
-                        <li><span class="badge" style="background-color: #1F3BB3; color:#fff;">CPMK (Mahasiswa)</span>: Nilai capaian CPMK mahasiswa yang bersangkutan (skala 0 - 100).</li>
-                        <li><span class="badge" style="background-color: #c06e4b; color:#fff;">CPMK Avg (Batch)</span>: Rata-rata nilai capaian CPMK mahasiswa seangkatan pada mata kuliah ini.</li>
-                        <li><span class="badge" style="background-color: #ef4444; color:#fff;">CPMK Min (Batch)</span>: Nilai capaian CPMK terendah di angkatan tersebut.</li>
-                        <li><span class="badge" style="background-color: #10b981; color:#fff;">CPMK Max (Batch)</span>: Nilai capaian CPMK tertinggi di angkatan tersebut.</li>
+                        <li><span class="badge" style="background-color: #1F3BB3; color:#fff;">Skor CPMK</span>: Nilai capaian CPMK mahasiswa yang bersangkutan (skala 0 - 100).</li>
+                        <li><span class="badge" style="background-color: #ef4444; color:#fff;">Min CPMK</span>: Nilai capaian CPMK terendah di angkatan tersebut.</li>
+                        <li><span class="badge" style="background-color: #10b981; color:#fff;">Max CPMK</span>: Nilai capaian CPMK tertinggi di angkatan tersebut.</li>
                     </ul>
                 </div>
             </div>
@@ -1128,49 +1127,47 @@
                         labels: labelsCapaianCpmk,
                         datasets: [
                             {
-                                label: 'CPMK (Mahasiswa)',
+                                label: 'Skor CPMK',
                                 data: dataCapaianCpmk,
-                                backgroundColor: 'rgba(31, 59, 179, 0.2)',
+                                backgroundColor: 'rgba(31, 59, 179, 0.15)',
                                 borderColor: '#1f3bb3',
                                 borderWidth: 2.5,
                                 pointBackgroundColor: '#1f3bb3',
-                                pointBorderColor: '#fff',
-                                pointHoverBackgroundColor: '#fff',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointHoverBackgroundColor: '#ffffff',
                                 pointHoverBorderColor: '#1f3bb3',
                                 pointRadius: 4,
-                                pointHoverRadius: 6
+                                pointHoverRadius: 6,
+                                pointHitRadius: 10
                             },
                             {
-                                label: 'CPMK Avg (Batch)',
-                                data: dataCapaianCpmkAvg,
-                                backgroundColor: 'rgba(192, 110, 75, 0.05)',
-                                borderColor: 'rgba(192, 110, 75, 0.9)',
-                                borderWidth: 2,
-                                pointBackgroundColor: 'rgba(192, 110, 75, 1)',
-                                pointRadius: 3,
-                                pointHoverRadius: 5
-                            },
-                            {
-                                label: 'CPMK Min (Batch)',
+                                label: 'Min CPMK',
                                 data: dataCapaianCpmkMin,
                                 backgroundColor: 'rgba(239, 68, 68, 0.05)',
                                 borderColor: '#ef4444',
-                                borderWidth: 1.5,
-                                borderDash: [4, 4],
+                                borderWidth: 2,
+                                borderDash: [5, 5],
                                 pointBackgroundColor: '#ef4444',
-                                pointRadius: 3,
-                                pointHoverRadius: 5
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4.5,
+                                pointHoverRadius: 6.5,
+                                pointHitRadius: 10
                             },
                             {
-                                label: 'CPMK Max (Batch)',
+                                label: 'Max CPMK',
                                 data: dataCapaianCpmkMax,
                                 backgroundColor: 'rgba(16, 185, 129, 0.05)',
                                 borderColor: '#10b981',
-                                borderWidth: 1.5,
-                                borderDash: [4, 4],
+                                borderWidth: 2,
+                                borderDash: [5, 5],
                                 pointBackgroundColor: '#10b981',
-                                pointRadius: 3,
-                                pointHoverRadius: 5
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4.5,
+                                pointHoverRadius: 6.5,
+                                pointHitRadius: 10
                             }
                         ]
                     },
@@ -1217,7 +1214,12 @@
                                 }
                             },
                             tooltip: {
+                                mode: 'index',
+                                intersect: true,
                                 callbacks: {
+                                    title: function(tooltipItems) {
+                                        return tooltipItems[0].label || '';
+                                    },
                                     label: function(context) {
                                         return context.dataset.label + ': ' + context.formattedValue;
                                     }

@@ -801,9 +801,9 @@
                         <h6 class="fw-bold text-primary mb-1"><i class="bi bi-compass me-1"></i> Panduan Membaca Diagram Radar Capaian CPL Angkatan:</h6>
                         <ul class="mb-0 ps-3 text-muted">
                             <li><strong>Bentuk Jaring (Radar):</strong> Setiap sudut mewakili satu <strong>CPL (Capaian Pembelajaran Lulusan)</strong>.</li>
-                            <li><span class="badge" style="background-color: #c06e4b; color:#fff;">Average CPL</span>: Rata-rata persentase ketercapaian tiap CPL oleh seluruh mahasiswa dalam satu angkatan.</li>
-                            <li><span class="badge" style="background-color: #21d85f; color:#fff;">Max CPL</span>: Batas pencapaian tertinggi mahasiswa pada CPL tersebut di angkatan yang dipilih.</li>
-                            <li><span class="badge" style="background-color: #d82121; color:#fff;">Min CPL</span>: Batas pencapaian terendah mahasiswa pada CPL tersebut di angkatan yang dipilih.</li>
+                            <li><span class="badge" style="background-color: #1F3BB3; color:#fff;">Skor Capaian CPL</span>: Rata-rata persentase ketercapaian tiap CPL oleh seluruh mahasiswa dalam satu angkatan.</li>
+                            <li><span class="badge" style="background-color: #10b981; color:#fff;">Max CPL</span>: Batas pencapaian tertinggi mahasiswa pada CPL tersebut di angkatan yang dipilih.</li>
+                            <li><span class="badge" style="background-color: #ef4444; color:#fff;">Min CPL</span>: Batas pencapaian terendah mahasiswa pada CPL tersebut di angkatan yang dipilih.</li>
                             <li><strong>Tabel Rincian Ketercapaian CPL (%):</strong> Menampilkan persentase kelulusan mata kuliah pendukung CPL secara kumulatif setiap tahun akademik. <em>Klik pada kolom tahun di tabel untuk melihat diagram pada tahun tersebut.</em></li>
                         </ul>
                     </div>
@@ -813,7 +813,7 @@
                 <div class="row g-3 mb-4" id="cplBatchMetricCards">
                     <div class="col-md-4 col-sm-12">
                         <div class="p-3 bg-light rounded-3 border text-center">
-                            <div class="text-muted small fw-semibold">Rata-rata Ketercapaian CPL</div>
+                            <div class="text-muted small fw-semibold">Skor Capaian CPL</div>
                             <div class="h4 mb-0 fw-bold text-primary mt-1" id="cardAvgCplAngkatan">-</div>
                         </div>
                     </div>
@@ -2321,9 +2321,9 @@
                 }
 
                 var labelsCapaianCpl = Object.keys(allCplPerAngkatan.avg_cpl || {});
-                var dataMinCpl = Object.values(allCplPerAngkatan.min || {}).map(function(v) { return roundToTwo(v); });
-                var dataAvgCpl = Object.values(allCplPerAngkatan.avg_cpl || {}).map(function(v) { return roundToTwo(v); });
-                var dataMaxCpl = Object.values(allCplPerAngkatan.max || {}).map(function(v) { return roundToTwo(v); });
+                var dataMinCpl = labelsCapaianCpl.map(function(k) { return roundToTwo((allCplPerAngkatan.min || {})[k] || 0); });
+                var dataAvgCpl = labelsCapaianCpl.map(function(k) { return roundToTwo((allCplPerAngkatan.avg_cpl || {})[k] || 0); });
+                var dataMaxCpl = labelsCapaianCpl.map(function(k) { return roundToTwo((allCplPerAngkatan.max || {})[k] || 0); });
 
                 var canvas = document.getElementById('radarChartAngkatan');
                 var ctx = canvas.getContext('2d');
@@ -2332,36 +2332,45 @@
                     data: {
                         labels: labelsCapaianCpl,
                         datasets: [{
-                                label: 'Average CPL',
+                                label: 'Skor Capaian CPL',
                                 data: dataAvgCpl,
-                                backgroundColor: 'rgba(31, 59, 179, 0.12)',
+                                backgroundColor: 'rgba(31, 59, 179, 0.15)',
                                 borderColor: '#1F3BB3',
                                 borderWidth: 2.5,
                                 pointBackgroundColor: '#1F3BB3',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
                                 pointRadius: 4,
-                                pointHoverRadius: 6
+                                pointHoverRadius: 6,
+                                pointHitRadius: 10
                             },
                             {
                                 label: 'Min CPL',
                                 data: dataMinCpl,
                                 backgroundColor: 'rgba(239, 68, 68, 0.05)',
-                                borderColor: 'rgba(239, 68, 68, 0.8)',
-                                borderWidth: 1.5,
-                                borderDash: [4, 4],
+                                borderColor: '#ef4444',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
                                 pointBackgroundColor: '#ef4444',
-                                pointRadius: 3,
-                                pointHoverRadius: 5
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4.5,
+                                pointHoverRadius: 6.5,
+                                pointHitRadius: 10
                             },
                             {
                                 label: 'Max CPL',
                                 data: dataMaxCpl,
                                 backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                                borderColor: 'rgba(16, 185, 129, 0.8)',
-                                borderWidth: 1.5,
-                                borderDash: [4, 4],
+                                borderColor: '#10b981',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
                                 pointBackgroundColor: '#10b981',
-                                pointRadius: 3,
-                                pointHoverRadius: 5
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 1.5,
+                                pointRadius: 4.5,
+                                pointHoverRadius: 6.5,
+                                pointHitRadius: 10
                             }
                         ]
                     },
@@ -2376,7 +2385,12 @@
                             }
                         },
                         tooltips: {
+                            mode: 'index',
+                            intersect: true,
                             callbacks: {
+                                title: function(tooltipItems, data) {
+                                    return data.labels[tooltipItems[0].index] || '';
+                                },
                                 label: function(tooltipItem, data) {
                                     var datasetLabel = data.datasets[tooltipItem.datasetIndex].label || '';
                                     return datasetLabel + ': ' + tooltipItem.yLabel + '%';
@@ -2486,7 +2500,7 @@
                     }
 
                     if (radarChartAngkatanInstance) {
-                        radarChartAngkatanInstance.data.datasets[0].label = selectedYear ? 'Average CPL (Tahun ' + selectedYear + ')' : 'Average CPL';
+                        radarChartAngkatanInstance.data.datasets[0].label = selectedYear ? 'Skor Capaian CPL (Tahun ' + selectedYear + ')' : 'Skor Capaian CPL';
                         radarChartAngkatanInstance.data.datasets[0].data = datasetData;
                         radarChartAngkatanInstance.update();
                     }

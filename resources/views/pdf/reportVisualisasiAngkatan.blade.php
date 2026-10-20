@@ -3,135 +3,212 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Visualisasi Angkatan {{ $angkatan }}</title>
+    <title>Laporan Evaluasi CPL Angkatan {{ $angkatan }}</title>
     <style>
         @page {
-            margin: 15mm 12mm 15mm 12mm;
+            margin: 12mm 12mm 15mm 12mm;
+            size: A4 portrait;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: "DejaVu Sans", "Helvetica Neue", Arial, sans-serif;
+            font-family: "Times New Roman", Times, serif;
             font-size: 8.5pt;
-            line-height: 1.4;
-            color: #222;
+            line-height: 1.35;
+            color: #000;
+            margin: 0;
+            padding: 0;
         }
 
-        .header {
+        /* ── KOP SURAT RESMI ── */
+        .kop {
+            margin-bottom: 10px;
+        }
+
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .kop-table td {
+            vertical-align: middle;
+            padding: 0;
+        }
+
+        .kop-logo {
+            width: 70px;
             text-align: center;
-            border-bottom: 2px solid #2980b9;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
         }
 
-        .header h2 {
-            margin: 0 0 4px;
-            font-size: 13pt;
-            color: #2c3e50;
+        .kop-logo img {
+            width: 65px;
+            height: auto;
+        }
+
+        .kop-text {
+            text-align: center;
+            padding-left: 8px;
+        }
+
+        .kementerian {
+            font-size: 9.5pt;
+            font-weight: bold;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.15;
+        }
+
+        .universitas {
+            font-size: 13pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 2px 0;
             letter-spacing: 0.5px;
         }
 
-        .header h3 {
-            margin: 0;
+        .prodi-title {
             font-size: 10pt;
-            font-weight: normal;
-            color: #555;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .alamat,
+        .kontak {
+            font-size: 7.5pt;
+            line-height: 1.2;
+            color: #222;
+        }
+
+        .kop-line {
+            border-top: 2px solid #000;
+            border-bottom: 1px solid #000;
+            height: 2px;
+            margin-top: 6px;
+            margin-bottom: 12px;
+        }
+
+        /* ── JUDUL DOKUMEN ── */
+        .doc-title-container {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .doc-title {
+            font-size: 11pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-decoration: underline;
+        }
+
+        .doc-subtitle {
+            font-size: 8.5pt;
+            margin-top: 2px;
+            color: #333;
+            letter-spacing: 0.3px;
+        }
+
+        /* ── METADATA / INFO TABLE ── */
+        .info-box {
+            width: 100%;
+            border: 1px solid #333;
+            background-color: #fafafa;
+            margin-bottom: 12px;
+            padding: 3px 4px;
         }
 
         .info-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 12px;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
         }
 
         .info-table td {
-            padding: 5px 10px;
+            padding: 3px 6px;
             font-size: 8.5pt;
-            vertical-align: middle;
+            vertical-align: top;
         }
 
         .info-label {
             width: 18%;
             font-weight: bold;
-            color: #495057;
+            color: #111;
         }
 
-        .info-value {
-            width: 32%;
-            color: #212529;
-        }
-
-        .metric-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 6px 0;
-            margin-bottom: 14px;
-        }
-
-        .metric-card {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            padding: 8px 10px;
+        .info-sep {
+            width: 2%;
             text-align: center;
+            font-weight: bold;
         }
 
-        .metric-label {
+        .info-val {
+            width: 30%;
+            color: #000;
+        }
+
+        /* ── EXECUTIVE METRICS SUMMARY TABLE ── */
+        .metric-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+        }
+
+        .metric-summary-table td {
+            border: 1px solid #444;
+            padding: 6px 8px;
+            text-align: center;
+            background-color: #fbfbfb;
+            width: 33.33%;
+        }
+
+        .metric-lbl {
             font-size: 7.5pt;
             font-weight: bold;
-            color: #64748b;
             text-transform: uppercase;
-            margin-bottom: 3px;
+            color: #444;
+            margin-bottom: 2px;
         }
 
-        .metric-value-primary {
+        .metric-val {
             font-size: 11.5pt;
             font-weight: bold;
-            color: #1F3BB3;
+            color: #000;
         }
 
-        .metric-value-success {
-            font-size: 11.5pt;
-            font-weight: bold;
-            color: #16a34a;
-        }
-
-        .metric-value-danger {
-            font-size: 11.5pt;
-            font-weight: bold;
-            color: #dc2626;
-        }
-
+        /* ── SECTION HEADERS ── */
         .section-box {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             page-break-inside: avoid;
         }
 
-        .section-title {
-            font-size: 9.5pt;
+        .section-header {
+            font-size: 9pt;
             font-weight: bold;
-            color: #1a5276;
-            background-color: #ebf5fb;
-            padding: 5px 8px;
-            border-left: 4px solid #2980b9;
-            margin-bottom: 8px;
             text-transform: uppercase;
+            background-color: #f1f5f9;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            border-left: 4px solid #1a365d;
+            padding: 4px 8px;
+            margin-top: 12px;
+            margin-bottom: 8px;
+            page-break-after: avoid;
         }
 
         .summary-box {
+            border: 1px solid #666;
             background-color: #fcfcfc;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            padding: 8px 10px;
-            margin-bottom: 10px;
+            padding: 6px 10px;
+            margin-bottom: 8px;
             font-size: 8pt;
-            color: #333;
-            line-height: 1.45;
+            line-height: 1.4;
+            color: #222;
         }
 
+        /* ── DATA TABLES ── */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -141,111 +218,128 @@
 
         .data-table th,
         .data-table td {
-            border: 1px solid #bdc3c7;
+            border: 1px solid #444;
             padding: 4px 6px;
-            text-align: left;
+            vertical-align: middle;
         }
 
         .data-table th {
-            background-color: #f2f4f4;
-            color: #2c3e50;
+            background-color: #e5e9ee;
+            color: #000;
             font-weight: bold;
             text-align: center;
+            font-size: 8pt;
         }
 
-        .data-table tr:nth-child(even) {
-            background-color: #fafafa;
+        .data-table tr.avg-row td {
+            background-color: #eef2f6;
+            font-weight: bold;
+            border-top: 1.5px solid #000;
         }
 
-        .chart-container {
+        /* ── MATRIX TABLES ── */
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7.5pt;
+            margin-bottom: 8px;
+        }
+
+        .matrix-table th,
+        .matrix-table td {
+            border: 1px solid #555;
+            padding: 3px 4px;
             text-align: center;
-            margin: 8px 0;
+            vertical-align: middle;
+        }
+
+        .matrix-table th {
+            background-color: #e2e8f0;
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* ── CHARTS ── */
+        .chart-box {
+            text-align: center;
+            margin: 8px auto 10px;
             page-break-inside: avoid;
         }
 
-        .chart-container img {
-            max-width: 85%;
-            max-height: 270px;
+        .chart-box img {
+            max-width: 80%;
+            max-height: 250px;
             height: auto;
-            border: 1px solid #e0e0e0;
+            border: 1px solid #777;
             padding: 4px;
             background: #fff;
         }
 
-        .badge-success {
-            color: #1e8449;
-            font-weight: bold;
+        .figure-caption {
+            font-size: 7.5pt;
+            font-style: italic;
+            color: #333;
+            margin-top: 3px;
+            text-align: center;
         }
 
-        .badge-warning {
-            color: #d35400;
-            font-weight: bold;
-        }
-
-        .badge-danger {
-            color: #c0392b;
-            font-weight: bold;
-        }
-
-        .badge-info {
-            color: #2980b9;
-            font-weight: bold;
-        }
-
-        ol, ul {
-            margin: 4px 0 8px 18px;
+        ol,
+        ul {
+            margin: 4px 0 6px 18px;
             padding: 0;
             font-size: 8pt;
         }
 
         li {
-            margin-bottom: 3px;
+            margin-bottom: 2.5px;
+            line-height: 1.3;
         }
 
-        .matrix-table {
+        /* ── TANDA TANGAN / PENGESAHAN ── */
+        .signature-section {
+            page-break-inside: avoid;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .signature-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 7.5pt;
         }
 
-        .matrix-table th,
-        .matrix-table td {
-            border: 1px solid #bdc3c7;
-            padding: 3px 4px;
-            text-align: center;
+        .signature-table td {
+            vertical-align: top;
         }
 
-        .matrix-table th {
-            background-color: #eaf2f8;
-            color: #1b4f72;
-            font-weight: bold;
-        }
-
-        .matrix-table tr:nth-child(even) {
-            background-color: #fdfefe;
-        }
-
+        /* ── FOOTER ── */
         .footer {
             margin-top: 15px;
-            border-top: 1px solid #ccc;
-            padding-top: 5px;
-            text-align: center;
-            font-size: 7.5pt;
-            color: #7f8c8d;
+            border-top: 1px solid #888;
+            padding-top: 4px;
+            font-size: 7pt;
+            color: #555;
         }
     </style>
 </head>
 
 <body>
 
-    {{-- HEADER --}}
-    <div class="header">
-        <h2>Laporan Visualisasi Capaian Pembelajaran Lulusan (CPL) Angkatan</h2>
-        <h3>{{ $universitas }} &bull; Program Studi {{ $prodi }}</h3>
-    </div>
-
-    {{-- INFORMASI ANGKATAN & PERIODE --}}
     @php
+        $logoPath = public_path('assets/img/logo_unila.png');
+        $logoBase64 = null;
+        if (file_exists($logoPath)) {
+            $ext = strtolower(pathinfo($logoPath, PATHINFO_EXTENSION));
+            $data = file_get_contents($logoPath);
+            $mime = in_array($ext, ['png', 'jpg', 'jpeg']) ? $ext : 'png';
+            $logoBase64 = 'data:image/' . $mime . ';base64,' . base64_encode($data);
+        }
+
+        $bulanIndo = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
+            7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        $tglCetak = date('d') . ' ' . ($bulanIndo[(int)date('m')] ?? date('F')) . ' ' . date('Y');
+
         $baseAngkatan = !empty($angkatan) ? (int)$angkatan : (int)date('Y');
         $activePeriodLabel = 'Kumulatif (Semua Semester)';
 
@@ -279,60 +373,98 @@
             $activePeriodLabel = "Tahun Akademik {$calYear}/{$nextYear} (Semester {$sem1} & {$sem2})";
         }
     @endphp
-    <table class="info-table">
-        <tr>
-            <td class="info-label">Angkatan</td>
-            <td class="info-value"><strong>{{ $angkatan }}</strong></td>
-            <td class="info-label">Program Studi</td>
-            <td class="info-value">{{ $prodi }}</td>
-        </tr>
-        <tr>
-            <td class="info-label">Tanggal Cetak</td>
-            <td class="info-value">{{ date('d F Y') }}</td>
-            <td class="info-label">Periode</td>
-            <td class="info-value"><strong style="color: #1a5276;">{{ $activePeriodLabel }}</strong></td>
-        </tr>
-    </table>
 
-    {{-- EXECUTIVE SUMMARY METRICS --}}
-    @if (!empty($avgCpl) || !empty($maxCpl) || !empty($minCpl))
-        <table class="metric-table">
+    {{-- KOP SURAT RESMI --}}
+    <div class="kop">
+        <table class="kop-table">
             <tr>
-                <td style="width: 33.33%;">
-                    <div class="metric-card">
-                        <div class="metric-label">Rata-rata Ketercapaian CPL</div>
-                        <div class="metric-value-primary">{{ $avgCpl ?? '-' }}</div>
-                    </div>
+                <td class="kop-logo">
+                    @if ($logoBase64)
+                        <img src="{{ $logoBase64 }}" alt="Logo Unila">
+                    @endif
                 </td>
-                <td style="width: 33.33%;">
-                    <div class="metric-card">
-                        <div class="metric-label">CPL Tertinggi</div>
-                        <div class="metric-value-success">{{ $maxCpl ?? '-' }}</div>
-                    </div>
+                <td class="kop-text">
+                    <div class="kementerian">KEMENTERIAN PENDIDIKAN TINGGI, SAINS, DAN TEKNOLOGI</div>
+                    <div class="universitas">{{ strtoupper($universitas ?? 'UNIVERSITAS LAMPUNG') }}</div>
+                    <div class="prodi-title">PROGRAM STUDI {{ strtoupper($prodi ?? 'ILMU KOMPUTER') }}</div>
+                    <div class="alamat">Jalan Prof. Dr. Sumantri Brojonegoro No. 1, Bandar Lampung 35145</div>
+                    <div class="kontak">Telepon: (0721) 701609 &bull; Laman: www.unila.ac.id &bull; Surel: rektorat@unila.ac.id</div>
                 </td>
-                <td style="width: 33.33%;">
-                    <div class="metric-card">
-                        <div class="metric-label">CPL Terendah</div>
-                        <div class="metric-value-danger">{{ $minCpl ?? '-' }}</div>
-                    </div>
+            </tr>
+        </table>
+        <div class="kop-line"></div>
+    </div>
+
+    {{-- JUDUL DOKUMEN --}}
+    <div class="doc-title-container">
+        <div class="doc-title">LAPORAN EVALUASI CAPAIAN PEMBELAJARAN LULUSAN (CPL) ANGKATAN {{ $angkatan }}</div>
+        <div class="doc-subtitle">Sistem Evaluasi Berbasis Outcome-Based Education (OBE)</div>
+    </div>
+
+    {{-- METADATA ANGKATAN & PERIODE --}}
+    <div class="info-box">
+        <table class="info-table">
+            <tr>
+                <td class="info-label">Tahun Angkatan</td>
+                <td class="info-sep">:</td>
+                <td class="info-val"><strong>{{ $angkatan }}</strong></td>
+                <td class="info-label">Program Studi</td>
+                <td class="info-sep">:</td>
+                <td class="info-val">{{ $prodi ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Periode Evaluasi</td>
+                <td class="info-sep">:</td>
+                <td class="info-val"><strong>{{ $activePeriodLabel }}</strong></td>
+                <td class="info-label">Universitas</td>
+                <td class="info-sep">:</td>
+                <td class="info-val">{{ $universitas ?? 'Universitas Lampung' }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Tanggal Cetak</td>
+                <td class="info-sep">:</td>
+                <td class="info-val">{{ $tglCetak }}</td>
+                <td class="info-label">Status Dokumen</td>
+                <td class="info-sep">:</td>
+                <td class="info-val">Laporan Resmi OBE</td>
+            </tr>
+        </table>
+    </div>
+
+    {{-- RINGKASAN METRIK CAPAIAN CPL ANGKATAN --}}
+    @if (!empty($avgCpl) || !empty($maxCpl) || !empty($minCpl))
+        <table class="metric-summary-table">
+            <tr>
+                <td>
+                    <div class="metric-lbl">Skor Capaian CPL</div>
+                    <div class="metric-val">{{ $avgCpl ?? '-' }}</div>
+                </td>
+                <td>
+                    <div class="metric-lbl">Capaian CPL Tertinggi</div>
+                    <div class="metric-val">{{ $maxCpl ?? '-' }}</div>
+                </td>
+                <td>
+                    <div class="metric-lbl">Capaian CPL Terendah</div>
+                    <div class="metric-val">{{ $minCpl ?? '-' }}</div>
                 </td>
             </tr>
         </table>
     @endif
 
-    {{-- 1. CPL ACHIEVEMENT PERCENTAGE (BATCH) --}}
+    {{-- BAGIAN I: KETERCAPAIAN CPL ANGKATAN --}}
     <div class="section-box">
-        <div class="section-title">1. CPL Achievement Percentage (%) (Batch) - Capaian CPL Angkatan</div>
+        <div class="section-header">I. Persentase Ketercapaian CPL Angkatan (CPL Achievement Percentage - Batch)</div>
 
         @if (!empty($radarChartAngkatanImg))
-            <div class="chart-container">
-                <img src="{{ $radarChartAngkatanImg }}">
+            <div class="chart-box">
+                <img src="{{ $radarChartAngkatanImg }}" alt="Diagram Radar CPL Angkatan">
+                <div class="figure-caption">Gambar 1. Diagram Radar Persentase Capaian CPL Rata-rata Angkatan {{ $angkatan }}</div>
             </div>
         @endif
 
-        {{-- Ringkasan Evaluasi / Summary --}}
+        {{-- Ringkasan Evaluasi --}}
         @if (!empty($summary))
-            <div style="font-weight: bold; margin-top: 4px; margin-bottom: 2px; font-size: 8pt; color: #2c3e50;">Ringkasan Evaluasi Capaian CPL Angkatan:</div>
+            <div style="font-weight: bold; margin-top: 6px; margin-bottom: 3px; font-size: 8pt;">Ringkasan Evaluasi Capaian CPL:</div>
             <div class="summary-box">
                 {!! $summary !!}
             </div>
@@ -340,7 +472,7 @@
 
         {{-- Tabel Rincian Capaian CPL Angkatan Per Tahun --}}
         @if (!empty($rincianCplPerTahun) && count($rincianCplPerTahun) > 0)
-            <div style="font-weight: bold; margin-top: 6px; margin-bottom: 3px; font-size: 8pt; color: #2c3e50;">Rincian Ketercapaian CPL (%):</div>
+            <div style="font-weight: bold; margin-top: 6px; margin-bottom: 3px; font-size: 8pt;">Rincian Ketercapaian CPL (%):</div>
             <table class="data-table">
                 <thead>
                     <tr>
@@ -369,7 +501,7 @@
                         <tr>
                             <td style="font-weight: bold; padding-left: 8px;">{{ $cplKode }}</td>
                             @foreach ($scoresList as $sc)
-                                <td style="text-align: center; font-weight: bold; color: {{ $sc === '-' ? '#95a5a6' : '#2c3e50' }}; {{ $sc === '-' ? 'background-color: #fcfcfc;' : '' }}">
+                                <td style="text-align: center; font-weight: bold; {{ $sc === '-' ? 'color: #888; background-color: #fafafa;' : '' }}">
                                     {{ $sc }}
                                 </td>
                             @endforeach
@@ -387,10 +519,10 @@
                         }
                     @endphp
                     @if (!empty($footerAvgList))
-                        <tr style="background-color: #ebf5fb; font-weight: bold;">
-                            <td style="color: #1a5276; font-weight: bold; padding-left: 8px;">Rata-rata Ketercapaian</td>
+                        <tr class="avg-row">
+                            <td style="font-weight: bold; padding-left: 8px;">Rata-rata Ketercapaian</td>
                             @foreach ($footerAvgList as $avg)
-                                <td style="text-align: center; color: #1a5276; font-weight: bold;">
+                                <td style="text-align: center; font-weight: bold;">
                                     {{ $avg }}
                                 </td>
                             @endforeach
@@ -399,29 +531,27 @@
                 </tbody>
             </table>
         @elseif (!empty($rincianCplScoresAngkatan) && count($rincianCplScoresAngkatan) > 0)
-            {{-- Fallback 2 Kolom --}}
-            <div style="font-weight: bold; margin-top: 6px; margin-bottom: 3px; font-size: 8pt; color: #2c3e50;">Rincian Ketercapaian CPL (%):</div>
+            <div style="font-weight: bold; margin-top: 6px; margin-bottom: 3px; font-size: 8pt;">Rincian Ketercapaian CPL (%):</div>
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th style="width: 30%;">Kode CPL</th>
-                        <th style="width: 70%; text-align: center;">Ketercapaian</th>
+                        <th style="width: 30%; text-align: left; padding-left: 8px;">Kode CPL</th>
+                        <th style="width: 70%; text-align: center;">Ketercapaian Rata-rata</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($rincianCplScoresAngkatan as $item)
                         <tr>
-                            <td style="font-weight: bold;">{{ $item['kode'] }}</td>
-                            <td style="text-align: center; font-weight: bold; color: #2980b9;">{{ $item['avgScore'] }}</td>
+                            <td style="font-weight: bold; padding-left: 8px;">{{ $item['kode'] }}</td>
+                            <td style="text-align: center; font-weight: bold;">{{ $item['avgScore'] }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         @endif
 
-        {{-- Deskripsi CPL --}}
         @if (!empty($descriptions) && is_array($descriptions))
-            <div style="font-weight: bold; margin-top: 6px; margin-bottom: 2px; font-size: 8pt;">Deskripsi Naratif CPL:</div>
+            <div style="font-weight: bold; margin-top: 6px; margin-bottom: 3px; font-size: 8pt;">Deskripsi Naratif CPL:</div>
             <ol>
                 @foreach ($descriptions as $desc)
                     <li>{{ $desc }}</li>
@@ -430,17 +560,17 @@
         @endif
     </div>
 
-    {{-- 2. QUESTIONS WITH LOWEST CPL --}}
+    {{-- BAGIAN II: SOAL DENGAN CAPAIAN TERENDAH --}}
     @if (!empty($soalTerendah) && count($soalTerendah) > 0)
         <div class="section-box">
-            <div class="section-title">2. Questions with Lowest CPL (Soal dengan Capaian Rata-rata Terendah)</div>
+            <div class="section-header">II. Pertanyaan / Asesmen dengan Capaian CPL Terendah</div>
             <table class="data-table">
                 <thead>
                     <tr>
                         <th style="width: 28px;">No</th>
-                        <th style="width: 28%;">Course Name</th>
-                        <th style="width: 22%;">Assessment Type</th>
-                        <th>Questions</th>
+                        <th style="width: 28%; text-align: left;">Mata Kuliah</th>
+                        <th style="width: 22%; text-align: center;">Jenis Asesmen</th>
+                        <th style="text-align: left;">Pertanyaan / Deskripsi Soal</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -457,16 +587,16 @@
         </div>
     @endif
 
-    {{-- 3. CPL CALCULATION COURSES --}}
+    {{-- BAGIAN III: MATA KULIAH PERHITUNGAN CPL --}}
     @if (!empty($courseList) && count($courseList) > 0)
         <div class="section-box">
-            <div class="section-title">3. CPL Calculation Courses (Mata Kuliah Perhitungan CPL)</div>
+            <div class="section-header">III. Mata Kuliah Perhitungan CPL (CPL Calculation Courses)</div>
             <table class="data-table">
                 <thead>
                     <tr>
                         <th style="width: 32px; text-align: center;">No</th>
                         <th style="width: 95px; text-align: center;">Kode MK</th>
-                        <th>Nama Mata Kuliah</th>
+                        <th style="text-align: left;">Nama Mata Kuliah</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -483,7 +613,7 @@
                         @endphp
                         <tr>
                             <td style="text-align: center;">{{ $idx + 1 }}</td>
-                            <td style="text-align: center; font-weight: bold; color: #1F3BB3;">{{ $kode }}</td>
+                            <td style="text-align: center; font-family: monospace; font-weight: bold;">{{ $kode }}</td>
                             <td>{{ $nama }}</td>
                         </tr>
                     @endforeach
@@ -492,16 +622,16 @@
         </div>
     @endif
 
-    {{-- 4. MATRIKS CAPAIAN SELURUH MAHASISWA ANGKATAN --}}
+    {{-- BAGIAN IV & V: MATRIKS CAPAIAN SELURUH MAHASISWA ANGKATAN --}}
     @if (!empty($mahasiswaAngkatan) && count($mahasiswaAngkatan) > 0)
         {{-- Matriks 1: Persentase Ketercapaian CPL (%) --}}
-        <div class="section-box" style="page-break-before: auto;">
-            <div class="section-title">4. Matriks Persentase Ketercapaian CPL (%) Seluruh Mahasiswa Angkatan {{ $angkatan }}</div>
+        <div class="section-box">
+            <div class="section-header">IV. Matriks Persentase Ketercapaian CPL (%) Seluruh Mahasiswa Angkatan {{ $angkatan }}</div>
             <table class="matrix-table">
                 <thead>
                     <tr>
                         <th style="width: 24px;">No</th>
-                        <th style="width: 70px;">NPM</th>
+                        <th style="width: 75px;">NPM</th>
                         <th style="text-align: left; padding-left: 6px;">Nama Mahasiswa</th>
                         @if (!empty($cplCodes))
                             @foreach ($cplCodes as $cplCode)
@@ -514,14 +644,14 @@
                     @foreach ($mahasiswaAngkatan as $student)
                         <tr>
                             <td>{{ $student['no'] }}</td>
-                            <td>{{ $student['npm'] }}</td>
+                            <td style="font-family: monospace;">{{ $student['npm'] }}</td>
                             <td style="text-align: left; padding-left: 6px;">{{ $student['nama_mhs'] }}</td>
                             @if (!empty($student['cpls']))
                                 @foreach ($student['cpls'] as $cpl)
                                     @php
                                         $pVal = isset($cpl['persen']) ? (float)$cpl['persen'] : (isset($cpl['nilai']) ? (float)$cpl['nilai'] : 0);
                                     @endphp
-                                    <td style="{{ $pVal >= 65 ? 'color: #1e8449; font-weight: bold;' : ($pVal > 0 ? 'color: #d35400;' : 'color: #888;') }}">
+                                    <td style="{{ $pVal >= 65 ? 'font-weight: bold;' : '' }}">
                                         {{ number_format($pVal, 1) }}%
                                     </td>
                                 @endforeach
@@ -533,13 +663,13 @@
         </div>
 
         {{-- Matriks 2: Skor Nilai Capaian CPL (0–100) --}}
-        <div class="section-box" style="page-break-before: auto; margin-top: 15px;">
-            <div class="section-title">5. Matriks Skor Nilai Capaian CPL (0–100) Seluruh Mahasiswa Angkatan {{ $angkatan }}</div>
+        <div class="section-box" style="margin-top: 14px;">
+            <div class="section-header">V. Matriks Skor Nilai Capaian CPL (0–100) Seluruh Mahasiswa Angkatan {{ $angkatan }}</div>
             <table class="matrix-table">
                 <thead>
                     <tr>
                         <th style="width: 24px;">No</th>
-                        <th style="width: 70px;">NPM</th>
+                        <th style="width: 75px;">NPM</th>
                         <th style="text-align: left; padding-left: 6px;">Nama Mahasiswa</th>
                         @if (!empty($cplCodes))
                             @foreach ($cplCodes as $cplCode)
@@ -552,7 +682,7 @@
                     @foreach ($mahasiswaAngkatan as $student)
                         <tr>
                             <td>{{ $student['no'] }}</td>
-                            <td>{{ $student['npm'] }}</td>
+                            <td style="font-family: monospace;">{{ $student['npm'] }}</td>
                             <td style="text-align: left; padding-left: 6px;">{{ $student['nama_mhs'] }}</td>
                             @if (!empty($student['cpls']))
                                 @foreach ($student['cpls'] as $cpl)
@@ -571,10 +701,36 @@
         </div>
     @endif
 
+    {{-- TANDA TANGAN / PENGESAHAN RESMI --}}
+    <div class="signature-section">
+        <table class="signature-table">
+            <tr>
+                <td style="width: 55%; font-size: 7.5pt; color: #444; line-height: 1.4; padding-right: 15px;">
+                    <div style="font-weight: bold; color: #000; margin-bottom: 2px;">Catatan Akademik Angkatan:</div>
+                    <div>1. Laporan ini merangkum ketercapaian kompetensi lulusan seluruh mahasiswa angkatan {{ $angkatan }}.</div>
+                    <div>2. Digunakan sebagai dasar monitoring, perbaikan mutu pembelajaran berkelanjutan (CQI), dan pelaporan akreditasi.</div>
+                    <div>3. Disahkan secara resmi oleh Pengelola Program Studi {{ $prodi ?? '' }}.</div>
+                </td>
+                <td style="width: 45%; text-align: center; font-size: 8.5pt;">
+                    <div>Bandar Lampung, {{ $tglCetak }}</div>
+                    <div style="margin-top: 2px;">Mengetahui,</div>
+                    <div style="font-weight: bold;">Ketua / Koordinator Program Studi</div>
+                    <div style="height: 50px;"></div>
+                    <div style="font-weight: bold; text-decoration: underline;">( ______________________________ )</div>
+                    <div style="margin-top: 2px;">NIP. ....................................................</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
     {{-- FOOTER --}}
     <div class="footer">
-        Dokumen ini dihasilkan secara otomatis oleh Sistem Evaluasi OBE &bull; {{ $universitas }}<br>
-        Dicetak pada: {{ date('d F Y H:i:s') }}
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="text-align: left;">Sistem Informasi Evaluasi OBE &bull; {{ $universitas ?? 'Universitas Lampung' }}</td>
+                <td style="text-align: right;">Dicetak pada: {{ date('d/m/Y H:i:s') }} WIB</td>
+            </tr>
+        </table>
     </div>
 
 </body>

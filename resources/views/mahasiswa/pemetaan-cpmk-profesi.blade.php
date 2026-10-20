@@ -168,10 +168,10 @@
 
                 <div class="col-lg-4 text-lg-end">
                     <div class="d-flex align-items-center justify-content-lg-end gap-2 flex-wrap">
-                        <button class="modern-btn-primary" onclick="printPetaan()">
+                        <a href="{{ route('mahasiswa.pemetaan-cpmk-profesi.print') }}" target="_blank" class="modern-btn-primary">
                             <i class="bi bi-printer"></i> Cetak
-                        </button>
-                        <a href="{{ route('mahasiswa.pemetaan-cpmk-profesi.pdf') }}" target="_blank" class="modern-btn-outline">
+                        </a>
+                        <a href="{{ route('mahasiswa.pemetaan-cpmk-profesi.pdf') }}" class="modern-btn-outline">
                             <i class="bi bi-file-earmark-pdf text-danger"></i> Unduh PDF
                         </a>
                     </div>
@@ -461,14 +461,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         function printPetaan() {
-            const url = "{{ route('mahasiswa.pemetaan-cpmk-profesi.pdf') }}";
-            const w = window.open(url, '_blank');
-            setTimeout(() => {
-                if (w) {
-                    w.focus();
-                    w.print();
-                }
-            }, 800);
+            const url = "{{ route('mahasiswa.pemetaan-cpmk-profesi.print') }}";
+            window.open(url, '_blank');
         }
 
         function toggleDetail(id, btn) {

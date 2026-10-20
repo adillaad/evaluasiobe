@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Koleksi UML Activity Diagram - Visualisasi Evaluasi OBE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --surface: #ffffff;
+      --bg: #f8fafc;
+      --border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: var(--bg); color: var(--text-main); padding: 40px 20px; line-height: 1.5; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .header-box {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: white;
+      padding: 35px 30px;
+      border-radius: 16px;
+      margin-bottom: 35px;
+      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
+    }
+    .header-box h1 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+    .header-box p { font-size: 14px; opacity: 0.9; max-width: 700px; }
+    .nav-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
+      background: white;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .nav-btn {
+      background: #f1f5f9;
+      color: #334155;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover { background: #e2e8f0; color: var(--primary); }
+    .diagram-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 40px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .diagram-card:hover {
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    }
+    .card-header {
+      padding: 24px 28px;
+      border-bottom: 1px solid var(--border);
+      background: #fafafa;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #dbeafe;
+      color: #1e40af;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .card-header h2 { font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: var(--text-muted); }
+    .subtitle strong { color: #d97706; }
+    .card-body {
+      padding: 30px;
+      display: flex;
+      justify-content: center;
+      background: #ffffff;
+      overflow-x: auto;
+    }
+    .card-body img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      cursor: zoom-in;
+    }
+    .card-actions {
+      padding: 16px 28px;
+      border-top: 1px solid var(--border);
+      background: #f8fafc;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .btn {
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary {
+      background: white;
+      color: #334155;
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: #f1f5f9; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-box">
+      <h1>Koleksi UML Activity Diagram</h1>
+      <p>Berdasarkan 6 Use Case Visualisasi &amp; Cetak Laporan OBE (PMPS, Kaprodi, dan Dosen). Dibuat dengan standar partisi/swimlane UML 2.0 resmi untuk kemudahan penulisan skripsi &amp; laporan teknis.</p>
+    </div>
+
+    <div class="nav-tabs">
+      <a href="#activity_01_cpl_mahasiswa" class="nav-btn">1. CPL Mahasiswa</a>
+      <a href="#activity_02_cpmk_mahasiswa" class="nav-btn">2. CPMK Mahasiswa</a>
+      <a href="#activity_03_cpl_angkatan" class="nav-btn">3. CPL Angkatan</a>
+      <a href="#activity_04_cpmk_angkatan" class="nav-btn">4. CPMK Angkatan</a>
+      <a href="#activity_05_cpl_matakuliah" class="nav-btn">5. CPL Mata Kuliah</a>
+      <a href="#activity_06_cpmk_matakuliah" class="nav-btn">6. CPMK Mata Kuliah</a>
+    </div>
+
+    
+    <div class="diagram-card" id="activity_01_cpl_mahasiswa">
+      <div class="card-header">
+        <div class="badge">UML 2.0 Activity Diagram</div>
+        <h2>Melihat Visualisasi CPL per Mahasiswa</h2>
+        <p class="subtitle">&lt;&lt;Extend&gt;&gt; Use Case: <strong>Mencetak Laporan Visualisasi CPL per Mahasiswa</strong></p>
+      </div>
+      <div class="card-body">
+        <a href="activity_01_cpl_mahasiswa.png" target="_blank" title="Klik untuk membuka ukuran penuh">
+          <img src="activity_01_cpl_mahasiswa.png" alt="Melihat Visualisasi CPL per Mahasiswa" loading="lazy"/>
+        </a>
+      </div>
+      <div class="card-actions">
+        <a href="activity_01_cpl_mahasiswa.png" download class="btn btn-primary"><i class="bi bi-download"></i> Unduh File PNG (HD)</a>
+        <a href="activity_01_cpl_mahasiswa.svg" download class="btn btn-secondary"><i class="bi bi-file-earmark-code"></i> Unduh File SVG (Vector)</a>
+      </div>
+    </div>
+
+    <div class="diagram-card" id="activity_02_cpmk_mahasiswa">
+      <div class="card-header">
+        <div class="badge">UML 2.0 Activity Diagram</div>
+        <h2>Melihat Visualisasi CPMK per Mahasiswa</h2>
+        <p class="subtitle">&lt;&lt;Extend&gt;&gt; Use Case: <strong>Mencetak Laporan Visualisasi CPMK per Mahasiswa</strong></p>
+      </div>
+      <div class="card-body">
+        <a href="activity_02_cpmk_mahasiswa.png" target="_blank" title="Klik untuk membuka ukuran penuh">
+          <img src="activity_02_cpmk_mahasiswa.png" alt="Melihat Visualisasi CPMK per Mahasiswa" loading="lazy"/>
+        </a>
+      </div>
+      <div class="card-actions">
+        <a href="activity_02_cpmk_mahasiswa.png" download class="btn btn-primary"><i class="bi bi-download"></i> Unduh File PNG (HD)</a>
+        <a href="activity_02_cpmk_mahasiswa.svg" download class="btn btn-secondary"><i class="bi bi-file-earmark-code"></i> Unduh File SVG (Vector)</a>
+      </div>
+    </div>
+
+    <div class="diagram-card" id="activity_03_cpl_angkatan">
+      <div class="card-header">
+        <div class="badge">UML 2.0 Activity Diagram</div>
+        <h2>Melihat Visualisasi CPL per Angkatan</h2>
+        <p class="subtitle">&lt;&lt;Extend&gt;&gt; Use Case: <strong>Mencetak Laporan Visualisasi CPL per Angkatan</strong></p>
+      </div>
+      <div class="card-body">
+        <a href="activity_03_cpl_angkatan.png" target="_blank" title="Klik untuk membuka ukuran penuh">
+          <img src="activity_03_cpl_angkatan.png" alt="Melihat Visualisasi CPL per Angkatan" loading="lazy"/>
+        </a>
+      </div>
+      <div class="card-actions">
+        <a href="activity_03_cpl_angkatan.png" download class="btn btn-primary"><i class="bi bi-download"></i> Unduh File PNG (HD)</a>
+        <a href="activity_03_cpl_angkatan.svg" download class="btn btn-secondary"><i class="bi bi-file-earmark-code"></i> Unduh File SVG (Vector)</a>
+      </div>
+    </div>
+
+    <div class="diagram-card" id="activity_04_cpmk_angkatan">
+      <div class="card-header">
+        <div class="badge">UML 2.0 Activity Diagram</div>
+        <h2>Melihat Visualisasi CPMK per Angkatan</h2>
+        <p class="subtitle">&lt;&lt;Extend&gt;&gt; Use Case: <strong>Mencetak Laporan Visualisasi CPMK per Angkatan</strong></p>
+      </div>
+      <div class="card-body">
+        <a href="activity_04_cpmk_angkatan.png" target="_blank" title="Klik untuk membuka ukuran penuh">
+          <img src="activity_04_cpmk_angkatan.png" alt="Melihat Visualisasi CPMK per Angkatan" loading="lazy"/>
+        </a>
+      </div>
+      <div class="card-actions">
+        <a href="activity_04_cpmk_angkatan.png" download class="btn btn-primary"><i class="bi bi-download"></i> Unduh File PNG (HD)</a>
+        <a href="activity_04_cpmk_angkatan.svg" download class="btn btn-secondary"><i class="bi bi-file-earmark-code"></i> Unduh File SVG (Vector)</a>
+      </div>
+    </div>
+
+    <div class="diagram-card" id="activity_05_cpl_matakuliah">
+      <div class="card-header">
+        <div class="badge">UML 2.0 Activity Diagram</div>
+        <h2>Melihat Visualisasi CPL per Mata Kuliah</h2>
+        <p class="subtitle">&lt;&lt;Extend&gt;&gt; Use Case: <strong>Mencetak Laporan Visualisasi CPL per Mata Kuliah</strong></p>
+      </div>
+      <div class="card-body">
+        <a href="activity_05_cpl_matakuliah.png" target="_blank" title="Klik untuk membuka ukuran penuh">
+          <img src="activity_05_cpl_matakuliah.png" alt="Melihat Visualisasi CPL per Mata Kuliah" loading="lazy"/>
+        </a>
+      </div>
+      <div class="card-actions">
+        <a href="activity_05_cpl_matakuliah.png" download class="btn btn-primary"><i class="bi bi-download"></i> Unduh File PNG (HD)</a>
+        <a href="activity_05_cpl_matakuliah.svg" download class="btn btn-secondary"><i class="bi bi-file-earmark-code"></i> Unduh File SVG (Vector)</a>
+      </div>
+    </div>
+
+    <div class="diagram-card" id="activity_06_cpmk_matakuliah">
+      <div class="card-header">
+        <div class="badge">UML 2.0 Activity Diagram</div>
+        <h2>Melihat Visualisasi CPMK per Mata Kuliah</h2>
+        <p class="subtitle">&lt;&lt;Extend&gt;&gt; Use Case: <strong>Mencetak Laporan Visualisasi CPMK per Mata Kuliah</strong></p>
+      </div>
+      <div class="card-body">
+        <a href="activity_06_cpmk_matakuliah.png" target="_blank" title="Klik untuk membuka ukuran penuh">
+          <img src="activity_06_cpmk_matakuliah.png" alt="Melihat Visualisasi CPMK per Mata Kuliah" loading="lazy"/>
+        </a>
+      </div>
+      <div class="card-actions">
+        <a href="activity_06_cpmk_matakuliah.png" download class="btn btn-primary"><i class="bi bi-download"></i> Unduh File PNG (HD)</a>
+        <a href="activity_06_cpmk_matakuliah.svg" download class="btn btn-secondary"><i class="bi bi-file-earmark-code"></i> Unduh File SVG (Vector)</a>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

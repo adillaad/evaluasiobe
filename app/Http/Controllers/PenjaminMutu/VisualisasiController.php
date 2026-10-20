@@ -139,8 +139,11 @@ class VisualisasiController extends Controller
             ->join('prodi', 'm1.id_prodi', '=', 'prodi.id')
             ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
             ->select('m1.npm as npm', 'm1.nama_mhs as nama_mhs')
-            ->where('m1.angkatan', $angkatan)
-            ->where('m1.universitas_id', $universitas);
+            ->where('m1.angkatan', $angkatan);
+
+        if (!empty($universitas)) {
+            $mutuQuery->where('m1.universitas_id', $universitas);
+        }
 
         if (!empty($prodiId)) {
             $mutuQuery->where('m1.id_prodi', $prodiId);
@@ -486,8 +489,15 @@ class VisualisasiController extends Controller
                 $universitas = Universitas::where('nama', $universitas)->value('id') ?? $universitas;
             }
         }
+        if (empty($universitas)) {
+            $universitas = auth()->user()->id_universitasUser 
+                ?? (auth()->user()->prodi ? auth()->user()->prodi->fakultas->id_universitas ?? null : null) 
+                ?? DB::table('mutus')->where('npm', $npm)->value('universitas_id')
+                ?? (Universitas::first()->id ?? null);
+        }
         if (empty($universitasNama)) {
-            $universitasNama = auth()->user()->universitas->nama 
+            $universitasNama = Universitas::where('id', $universitas)->value('nama')
+                ?? auth()->user()->universitas->nama 
                 ?? (auth()->user()->prodi ? auth()->user()->prodi->fakultas->universitas->nama ?? null : null) 
                 ?? Universitas::first()->nama 
                 ?? 'Universitas';
@@ -827,6 +837,7 @@ class VisualisasiController extends Controller
         }
         $mutuNpms = $allNpmQuery->distinct()->pluck('npm')->toArray();
         $allNpm = array_values(array_unique(array_merge($mhsNpms, $mutuNpms)));
+        $evaluatedCohortNpms = !empty($mutuNpms) ? $mutuNpms : (!empty($allNpm) ? $allNpm : (!empty($npm) ? [$npm] : []));
         $persentaseTotalCplCapaianAngkatan = [];
 
         $allCplPerAngkatanQuery = DB::table('cpls')
@@ -858,7 +869,8 @@ class VisualisasiController extends Controller
 
         $allCplPerAngkatan['count'] = 0;
         $gabunganMkAngkatan = [];
-        foreach ($allNpm as $npmItem) {
+        $cohortCplPctCollector = [];
+        foreach ($evaluatedCohortNpms as $npmItem) {
             // Sama seperti perhitungan persentaseTotalCplCapaian sebelumnya untuk setiap npm
             $subQuery = $this->buildBestAttemptSubquery($npmItem, $semestersToFilter, $prodiId, $otoritas);
 
@@ -1015,6 +1027,7 @@ class VisualisasiController extends Controller
                 }
 
                 $allCplPerAngkatan['total'][$cplCode] += $persentase;
+                $cohortCplPctCollector[$cplCode][] = round($persentase, 2);
 
                 // MIN MAX
                 if ($allCplPerAngkatan['min'][$cplCode] >= round($persentase, 2)) {
@@ -1045,11 +1058,104 @@ class VisualisasiController extends Controller
                 $keyKodeCplAvgAngkatanMax = $cpl;
                 $cplAvgAngkatanMax = $allCplPerAngkatan['avg_cpl'][$cpl];
             }
-            if ($allCplPerAngkatan['min'][$cpl] > 100) {
-                $allCplPerAngkatan['min'][$cpl] = 0;
-            }
+
+            // Pastikan min dan max ketercapaian CPL mencerminkan batas capaian riil mahasiswa angkatan
+            $pctList = $cohortCplPctCollector[$cpl] ?? [];
+            $posList = array_filter($pctList, fn($v) => $v > 0);
+            $allCplPerAngkatan['min'][$cpl] = count($posList) > 0 ? min($posList) : (count($pctList) > 0 ? min($pctList) : 0);
+            $allCplPerAngkatan['max'][$cpl] = count($pctList) > 0 ? max($pctList) : 0;
         }
         $gabunganMkAngkatan = array_unique($gabunganMkAngkatan);
+
+        // Hitung Min dan Max Skor Capaian CPL (Skala 0-100) per Angkatan untuk Diagram Card 1
+        $allSkorCplPerAngkatan = [
+            'min' => [],
+            'max' => [],
+            'avg' => []
+        ];
+        if (!empty($evaluatedCohortNpms)) {
+            $npmListStrForSkor = "'" . implode("','", array_map('addslashes', $evaluatedCohortNpms)) . "'";
+            $yearExprQ2Skor = $this->getYearSemSqlExpr('m2', 'ta2');
+            $cplConditionSubSkor = "";
+            $cplConditionMainSkor = "";
+            if (!empty($semestersToFilter)) {
+                $semListStrSkor = implode(',', array_map('intval', $semestersToFilter));
+                $cplConditionSubSkor = " AND m2.Course IN (SELECT kode FROM mks WHERE semester IN ({$semListStrSkor})) ";
+                $cplConditionMainSkor = " AND m.Course IN (SELECT kode FROM mks WHERE semester IN ({$semListStrSkor})) ";
+            }
+
+            $querySkorAngkatan = "
+                SELECT q5.NPM, q5.Cpl, cpls.kode as kode, AVG(q5.hasil) as hasil FROM (
+                    SELECT NPM, Cpl, Course, SUM(hasil) as hasil 
+                    FROM (
+                        SELECT q1.NPM, q1.tahun, q1.Cpl, q1.Jenis, q1.Course, 
+                            (CASE WHEN q1.nilaiSoal IS NOT NULL AND q1.BobotSoal > 0 AND q2.BobotJenis > 0 THEN (q1.nilaiSoal * q1.BobotSoal / q2.BobotJenis) * q1.examWeight / COALESCE(NULLIF(q3.sumExamWeight, 0), 100) ELSE COALESCE(q1.Nilai, 0) * q1.examWeight / COALESCE(NULLIF(q3.sumExamWeight, 0), 100) END) as hasil 
+                        FROM (
+                            SELECT m.NPM, m.tahun, m.Cpl, m.Jenis, m.Course, m.nilaiSoal, m.Nilai, m.examWeight, m.BobotSoal 
+                            FROM mutus m 
+                            LEFT JOIN tahun_ajaran ta ON m.tahun_ajaran_id = ta.id
+                            JOIN (
+                                SELECT t_sub.NPM, t_sub.Course, t_sub.best_tahun
+                                FROM (
+                                    SELECT m2.NPM, m2.Course, m2.tahun as best_tahun,
+                                           ROW_NUMBER() OVER (
+                                               PARTITION BY m2.NPM, m2.Course 
+                                               ORDER BY SUM(m2.examWeight / 100 * m2.Nilai) DESC, MAX($yearExprQ2Skor) DESC
+                                           ) as rn
+                                    FROM mutus m2
+                                    LEFT JOIN tahun_ajaran ta2 ON m2.tahun_ajaran_id = ta2.id
+                                    WHERE m2.NPM IN ({$npmListStrForSkor}) {$cplConditionSubSkor}
+                                    GROUP BY m2.NPM, m2.Course, m2.tahun, m2.tahun_ajaran_id
+                                ) t_sub
+                                WHERE t_sub.rn = 1
+                            ) t 
+                            ON m.NPM = t.NPM AND m.Course = t.Course AND m.tahun = t.best_tahun 
+                            WHERE m.NPM IN ({$npmListStrForSkor}) {$cplConditionMainSkor}
+                        ) q1 
+                        JOIN (
+                            SELECT NPM, Cpl, Jenis, Course, tahun, SUM(BobotSoal) as BobotJenis 
+                            FROM mutus 
+                            WHERE NPM IN ({$npmListStrForSkor})
+                            GROUP BY NPM, Cpl, Jenis, Course, tahun 
+                        ) q2 
+                        ON q1.NPM = q2.NPM AND q1.tahun = q2.tahun AND q1.Cpl = q2.Cpl AND q1.Course = q2.Course AND q1.Jenis = q2.Jenis 
+                        JOIN (
+                            SELECT NPM, tahun, Cpl, Course, SUM(examWeight) AS sumExamWeight 
+                            FROM (
+                                SELECT DISTINCT NPM, tahun, Cpl, Course, Jenis, examWeight 
+                                FROM mutus 
+                                WHERE NPM IN ({$npmListStrForSkor})
+                            ) AS subquery 
+                            GROUP BY NPM, tahun, Cpl, Course
+                        ) q3 
+                        ON q1.NPM = q3.NPM AND q1.tahun = q3.tahun AND q1.Cpl = q3.Cpl AND q1.Course = q3.Course
+                    ) q4 
+                    GROUP BY NPM, Cpl, Course
+                ) q5 
+                JOIN cpls ON cpls.id = q5.Cpl
+                JOIN prodi ON cpls.id_prodi = prodi.id
+                WHERE prodi.id = :id_prodi
+                GROUP BY q5.NPM, q5.Cpl;
+            ";
+
+            $scoresAngkatanResults = DB::select($querySkorAngkatan, ['id_prodi' => $prodiId]);
+            $scoresByCplCode = [];
+            foreach ($cplResultsAll as $c) {
+                $scoresByCplCode[$c->kode] = [];
+            }
+            foreach ($scoresAngkatanResults as $r) {
+                $val = round((float)$r->hasil, 2);
+                if ($val > 0) {
+                    $scoresByCplCode[$r->kode][] = $val;
+                }
+            }
+            foreach ($cplResultsAll as $c) {
+                $list = $scoresByCplCode[$c->kode] ?? [];
+                $allSkorCplPerAngkatan['min'][$c->kode] = count($list) > 0 ? min($list) : 0;
+                $allSkorCplPerAngkatan['max'][$c->kode] = count($list) > 0 ? max($list) : 0;
+                $allSkorCplPerAngkatan['avg'][$c->kode] = count($list) > 0 ? round(array_sum($list) / count($list), 2) : 0;
+            }
+        }
 
         // Ngisi radar sementara pencapaian cpl yg blm diiinput
         $cplAllTmp = DB::table('cpls')
@@ -1678,6 +1784,7 @@ class VisualisasiController extends Controller
                 'cplResultsAll' => $cplResultsAll,
                 'cplTmp' => $cplTmp,
                 'allCplPerAngkatan' => $allCplPerAngkatan,
+                'allSkorCplPerAngkatan' => $allSkorCplPerAngkatan,
                 'cplPerSoalWithKodeAll' => $cplPerSoalWithKodeAll
             ],
             'showVisualContainer' => true
@@ -2568,7 +2675,8 @@ class VisualisasiController extends Controller
             }
         }
 
-        $allNpm = array_keys($studentMap);
+        $mutuNpmList = $mutuRows->pluck('npm')->filter()->unique()->toArray();
+        $allNpm = !empty($mutuNpmList) ? array_values($mutuNpmList) : array_keys($studentMap);
 
         $persentaseTotalCplCapaianAngkatan = [];
 
@@ -2600,6 +2708,7 @@ class VisualisasiController extends Controller
         $allCplPerAngkatan['count'] = 0;
         $gabunganMkAngkatan = [];
         $persenPerMhs = [];
+        $cohortAngkatanPctCollector = [];
 
         // LOOPING CAPAIAN CPL PER ANGKATAN
         foreach ($allNpm as $npm) {
@@ -2831,8 +2940,11 @@ class VisualisasiController extends Controller
             ->where('mutus.angkatan', $angkatan)
             ->where('mutus.id_prodi', $prodiId)
             ->where('mutus.cpl', $idCplAvgMinInt)
-            ->where('universitas_id', $universitas)
             ->distinct();
+
+        if (!empty($universitas)) {
+            $soalDescQuery->where('mutus.universitas_id', $universitas);
+        }
 
         if (!empty($semestersToFilter)) {
             $soalDescQuery->whereIn('mks.semester', $semestersToFilter);
@@ -3181,6 +3293,7 @@ class VisualisasiController extends Controller
                 ];
 
                 $allCplPerAngkatan['total'][$cpl->kode] += $persenHasil;
+                $cohortAngkatanPctCollector[$cpl->kode][] = round((float)$persenHasil, 2);
                 if ($allCplPerAngkatan['min'][$cpl->kode] >= round($persenHasil, 2)) {
                     $allCplPerAngkatan['min'][$cpl->kode] = round($persenHasil, 2);
                 }
@@ -3195,9 +3308,10 @@ class VisualisasiController extends Controller
         $totalAngkatanCount = max(1, $allCplPerAngkatan['count']);
         foreach ($allCplPerAngkatan['total'] as $cpl => $total) {
             $allCplPerAngkatan['avg_cpl'][$cpl] = round($total / $totalAngkatanCount, 2);
-            if ($allCplPerAngkatan['min'][$cpl] > 100) {
-                $allCplPerAngkatan['min'][$cpl] = 0;
-            }
+            $pctList = $cohortAngkatanPctCollector[$cpl] ?? [];
+            $posList = array_filter($pctList, fn($v) => $v > 0);
+            $allCplPerAngkatan['min'][$cpl] = count($posList) > 0 ? min($posList) : (count($pctList) > 0 ? min($pctList) : 0);
+            $allCplPerAngkatan['max'][$cpl] = count($pctList) > 0 ? max($pctList) : 0;
         }
 
         // Batch yearly ketercapaian (Monotonik: Tetap atau Naik, Tidak Mungkin Turun)
@@ -4269,12 +4383,20 @@ class VisualisasiController extends Controller
         $fakultas = $fakultasId ? Fakultas::find($fakultasId) : null;
         $universitas = $userUniversitasId ? Universitas::find($userUniversitasId) : ($fakultas ? Universitas::find($fakultas->id_universitas) : null);
 
+        $selectedProdiId = $request->input('prodi_id');
+        if (!$selectedProdiId && !empty($fakultasCplData['prodi_stats'])) {
+            $selectedProdiId = $fakultasCplData['prodi_stats'][0]['id'];
+        }
+
         return view('penjamin-mutu.visualisasi.indexVisualisasiProgramStudi', [
             'fakultasCplData' => $fakultasCplData,
             'fakultas' => $fakultas,
             'allFakultas' => $allFakultas,
             'fakultasId' => $fakultasId,
             'universitas' => $universitas,
+            'selectedProdiId' => $selectedProdiId,
+            'prodiList' => $fakultasCplData['prodi_stats'] ?? [],
+            'prodiCplYearlyData' => $extended['prodiCplYearlyData'] ?? [],
             'yearlyProgression' => $extended['yearlyProgression'],
             'availableYears' => $extended['availableYears'],
             'yearlyAverages' => $extended['yearlyAverages'],
@@ -4302,21 +4424,32 @@ class VisualisasiController extends Controller
         $fakultas = $fakultasId ? Fakultas::find($fakultasId) : null;
         $universitas = $userUniversitasId ? Universitas::find($userUniversitasId) : ($fakultas ? Universitas::find($fakultas->id_universitas) : null);
 
-        $selectedProdiId = $request->input('prodi_id');
+        $selectedProdiId = $request->input('prodi_id') ?? $request->input('prodi');
+        if (!$selectedProdiId && !empty($fakultasCplData['prodi_stats'])) {
+            $selectedProdiId = $fakultasCplData['prodi_stats'][0]['id'];
+        }
+
         $selectedProdi = null;
         if ($selectedProdiId && $fakultasCplData && !empty($fakultasCplData['prodi_stats'])) {
             $selectedProdi = collect($fakultasCplData['prodi_stats'])->firstWhere('id', (int)$selectedProdiId);
         }
 
+        $selectedProdiCplData = ($selectedProdiId && isset($extended['prodiCplYearlyData'][$selectedProdiId]))
+            ? $extended['prodiCplYearlyData'][$selectedProdiId]
+            : null;
+
         $chartImg = $request->input('chartImg');
         $trendChartImg = $request->input('trendChartImg');
         $radarChartImg = $request->input('radarChartImg');
+        $radarChartCapaianCplImg = $request->input('radarChartCapaianCplImg');
 
         $data = [
             'fakultasCplData' => $fakultasCplData,
             'fakultas' => $fakultas,
             'universitas' => $universitas,
             'selectedProdi' => $selectedProdi,
+            'selectedProdiCplData' => $selectedProdiCplData,
+            'prodiCplYearlyData' => $extended['prodiCplYearlyData'] ?? [],
             'yearlyProgression' => $extended['yearlyProgression'],
             'availableYears' => $extended['availableYears'],
             'yearlyAverages' => $extended['yearlyAverages'],
@@ -4325,6 +4458,7 @@ class VisualisasiController extends Controller
             'chartImg' => $chartImg,
             'trendChartImg' => $trendChartImg,
             'radarChartImg' => $radarChartImg,
+            'radarChartCapaianCplImg' => $radarChartCapaianCplImg,
             'tanggalCetak' => date('d F Y')
         ];
 
@@ -4343,6 +4477,7 @@ class VisualisasiController extends Controller
     {
         if (!$fakultasCplData || empty($fakultasCplData['prodi_stats'])) {
             return [
+                'prodiCplYearlyData' => [],
                 'yearlyProgression' => [],
                 'availableYears' => [],
                 'yearlyAverages' => [],
@@ -4386,7 +4521,55 @@ class VisualisasiController extends Controller
             $availableYears = [(string)$startYear, (string)($startYear + 1), (string)($startYear + 2)];
         }
 
-        // 2. Yearly Progression per Prodi (Kumulatif & Monotonik Tetap/Meningkat Seiring Berjalannya Tahun Perkuliahan)
+        // Initialize Prodi CPL Yearly Data Structure
+        $prodiCplYearlyData = [];
+        foreach ($fakultasCplData['prodi_stats'] as $prodi) {
+            $pId = $prodi['id'];
+            $prodiCplYearlyData[$pId] = [
+                'id' => $pId,
+                'nama' => $prodi['nama'],
+                'jenjang' => $prodi['jenjang'],
+                'is_aptikom' => $prodi['is_aptikom'],
+                'total_mhs' => $prodi['total_mhs'],
+                'total_cpl' => $prodi['total_cpl'],
+                'avg_skor_cpl' => (float)$prodi['avg_skor_cpl'],
+                'avg_capaian_cpl' => (float)$prodi['avg_capaian_cpl'],
+                'cpl_scores' => [],
+                'cpl_capaians' => [],
+                'cpl_meta' => [],
+                'yearly_avg_skor' => array_fill_keys($availableYears, 0.0),
+                'yearly_avg_capaian' => array_fill_keys($availableYears, 0.0),
+            ];
+
+            if (!empty($prodi['cpl_details'])) {
+                foreach ($prodi['cpl_details'] as $c) {
+                    $cCode = $c['kode'];
+                    $prodiCplYearlyData[$pId]['cpl_scores'][$cCode] = array_fill_keys($availableYears, 0.0);
+                    $prodiCplYearlyData[$pId]['cpl_capaians'][$cCode] = array_fill_keys($availableYears, 0.0);
+                    $prodiCplYearlyData[$pId]['cpl_meta'][$cCode] = [
+                        'id' => $c['id'] ?? null,
+                        'kode' => $cCode,
+                        'aspek' => $c['aspek'] ?? '-',
+                        'judul' => $c['judul'] ?? ($c['deskripsi'] ?? '-'),
+                        'target_skor' => (float)($c['target_skor'] ?? 65),
+                        'overall_skor' => (float)$c['avg_skor'],
+                        'overall_capaian' => (float)$c['avg_capaian'],
+                        'min_skor' => (float)($c['min_skor'] ?? 0.0),
+                        'max_skor' => (float)($c['max_skor'] ?? 0.0),
+                        'min_capaian' => (float)($c['min_capaian'] ?? 0.0),
+                        'max_capaian' => (float)($c['max_capaian'] ?? 0.0),
+                        'yearly_min_skor' => array_fill_keys($availableYears, 0.0),
+                        'yearly_max_skor' => array_fill_keys($availableYears, 0.0),
+                        'yearly_min_capaian' => array_fill_keys($availableYears, 0.0),
+                        'yearly_max_capaian' => array_fill_keys($availableYears, 0.0),
+                        'status' => $c['status'] ?? ($c['avg_skor'] >= 65 ? 'Tercapai' : 'Belum Tercapai'),
+                    ];
+                }
+            }
+        }
+
+        // 2. Yearly Progression per Prodi & per CPL
+        $cumDataCache = [];
         $yearlyProgression = [];
         $yearlyTotals = array_fill_keys($availableYears, ['sum_skor' => 0, 'count_skor' => 0, 'sum_capaian' => 0, 'count_capaian' => 0]);
 
@@ -4412,8 +4595,12 @@ class VisualisasiController extends Controller
                 $offset = max(0, (int)$yr - (int)$pMinAngkatan);
                 $maxSem = min(8, $offset * 2 + 1);
                 $cumSemesters = range(1, $maxSem);
+                $cacheKey = implode('-', $cumSemesters);
 
-                $yrData = $dashboardController->getFakultasCplAnalytics($fakultasId, 'all', $cumSemesters);
+                if (!isset($cumDataCache[$cacheKey])) {
+                    $cumDataCache[$cacheKey] = $dashboardController->getFakultasCplAnalytics($fakultasId, 'all', $cumSemesters);
+                }
+                $yrData = $cumDataCache[$cacheKey];
                 $prodiYr = collect($yrData['prodi_stats'])->firstWhere('id', $pId);
                 
                 $calcSkor = $prodiYr ? (float)$prodiYr['avg_skor_cpl'] : 0.0;
@@ -4425,6 +4612,25 @@ class VisualisasiController extends Controller
                 // Ketercapaian CPL (%) tetap bersifat monotonik (tetap atau meningkat)
                 $runningMaxCapaian = max($runningMaxCapaian, $calcCapaian);
                 $pCapaians[$yr] = $runningMaxCapaian;
+
+                $prodiCplYearlyData[$pId]['yearly_avg_skor'][$yr] = $calcSkor;
+                $prodiCplYearlyData[$pId]['yearly_avg_capaian'][$yr] = $runningMaxCapaian;
+
+                if ($prodiYr && !empty($prodiYr['cpl_details'])) {
+                    foreach ($prodiYr['cpl_details'] as $cDetail) {
+                        $cCode = $cDetail['kode'];
+                        if (isset($prodiCplYearlyData[$pId]['cpl_scores'][$cCode])) {
+                            $prodiCplYearlyData[$pId]['cpl_scores'][$cCode][$yr] = (float)$cDetail['avg_skor'];
+                            $prodiCplYearlyData[$pId]['cpl_capaians'][$cCode][$yr] = (float)$cDetail['avg_capaian'];
+                            if (isset($prodiCplYearlyData[$pId]['cpl_meta'][$cCode])) {
+                                $prodiCplYearlyData[$pId]['cpl_meta'][$cCode]['yearly_min_skor'][$yr] = (float)($cDetail['min_skor'] ?? 0.0);
+                                $prodiCplYearlyData[$pId]['cpl_meta'][$cCode]['yearly_max_skor'][$yr] = (float)($cDetail['max_skor'] ?? 0.0);
+                                $prodiCplYearlyData[$pId]['cpl_meta'][$cCode]['yearly_min_capaian'][$yr] = (float)($cDetail['min_capaian'] ?? 0.0);
+                                $prodiCplYearlyData[$pId]['cpl_meta'][$cCode]['yearly_max_capaian'][$yr] = (float)($cDetail['max_capaian'] ?? 0.0);
+                            }
+                        }
+                    }
+                }
 
                 if ($calcSkor > 0) {
                     $yearlyTotals[$yr]['sum_skor'] += $calcSkor;
@@ -4532,6 +4738,7 @@ class VisualisasiController extends Controller
         }
 
         return [
+            'prodiCplYearlyData' => $prodiCplYearlyData,
             'yearlyProgression' => $yearlyProgression,
             'availableYears' => $availableYears,
             'yearlyAverages' => $yearlyAverages,
@@ -4563,10 +4770,19 @@ class VisualisasiController extends Controller
         $universitas = $universitasId ? Universitas::find($universitasId) : null;
         $extended = $this->getExtendedUniversitasAnalytics($universitasId);
 
+        $selectedFakultasId = $request->input('fakultas_id') ?? $request->input('fakultas');
+        if (!$selectedFakultasId && !empty($extended['fakultasStats'])) {
+            $selectedFakultasId = $extended['fakultasStats'][0]['id'];
+        }
+
         return view('penjamin-mutu.visualisasi.indexVisualisasiFakultas', [
             'universitasCplData' => $extended['universitasCplData'],
             'universitas' => $universitas,
             'universitasId' => $universitasId,
+            'fakultasList' => $extended['fakultasStats'],
+            'allFakultas' => $extended['fakultasStats'],
+            'fakultasCplYearlyData' => $extended['fakultasCplYearlyData'],
+            'selectedFakultasId' => $selectedFakultasId,
             'yearlyProgression' => $extended['yearlyProgression'],
             'availableYears' => $extended['availableYears'],
             'yearlyAverages' => $extended['yearlyAverages'],
@@ -4596,24 +4812,35 @@ class VisualisasiController extends Controller
         $universitas = $universitasId ? Universitas::find($universitasId) : null;
         $extended = $this->getExtendedUniversitasAnalytics($universitasId);
 
-        $selectedFakultasId = $request->input('fakultas_id');
-        $selectedFakultas = null;
-        if ($selectedFakultasId && !empty($extended['universitasCplData']['fakultas_stats'])) {
-            $selectedFakultas = collect($extended['universitasCplData']['fakultas_stats'])->firstWhere('id', (int)$selectedFakultasId);
+        $selectedFakultasId = $request->input('fakultas_id') ?? $request->input('fakultas');
+        if (!$selectedFakultasId && !empty($extended['fakultasStats'])) {
+            $selectedFakultasId = $extended['fakultasStats'][0]['id'];
         }
 
-        $chartImg = $request->input('chartImg');
-        $trendChartImg = $request->input('trendChartImg');
+        $selectedFakultas = null;
+        if ($selectedFakultasId && !empty($extended['fakultasStats'])) {
+            $selectedFakultas = collect($extended['fakultasStats'])->firstWhere('id', (int)$selectedFakultasId);
+        }
+
+        $selectedFakultasCplData = ($selectedFakultasId && isset($extended['fakultasCplYearlyData'][$selectedFakultasId]))
+            ? $extended['fakultasCplYearlyData'][$selectedFakultasId]
+            : null;
+
+        $radarChartImg = $request->input('radarChartImg');
+        $radarChartCapaianCplImg = $request->input('radarChartCapaianCplImg');
 
         $data = [
             'universitasCplData' => $extended['universitasCplData'],
             'universitas' => $universitas,
+            'fakultas' => $selectedFakultas ? Fakultas::find($selectedFakultas['id']) : null,
             'selectedFakultas' => $selectedFakultas,
+            'selectedFakultasCplData' => $selectedFakultasCplData,
+            'fakultasCplYearlyData' => $extended['fakultasCplYearlyData'],
             'yearlyProgression' => $extended['yearlyProgression'],
             'availableYears' => $extended['availableYears'],
             'yearlyAverages' => $extended['yearlyAverages'],
-            'chartImg' => $chartImg,
-            'trendChartImg' => $trendChartImg,
+            'radarChartImg' => $radarChartImg,
+            'radarChartCapaianCplImg' => $radarChartCapaianCplImg,
             'tanggalCetak' => date('d F Y')
         ];
 
@@ -4622,7 +4849,7 @@ class VisualisasiController extends Controller
 
         $title = $selectedFakultas 
             ? "Laporan Evaluasi CPL - {$selectedFakultas['nama']}"
-            : "Laporan Evaluasi CPL Universitas - " . ($universitas->nama ?? 'Universitas');
+            : "Laporan Evaluasi CPL Fakultas - " . ($universitas->nama ?? 'Universitas');
 
         $safeTitle = preg_replace('~[\\\\/:*?"<>|]~', '-', $title);
         return $pdf->download("{$safeTitle}.pdf");
@@ -4634,6 +4861,8 @@ class VisualisasiController extends Controller
         if (!$universitas) {
             return [
                 'universitasCplData' => null,
+                'fakultasStats' => [],
+                'fakultasCplYearlyData' => [],
                 'yearlyProgression' => [],
                 'availableYears' => [],
                 'yearlyAverages' => []
@@ -4675,8 +4904,9 @@ class VisualisasiController extends Controller
             $availableYears = [(string)$startYear, (string)($startYear + 1), (string)($startYear + 2)];
         }
 
-        // 2. Fakultas stats & yearly progression
+        // 2. Fakultas stats & yearly progression & CPL analytics per fakultas
         $allFakultasStats = [];
+        $fakultasCplYearlyData = [];
         $yearlyProgression = [];
         $yearlyTotals = array_fill_keys($availableYears, ['sum_skor' => 0, 'count_skor' => 0, 'sum_capaian' => 0, 'count_capaian' => 0]);
 
@@ -4689,18 +4919,17 @@ class VisualisasiController extends Controller
         $countUnivCapaian = 0;
 
         foreach ($fakultasList as $fak) {
+            $fakProdiIds = Prodi::where('id_fakultas', $fak->id)->pluck('id')->toArray();
             $fakData = $dashboardController->getFakultasCplAnalytics($fak->id, 'all', 'all');
             $pStats = $fakData['prodi_stats'] ?? [];
             
             $fakSkor = (float)($fakData['summary']['faculty_avg_skor'] ?? 0);
             $fakCapaian = (float)($fakData['summary']['faculty_avg_capaian'] ?? 0);
             $fakMhs = (int)($fakData['summary']['total_mhs_evaluated'] ?? 0);
-            $fakCpl = (int)($fakData['summary']['total_cpl_count'] ?? 0);
             $prodiCount = count($pStats);
 
             $totalUnivMhs += $fakMhs;
             $totalUnivProdi += $prodiCount;
-            $totalUnivCpl += $fakCpl;
 
             if ($fakSkor > 0) {
                 $sumUnivSkor += $fakSkor;
@@ -4711,48 +4940,173 @@ class VisualisasiController extends Controller
                 $countUnivCapaian++;
             }
 
-            // Yearly progression per fakultas (berdasarkan angkatan tertua fakultas masing-masing)
-            $fScores = [];
-            $fCapaians = [];
+            // A. CPL metadata across all prodis in this faculty
+            $fCplMeta = [];
+            foreach ($pStats as $p) {
+                foreach ($p['cpl_details'] ?? [] as $c) {
+                    $code = $c['kode'];
+                    if (!isset($fCplMeta[$code])) {
+                        $fCplMeta[$code] = [
+                            'kode' => $code,
+                            'aspek' => $c['aspek'] ?? '-',
+                            'judul' => $c['judul'] ?? ($c['deskripsi'] ?? $code),
+                            'deskripsi' => $c['deskripsi'] ?? ($c['judul'] ?? $code),
+                            'target_skor' => (float)($c['target_skor'] ?? 65),
+                            'scores_sum' => 0,
+                            'scores_count' => 0,
+                            'capaian_sum' => 0,
+                            'capaian_count' => 0,
+                        ];
+                    }
+                    if (($c['avg_skor'] ?? 0) > 0) {
+                        $fCplMeta[$code]['scores_sum'] += (float)$c['avg_skor'];
+                        $fCplMeta[$code]['scores_count']++;
+                    }
+                    if (($c['avg_capaian'] ?? 0) > 0) {
+                        $fCplMeta[$code]['capaian_sum'] += (float)$c['avg_capaian'];
+                        $fCplMeta[$code]['capaian_count']++;
+                    }
+                    if (isset($c['min_skor'])) {
+                        $fCplMeta[$code]['min_skor'] = isset($fCplMeta[$code]['min_skor']) ? min($fCplMeta[$code]['min_skor'], (float)$c['min_skor']) : (float)$c['min_skor'];
+                    }
+                    if (isset($c['max_skor'])) {
+                        $fCplMeta[$code]['max_skor'] = isset($fCplMeta[$code]['max_skor']) ? max($fCplMeta[$code]['max_skor'], (float)$c['max_skor']) : (float)$c['max_skor'];
+                    }
+                    if (isset($c['min_capaian'])) {
+                        $fCplMeta[$code]['min_capaian'] = isset($fCplMeta[$code]['min_capaian']) ? min($fCplMeta[$code]['min_capaian'], (float)$c['min_capaian']) : (float)$c['min_capaian'];
+                    }
+                    if (isset($c['max_capaian'])) {
+                        $fCplMeta[$code]['max_capaian'] = isset($fCplMeta[$code]['max_capaian']) ? max($fCplMeta[$code]['max_capaian'], (float)$c['max_capaian']) : (float)$c['max_capaian'];
+                    }
+                }
+            }
+
+            ksort($fCplMeta, SORT_NATURAL);
+
+            foreach ($fCplMeta as $code => &$meta) {
+                $meta['overall_skor'] = $meta['scores_count'] > 0 ? round($meta['scores_sum'] / $meta['scores_count'], 1) : 0.0;
+                $meta['overall_capaian'] = $meta['capaian_count'] > 0 ? round($meta['capaian_sum'] / $meta['capaian_count'], 1) : 0.0;
+                $meta['min_skor'] = (float)($meta['min_skor'] ?? 0.0);
+                $meta['max_skor'] = (float)($meta['max_skor'] ?? 0.0);
+                $meta['min_capaian'] = (float)($meta['min_capaian'] ?? 0.0);
+                $meta['max_capaian'] = (float)($meta['max_capaian'] ?? 0.0);
+                $meta['status'] = $meta['overall_skor'] >= 65.0 ? 'Standar Kelulusan Tercapai' : ($meta['overall_skor'] > 0 ? 'Perlu Peningkatan' : 'Belum Ada Nilai');
+            }
+            unset($meta);
+
+            $fakCplCount = count($fCplMeta);
+            $totalUnivCpl += $fakCplCount;
+
+            // B. Yearly progression per CPL & faculty total
+            $fCplScores = [];
+            $fCplCapaians = [];
+            $runningMaxCapaianPerCpl = [];
+            foreach (array_keys($fCplMeta) as $k) {
+                $fCplScores[$k] = array_fill_keys($availableYears, 0.0);
+                $fCplCapaians[$k] = array_fill_keys($availableYears, 0.0);
+                $runningMaxCapaianPerCpl[$k] = 0.0;
+            }
+
+            $fScores = array_fill_keys($availableYears, 0.0);
+            $fCapaians = array_fill_keys($availableYears, 0.0);
             $runningMaxCapaian = 0.0;
 
-            $fakProdiIds = Prodi::where('id_fakultas', $fak->id)->pluck('id')->toArray();
-            $fakMinAngkatan = DB::table('mahasiswa')
-                ->whereIn('id_prodi', $fakProdiIds)
-                ->whereNotNull('angkatan')
-                ->where('angkatan', '>=', 2018)
-                ->min('angkatan');
+            if (!empty($fakProdiIds)) {
+                $fakMinAngkatan = DB::table('mahasiswa')
+                    ->whereIn('id_prodi', $fakProdiIds)
+                    ->whereNotNull('angkatan')
+                    ->where('angkatan', '>=', 2018)
+                    ->min('angkatan');
 
+                $semDataCache = [];
+
+                foreach ($availableYears as $yr) {
+                    if (!$fakMinAngkatan || (int)$yr < (int)$fakMinAngkatan) {
+                        continue;
+                    }
+
+                    $offset = max(0, (int)$yr - (int)$fakMinAngkatan);
+                    $maxSem = min(8, $offset * 2 + 1);
+
+                    if (!isset($semDataCache[$maxSem])) {
+                        $cumSemesters = range(1, $maxSem);
+                        $semDataCache[$maxSem] = $dashboardController->getFakultasCplAnalytics($fak->id, 'all', $cumSemesters);
+                    }
+
+                    $yrData = $semDataCache[$maxSem];
+                    $calcSkor = (float)($yrData['summary']['faculty_avg_skor'] ?? 0);
+                    $calcCapaian = (float)($yrData['summary']['faculty_avg_capaian'] ?? 0);
+
+                    $fScores[$yr] = $calcSkor;
+                    $runningMaxCapaian = max($runningMaxCapaian, $calcCapaian);
+                    $fCapaians[$yr] = $runningMaxCapaian;
+
+                    $yrProdiStats = $yrData['prodi_stats'] ?? [];
+                    $cplYearSums = [];
+                    foreach ($yrProdiStats as $p) {
+                        foreach ($p['cpl_details'] ?? [] as $c) {
+                            $code = $c['kode'];
+                            if (!isset($cplYearSums[$code])) {
+                                $cplYearSums[$code] = ['skor_sum' => 0, 'skor_cnt' => 0, 'cap_sum' => 0, 'cap_cnt' => 0];
+                            }
+                            if (($c['avg_skor'] ?? 0) > 0) {
+                                $cplYearSums[$code]['skor_sum'] += (float)$c['avg_skor'];
+                                $cplYearSums[$code]['skor_cnt']++;
+                            }
+                            if (($c['avg_capaian'] ?? 0) > 0) {
+                                $cplYearSums[$code]['cap_sum'] += (float)$c['avg_capaian'];
+                                $cplYearSums[$code]['cap_cnt']++;
+                            }
+                        }
+                    }
+
+                    foreach (array_keys($fCplMeta) as $code) {
+                        $skor = 0.0;
+                        $capaian = 0.0;
+                        if (isset($cplYearSums[$code])) {
+                            if ($cplYearSums[$code]['skor_cnt'] > 0) {
+                                $skor = round($cplYearSums[$code]['skor_sum'] / $cplYearSums[$code]['skor_cnt'], 1);
+                            }
+                            if ($cplYearSums[$code]['cap_cnt'] > 0) {
+                                $capaian = round($cplYearSums[$code]['cap_sum'] / $cplYearSums[$code]['cap_cnt'], 1);
+                            }
+                        }
+                        $fCplScores[$code][$yr] = $skor;
+                        $runningMaxCapaianPerCpl[$code] = max($runningMaxCapaianPerCpl[$code], $capaian);
+                        $fCplCapaians[$code][$yr] = $runningMaxCapaianPerCpl[$code];
+                    }
+
+                    if ($calcSkor > 0) {
+                        $yearlyTotals[$yr]['sum_skor'] += $calcSkor;
+                        $yearlyTotals[$yr]['count_skor']++;
+                    }
+                    if ($runningMaxCapaian > 0) {
+                        $yearlyTotals[$yr]['sum_capaian'] += $runningMaxCapaian;
+                        $yearlyTotals[$yr]['count_capaian']++;
+                    }
+                }
+            }
+
+            // C. Yearly average per faculty
+            $fYearlyAvgSkor = [];
+            $fYearlyAvgCapaian = [];
             foreach ($availableYears as $yr) {
-                if (!$fakMinAngkatan || (int)$yr < (int)$fakMinAngkatan) {
-                    $fScores[$yr] = 0.0;
-                    $fCapaians[$yr] = 0.0;
-                    continue;
+                $skorSum = 0; $skorCnt = 0;
+                $capSum = 0; $capCnt = 0;
+                foreach (array_keys($fCplMeta) as $code) {
+                    $valSkor = $fCplScores[$code][$yr] ?? 0;
+                    if ($valSkor > 0) {
+                        $skorSum += $valSkor;
+                        $skorCnt++;
+                    }
+                    $valCap = $fCplCapaians[$code][$yr] ?? 0;
+                    if ($valCap > 0) {
+                        $capSum += $valCap;
+                        $capCnt++;
+                    }
                 }
-
-                $offset = max(0, (int)$yr - (int)$fakMinAngkatan);
-                $maxSem = min(8, $offset * 2 + 1);
-                $cumSemesters = range(1, $maxSem);
-
-                $yrData = $dashboardController->getFakultasCplAnalytics($fak->id, 'all', $cumSemesters);
-                $calcSkor = (float)($yrData['summary']['faculty_avg_skor'] ?? 0);
-                $calcCapaian = (float)($yrData['summary']['faculty_avg_capaian'] ?? 0);
-
-                // Skor CPL kumulatif dapat naik atau turun secara dinamis
-                $fScores[$yr] = $calcSkor;
-
-                // Ketercapaian CPL (%) tetap bersifat monotonik (tetap atau meningkat)
-                $runningMaxCapaian = max($runningMaxCapaian, $calcCapaian);
-                $fCapaians[$yr] = $runningMaxCapaian;
-
-                if ($calcSkor > 0) {
-                    $yearlyTotals[$yr]['sum_skor'] += $calcSkor;
-                    $yearlyTotals[$yr]['count_skor']++;
-                }
-                if ($runningMaxCapaian > 0) {
-                    $yearlyTotals[$yr]['sum_capaian'] += $runningMaxCapaian;
-                    $yearlyTotals[$yr]['count_capaian']++;
-                }
+                $fYearlyAvgSkor[$yr] = $skorCnt > 0 ? round($skorSum / $skorCnt, 1) : 0.0;
+                $fYearlyAvgCapaian[$yr] = $capCnt > 0 ? round($capSum / $capCnt, 1) : 0.0;
             }
 
             $allFakultasStats[] = [
@@ -4760,11 +5114,26 @@ class VisualisasiController extends Controller
                 'nama' => $fak->nama,
                 'total_prodi' => $prodiCount,
                 'total_mhs' => $fakMhs,
-                'total_cpl' => $fakCpl,
+                'total_cpl' => $fakCplCount,
                 'avg_skor_cpl' => $fakSkor,
                 'avg_capaian_cpl' => $fakCapaian,
                 'prodi_stats' => $pStats,
                 'fakultas_data' => $fakData
+            ];
+
+            $fakultasCplYearlyData[$fak->id] = [
+                'id' => $fak->id,
+                'nama' => $fak->nama,
+                'total_prodi' => $prodiCount,
+                'total_mhs' => $fakMhs,
+                'total_cpl' => $fakCplCount,
+                'avg_skor_cpl' => $fakSkor,
+                'avg_capaian_cpl' => $fakCapaian,
+                'cpl_scores' => $fCplScores,
+                'cpl_capaians' => $fCplCapaians,
+                'cpl_meta' => $fCplMeta,
+                'yearly_avg_skor' => $fYearlyAvgSkor,
+                'yearly_avg_capaian' => $fYearlyAvgCapaian
             ];
 
             $yearlyProgression[] = [
@@ -4809,6 +5178,8 @@ class VisualisasiController extends Controller
 
         return [
             'universitasCplData' => $universitasCplData,
+            'fakultasStats' => $allFakultasStats,
+            'fakultasCplYearlyData' => $fakultasCplYearlyData,
             'yearlyProgression' => $yearlyProgression,
             'availableYears' => $availableYears,
             'yearlyAverages' => $yearlyAverages
