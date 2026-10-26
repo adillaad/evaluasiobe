@@ -6,13 +6,77 @@
 @endphp
 
 <style>
+    .select2-container--default .select2-selection--single {
+        height: 42px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        padding: 6px 12px !important;
+        background-color: #ffffff !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 28px !important;
+        color: #1e293b !important;
+        font-size: 13.5px !important;
+        padding-left: 0 !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px !important;
+        right: 10px !important;
+    }
+    .select2-container--default .select2-selection--multiple {
+        min-height: 42px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        padding: 4px 8px !important;
+        background-color: #ffffff !important;
+    }
     .select2-container--default .select2-selection--multiple .select2-selection__choice {
         background-color: #e9ecef;
         border: 1px solid #ced4da;
         color: #495057;
         font-weight: 600;
         font-size: 0.85rem;
+        border-radius: 6px !important;
+        padding: 3px 8px !important;
+        margin-top: 4px !important;
     }
+    .select2-dropdown {
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+        z-index: 9999 !important;
+        overflow: hidden !important;
+    }
+    .select2-search--dropdown {
+        padding: 8px !important;
+    }
+    .select2-search--dropdown .select2-search__field {
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px !important;
+        padding: 7px 12px !important;
+        font-size: 13px !important;
+        width: 100% !important;
+    }
+    .select2-search--dropdown .select2-search__field:focus {
+        border-color: {{ $isAptikom ? '#006199' : '#2664F5' }} !important;
+        outline: none !important;
+        box-shadow: 0 0 0 2px {{ $isAptikom ? 'rgba(0, 97, 153, 0.15)' : 'rgba(38, 100, 245, 0.15)' }} !important;
+    }
+    .select2-results__option {
+        padding: 8px 12px !important;
+        font-size: 13.5px !important;
+    }
+    @if ($isAptikom)
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #006199 !important;
+            color: #ffffff !important;
+        }
+    @else
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #2664F5 !important;
+            color: #ffffff !important;
+        }
+    @endif
     .btn-light, .btn-secondary {
         background-color: #e2e8f0 !important;
         border: 1px solid #cbd5e1 !important;
@@ -127,8 +191,8 @@
                 {{-- Bagian Mata Kuliah --}}
                 <div class="mb-4">
                     <label for="mataKuliah" class="form-label">Pilih Mata Kuliah <span class="text-danger">*</span></label>
-                    <select id="mataKuliah" name="kode_mk" class="form-select form-select-sm" required>
-                        <option value="" selected disabled>-- Pilih Mata Kuliah --</option>
+                    <select id="mataKuliah" name="kode_mk" class="js-example-basic-single w-100" required>
+                        <option value="">-- Pilih Mata Kuliah --</option>
                         @foreach ($mks as $mk)
                             <option value="{{$mk->kode}}">{{$mk->kode}} - {{$mk->nama}}</option>
                         @endforeach
@@ -138,7 +202,7 @@
                 {{-- Bagian Pilih CPL (Multiple) --}}
                 <div class="mb-4">
                     <label for="id_cpl" class="form-label">Pilih CPL Prodi <span class="text-danger">*</span></label>
-                    <select name="id_cpl[]" id="id_cpl" class="js-example-basic-multiple form-select form-select-sm" multiple="multiple" required>
+                    <select name="id_cpl[]" id="id_cpl" class="js-example-basic-multiple w-100" multiple="multiple" required>
                         @foreach ($cpls as $cpl)
                             <option value="{{$cpl->id}}">
                                 {{$cpl->kurikulum->tahun ?? '-'}} - {{$cpl->kode}} - {{ Str::limit($cpl->judul, 80) }}
@@ -235,6 +299,21 @@
         <script src="{{ asset('/assets/template/js/select2.js')}}"></script>
         <script>
             $(document).ready(function() {
+                if ($('#mataKuliah').length) {
+                    $('#mataKuliah').select2({
+                        placeholder: "-- Pilih Mata Kuliah --",
+                        allowClear: true,
+                        width: '100%'
+                    });
+                }
+                if ($('#id_cpl').length) {
+                    $('#id_cpl').select2({
+                        placeholder: "-- Pilih CPL Prodi --",
+                        allowClear: true,
+                        width: '100%'
+                    });
+                }
+
                 var i = 0;
                 $("#dynamic-ar-sik").click(function() {
                     ++i;

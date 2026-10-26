@@ -209,7 +209,7 @@ class CPMKcontroller extends Controller
             ->join('kurikulums', 'cpls.id_kurikulum', '=', 'kurikulums.id')
             ->whereNotNull('cpmks.cpl_id')
             ->select('cpmks.*')
-            ->with(['subCpmks', 'cpl.kurikulum', 'prodi.fakultas']);
+            ->with(['subCpmks', 'cpl.kurikulum', 'prodi.fakultas', 'mks']);
 
         // Logika filter berdasarkan peran pengguna
         if ($userOtoritas === 'Admin Universitas') {

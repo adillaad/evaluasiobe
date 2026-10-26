@@ -108,6 +108,32 @@
         white-space: nowrap !important;
         word-break: keep-all !important;
     }
+    .badge-mk-pill {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 4px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        transition: all 0.15s ease;
+    }
+    .badge-mk-pill:hover {
+        background-color: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+    .badge-mk-code {
+        font-weight: 700;
+        font-size: 11px;
+        color: {{ $isAptikom ? '#006199' : '#2664F5' }};
+        white-space: nowrap;
+    }
+    .badge-mk-name {
+        font-size: 11.5px;
+        color: #334155;
+        line-height: 1.3;
+        font-weight: 500;
+    }
 
     @if ($isAptikom)
         /* ── APTIKOM Theme (#006199 Accent) ── */
@@ -250,6 +276,7 @@
                             <th style="min-width: 50px;" class="text-center cell-nowrap">No</th>
                             <th style="min-width: 110px;" class="text-center cell-nowrap">Kode CPL</th>
                             <th style="min-width: 120px;" class="text-center cell-nowrap">Kode CPMK</th>
+                            <th style="min-width: 180px;">Mata Kuliah</th>
                             <th style="min-width: 250px;">Rincian CPMK</th>
                             <th style="min-width: 140px;" class="text-center cell-nowrap">Kode Sub</th>
                             <th style="min-width: 250px;">Uraian Sub-CPMK</th>
@@ -273,6 +300,7 @@
                                 $cplKode = $cpmk->cpl->kode ?? '-';
                                 $tahunKurikulum = $cpmk->cpl->kurikulum->tahun ?? '-';
                                 $subs = $cpmk->subCpmks->sortBy('kode')->values();
+                                $cpmkMks = $cpmk->mks ? $cpmk->mks->unique('kode')->sortBy('kode') : collect();
                             @endphp
 
                             @if ($subs->count() > 0)
@@ -283,6 +311,20 @@
                                             <span class="badge-cpl-kode">{{ $cplKode }}</span>
                                         </td>
                                         <td class="text-center align-middle fw-bold text-primary cell-nowrap">{{ $cpmk->kode }}</td>
+                                        <td class="align-middle" style="min-width: 180px;">
+                                            @if ($cpmkMks->isNotEmpty())
+                                                <div class="d-flex flex-column gap-1">
+                                                    @foreach ($cpmkMks as $mk)
+                                                        <div class="badge-mk-pill">
+                                                            <span class="badge-mk-code">[{{ $mk->kode }}]</span>
+                                                            <span class="badge-mk-name">{{ $mk->nama }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <span class="text-muted fst-italic small">- Belum dipetakan -</span>
+                                            @endif
+                                        </td>
                                         <td class="align-middle" style="white-space: normal; word-break: break-word;">
                                             {{ $cpmk->judul ?? '-' }}
                                         </td>
@@ -334,6 +376,20 @@
                                         <span class="badge-cpl-kode">{{ $cplKode }}</span>
                                     </td>
                                     <td class="text-center align-middle fw-bold text-primary cell-nowrap">{{ $cpmk->kode }}</td>
+                                    <td class="align-middle" style="min-width: 180px;">
+                                        @if ($cpmkMks->isNotEmpty())
+                                            <div class="d-flex flex-column gap-1">
+                                                @foreach ($cpmkMks as $mk)
+                                                    <div class="badge-mk-pill">
+                                                        <span class="badge-mk-code">[{{ $mk->kode }}]</span>
+                                                        <span class="badge-mk-name">{{ $mk->nama }}</span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <span class="text-muted fst-italic small">- Belum dipetakan -</span>
+                                        @endif
+                                    </td>
                                     <td class="align-middle" style="white-space: normal; word-break: break-word;">
                                         {{ $cpmk->judul ?? '-' }}
                                     </td>
@@ -378,7 +434,7 @@
                             @endif
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center text-muted py-4">Data CPMK tidak ditemukan.</td>
+                                <td colspan="11" class="text-center text-muted py-4">Data CPMK tidak ditemukan.</td>
                             </tr>
                         @endforelse
                     </tbody>
