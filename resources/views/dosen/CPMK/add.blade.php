@@ -1,6 +1,89 @@
 @extends('dosen.template')
 @section('content')
 
+@php
+    $isAptikom = auth()->check() && auth()->user()->prodi ? (bool) auth()->user()->prodi->is_aptikom : true;
+@endphp
+
+<style>
+    /* Styling Select2 agar Rapi & Konsisten dengan Elemen Form Lainnya */
+    .select2-container {
+        font-family: 'Poppins', sans-serif !important;
+    }
+    .select2-container--default .select2-selection--single {
+        height: 38px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px !important;
+        padding: 5px 12px !important;
+        background-color: #ffffff !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 26px !important;
+        color: #1e293b !important;
+        font-size: 13.5px !important;
+        font-family: 'Poppins', sans-serif !important;
+        padding-left: 0 !important;
+        padding-right: 20px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        top: 1px !important;
+        right: 8px !important;
+    }
+    .select2-container--default.select2-container--disabled .select2-selection--single {
+        background-color: #f8fafc !important;
+        border-color: #e2e8f0 !important;
+        cursor: not-allowed !important;
+    }
+    .select2-container--default.select2-container--disabled .select2-selection--single .select2-selection__rendered {
+        color: #94a3b8 !important;
+    }
+    .select2-dropdown {
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08) !important;
+        z-index: 9999 !important;
+        font-family: 'Poppins', sans-serif !important;
+        overflow: hidden !important;
+    }
+    .select2-search--dropdown {
+        padding: 6px 8px !important;
+    }
+    .select2-search--dropdown .select2-search__field {
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 5px !important;
+        padding: 6px 10px !important;
+        font-size: 13px !important;
+        font-family: 'Poppins', sans-serif !important;
+        height: 34px !important;
+        width: 100% !important;
+    }
+    .select2-search--dropdown .select2-search__field:focus {
+        border-color: {{ $isAptikom ? '#006199' : '#2664F5' }} !important;
+        outline: none !important;
+        box-shadow: 0 0 0 2px {{ $isAptikom ? 'rgba(0, 97, 153, 0.15)' : 'rgba(38, 100, 245, 0.15)' }} !important;
+    }
+    .select2-results__option {
+        padding: 7px 12px !important;
+        font-size: 13px !important;
+        font-family: 'Poppins', sans-serif !important;
+        line-height: 1.4 !important;
+    }
+    @if ($isAptikom)
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #006199 !important;
+            color: #ffffff !important;
+        }
+    @else
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #2664F5 !important;
+            color: #ffffff !important;
+        }
+    @endif
+</style>
+
 <div class="container-fluid">
     <div class="card">
         <div class="card-header py-3">
@@ -17,12 +100,12 @@
             <div class="row">
                 {{-- 1. PILIH CPL --}} 
                 <div class="col-md-12 mb-3">
-                    <label for="cpl" class="form-label">
+                    <label for="cpl_select" class="form-label">
                         Pilih CPL Prodi <span class="text-danger">*</span>
                     </label>
 
-                    <select id="cpl" name="cpl" class="form-select form-select-sm" required>
-                        <option selected disabled value="">Pilih CPL...</option>
+                    <select id="cpl_select" name="cpl" class="form-select w-100" required>
+                        <option value="">-- Pilih CPL --</option>
 
                         @foreach ($cpls as $cpl)
                             <option value="{{ $cpl->id }}" {{ old('cpl') == $cpl->id ? 'selected' : '' }}>
@@ -35,8 +118,8 @@
                 {{-- 2. PILIH CPMK (Dropdown) --}}
                 <div class="col-md-12 mb-3">
                     <label class="form-label">Pilih CPMK / Buat Baru <span class="text-danger">*</span></label>
-                    <select id="cpmk_select" name="cpmk_selection" class="form-select form-select-sm" required disabled>
-                        <option selected disabled value="">-- Pilih CPL Terlebih Dahulu --</option>
+                    <select id="cpmk_select" name="cpmk_selection" class="form-select w-100" required disabled>
+                        <option value="">-- Pilih CPL Terlebih Dahulu --</option>
                     </select>
 
                     {{-- 3. INPUT JUDUL BARU (Hanya muncul jika pilih 'Tambah Baru') --}}
@@ -285,18 +368,42 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
+    // Inisialisasi Select2 pada Pilih CPL Prodi
+    $('#cpl_select').select2({
+        placeholder: "-- Pilih CPL --",
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Inisialisasi Select2 pada Pilih CPMK
+    $('#cpmk_select').select2({
+        placeholder: "-- Pilih CPL Terlebih Dahulu --",
+        allowClear: false,
+        width: '100%'
+    });
+
     // Data dari Controller
     const allCpmks = {!! json_encode($existingCpmks) !!};
 
     // LOGIKA FILTER DROPDOWN
-    // Gunakan document.on agar event tetap jalan meski elemen dirender ulang/plugin
-    $(document).on('change', '#cpl', function() {
+    $(document).on('change', '#cpl_select', function() {
         const selectedCplId = $(this).val(); 
         const cpmkSelect = $('#cpmk_select');
 
-        // Reset Dropdown
+        if (!selectedCplId) {
+            cpmkSelect.empty().prop('disabled', true);
+            cpmkSelect.append('<option value="">-- Pilih CPL Terlebih Dahulu --</option>');
+            cpmkSelect.select2({
+                placeholder: "-- Pilih CPL Terlebih Dahulu --",
+                width: '100%'
+            });
+            cpmkSelect.trigger('change');
+            return;
+        }
+
+        // Reset Dropdown & Aktifkan
         cpmkSelect.empty().prop('disabled', false);
-        cpmkSelect.append('<option selected disabled value="">-- Pilih CPMK --</option>');
+        cpmkSelect.append('<option value="">-- Pilih CPMK --</option>');
 
         // Filter Data (cpl_id == selectedCplId)
         const filteredCpmks = allCpmks.filter(function(item) {
@@ -306,15 +413,27 @@ $(document).ready(function() {
         // Masukkan data ke dropdown
         if (filteredCpmks.length > 0) {
             $.each(filteredCpmks, function(key, cpmk) {
-                let judulPendek = cpmk.judul.length > 100 ? cpmk.judul.substring(0, 100) + '...' : cpmk.judul;
+                let judulPendek = cpmk.judul && cpmk.judul.length > 100 ? cpmk.judul.substring(0, 100) + '...' : (cpmk.judul || '');
                 cpmkSelect.append(`<option value="${cpmk.id}">[${cpmk.kode}] ${judulPendek}</option>`);
             });
         } 
         cpmkSelect.append('<option value="new" class="fw-bold text-primary">+ Tambah CPMK Baru</option>');
         
+        // Re-inisialisasi Select2 agar opsi baru terindeks pencarian
+        cpmkSelect.select2({
+            placeholder: "-- Pilih CPMK --",
+            allowClear: true,
+            width: '100%'
+        });
+
         // Trigger perubahan untuk reset input judul
         cpmkSelect.trigger('change');
     });
+
+    // Handle auto-trigger jika CPL sudah terpilih sebelumnya
+    if ($('#cpl_select').val()) {
+        $('#cpl_select').trigger('change');
+    }
 
     // LOGIKA MUNCULKAN TEXTAREA JUDUL BARU
     $(document).on('change', '#cpmk_select', function() {
