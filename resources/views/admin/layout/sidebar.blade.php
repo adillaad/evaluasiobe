@@ -174,7 +174,7 @@
                         </li>
                     @endif
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route($currentPrefix . 'list-cpmk') }}">Daftar CPMK & Sub CPMK</a>
+                            <a class="nav-link" href="{{ route($currentPrefix . 'list-cpmk') }}">Daftar CPMK</a>
                         </li>
                     </ul>
                 </div>

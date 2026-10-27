@@ -152,8 +152,22 @@ class CpmkController extends Controller
         // Gunakan method dari trait untuk data dropdown filter
         $filterData = $this->getFilterData($request);
 
+        // Siapkan kurikulum untuk modal Tambah CPMK
+        $kurikulumsAddQuery = Kurikulum::query()
+            ->join('prodi', 'kurikulums.id_prodi', '=', 'prodi.id')
+            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
+            ->select('kurikulums.*')
+            ->with(['prodi.fakultas']);
+
+        if ($userOtoritas === 'Admin Universitas') {
+            $kurikulumsAddQuery->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
+        } elseif (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi'])) {
+            $kurikulumsAddQuery->where('kurikulums.id_prodi', auth()->user()->id_prodiUser);
+        }
+        $kurikulumsAdd = $kurikulumsAddQuery->orderBy('kurikulums.tahun', 'desc')->get();
+
         return view('admin.cpmk.list', array_merge(
-            ['cpmks' => $cpmks, 'userOtoritas' => $userOtoritas],
+            ['cpmks' => $cpmks, 'userOtoritas' => $userOtoritas, 'kurikulumsAdd' => $kurikulumsAdd],
             $filterData
         ));
     }
@@ -314,8 +328,8 @@ class CpmkController extends Controller
         $routes = [
             'Admin' => 'admin.list-cpmk',
             'Admin Universitas' => 'admin-universitas.list-cpmk',
-            'Koordinator Program Studi' => 'koordinator-program-studi.cpmk-list',
-            'Kepala Program Studi' => 'kepala-program-studi.cpmk-list',
+            'Koordinator Program Studi' => 'koordinator-program-studi.list-cpmk',
+            'Kepala Program Studi' => 'kepala-program-studi.list-cpmk',
             'Penjamin Mutu Universitas' => 'penjamin-mutu.universitas.list-cpmk',
             'Penjamin Mutu Fakultas' => 'penjamin-mutu.fakultas.list-cpmk',
             'Penjamin Mutu Program Studi' => 'penjamin-mutu.program-studi.list-cpmk',

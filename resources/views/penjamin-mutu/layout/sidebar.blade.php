@@ -123,24 +123,10 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
 
             {{-- CPMK Pages --}}
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#cpmk" aria-expanded="false"
-                    aria-controls="cpmk">
+                <a class="nav-link" href="{{ route($currentPrefix . 'list-cpmk') }}">
                     <i class="menu-icon mdi mdi-target"></i>
                     <span class="menu-title">CPMK</span>
-                    <i class="menu-arrow"></i>
                 </a>
-                <div class="collapse" id="cpmk">
-                    <ul class="nav flex-column sub-menu">
-                        @if (in_array($userOtoritas, ['Koordinator Program Studi', 'Kepala Program Studi', 'Penjamin Mutu Program Studi']))
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route($currentPrefix . 'add-cpmk') }}">Tambah CPMK</a>
-                            </li>
-                        @endif
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route($currentPrefix . 'list-cpmk') }}">Daftar CPMK & Sub CPMK</a>
-                        </li>
-                    </ul>
-                </div>
             </li>
 
             {{-- BK Pages --}}
