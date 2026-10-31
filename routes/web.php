@@ -574,7 +574,7 @@ Route::middleware(['auth'])->group(function () {
                         Route::get('getJenisByMk/{mk?}', 'getJenisByMk')->name('getJenisByMk');
                         Route::get('getSoalByMkJenis', [App\Http\Controllers\Dosen\SoalController::class, 'getSoalByMkJenis'])->name('getSoalByMkJenis');
                         Route::get('getGabunganByMkJenis', 'getGabunganByMkJenis')->name('getGabunganByMkJenis');
-                        Route::get('excelGabungan', 'ExcelGabungan')->name('excelGabungan');
+                        Route::match(['get', 'post'], 'excelGabungan', 'ExcelGabungan')->name('excelGabungan');
                         Route::match(['get', 'post'], 'soal/cetak-naskah', 'cetakNaskahSoal')->name('soal-cetak-naskah');
                         Route::get('getInstrumenTanpaSoal', 'getInstrumenTanpaSoal')->name('getInstrumenTanpaSoal');
                         Route::get('ExcelTanpaSoal', 'ExcelTanpaSoal')->name('ExcelTanpaSoal');
@@ -968,7 +968,7 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('getJenisByMk/{mk?}', 'getJenisByMk')->name('getJenisByMk');
                     Route::get('getSoalByMkJenis', [App\Http\Controllers\Dosen\SoalController::class, 'getSoalByMkJenis'])->name('getSoalByMkJenis');
                     Route::get('getGabunganByMkJenis', 'getGabunganByMkJenis')->name('getGabunganByMkJenis');
-                    Route::get('excelGabungan', 'ExcelGabungan')->name('excelGabungan');
+                    Route::match(['get', 'post'], 'excelGabungan', 'ExcelGabungan')->name('excelGabungan');
                     Route::match(['get', 'post'], 'soal/cetak-naskah', 'cetakNaskahSoal')->name('soal-cetak-naskah');
                     Route::get('getInstrumenTanpaSoal', 'getInstrumenTanpaSoal')->name('getInstrumenTanpaSoal');
                     Route::get('ExcelTanpaSoal', 'ExcelTanpaSoal')->name('ExcelTanpaSoal');

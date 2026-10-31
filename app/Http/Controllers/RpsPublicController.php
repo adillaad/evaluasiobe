@@ -185,22 +185,31 @@ class RpsPublicController extends Controller
                 'koordinatorTtd',
                 'kaprodiTtd'
             );
-            $pdf = SnappyPdf::loadView('pdf.rpsDownload', $data)
-                ->setPaper('a4')
-                ->setOrientation('landscape')
-                ->setOption('margin-left', 10)
-                ->setOption('margin-right', 10)
-                ->setOption('margin-top', 10)
-                ->setOption('margin-bottom', 10)
-                ->setOption('disable-smart-shrinking', true)
-                ->setOption('no-outline', true)
-                ->setOption('print-media-type', true)
-                ->setOption('disable-smart-shrinking', true)
-                ->setOption('enable-local-file-access', true)
-                ->setOption('load-error-handling', 'ignore')
-                ->setOption('load-media-error-handling', 'ignore')
-                ->setOption('image-quality', 60)
-                ->setOption('dpi', 150);
+
+            $pdf = SnappyPdf::loadView('pdf.rpsDownload', $data);
+
+            // Use a writable temporary directory within Laravel storage
+            // to avoid Windows Temp permission issues
+            $tempFolder = storage_path('app/temp');
+            if (!file_exists($tempFolder)) {
+                mkdir($tempFolder, 0755, true);
+            }
+            $pdf->snappy()->setTemporaryFolder($tempFolder);
+
+            $pdf->setPaper('a4');
+            $pdf->setOrientation('landscape');
+            $pdf->setOption('margin-left', 10);
+            $pdf->setOption('margin-right', 10);
+            $pdf->setOption('margin-top', 10);
+            $pdf->setOption('margin-bottom', 10);
+            $pdf->setOption('disable-smart-shrinking', true);
+            $pdf->setOption('no-outline', true);
+            $pdf->setOption('print-media-type', true);
+            $pdf->setOption('enable-local-file-access', true);
+            $pdf->setOption('load-error-handling', 'ignore');
+            $pdf->setOption('load-media-error-handling', 'ignore');
+            $pdf->setOption('image-quality', 60);
+            $pdf->setOption('dpi', 150);
 
             $mkNama = $rps->mk->nama ?? 'Mata Kuliah';
             $filename = "RPS - {$mkNama}.pdf";

@@ -86,6 +86,8 @@
 
     @if (session()->has('failed'))
         <div class="alert alert-danger">{{ session('failed') }}</div>
+    @elseif(session()->has('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
     @elseif(session()->has('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -111,7 +113,7 @@
                     <strong>Hubungi Penjamin Mutu Prodi / Koordinator Program Studi untuk menyetujui soal Anda.</strong>
                 </div>
 
-                <form action="{{ route('dosen.excelGabungan') }}" method="GET" id="form-download">
+                <form action="{{ Route::has($currentPrefix . 'excelGabungan') ? route($currentPrefix . 'excelGabungan') : route('dosen.excelGabungan') }}" method="POST" enctype="multipart/form-data" id="form-download">
                     @csrf
 
                     {{-- Data Universitas & Prodi Otomatis Sesuai Akun User --}}
@@ -235,6 +237,86 @@
 
                         <div id="hidden-inputs-container"></div>
 
+                        {{-- ===== OPSI DATA MAHASISWA ===== --}}
+                        <div class="card border-0 shadow-sm mb-4" id="mhs-option-panel">
+                            <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+                                <span><i class="ti ti-users me-1 text-primary"></i> Data Mahasiswa dalam Template (Opsional)</span>
+                                <span class="badge bg-primary text-white" style="font-size: 0.75rem;">Otomatisasi Nilai</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small mb-3">
+                                    Pilih apakah Anda ingin template Excel langsung terisi daftar mahasiswa kelas yang akan dinilai, atau unduh template kosong.
+                                </p>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <div class="p-3 border rounded h-100 bg-white" style="cursor: pointer;" onclick="$('#opsi_mhs_kosong').prop('checked', true).trigger('change');">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="opsi_mhs" id="opsi_mhs_kosong" value="kosong" checked>
+                                                <label class="form-check-label fw-bold text-dark" for="opsi_mhs_kosong">
+                                                    Template Kosong
+                                                </label>
+                                            </div>
+                                            <div class="text-muted small mt-1 ms-4">
+                                                Unduh template standar tanpa data mahasiswa (NPM, Nama, & Angkatan diisi manual nanti).
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="p-3 border rounded h-100 bg-white" style="cursor: pointer;" onclick="$('#opsi_mhs_upload').prop('checked', true).trigger('change');">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="opsi_mhs" id="opsi_mhs_upload" value="upload">
+                                                <label class="form-check-label fw-bold text-primary" for="opsi_mhs_upload">
+                                                    Unggah Daftar Mahasiswa (.xlsx / .xls / .csv)
+                                                </label>
+                                            </div>
+                                            <div class="text-muted small mt-1 ms-4">
+                                                Template langsung memuat data mahasiswa (NPM, Nama, Angkatan) & rumus total nilai otomatis.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Input File Mahasiswa (tampil jika opsi_mhs == 'upload') --}}
+                                <div id="mhs-upload-container" class="p-3 bg-light rounded border d-none">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-7">
+                                            <label for="mhs_file" class="form-label fw-bold small text-dark mb-1">
+                                                Pilih File Daftar Mahasiswa: <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="file" name="mhs_file" id="mhs_file" class="form-control form-control-sm" accept=".xlsx,.xls,.csv">
+                                            <div class="form-text text-muted" style="font-size: 0.8rem;">
+                                                <i class="ti ti-info-circle me-1 text-primary"></i> File memuat kolom <strong>NPM</strong> dan <strong>Nama</strong>, serta kolom <strong>Angkatan</strong>. 
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5 mt-3 mt-md-0">
+                                            <div class="border rounded p-2 bg-white small text-muted">
+                                                <strong class="text-dark d-block mb-1" style="font-size: 0.8rem;">Contoh Kolom File yang Didukung:</strong>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered text-center mb-0" style="font-size: 0.72rem;">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>NPM</th>
+                                                                <th>Nama</th>
+                                                                <th>Angkatan</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>2117051001</td>
+                                                                <td>Budi Santoso</td>
+                                                                <td>2021</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-12">
                                 <div id="cpmk-warning-banner" class="alert alert-warning d-none">
@@ -320,6 +402,9 @@
                 $('#btn-download').prop('disabled', true).hide();
                 $('#btn-cetak-soal').hide();
                 $('#hidden-inputs-container').empty();
+                $('#opsi_mhs_kosong').prop('checked', true);
+                $('#mhs-upload-container').addClass('d-none');
+                $('#mhs_file').val('');
                 $('#cpmk-warning-banner').addClass('d-none');
                 $('#global-warning').addClass('d-none');
                 window._allCpmks = [];
@@ -612,6 +697,30 @@
                     }
                 });
             }
+
+            // Handler perubahan opsi mahasiswa (Kosong vs Upload)
+            $('input[name="opsi_mhs"]').on('change', function() {
+                if ($(this).val() === 'upload') {
+                    $('#mhs-upload-container').removeClass('d-none');
+                } else {
+                    $('#mhs-upload-container').addClass('d-none');
+                    $('#mhs_file').val('');
+                }
+            });
+
+            // Validasi submit form jika memilih upload file mahasiswa
+            $('#form-download').on('submit', function(e) {
+                var opsi = $('input[name="opsi_mhs"]:checked').val();
+                if (opsi === 'upload') {
+                    var fileInput = $('#mhs_file')[0];
+                    if (!fileInput.files || fileInput.files.length === 0) {
+                        e.preventDefault();
+                        alert('Silakan pilih file daftar mahasiswa terlebih dahulu, atau pilih opsi "Template Kosong".');
+                        $('#mhs_file').focus();
+                        return false;
+                    }
+                }
+            });
 
             /*
             // Handler tombol Cetak / Download Naskah Soal

@@ -7,7 +7,7 @@
 @extends('dosen.template')
 
 @section('content')
-    <h3 class="fw-bold text-center mb-4">Daftar Import Nilai Konversi</h3>
+    <h3 class="fw-bold text-center mb-4">Daftar Mata Kuliah Nilai Konversi</h3>
 
     <div class="card border-0 shadow-sm rounded-3 mb-4">
         <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -20,7 +20,7 @@
         </div>
         <div class="card-body p-4">
             <p class="text-muted small mb-3">
-                Riwayat pemetaan dan konversi nilai historis per metode penilaian untuk periode sebelum sistem digunakan.
+                Riwayat pemetaan dan konversi nilai per metode penilaian untuk periode sebelum sistem digunakan atau periode semester yang telah berlalu.
             </p>
 
             <div class="table-responsive">

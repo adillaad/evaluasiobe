@@ -183,7 +183,7 @@
                             <a class="nav-link" href="{{ route($currentPrefix . 'import-mutu') }}">Import Nilai Soal</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route($currentPrefix . 'konversi-nilai.index') }}">Import Nilai Konversi</a>
+                            <a class="nav-link" href="{{ route($currentPrefix . 'konversi-nilai.index') }}">Konversi Nilai</a>
                         </li>
                 </ul>
             </div>

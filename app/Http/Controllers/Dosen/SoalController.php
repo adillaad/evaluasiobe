@@ -41,6 +41,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 
 class SoalController extends Controller
@@ -1051,7 +1052,7 @@ class SoalController extends Controller
             });
         }
 
-        // Grouping 1 baris per mahasiswa di metode & MK yang sama
+        // Grouping 1 baris per mahasiswa per MK (tanpa Jenis — digabung per MK)
         $groupedQuery = (clone $query)
             ->select(
                 DB::raw('MAX(mutus.id) as max_id'),
@@ -1059,10 +1060,7 @@ class SoalController extends Controller
                 DB::raw('COALESCE(MAX(mutus.nama_mhs), MAX(mutus.Nama_mhs)) as nama_mhs'),
                 DB::raw('MAX(mutus.angkatan) as angkatan'),
                 'mutus.Course',
-                'mutus.Jenis',
                 DB::raw('COALESCE(MAX(mks.nama), MAX(mutus.namaCourse), mutus.Course) as nama_mk'),
-                DB::raw('MAX(mutus.Nilai) as nilai_akhir'),
-                DB::raw('MAX(mutus.examWeight) as exam_weight'),
                 DB::raw('MAX(mutus.tahun) as tahun'),
                 DB::raw('MAX(mutus.tahun_ajaran_id) as tahun_ajaran_id'),
                 DB::raw('COALESCE(MAX(tahun_ajaran.tahun), MAX(mutus.tahun), "-") as ta_tahun'),
@@ -1072,14 +1070,13 @@ class SoalController extends Controller
             ->groupBy(
                 DB::raw('COALESCE(NULLIF(mutus.npm, 0), mutus.NPM)'),
                 'mutus.Course',
-                'mutus.Jenis',
                 DB::raw('COALESCE(mutus.tahun_ajaran_id, mutus.tahun)')
             )
             ->orderBy('max_id', 'desc');
 
         $mutus = $groupedQuery->paginate(15)->appends($request->query());
 
-        // Ambil rincian soal untuk setiap baris mahasiswa & metode pada halaman aktif
+        // Ambil semua rincian soal untuk halaman aktif lalu hitung skor per metode & CPMK
         if ($mutus->isNotEmpty()) {
             $details = Mutu::query()
                 ->leftJoin('cpls', 'mutus.Cpl', '=', 'cpls.id')
@@ -1089,6 +1086,8 @@ class SoalController extends Controller
                     DB::raw('COALESCE(NULLIF(mutus.npm, 0), mutus.NPM) as npm'),
                     'mutus.Course',
                     'mutus.Jenis',
+                    'mutus.examWeight',
+                    'mutus.Nilai',
                     DB::raw('COALESCE(mutus.tahun_ajaran_id, mutus.tahun) as ta_key'),
                     'mutus.soal',
                     'mutus.idSoal',
@@ -1097,12 +1096,11 @@ class SoalController extends Controller
                     'cpls.kode as kode_cpl',
                     'cpmks.kode as kode_cpmk'
                 )
-                ->where(function($q) use ($mutus) {
+                ->where(function ($q) use ($mutus) {
                     foreach ($mutus as $m) {
-                        $q->orWhere(function($sub) use ($m) {
+                        $q->orWhere(function ($sub) use ($m) {
                             $sub->where(DB::raw('COALESCE(NULLIF(mutus.npm, 0), mutus.NPM)'), $m->npm)
-                                ->where('mutus.Course', $m->Course)
-                                ->where('mutus.Jenis', $m->Jenis);
+                                ->where('mutus.Course', $m->Course);
                             if ($m->tahun_ajaran_id) {
                                 $sub->where('mutus.tahun_ajaran_id', $m->tahun_ajaran_id);
                             } elseif ($m->tahun) {
@@ -1114,19 +1112,74 @@ class SoalController extends Controller
                 ->orderBy('mutus.id')
                 ->get();
 
-            $groupedDetails = $details->groupBy(function($d) {
-                return $d->npm . '|' . $d->Course . '|' . $d->Jenis . '|' . $d->ta_key;
+            // Group details by npm|Course|ta_key
+            $groupedDetails = $details->groupBy(function ($d) {
+                return $d->npm . '|' . $d->Course . '|' . $d->ta_key;
             });
 
-            $mutus->getCollection()->transform(function($item) use ($groupedDetails) {
-                $key = $item->npm . '|' . $item->Course . '|' . $item->Jenis . '|' . ($item->tahun_ajaran_id ?: $item->tahun);
-                $item->detail_soals = $groupedDetails->get($key, collect());
+            $mutus->getCollection()->transform(function ($item) use ($groupedDetails) {
+                $taKey = $item->tahun_ajaran_id ?: $item->tahun;
+                $key   = $item->npm . '|' . $item->Course . '|' . $taKey;
+                $rows  = $groupedDetails->get($key, collect());
+
+                // Sub-group by Jenis
+                $metodes = $rows->groupBy(fn($r) => trim((string)($r->Jenis ?? 'Umum')))
+                    ->map(function ($metodeRows, $metodeName) {
+                        $firstM      = $metodeRows->first();
+                        $bobot       = (float)($firstM->examWeight ?? 0);
+                        $nilai       = (float)($firstM->Nilai ?? 0);
+                        $uniqueSoals = $metodeRows->unique(function ($r) {
+                            return ($r->idSoal ?? 'no_id') . '_' . trim($r->soal ?? '');
+                        })->values();
+                        return (object)[
+                            'jenis_nama' => $metodeName,
+                            'bobot'      => $bobot,
+                            'nilai'      => $nilai,
+                            'soals'      => $uniqueSoals,
+                            'soal_count' => $uniqueSoals->count(),
+                        ];
+                    })->values();
+
+                // Nilai Akhir MK
+                $nilaiAkhirMk = 0;
+                foreach ($metodes as $m) {
+                    $nilaiAkhirMk += ($m->nilai * $m->bobot / 100);
+                }
+
+                // Skor CPMK
+                $cpmkScores    = [];
+                $rowsWithCpmk  = $rows->filter(fn($r) => !empty($r->kode_cpmk));
+                $byCpmk        = $rowsWithCpmk->groupBy(fn($r) => $r->kode_cpmk);
+                foreach ($byCpmk as $cpmkKode => $cRows) {
+                    $uniqueRows = $cRows->unique(function ($r) {
+                        return ($r->idSoal ?? $r->id) . '_' . trim($r->soal ?? '');
+                    });
+                    $sumWeight = 0;
+                    $sumScore  = 0;
+                    foreach ($uniqueRows as $r) {
+                        $b   = (float)($r->BobotSoal ?? 0);
+                        $eff = ($b > 0) ? $b : 1;
+                        $sc  = (float)($r->nilaiSoal ?? $r->Nilai ?? 0);
+                        $sumScore  += ($eff * $sc);
+                        $sumWeight += $eff;
+                    }
+                    $cpmkScores[$cpmkKode] = $sumWeight > 0 ? round($sumScore / $sumWeight, 2) : 0;
+                }
+                uksort($cpmkScores, 'strnatcmp');
+
+                $item->metodes       = $metodes;
+                $item->skor_cpmk    = $cpmkScores;
+                $item->nilai_akhir_mk = round($nilaiAkhirMk, 2);
+                $item->ta_label     = ($item->ta_tahun && $item->ta_tahun != '-')
+                    ? ($item->ta_tahun . ($item->ta_semester ? ' (' . $item->ta_semester . ')' : ''))
+                    : ($item->tahun ?: '-');
                 return $item;
             });
         }
 
         return $mutus;
     }
+
 
     public function filterSoal(Request $request)
     {
@@ -2064,6 +2117,22 @@ class SoalController extends Controller
             return back()->with('error', 'Pilih minimal satu soal atau instrumen.');
         }
 
+        // Cek dan proses data mahasiswa jika memilih opsi upload
+        $mahasiswas = [];
+        if ($request->input('opsi_mhs') === 'upload' && $request->hasFile('mhs_file')) {
+            $parseResult = $this->parseUploadedMahasiswaFile($request->file('mhs_file'));
+            if (!$parseResult['success']) {
+                return back()
+                    ->with('error', $parseResult['message'])
+                    ->with('failed', $parseResult['message']);
+            }
+            $mahasiswas = $parseResult['data'];
+            if (empty($mahasiswas)) {
+                $msg = 'Tidak ada baris data mahasiswa dengan format NPM yang valid pada file tersebut.';
+                return back()->with('error', $msg)->with('failed', $msg);
+            }
+        }
+
         $mk         = MK::where('kode', $kodeMk)->first();
         $namaMK     = $mk->nama ?? $kodeMk;
         $namaMetode = DB::table('metode_penilaian')->where('id', $metodeId)->value('nama') ?? '-';
@@ -2137,12 +2206,32 @@ class SoalController extends Controller
             $sheet->getStyle($cell)->getFont()->setBold(true);
         }
 
-        // Baris 3: Baris data awal (template/dosen isi nilai mulai baris ini)
-        $sheet->setCellValue('A3', $request->semester);
-        $sheet->setCellValue('E3', $kodeMk);
-        $sheet->setCellValue('F3', $namaMK);
-        $sheet->setCellValue('G3', $namaMetode);
-        $sheet->setCellValue('H3', $totalBobotMetode);
+        // Baris data awal (template kosong atau terisi daftar mahasiswa)
+        $startRow = 3;
+        $maxRow   = 100;
+
+        if (!empty($mahasiswas)) {
+            $currentRow = $startRow;
+            foreach ($mahasiswas as $mhs) {
+                $sheet->setCellValue('A' . $currentRow, $request->semester);
+                $sheet->setCellValue('B' . $currentRow, $mhs['angkatan'] ?? '');
+                $sheet->setCellValueExplicit('C' . $currentRow, (string) $mhs['npm'], DataType::TYPE_STRING);
+                $sheet->setCellValue('D' . $currentRow, $mhs['nama'] ?? '');
+                $sheet->setCellValue('E' . $currentRow, $kodeMk);
+                $sheet->setCellValue('F' . $currentRow, $namaMK);
+                $sheet->setCellValue('G' . $currentRow, $namaMetode);
+                $sheet->setCellValue('H' . $currentRow, $totalBobotMetode);
+                $currentRow++;
+            }
+            $maxRow = max(100, $currentRow - 1);
+        } else {
+            // Baris 3: Baris data awal template kosongan
+            $sheet->setCellValue('A3', $request->semester);
+            $sheet->setCellValue('E3', $kodeMk);
+            $sheet->setCellValue('F3', $namaMK);
+            $sheet->setCellValue('G3', $namaMetode);
+            $sheet->setCellValue('H3', $totalBobotMetode);
+        }
 
         $columnIndex       = 10;   
         $itemsWithBobot    = [];
@@ -2222,8 +2311,8 @@ class SoalController extends Controller
         }
 
         if (!empty($itemsWithBobot) && $totalBobotMetode > 0) {
-            // Loop pembuatan rumus baris 3 s/d 100 secara otomatis
-            for ($r = 3; $r <= 100; $r++) {
+            // Loop pembuatan rumus baris 3 s/d maxRow secara otomatis
+            for ($r = 3; $r <= $maxRow; $r++) {
                 $rowFormulaParts = [];
                 foreach ($itemsWithBobot as $it) {
                     $rowFormulaParts[] = '(' . $it['col'] . $r . '*' . $it['bobot'] . ')';
@@ -2414,5 +2503,200 @@ class SoalController extends Controller
                 // ignore
             }
         }
+    }
+
+    /**
+     * Parse uploaded student file (Excel/CSV) into normalized student array.
+     * Expected columns: NPM (required), Nama (required), Angkatan (optional).
+     */
+    private function parseUploadedMahasiswaFile($file): array
+    {
+        if (!$file || !$file->isValid()) {
+            return [
+                'success' => false,
+                'message' => 'File yang diunggah tidak valid atau rusak.',
+                'data'    => [],
+            ];
+        }
+
+        $filePath = $file->getRealPath() ?: $file->getPathname();
+        try {
+            $spreadsheet = IOFactory::load($filePath);
+            $worksheet   = $spreadsheet->getActiveSheet();
+            $rows        = $worksheet->toArray(null, true, true, false);
+        } catch (\Throwable $e) {
+            Log::warning('Gagal parse file mahasiswa di ExcelGabungan: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Gagal membaca isi file: ' . $e->getMessage(),
+                'data'    => [],
+            ];
+        }
+
+        if (empty($rows)) {
+            return [
+                'success' => false,
+                'message' => 'File Excel/CSV yang diunggah kosong.',
+                'data'    => [],
+            ];
+        }
+
+        // 1. Variasi kata kunci header kolom yang didukung
+        $npmKeywords      = ['npm', 'nim', 'no pokok mahasiswa', 'nomor pokok mahasiswa', 'no. pokok', 'no. mhs', 'no mhs', 'nomor mahasiswa', 'student id', 'id mahasiswa'];
+        $namaKeywords     = ['nama', 'nama mahasiswa', 'nama lengkap', 'student name', 'name', 'nama mhs'];
+        $angkatanKeywords = ['angkatan', 'thn angkatan', 'tahun angkatan', 'th masuk', 'tahun masuk', 'thn masuk', 'cohort'];
+
+        $headerRowIdx    = null;
+        $colNpm          = null;
+        $colNama         = null;
+        $colAngkatan     = null;
+        $detectedHeaders = [];
+
+        // Periksa 10 baris pertama untuk mendeteksi baris header
+        $checkLimit = min(10, count($rows));
+        for ($rIdx = 0; $rIdx < $checkLimit; $rIdx++) {
+            $row = $rows[$rIdx];
+            if (!is_array($row)) continue;
+
+            foreach ($row as $cIdx => $cellVal) {
+                $cellStr = strtolower(trim((string)$cellVal));
+                if (in_array($cellStr, $npmKeywords)) {
+                    $headerRowIdx = $rIdx;
+                    break 2;
+                }
+            }
+        }
+
+        if ($headerRowIdx !== null) {
+            $headerRow = $rows[$headerRowIdx];
+            foreach ($headerRow as $cIdx => $cellVal) {
+                $cellRaw = trim((string)$cellVal);
+                if ($cellRaw !== '') {
+                    $detectedHeaders[] = $cellRaw;
+                }
+                $cellStr = strtolower($cellRaw);
+
+                if (in_array($cellStr, $npmKeywords) && $colNpm === null) {
+                    $colNpm = $cIdx;
+                } elseif (in_array($cellStr, $namaKeywords) && $colNama === null) {
+                    $colNama = $cIdx;
+                } elseif (in_array($cellStr, $angkatanKeywords) && $colAngkatan === null) {
+                    $colAngkatan = $cIdx;
+                }
+            }
+            $dataStartIdx = $headerRowIdx + 1;
+        } else {
+            // Jika tidak ada header dengan kata NPM/NIM, cek apakah baris 0 langsung berupa data (tanpa header)
+            $firstCell = preg_replace('/[^0-9]/', '', trim((string)($rows[0][0] ?? '')));
+            if (strlen($firstCell) >= 7 && strlen($firstCell) <= 15) {
+                // Pola data tanpa header: kolom 0 = NPM, kolom 1 = Nama
+                $colNpm       = 0;
+                $colNama      = 1;
+                $colAngkatan  = count($rows[0] ?? []) > 2 ? 2 : null;
+                $dataStartIdx = 0;
+            } else {
+                // Ambil daftar kolom yang terdeteksi di baris pertama untuk pesan error yang jelas
+                $firstRowLabels = array_filter(array_map(fn($v) => trim((string)$v), $rows[0] ?? []));
+                $headerPreview  = !empty($firstRowLabels) ? implode(', ', array_slice($firstRowLabels, 0, 8)) : 'Tidak terdeteksi';
+
+                return [
+                    'success' => false,
+                    'message' => "Format file tidak sesuai! Sistem tidak menemukan kolom 'NPM' atau 'NIM'. Kolom yang terdeteksi pada file Anda: [{$headerPreview}]. Pastikan file memiliki kolom NPM dan Nama mahasiswa.",
+                    'data'    => [],
+                ];
+            }
+        }
+
+        if ($colNpm === null) {
+            $headerPreview = !empty($detectedHeaders) ? implode(', ', array_slice($detectedHeaders, 0, 8)) : 'Tidak terdeteksi';
+            return [
+                'success' => false,
+                'message' => "Kolom 'NPM' atau 'NIM' tidak ditemukan. Kolom yang terdeteksi: [{$headerPreview}].",
+                'data'    => [],
+            ];
+        }
+
+        // Jika kolom Nama belum cocok dari header, coba gunakan kolom setelah NPM
+        if ($colNama === null) {
+            $colNama = $colNpm + 1;
+        }
+
+        $students = [];
+        $seenNpm  = [];
+
+        for ($i = $dataStartIdx; $i < count($rows); $i++) {
+            $row = $rows[$i];
+            if (!is_array($row) || empty($row)) continue;
+
+            $npmRaw      = $row[$colNpm] ?? null;
+            $namaRaw     = $row[$colNama] ?? null;
+            $angkatanRaw = ($colAngkatan !== null && isset($row[$colAngkatan])) ? $row[$colAngkatan] : null;
+
+            if ($npmRaw === null && $namaRaw === null) continue;
+
+            $npmStr      = trim((string)$npmRaw);
+            $namaStr     = trim((string)$namaRaw);
+            $angkatanStr = trim((string)$angkatanRaw);
+
+            // Bersihkan format float dari Excel jika terbaca desimal
+            if (is_numeric($npmStr) && str_contains($npmStr, '.')) {
+                $npmStr = number_format((float)$npmStr, 0, '', '');
+            }
+
+            // Lewati jika label header berulang
+            if (in_array(strtolower($npmStr), $npmKeywords) || in_array(strtolower($namaStr), $namaKeywords)) {
+                continue;
+            }
+
+            // Ambil angka saja untuk NPM
+            $cleanNpm = preg_replace('/[^0-9]/', '', $npmStr);
+            if (empty($cleanNpm) || strlen($cleanNpm) < 5) {
+                continue;
+            }
+
+            if (isset($seenNpm[$cleanNpm])) {
+                continue; // cegah duplikasi NPM
+            }
+            $seenNpm[$cleanNpm] = true;
+
+            // Jika nama kosong, coba cari di master database mahasiswa
+            if (empty($namaStr)) {
+                $mhsDb = Mahasiswa::where('NPM', $cleanNpm)->first();
+                if ($mhsDb) {
+                    $namaStr = $mhsDb->nama;
+                    if (empty($angkatanStr)) {
+                        $angkatanStr = (string)$mhsDb->angkatan;
+                    }
+                }
+            }
+
+            // Jika angkatan kosong di file, ambil data resmi dari master database mahasiswa
+            if (empty($angkatanStr)) {
+                $mhsDb = Mahasiswa::where('NPM', $cleanNpm)->first();
+                if ($mhsDb && !empty($mhsDb->angkatan)) {
+                    $angkatanStr = (string) $mhsDb->angkatan;
+                }
+            }
+
+            $students[] = [
+                'npm'      => $cleanNpm,
+                'nama'     => $namaStr,
+                'angkatan' => $angkatanStr,
+            ];
+        }
+
+        if (empty($students)) {
+            return [
+                'success' => false,
+                'message' => "Tidak ada baris data mahasiswa dengan nomor NPM yang valid ditemukan pada file tersebut. Pastikan baris data memuat angka NPM yang benar.",
+                'data'    => [],
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Berhasil membaca ' . count($students) . ' data mahasiswa.',
+            'data'    => $students,
+        ];
     }
 }

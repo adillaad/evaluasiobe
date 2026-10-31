@@ -97,11 +97,7 @@
                                     <td>{{ $r->updated_at ? $r->updated_at->format('d-m-Y') : '-' }}</td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center align-items-center" style="gap: 4px;">
-                                            <a href="{{ route($currentPrefix.'rubrik-download', $r->id) }}"
-                                               class="btn btn-icons btn-success"
-                                               data-bs-toggle="tooltip" title="Download Rubrik">
-                                                <i class="ti-download"></i>
-                                            </a>
+                                            <a href="{{ route($currentPrefix.'rubrik-download', $r->id) }}" class="btn btn-icons btn-success" data-bs-toggle="tooltip" title="Download Rubrik"><i class="ti-download"></i></a>
                 
                                             @if($userOtoritas === 'Dosen')
                                                 <form action="{{ route($currentPrefix.'rubrik-delete', $r->id) }}"

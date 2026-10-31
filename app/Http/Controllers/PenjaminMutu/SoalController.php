@@ -534,25 +534,95 @@ class SoalController extends Controller
         return view($view, array_merge(compact('mutus'), $filterData));
     }
 
-    private function getPaginatedGroupedMutus(Request $request, string $type = 'soal', int $perPage = 10)
+        private function getPaginatedGroupedMutus(Request $request, string $type = 'soal', int $perPage = 10)
     {
         $allRecords = $this->mutuPenilaianQuery($request, $type)->get();
 
-        // Grouping records per Mahasiswa + Course + Jenis + Tahun Ajaran
+        // Grouping records per Mahasiswa + Course + Tahun Ajaran (per MK, bukan per Jenis)
         $grouped = $allRecords->groupBy(function ($item) {
-            $npmKey = trim((string)($item->npm ?? $item->NPM ?? 'unknown'));
+            $npmKey    = trim((string)($item->npm ?? $item->NPM ?? 'unknown'));
             $courseKey = trim((string)($item->Course ?? $item->nama_mk ?? 'unknown'));
-            $jenisKey = strtolower(trim((string)($item->Jenis ?? 'umum')));
-            $taKey = (string)($item->tahun_ajaran_id ?? $item->tahun ?? 'ta_default');
-            return $npmKey . '_' . $courseKey . '_' . $jenisKey . '_' . $taKey;
+            $taKey     = (string)($item->tahun_ajaran_id ?? $item->tahun ?? 'ta_default');
+            return $npmKey . '_' . $courseKey . '_' . $taKey;
         });
 
-        $currentPage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
-        $currentItems = $grouped->slice(($currentPage - 1) * $perPage, $perPage);
+        // Transform each group into a structured object with metodes + skor_cpmk + nilai_akhir
+        $structured = $grouped->map(function ($items) {
+            $first = $items->first();
+
+            // Sub-group by Jenis (metode penilaian)
+            $metodes = $items->groupBy(function ($item) {
+                return trim((string)($item->Jenis ?? 'Umum'));
+            })->map(function ($metodeItems, $metodeName) {
+                $firstM = $metodeItems->first();
+                $bobot  = (float)($firstM->examWeight ?? 0);
+                $nilai  = (float)($firstM->Nilai ?? 0);
+
+                $uniqueSoals = $metodeItems->unique(function ($sub) {
+                    return ($sub->idSoal ?? 'no_id') . '_' . trim($sub->soal ?? '');
+                })->values();
+
+                return (object)[
+                    'jenis_nama' => $metodeName,
+                    'bobot'      => $bobot,
+                    'nilai'      => $nilai,
+                    'soals'      => $uniqueSoals,
+                    'soal_count' => $uniqueSoals->count(),
+                ];
+            })->values();
+
+            // Nilai Akhir MK (weighted sum of method scores)
+            $nilaiAkhirMk = 0;
+            foreach ($metodes as $m) {
+                $nilaiAkhirMk += ($m->nilai * $m->bobot / 100);
+            }
+
+            // Skor CPMK per MK
+            $cpmkScores    = [];
+            $itemsWithCpmk = $items->filter(fn($r) => !empty($r->cpmk_kode) || !empty($r->Cpmk));
+            $byCpmk        = $itemsWithCpmk->groupBy(fn($r) => $r->cpmk_kode ?: ('CPMK-' . $r->Cpmk));
+            foreach ($byCpmk as $cpmkKode => $cRows) {
+                $uniqueRows = $cRows->unique(function ($r) {
+                    return ($r->idSoal ?? $r->id) . '_' . trim($r->soal ?? '');
+                });
+                $sumWeight = 0;
+                $sumScore  = 0;
+                foreach ($uniqueRows as $r) {
+                    $b   = (float)($r->BobotSoal ?? 0);
+                    $eff = ($b > 0) ? $b : 1;
+                    $sc  = (float)($r->nilaiSoal ?? $r->Nilai ?? 0);
+                    $sumScore  += ($eff * $sc);
+                    $sumWeight += $eff;
+                }
+                $cpmkScores[$cpmkKode] = $sumWeight > 0 ? round($sumScore / $sumWeight, 2) : 0;
+            }
+            uksort($cpmkScores, 'strnatcmp');
+
+            $taLabel = isset($first->ta_tahun)
+                ? ($first->ta_tahun . ($first->ta_semester ? ' (' . $first->ta_semester . ')' : ''))
+                : ($first->tahun ?: '-');
+
+            return (object)[
+                'npm'            => $first->npm ?? $first->NPM,
+                'nama_mhs'       => $first->nama_mhs ?? $first->Nama_mhs ?? 'Tanpa Nama',
+                'angkatan'       => $first->angkatan ?? '-',
+                'Course'         => $first->Course,
+                'nama_mk'        => $first->nama_mk ?? $first->Course,
+                'nama_prodi'     => $first->nama_prodi ?? '-',
+                'nama_fakultas'  => $first->nama_fakultas ?? '-',
+                'ta_label'       => $taLabel,
+                'metodes'        => $metodes,
+                'skor_cpmk'      => $cpmkScores,
+                'nilai_akhir_mk' => round($nilaiAkhirMk, 2),
+            ];
+        })->values();
+
+        $currentPage  = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+        $currentItems = $structured->slice(($currentPage - 1) * $perPage, $perPage);
 
         $paginatedGrouped = new \Illuminate\Pagination\LengthAwarePaginator(
             $currentItems,
-            $grouped->count(),
+            $structured->count(),
             $perPage,
             $currentPage,
             ['path' => \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPath(), 'query' => $request->query()]

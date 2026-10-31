@@ -318,7 +318,7 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                             </li>
                             --}}
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route($currentPrefix . 'konversi-nilai.index') }}">Import Nilai Konversi</a>
+                                <a class="nav-link" href="{{ route($currentPrefix . 'konversi-nilai.index') }}">Konversi Nilai</a>
                             </li>
                         @endif
                         <li class="nav-item"><a class="nav-link"

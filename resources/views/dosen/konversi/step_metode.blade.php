@@ -56,6 +56,16 @@ select:disabled option,
 }
 
 .form-select:disabled,
+/* Highlight baris baru & mode editing */
+@keyframes highlightPulse {
+    0%   { box-shadow: 0 0 0 4px rgba(13,110,253,0.35); border-color: #0d6efd !important; }
+    50%  { box-shadow: 0 0 0 8px rgba(13,110,253,0.15); border-color: #0d6efd !important; }
+    100% { box-shadow: 0 0 0 0 rgba(13,110,253,0); }
+}
+.highlight-new-row { animation: highlightPulse 1.8s ease-out; border: 2px solid #0d6efd !important; }
+.metode-row.is-editing { border: 2px solid #0d6efd !important; box-shadow: 0 6px 18px rgba(13,110,253,0.12) !important; }
+.metode-row.is-editing .remove-metode-btn { display: none !important; }
+
 select:disabled {
     background-image: none !important;
     -webkit-appearance: none !important;
@@ -334,13 +344,8 @@ select:disabled {
                         @php
                             $hasExisting = $existingMetodes->isNotEmpty();
                         @endphp
-                        @if ($hasExisting)
-                            <button type="button" id="btn-edit-pemetaan" class="btn btn-sm btn-primary fw-bold shadow-sm">
-                                <i class="mdi mdi-pencil me-1"></i> Edit Pemetaan
-                            </button>
-                        @endif
-                        <button type="button" class="btn-add-metode btn btn-sm btn-outline-primary shadow-sm" style="{{ $hasExisting ? 'display: none !important;' : '' }}">
-                            <i class="mdi mdi-plus me-1"></i> Tambah Metode Penilaian
+                        <button type="button" class="btn-add-metode btn btn-sm btn-outline-primary shadow-sm">
+                            <i class="mdi mdi-plus me-1"></i> Tambah Pemetaan
                         </button>
                         <button type="button" class="btn btn-secondary btn-sm p-1 d-inline-flex align-items-center justify-content-center" data-bs-toggle="tooltip" data-bs-placement="left"
                             title="Tentukan metode penilaian dan bobotnya (total seluruh metode harus 100%), lalu centang CPMK yang diujikan pada tiap metode.">
@@ -356,8 +361,8 @@ select:disabled {
                 @if ($hasExisting)
                     <div id="locked-pemetaan-notice" class="alert alert-info py-2 px-3 small mb-3 border-0 rounded-3 d-flex align-items-center justify-content-between shadow-sm">
                         <div>
-                            <i class="mdi mdi-lock-outline me-1 fs-6"></i>
-                            <span>Pemetaan telah tersimpan. Klik <strong>Edit Pemetaan</strong> jika ingin mengubah metode, bobot, atau CPMK.</span>
+                            <i class="mdi mdi-information-outline me-1 fs-6"></i>
+                            <span>Pemetaan telah tersimpan. Gunakan tombol <strong>Edit</strong> atau <strong>Hapus</strong> pada masing-masing paket metode di bawah untuk mengubah konfigurasi.</span>
                         </div>
                         <span class="badge bg-info text-white px-2 py-1">Tersimpan</span>
                     </div>
@@ -394,8 +399,13 @@ select:disabled {
                                              <input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm metode-bobot-input"
                                                     name="bobot[{{ $metodeId }}]" value="{{ $bobotVal }}" placeholder="0 - 100" required {{ $hasExisting ? 'disabled' : '' }}>
                                          </div>
-                                         <div class="col-md-3 d-flex align-items-center justify-content-end gap-2 pt-2 pt-md-0">
-                                             <button type="button" class="btn btn-sm btn-outline-danger remove-metode-btn py-1 px-2 {{ $hasExisting ? 'd-none' : '' }}" title="Hapus Metode" {{ $hasExisting ? 'disabled' : '' }}>
+                                         <div class="col-md-3 d-flex align-items-center justify-content-end gap-1 pt-2 pt-md-0">
+                                             @if ($hasExisting)
+                                             <button type="button" class="btn btn-sm btn-outline-primary btn-edit-paket py-1 px-2" title="Edit Paket Metode">
+                                                 <i class="mdi mdi-pencil me-1"></i> Edit
+                                             </button>
+                                             @endif
+                                             <button type="button" class="btn btn-sm btn-outline-danger remove-metode-btn py-1 px-2" title="Hapus Paket Metode">
                                                  <i class="mdi mdi-trash-can-outline me-1"></i> Hapus
                                              </button>
                                              <button type="button" class="btn btn-sm text-secondary border-0 shadow-none toggle-cpmk-btn p-1 fs-5" title="Sembunyikan CPMK">
@@ -419,7 +429,7 @@ select:disabled {
                                                 @php
                                                     $isCpmkChecked = $existingCpmkMap->has($cpmk->id);
                                                 @endphp
-                                                <div class="col-md-6">
+                                                <div class="col-md-6 {{ $hasExisting && !$isCpmkChecked ? 'd-none' : '' }}" data-cpmk-col="{{ $cpmk->id }}">
                                                     <div class="border rounded p-2 bg-white h-100 cpmk-card" data-cpmk-id="{{ $cpmk->id }}">
                                                         <div class="form-check mb-1 d-flex align-items-start ps-0">
                                                             <input class="form-check-input form-check-input-lg cpmk-check me-2 ms-0 mt-1 flex-shrink-0 {{ $hasExisting && !$isCpmkChecked ? 'd-none' : '' }}" type="checkbox"
@@ -489,14 +499,16 @@ select:disabled {
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center border-top pt-3 flex-wrap gap-2">
-                        <button type="button" class="btn-add-metode btn btn-sm btn-outline-primary" style="{{ $hasExisting ? 'display: none !important;' : '' }}">
-                            <i class="mdi mdi-plus me-1"></i> Tambah Metode Penilaian
+                        <button type="button" class="btn-add-metode btn btn-sm btn-outline-primary">
+                            <i class="mdi mdi-plus me-1"></i> Tambah Pemetaan
                         </button>
+                        @if (!$hasExisting)
                         <div class="d-flex align-items-center gap-2 ms-auto">
-                            <button type="submit" id="btn-submit-metode" class="btn btn-primary btn-sm px-4 {{ $hasExisting ? 'd-none' : '' }}" disabled>
+                            <button type="submit" id="btn-submit-metode" class="btn btn-primary btn-sm px-4" disabled>
                                 <i class="mdi mdi-content-save me-1"></i> Simpan Metode & Pemetaan CPMK
                             </button>
                         </div>
+                        @endif
                     </div>
                 </form>
             </div>
@@ -524,7 +536,10 @@ select:disabled {
                 <input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm metode-bobot-input"
                        placeholder="0 - 100" required disabled>
             </div>
-            <div class="col-md-3 d-flex align-items-center justify-content-end gap-2 pt-2 pt-md-0">
+            <div class="col-md-3 d-flex align-items-center justify-content-end gap-1 pt-2 pt-md-0">
+                <button type="button" class="btn btn-sm btn-primary btn-save-paket py-1 px-2" title="Simpan Pemetaan">
+                    <i class="mdi mdi-content-save me-1"></i> Simpan
+                </button>
                 <button type="button" class="btn btn-sm btn-outline-danger remove-metode-btn py-1 px-2" title="Hapus Metode">
                     <i class="mdi mdi-trash-can-outline me-1"></i> Hapus
                 </button>
@@ -903,89 +918,186 @@ select:disabled {
         let currentMode = 'AB'; // Default Mode A & B
         let isLocked = {{ $hasExisting ? 'true' : 'false' }};
 
-        function applyLockState(locked) {
-            isLocked = locked;
-            let $form = $('#form-metode-cpmk');
+        // --- Per-Paket Edit / Hapus / Simpan / Batal ---
 
-            if (locked) {
-                $form.find('input, select').prop('disabled', true);
-                $('.btn-add-metode').attr('style', 'display: none !important;').addClass('d-none');
-                $('.remove-metode-btn, .btn-add-soal, .remove-soal-btn').attr('style', 'display: none !important;').addClass('d-none').prop('disabled', true);
-                $('#btn-submit-metode').attr('style', 'display: none !important;').addClass('d-none');
-
-                // Tampilkan seluruh CPMK card. Hilangkan box checkbox kosong untuk CPMK yang TIDAK dipilih, dan pertahankan ceklis untuk CPMK yang dipilih.
-                $('.cpmk-card').each(function() {
-                    let $card = $(this);
-                    let $col = $card.closest('.col-md-6');
-                    let $check = $card.find('.cpmk-check');
-                    let isChecked = $check.is(':checked');
-
-                    $col.removeClass('d-none');
-                    $card.css({ 'opacity': '1', 'background-color': '#ffffff' });
-
-                    if (isChecked) {
-                        $check.removeClass('d-none');
-                    } else {
-                        $check.addClass('d-none');
-                    }
-                });
-
-                $('#btn-edit-pemetaan')
-                    .removeClass('btn-outline-secondary btn-warning')
-                    .addClass('btn-primary')
-                    .html('<i class="mdi mdi-pencil me-1"></i> Edit Pemetaan');
-
-                $('#locked-pemetaan-notice')
-                    .removeClass('alert-warning')
-                    .addClass('alert-info')
-                    .html(`
-                        <div>
-                            <i class="mdi mdi-lock-outline me-1 fs-6"></i>
-                            <span>Pemetaan telah tersimpan. Klik <strong>Edit Pemetaan</strong> jika ingin mengubah metode, bobot, atau CPMK.</span>
-                        </div>
-                        <span class="badge bg-info text-white px-2 py-1">Tersimpan</span>
-                    `)
-                    .removeClass('d-none');
-            } else {
-                $form.find('input, select').prop('disabled', false);
-                $('.btn-add-metode').attr('style', 'display: inline-flex !important;').removeClass('d-none');
-                $('.remove-metode-btn, .btn-add-soal, .remove-soal-btn').attr('style', '').removeClass('d-none').prop('disabled', false);
-                $('#btn-submit-metode').attr('style', '').removeClass('d-none');
-
-                // Tampilkan kembali seluruh CPMK cards dan seluruh box checkbox dalam mode edit
-                $('.cpmk-card').each(function() {
-                    let $card = $(this);
-                    let $col = $card.closest('.col-md-6');
-                    let $check = $card.find('.cpmk-check');
+        // Fungsi untuk mengunci satu baris paket metode (read-only)
+        function lockRow($row) {
+            $row.removeClass('is-editing border-primary border-2 shadow-sm');
+            $row.find('.metode-select, .metode-bobot-input').prop('disabled', true);
+            $row.find('.cpmk-check').prop('disabled', true);
+            $row.find('.soal-nama-input, .soal-bobot-input').prop('disabled', true);
+            $row.find('.btn-add-soal, .remove-soal-btn').addClass('d-none').prop('disabled', true);
+            // Sembunyikan col-md-6 yang CPMK-nya tidak tercentang
+            $row.find('[data-cpmk-col]').each(function() {
+                let $col = $(this);
+                let $check = $col.find('.cpmk-check');
+                if (!$check.is(':checked')) {
+                    $col.addClass('d-none');
+                } else {
                     $col.removeClass('d-none');
                     $check.removeClass('d-none');
-                    $card.css({ 'opacity': '1', 'background-color': '#ffffff' });
-                });
-
-                $('#btn-edit-pemetaan')
-                    .removeClass('btn-primary btn-warning')
-                    .addClass('btn-outline-secondary')
-                    .html('<i class="mdi mdi-close-circle me-1"></i> Batal Edit');
-
-                $('#locked-pemetaan-notice')
-                    .removeClass('alert-info')
-                    .addClass('alert-warning')
-                    .html(`
-                        <div>
-                            <i class="mdi mdi-pencil-outline me-1 fs-6"></i>
-                            <span><strong>Mode Edit Aktif:</strong> Silakan ubah metode, bobot, atau pemetaan CPMK, lalu simpan perubahan.</span>
-                        </div>
-                        <span class="badge bg-warning text-dark px-2 py-1">Mode Edit</span>
-                    `)
-                    .removeClass('d-none');
-            }
-
-            recalculateStatus();
+                }
+            });
         }
 
-        $(document).on('click', '#btn-edit-pemetaan', function(e) {
+        // Fungsi untuk membuka satu baris paket metode (edit mode)
+        function unlockRow($row) {
+            $row.addClass('is-editing border-primary border-2 shadow-sm');
+            $row.find('.metode-select, .metode-bobot-input').prop('disabled', false);
+            $row.find('.cpmk-check').prop('disabled', false).removeClass('d-none');
+            $row.find('.soal-nama-input, .soal-bobot-input').prop('disabled', false);
+            $row.find('.btn-add-soal, .remove-soal-btn').removeClass('d-none').prop('disabled', false);
+            // Tampilkan semua col-md-6 CPMK dalam mode edit
+            $row.find('[data-cpmk-col]').removeClass('d-none');
+            // Buka section CPMK jika tertutup
+            $row.find('.cpmk-section').removeClass('d-none');
+            $row.find('.toggle-icon').removeClass('mdi-chevron-down').addClass('mdi-chevron-up');
+        }
+
+        // Handler Klik Edit per paket
+        $(document).on('click', '.btn-edit-paket', function(e) {
             e.preventDefault();
-            applyLockState(!isLocked);
+            let $btn = $(this);
+            let $row = $btn.closest('.metode-row');
+
+            // Simpan snapshot nilai awal untuk Batal
+            $row.data('snap-bobot', $row.find('.metode-bobot-input').val());
+            $row.data('snap-metode', $row.find('.metode-select').val());
+            let snapCpmks = [];
+            $row.find('.cpmk-check:checked').each(function() { snapCpmks.push($(this).data('cpmk-id')); });
+            $row.data('snap-cpmks', snapCpmks);
+
+            unlockRow($row);
+
+            // Sembunyikan Hapus, ganti Edit -> Simpan + Batal
+            $row.find('.remove-metode-btn').hide().addClass('d-none');
+            $btn.replaceWith(`
+                <button type="button" class="btn btn-sm btn-primary btn-save-paket py-1 px-2" title="Simpan Perubahan">
+                    <i class="mdi mdi-content-save me-1"></i> Simpan
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-cancel-paket py-1 px-2" title="Batal Edit">
+                    <i class="mdi mdi-close me-1"></i> Batal
+                </button>
+            `);
+
+            recalculateStatus();
+        });
+
+        // Handler Klik Batal per paket
+        $(document).on('click', '.btn-cancel-paket', function(e) {
+            e.preventDefault();
+            let $cancelBtn = $(this);
+            let $row = $cancelBtn.closest('.metode-row');
+
+            // Kembalikan nilai snapshot
+            let snapBobot = $row.data('snap-bobot');
+            let snapMetode = $row.data('snap-metode');
+            let snapCpmks = $row.data('snap-cpmks') || [];
+            if (snapBobot !== undefined) $row.find('.metode-bobot-input').val(snapBobot);
+            if (snapMetode !== undefined) $row.find('.metode-select').val(snapMetode);
+            $row.find('.cpmk-check').each(function() {
+                $(this).prop('checked', snapCpmks.includes($(this).data('cpmk-id')));
+            });
+
+            lockRow($row);
+
+            // Pulihkan tombol: hapus Simpan+Batal, kembalikan Edit+Hapus
+            $row.find('.btn-save-paket').remove();
+            $cancelBtn.replaceWith(`
+                <button type="button" class="btn btn-sm btn-outline-primary btn-edit-paket py-1 px-2" title="Edit Paket Metode">
+                    <i class="mdi mdi-pencil me-1"></i> Edit
+                </button>
+            `);
+            $row.find('.remove-metode-btn').show().removeClass('d-none').removeAttr('style');
+
+            recalculateStatus();
+        });
+
+        // Fungsi validasi form sebelum simpan
+        function validateMetodeForm() {
+            let $rows = $('.metode-row');
+            if ($rows.length === 0) {
+                alert('Minimal harus ada 1 metode penilaian.');
+                return false;
+            }
+
+            let hasError = false, errMsg = '', $errTarget = null;
+
+            $rows.each(function(idx) {
+                let $row = $(this);
+                let mVal = $row.find('.metode-select').val();
+                let bRaw = $row.find('.metode-bobot-input').val();
+                let bVal = parseFloat(bRaw);
+                let mText = mVal ? $row.find('.metode-select option:selected').text().trim() : 'Paket #' + (idx+1);
+
+                if (!mVal || mVal === '__add_new__') {
+                    hasError = true; errMsg = 'Paket #' + (idx+1) + ' belum memilih Metode Penilaian.';
+                    $errTarget = $row.find('.metode-select'); return false;
+                }
+                if (bRaw === '' || isNaN(bVal) || bVal <= 0) {
+                    hasError = true; errMsg = 'Paket "' + mText + '" belum mengisi Bobot yang valid (0.01 - 100).';
+                    $errTarget = $row.find('.metode-bobot-input'); return false;
+                }
+                if ($row.find('.cpmk-check:checked').length === 0) {
+                    hasError = true; errMsg = 'Metode "' + mText + '" harus memiliki minimal 1 CPMK yang dicentang.';
+                    $errTarget = $row; return false;
+                }
+                // Cek soal breakdown
+                $row.find('.cpmk-card').each(function() {
+                    let $soalRows = $(this).find('.soal-item-row');
+                    if ($soalRows.length > 1) {
+                        let s = 0;
+                        $soalRows.each(function() { s += parseFloat($(this).find('.soal-bobot-input').val()) || 0; });
+                        if (Math.round(s * 100)/100 !== 100) {
+                            hasError = true; errMsg = 'Total kontribusi soal pada metode "' + mText + '" harus 100% (saat ini: ' + s.toFixed(2) + '%).';
+                            $errTarget = $(this); return false;
+                        }
+                    }
+                });
+                if (hasError) return false;
+            });
+
+            if (hasError) {
+                alert(errMsg);
+                if ($errTarget) {
+                    if ($errTarget[0] && $errTarget[0].scrollIntoView) $errTarget[0].scrollIntoView({behavior:'smooth',block:'center'});
+                    $errTarget.focus && $errTarget.focus();
+                }
+                return false;
+            }
+
+            let totalBobot = 0;
+            $rows.each(function() { totalBobot += parseFloat($(this).find('.metode-bobot-input').val()) || 0; });
+            if (Math.round(totalBobot * 100)/100 !== 100) {
+                alert('Total bobot semua metode harus 100%. Saat ini: ' + totalBobot.toFixed(2) + '%');
+                return false;
+            }
+
+            let mappedIds = new Set();
+            $rows.find('.cpmk-check:checked').each(function() {
+                let cid = $(this).data('cpmk-id');
+                if (cid) mappedIds.add(cid);
+            });
+            if (mappedIds.size < totalCpmkCount && totalCpmkCount > 0) {
+                alert('Semua ' + totalCpmkCount + ' CPMK mata kuliah harus terpetakan. Baru ' + mappedIds.size + ' yang terpetakan.');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Handler Simpan per paket (existing rows, setelah klik Edit)
+        $(document).on('click', '.btn-save-paket', function(e) {
+            e.preventDefault();
+            if (!validateMetodeForm()) return;
+            $('#form-metode-cpmk').find('input, select').prop('disabled', false);
+            $('#form-metode-cpmk')[0].submit();
+        });
+
+        // Handler submit form (dari btn-submit-metode bawah untuk tambah pemetaan baru)
+        $('#form-metode-cpmk').on('submit', function(e) {
+            if (!validateMetodeForm()) { e.preventDefault(); return false; }
+            $(this).find('input, select').prop('disabled', false);
         });
 
         $(document).on('change', 'input[type="radio"]', function() {
@@ -1165,13 +1277,8 @@ select:disabled {
                 $btnUpload.addClass('disabled btn-secondary').removeClass('btn-primary').attr('disabled', 'disabled');
             }
 
-            // Tombol Simpan HANYA DITAMPILKAN & AKTIF pada mode edit (!isLocked)
-            if (isLocked) {
-                $btnSubmit.attr('style', 'display: none !important;').addClass('d-none');
-                $('.remove-metode-btn, .btn-add-soal, .remove-soal-btn').attr('style', 'display: none !important;').addClass('d-none');
-            } else {
-                $btnSubmit.attr('style', '').removeClass('d-none');
-                $('.remove-metode-btn, .btn-add-soal, .remove-soal-btn').attr('style', '').removeClass('d-none');
+            // Atur status tombol submit bawah jika ada
+            if ($btnSubmit.length) {
                 if (isFullyComplete) {
                     $btnSubmit
                         .prop('disabled', false)
@@ -1179,7 +1286,7 @@ select:disabled {
                         .addClass('btn-primary')
                         .removeAttr('disabled')
                         .css({ 'background-color': '', 'border-color': '', 'color': '', 'cursor': 'pointer', 'opacity': '1' });
-                    $btnSubmit.attr('title', 'Simpan Perubahan Metode & Pemetaan CPMK');
+                    $btnSubmit.attr('title', 'Simpan Metode & Pemetaan CPMK');
                 } else {
                     $btnSubmit
                         .prop('disabled', true)
@@ -1206,13 +1313,26 @@ select:disabled {
             let templateContent = document.getElementById('metode-row-template').content.cloneNode(true);
             let $row = $(templateContent).find('.metode-row');
             $row.attr('data-row-index', rowCounter);
+            $row.addClass('highlight-new-row');
 
             $('#metode-container').append($row);
             updateSelectOptions();
             recalculateStatus();
+
+            // Scroll ke baris baru & fokus ke select metode
+            let rawEl = $row[0];
+            setTimeout(function() {
+                if (rawEl && rawEl.scrollIntoView) rawEl.scrollIntoView({behavior:'smooth', block:'center'});
+                let targetTop = $row.offset() ? ($row.offset().top - 120) : 0;
+                window.scrollTo({top: targetTop, behavior:'smooth'});
+                setTimeout(function() { $row.find('.metode-select').focus({preventScroll:true}); }, 400);
+            }, 60);
+
+            setTimeout(function() { $row.removeClass('highlight-new-row'); }, 2500);
         }
 
-        $(document).on('click', '.btn-add-metode', function() {
+        $(document).on('click', '.btn-add-metode', function(e) {
+            e.preventDefault();
             createNewRow();
         });
 
@@ -1369,10 +1489,50 @@ select:disabled {
             });
         });
 
-        $(document).on('click', '.remove-metode-btn', function() {
-            $(this).closest('.metode-row').remove();
+        $(document).on('click', '.remove-metode-btn', function(e) {
+            e.preventDefault();
+            let $row = $(this).closest('.metode-row');
+            let mName = $row.find('.metode-select option:selected').text().trim() || 'paket ini';
+            if (!confirm('Hapus paket metode "' + mName + '"?')) return;
+            $row.remove();
             updateSelectOptions();
             recalculateStatus();
+        });
+
+        // Batasi input bobot: hanya 0-100, angka dan satu titik desimal
+        $(document).on('keydown', '.metode-bobot-input, .soal-bobot-input', function(e) {
+            const allowed = ['Backspace','Delete','Tab','Escape','Enter','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'];
+            if (allowed.includes(e.key) || e.ctrlKey || e.metaKey) return;
+            if (['-','+','e','E',' '].includes(e.key)) { e.preventDefault(); return; }
+            if ((e.key === '.' || e.key === ',') && this.value.includes('.')) { e.preventDefault(); return; }
+            if (!/^[0-9.,]$/.test(e.key)) { e.preventDefault(); return; }
+            // Prediksi nilai jika melebihi 100
+            let start = this.selectionStart, end = this.selectionEnd;
+            let projected = this.value.substring(0, start) + e.key + this.value.substring(end);
+            let num = parseFloat(projected);
+            if (!isNaN(num) && num > 100) { e.preventDefault(); this.value = '100'; $(this).trigger('input'); }
+        });
+
+        // Filter on paste/input
+        $(document).on('input paste', '.metode-bobot-input, .soal-bobot-input', function() {
+            let el = this;
+            setTimeout(function() {
+                let raw = el.value.replace(',', '.');
+                raw = raw.replace(/[^0-9.]/g, '');
+                let parts = raw.split('.');
+                if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+                parts = raw.split('.');
+                if (parts.length === 2 && parts[1].length > 2) raw = parts[0] + '.' + parts[1].substring(0, 2);
+                let num = parseFloat(raw);
+                if (!isNaN(num)) { if (num > 100) raw = '100'; else if (num < 0) raw = '0'; }
+                if (el.value !== raw) el.value = raw;
+            }, 0);
+        });
+
+        $(document).on('blur', '.metode-bobot-input, .soal-bobot-input', function() {
+            let num = parseFloat($(this).val());
+            if (isNaN(num) || num < 0) $(this).val('0');
+            else if (num > 100) $(this).val('100');
         });
 
         $(document).on('input change', '.metode-bobot-input', function() {
@@ -1508,9 +1668,16 @@ select:disabled {
             }
         });
 
-        // Terapkan state terkunci (read-only) atau terbuka sesuai status pemetaan
-        applyLockState(isLocked);
-        // Terapkan Mode AB secara tegas saat pertama kali dimuat
+        // Kunci semua baris existing (read-only) saat halaman pertama dimuat
+        if (isLocked) {
+            $('.metode-row[data-metode-id]').each(function() {
+                // Hanya kunci baris yang punya data-metode-id (existing rows)
+                let mId = $(this).attr('data-metode-id');
+                if (mId) lockRow($(this));
+            });
+        }
+
+        recalculateStatus();
         applyModeUI('AB');
 
         // Inisialisasi tooltip Bootstrap

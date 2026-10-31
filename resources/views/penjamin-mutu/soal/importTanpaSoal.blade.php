@@ -156,8 +156,8 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                     }
                 </style>
 
-                @php
-                    $totalCols = $isUnivLevel ? 10 : ($isFacultyLevel ? 9 : 8);
+                                @php
+                    $totalCols = $isUnivLevel ? 9 : ($isFacultyLevel ? 8 : 7);
                 @endphp
 
                 <div class="table-responsive">
@@ -175,9 +175,8 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                 <th style="width: 120px;">NPM</th>
                                 <th>Nama</th>
                                 <th>Mata Kuliah</th>
-                                <th>Jenis</th>
-                                <th class="text-center" style="width: 120px;">Nilai</th>
-                                <th class="text-center" style="width: 150px;">Rincian Nilai</th>
+                                <th class="text-center" style="width: 120px;">Nilai Akhir MK</th>
+                                <th class="text-center" style="width: 130px;">Detail</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -189,160 +188,140 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                 </tr>
                             @else
                                 @php $groupIndex = 0; @endphp
-                                @foreach ($mutus as $groupKey => $items)
+                                @foreach ($mutus as $row)
                                     @php
                                         $groupIndex++;
-                                        $first = $items->first();
-                                        $metodeName = $first->Jenis ?? '-';
-                                        $nilaiMetode = $first->Nilai ?? $items->avg('nilaiSoal') ?? 0;
-                                        $taLabel = isset($first->ta_tahun) 
-                                            ? ($first->ta_tahun . ($first->ta_semester ? ' (' . $first->ta_semester . ')' : '')) 
-                                            : ($first->tahunAjaran?->tahun ? ($first->tahunAjaran->tahun . ' (' . $first->tahunAjaran->jenis_semester . ')') : ($first->tahun ?: '-'));
-                                        
-                                        // Daftar nilai per soal/CPMK langsung dari data $items metode ini
-                                        $uniqueSubItems = $items->unique(function($sub) {
-                                            return ($sub->id ?? '') . '_' . ($sub->soal ?? '') . '_' . ($sub->Cpmk ?? '');
-                                        });
+                                        $detailId = 'detail-mk-ts-' . $groupIndex;
+                                        $metodes   = $row->metodes ?? collect();
+                                        $skorCpmk  = $row->skor_cpmk ?? [];
                                     @endphp
-                                    {{-- Main Row Per Mahasiswa + Mata Kuliah + Metode + Tahun Ajaran --}}
+
+                                    {{-- Main Row: 1 baris per mahasiswa per MK --}}
                                     <tr>
                                         @if ($isUnivLevel)
-                                            <td class="fw-semibold">{{ $first->nama_fakultas ?? '-' }}</td>
-                                            <td class="fw-semibold">{{ $first->nama_prodi }}</td>
+                                            <td class="fw-semibold">{{ $row->nama_fakultas ?? '-' }}</td>
+                                            <td class="fw-semibold">{{ $row->nama_prodi ?? '-' }}</td>
                                         @elseif ($isFacultyLevel)
-                                            <td class="fw-semibold">{{ $first->nama_prodi }}</td>
+                                            <td class="fw-semibold">{{ $row->nama_prodi ?? '-' }}</td>
                                         @endif
-                                        <td class="small fw-semibold text-secondary">{{ $taLabel }}</td>
-                                        <td class="text-center text-muted">{{ $first->angkatan ?: '-' }}</td>
+                                        <td class="small fw-semibold text-secondary">{{ $row->ta_label ?? '-' }}</td>
+                                        <td class="text-center text-muted">{{ $row->angkatan ?: '-' }}</td>
                                         <td>
-                                            <span class="font-monospace fw-semibold">{{ $first->npm }}</span>
+                                            <span class="font-monospace fw-semibold">{{ $row->npm }}</span>
                                         </td>
                                         <td>
-                                            <div class="fw-semibold text-dark">{{ $first->nama_mhs ?: 'Tanpa Nama' }}</div>
+                                            <div class="fw-semibold text-dark">{{ $row->nama_mhs ?: 'Tanpa Nama' }}</div>
                                         </td>
                                         <td>
-                                            <div class="small fw-semibold text-dark">{{ $first->nama_mk ?: $first->Course }}</div>
-                                            <div class="text-muted small">{{ $first->Course }}</div>
+                                            <div class="small fw-semibold text-dark">{{ $row->nama_mk ?: $row->Course }}</div>
+                                            <div class="text-muted small">{{ $row->Course }}</div>
                                         </td>
-                                        <td>
-                                            {{ strtoupper($metodeName) }}{{ !empty($first->examWeight) && $first->examWeight > 0 ? ' (' . $first->examWeight . '%)' : '' }}
-                                        </td>
-                                        <td class="text-center">
-                                            {{ is_numeric($nilaiMetode) ? number_format((float)$nilaiMetode, 2) : ($nilaiMetode ?: '0') }}
+                                        <td class="text-center fw-bold text-dark">
+                                            {{ number_format((float)($row->nilai_akhir_mk ?? 0), 2) }}
                                         </td>
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 toggle-soal-btn d-inline-flex align-items-center gap-1 shadow-none"
-                                                type="button" 
-                                                data-bs-toggle="collapse" 
-                                                data-bs-target="#collapseGroupTanpaSoal{{ $groupIndex }}" 
-                                                aria-expanded="false" 
-                                                aria-controls="collapseGroupTanpaSoal{{ $groupIndex }}">
-                                                <i class="mdi mdi-format-list-bulleted"></i>
-                                                <span>{{ $uniqueSubItems->count() }} Detail</span>
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#{{ $detailId }}"
+                                                aria-expanded="false"
+                                                aria-controls="{{ $detailId }}">
+                                                <i class="mdi mdi-view-list"></i>
+                                                <span>{{ $metodes->count() }} Metode</span>
                                                 <i class="mdi mdi-chevron-down ms-1"></i>
                                             </button>
                                         </td>
                                     </tr>
 
-                                    {{-- Collapsible Rows: Rincian Nilai Tanpa Kolom Bobot --}}
-                                    <tr class="collapse bg-light bg-opacity-50" id="collapseGroupTanpaSoal{{ $groupIndex }}">
+                                    {{-- Detail Collapse: Metode-level breakdown --}}
+                                    <tr class="collapse bg-light bg-opacity-50" id="{{ $detailId }}">
                                         <td colspan="{{ $totalCols }}" class="p-3 border-top-0">
                                             <div class="card border-0 shadow-sm rounded-3">
                                                 <div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
                                                     <span class="fw-bold small text-primary">
-                                                        <i class="mdi mdi-file-document-outline me-1"></i> Rincian Nilai per Soal / Instrumen &mdash; {{ strtoupper($metodeName) }}
+                                                        <i class="mdi mdi-school-outline me-1"></i>
+                                                        Rincian Nilai per Metode &mdash; {{ $row->nama_mk ?: $row->Course }}
                                                     </span>
                                                     <span class="badge bg-light text-secondary border small">
-                                                        Total Item: {{ $uniqueSubItems->count() }}
+                                                        {{ $metodes->count() }} Metode
                                                     </span>
                                                 </div>
-                                                <div class="table-responsive p-0">
-                                                    <table class="table table-sm table-bordered align-middle mb-0 small">
-                                                        <thead class="table-light">
-                                                            <tr class="text-muted">
-                                                                <th class="text-center" style="width: 45px;">No</th>
-                                                                <th>Nama Soal / Instrumen</th>
-                                                                <th class="text-center" style="width: 130px;">CPMK</th>
-                                                                <th class="text-center" style="width: 130px;">CPL</th>
-                                                                <th class="text-center" style="width: 120px;">Bobot (%)</th>
-                                                                <th class="text-center" style="width: 120px;">Nilai Soal</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @php
-                                                                $subExamWeight = (float)($first->examWeight ?? 0);
-                                                                $uniqueCpmkCount = $uniqueSubItems->pluck('Cpmk')->filter()->unique()->count() ?: 1;
-                                                                $cpmkPortion = $subExamWeight > 0 ? ($subExamWeight / $uniqueCpmkCount) : 0;
-                                                                $groupedByCpmk = $uniqueSubItems->groupBy(fn($si) => (string)($si->Cpmk ?? 'cpmk_default'));
-                                                            @endphp
-                                                            @forelse ($uniqueSubItems as $subItem)
-                                                                @php
-                                                                    $cpmkLabel = $subItem->cpmk_kode;
-                                                                    if (empty($cpmkLabel) && !empty($subItem->Cpmk)) {
-                                                                        $cpmkRec = \Illuminate\Support\Facades\DB::table('cpmks')->where('id', $subItem->Cpmk)->first();
-                                                                        $cpmkLabel = $cpmkRec->kode ?? ('CPMK-' . $subItem->Cpmk);
-                                                                    }
-                                                                    $cplLabel = $subItem->cpl_kode;
-                                                                    if (empty($cplLabel) && !empty($subItem->Cpl)) {
-                                                                        $cplRec = \Illuminate\Support\Facades\DB::table('cpls')->where('id', $subItem->Cpl)->first();
-                                                                        $cplLabel = $cplRec->kode ?? ('CPL-' . $subItem->Cpl);
-                                                                    }
+                                                <div class="p-3">
+                                                    @foreach ($metodes as $mIdx => $metode)
+                                                        @php
+                                                            $metodeDetailId = $detailId . '-metode-' . $mIdx;
+                                                        @endphp
+                                                        <div class="mb-3">
+                                                            <div class="d-flex align-items-center justify-content-between bg-white border rounded px-3 py-2 mb-0">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="fw-bold text-dark">{{ strtoupper($metode->jenis_nama) }}</span>
+                                                                    @if ($metode->bobot > 0)
+                                                                        <span class="badge bg-warning bg-opacity-20 text-warning-emphasis border border-warning border-opacity-25 small">Bobot: {{ $metode->bobot }}%</span>
+                                                                    @endif
+                                                                    <span class="fw-bold text-primary ms-2">Nilai: {{ number_format((float)$metode->nilai, 2) }}</span>
+                                                                </div>
+                                                                @if ($metode->soal_count > 0)
+                                                                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0 toggle-soal-btn d-inline-flex align-items-center gap-1 shadow-none"
+                                                                        type="button"
+                                                                        data-bs-toggle="collapse"
+                                                                        data-bs-target="#{{ $metodeDetailId }}"
+                                                                        aria-expanded="false">
+                                                                        <i class="mdi mdi-format-list-bulleted small"></i>
+                                                                        <span class="small">{{ $metode->soal_count }} Detail</span>
+                                                                        <i class="mdi mdi-chevron-down ms-1 small"></i>
+                                                                    </button>
+                                                                @endif
+                                                            </div>
 
-                                                                    $cpmkKey = (string)($subItem->Cpmk ?? 'cpmk_default');
-                                                                    $soalsInThisCpmk = $groupedByCpmk->get($cpmkKey, collect());
-                                                                    $numSoalsInThisCpmk = $soalsInThisCpmk->count() ?: 1;
-                                                                    $totalInputBobotInCpmk = $soalsInThisCpmk->sum(fn($s) => (float)($s->BobotSoal ?? 0));
-
-                                                                    $effectiveBobot = null;
-                                                                    if ($cpmkPortion > 0) {
-                                                                        // Jika BobotSoal sudah tersimpan sebagai bobot efektif (misal 5% dari metode 20%)
-                                                                        if ((float)$subItem->BobotSoal > 0 && (float)$subItem->BobotSoal < $cpmkPortion) {
-                                                                            $effectiveBobot = (float)$subItem->BobotSoal;
-                                                                        } elseif ($numSoalsInThisCpmk > 1 && $totalInputBobotInCpmk > 0) {
-                                                                            // Ada beberapa soal dalam 1 CPMK: bobot efektif = rasio kontribusi soal x porsi CPMK
-                                                                            $rasio = (float)($subItem->BobotSoal ?? 0) / $totalInputBobotInCpmk;
-                                                                            $effectiveBobot = round($rasio * $cpmkPortion, 2);
-                                                                        } else {
-                                                                            // Default 1 soal dalam CPMK ini: menyerap 100% dari porsi CPMK tersebut
-                                                                            $effectiveBobot = round($cpmkPortion, 2);
-                                                                        }
-                                                                    } elseif ($subItem->BobotSoal !== null) {
-                                                                        $effectiveBobot = (float)$subItem->BobotSoal;
-                                                                    }
-                                                                @endphp
-                                                                <tr>
-                                                                    <td class="text-center text-muted">{{ $loop->iteration }}</td>
-                                                                    <td>
-                                                                        <span class="fw-semibold text-dark">{{ $subItem->soal ?: 'Soal #1' }}</span>
-                                                                    </td>
-                                                                    <td class="text-center">
-                                                                        @if (!empty($cpmkLabel))
-                                                                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">{{ $cpmkLabel }}</span>
-                                                                        @else
-                                                                            <span class="text-muted">-</span>
-                                                                        @endif
-                                                                    </td>
-                                                                    <td class="text-center">
-                                                                        @if (!empty($cplLabel))
-                                                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border">{{ $cplLabel }}</span>
-                                                                        @else
-                                                                            <span class="text-muted">-</span>
-                                                                        @endif
-                                                                    </td>
-                                                                    <td class="text-center fw-semibold text-muted">
-                                                                        {{ $effectiveBobot !== null ? $effectiveBobot . '%' : '-' }}
-                                                                    </td>
-                                                                    <td class="text-center">
-                                                                        <span class="fw-bold text-dark">{{ is_numeric($subItem->nilaiSoal ?? $subItem->Nilai) ? number_format((float)($subItem->nilaiSoal ?? $subItem->Nilai), 2) : ($subItem->nilaiSoal ?? $subItem->Nilai ?? '0') }}</span>
-                                                                    </td>
-                                                                </tr>
-                                                            @empty
-                                                                <tr>
-                                                                    <td colspan="6" class="text-center text-muted py-2">Tidak ada rincian nilai.</td>
-                                                                </tr>
-                                                            @endforelse
-                                                        </tbody>
-                                                    </table>
+                                                            @if ($metode->soal_count > 0)
+                                                                <div class="collapse" id="{{ $metodeDetailId }}">
+                                                                    <div class="table-responsive border rounded-bottom border-top-0">
+                                                                        <table class="table table-sm table-bordered align-middle mb-0 small">
+                                                                            <thead class="table-light">
+                                                                                <tr class="text-muted">
+                                                                                    <th class="text-center" style="width: 45px;">No</th>
+                                                                                    <th>Nama Soal / Instrumen</th>
+                                                                                    <th class="text-center" style="width: 110px;">CPMK</th>
+                                                                                    <th class="text-center" style="width: 100px;">Bobot (%)</th>
+                                                                                    <th class="text-center" style="width: 100px;">Nilai</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                @forelse ($metode->soals as $soal)
+                                                                                    @php
+                                                                                        $cpmkLabel = $soal->cpmk_kode ?? null;
+                                                                                    @endphp
+                                                                                    <tr>
+                                                                                        <td class="text-center text-muted">{{ $loop->iteration }}</td>
+                                                                                        <td>
+                                                                                            <span class="fw-semibold text-dark">{{ $soal->soal ?: 'Soal #1' }}</span>
+                                                                                        </td>
+                                                                                        <td class="text-center">
+                                                                                            @if (!empty($cpmkLabel))
+                                                                                                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">{{ $cpmkLabel }}</span>
+                                                                                            @else
+                                                                                                <span class="text-muted">-</span>
+                                                                                            @endif
+                                                                                        </td>
+                                                                                        <td class="text-center fw-semibold text-muted">
+                                                                                            {{ $soal->BobotSoal !== null ? $soal->BobotSoal . '%' : '-' }}
+                                                                                        </td>
+                                                                                        <td class="text-center">
+                                                                                            <span class="fw-bold text-dark">{{ is_numeric($soal->nilaiSoal ?? $soal->Nilai) ? number_format((float)($soal->nilaiSoal ?? $soal->Nilai), 2) : ($soal->nilaiSoal ?? $soal->Nilai ?? '0') }}</span>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                @empty
+                                                                                    <tr>
+                                                                                        <td colspan="5" class="text-center text-muted py-2">Tidak ada rincian nilai.</td>
+                                                                                    </tr>
+                                                                                @endforelse
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    @endforeach
                                                 </div>
                                             </div>
                                         </td>
@@ -352,7 +331,7 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                         </tbody>
                     </table>
                 </div>
-            </div>
+
             @if ($mutus->hasPages())
                 <div class="card-footer bg-white border-top py-2 px-3">
                     {{ $mutus->links('pagination::bootstrap-5') }}
