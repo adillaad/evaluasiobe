@@ -294,6 +294,74 @@ class CPLController extends Controller
         return view('penjamin-mutu.cpl.pemetaan_cpl_pl', compact('cpls', 'profilLulusans', 'kurikulums'));
     }
 
+    /**
+     * Distribute target weight equally among items using penny rounding (Largest Remainder).
+     * Guaranteed to sum to EXACTLY $targetSum with 2 decimal places and never exceed 100%.
+     */
+    private static function distributeEqualWeights($items, $targetSum = 100.0)
+    {
+        $n = count($items);
+        if ($n === 0) {
+            return;
+        }
+
+        $targetCents = (int)round($targetSum * 100);
+        $baseCents = intdiv($targetCents, $n);
+        $remainder = $targetCents % $n;
+
+        $idx = 0;
+        foreach ($items as $item) {
+            $itemCents = $baseCents + ($idx < $remainder ? 1 : 0);
+            $weight = round($itemCents / 100.0, 2);
+            $weightVal = ((float)$weight == (int)$weight) ? (int)$weight : $weight;
+            ProfilCpl::where('id', $item->id)->update(['bobot' => $weightVal]);
+            $idx++;
+        }
+    }
+
+    /**
+     * Distribute target weight proportionally using the Largest Remainder Method (Hare-Niemeyer).
+     * Guaranteed to sum to EXACTLY $targetSum with 2 decimal places and never exceed 100%.
+     */
+    private static function distributeProportionalWeights($items, $targetSum = 100.0)
+    {
+        $totalSum = (float)$items->sum('bobot');
+        if ($totalSum <= 0) {
+            self::distributeEqualWeights($items, $targetSum);
+            return;
+        }
+
+        $targetCents = (int)round($targetSum * 100);
+        $allocatedCents = [];
+        $remainders = [];
+
+        foreach ($items as $item) {
+            $rawCents = (((float)$item->bobot) / $totalSum) * $targetCents;
+            $floorCents = (int)floor($rawCents);
+            $allocatedCents[$item->id] = $floorCents;
+            $remainders[$item->id] = $rawCents - $floorCents;
+        }
+
+        $missingCents = $targetCents - array_sum($allocatedCents);
+
+        arsort($remainders);
+        $added = 0;
+        foreach ($remainders as $itemId => $frac) {
+            if ($added < $missingCents) {
+                $allocatedCents[$itemId]++;
+                $added++;
+            } else {
+                break;
+            }
+        }
+
+        foreach ($items as $item) {
+            $weight = round($allocatedCents[$item->id] / 100.0, 2);
+            $weightVal = ((float)$weight == (int)$weight) ? (int)$weight : $weight;
+            ProfilCpl::where('id', $item->id)->update(['bobot' => $weightVal]);
+        }
+    }
+
     public static function recalculateCplPlBobot($idProfil, $forceEqual = false)
     {
         if (!$idProfil) {
@@ -313,11 +381,7 @@ class CPLController extends Controller
         }
 
         if ($forceEqual) {
-            $equalBobot = round(100.0 / $count, 2);
-            $equalBobotVal = (float)$equalBobot == (int)$equalBobot ? (int)$equalBobot : $equalBobot;
-            foreach ($profilCpls as $item) {
-                ProfilCpl::where('id', $item->id)->update(['bobot' => $equalBobotVal]);
-            }
+            self::distributeEqualWeights($profilCpls, 100.0);
             return;
         }
 
@@ -342,43 +406,37 @@ class CPLController extends Controller
         if ($unweightedItems->isNotEmpty()) {
             $totalExplicit = (float)$explicitItems->sum('bobot');
             if ($explicitItems->isEmpty() || $totalExplicit >= 100.0) {
-                $equalBobot = round(100.0 / $count, 2);
-                $equalBobotVal = (float)$equalBobot == (int)$equalBobot ? (int)$equalBobot : $equalBobot;
-                foreach ($profilCpls as $item) {
-                    ProfilCpl::where('id', $item->id)->update(['bobot' => $equalBobotVal]);
+                self::distributeEqualWeights($profilCpls, 100.0);
+            } else {
+                $remainingWeight = max(0, 100.0 - $totalExplicit);
+                self::distributeEqualWeights($unweightedItems, $remainingWeight);
+            }
+        } else {
+            // All items have explicit weights: ensure sum is strictly 100.00%
+            $totalSum = (float)$explicitItems->sum('bobot');
+            if (abs($totalSum - 100.0) > 0.001) {
+                $weights = $explicitItems->pluck('bobot')->map(fn($w) => (float)$w);
+                $minW = $weights->min();
+                $maxW = $weights->max();
+                // If all weights are approximately equal (e.g. from previous division with small rounding differences)
+                if (($maxW - $minW) <= 0.05) {
+                    self::distributeEqualWeights($profilCpls, 100.0);
+                } else {
+                    self::distributeProportionalWeights($profilCpls, 100.0);
                 }
-                return;
             }
-
-            $remainingWeight = max(0, 100.0 - $totalExplicit);
-            $unweightedCount = $unweightedItems->count();
-            $equalBobot = round($remainingWeight / $unweightedCount, 2);
-            $equalBobotVal = (float)$equalBobot == (int)$equalBobot ? (int)$equalBobot : $equalBobot;
-            foreach ($unweightedItems as $item) {
-                ProfilCpl::where('id', $item->id)->update(['bobot' => $equalBobotVal]);
-            }
-            return;
         }
 
-        // When all items have explicit weights ($unweightedItems is empty):
-        // Check if total sum is not 100% (e.g. after deleting a CPL)
-        $totalSum = (float)$explicitItems->sum('bobot');
-        if (abs($totalSum - 100.0) > 0.01) {
-            // Check if all items currently have equal weights
-            $uniqueWeights = $explicitItems->pluck('bobot')->map(fn($w) => (float)$w)->unique();
-            if ($uniqueWeights->count() <= 1) {
-                $equalBobot = round(100.0 / $count, 2);
-                $equalBobotVal = (float)$equalBobot == (int)$equalBobot ? (int)$equalBobot : $equalBobot;
-                foreach ($profilCpls as $item) {
-                    ProfilCpl::where('id', $item->id)->update(['bobot' => $equalBobotVal]);
-                }
-            } else {
-                // Scale weights proportionally to sum up to 100%
-                foreach ($profilCpls as $item) {
-                    $scaled = round(((float)$item->bobot / $totalSum) * 100.0, 2);
-                    $scaledVal = (float)$scaled == (int)$scaled ? (int)$scaled : $scaled;
-                    ProfilCpl::where('id', $item->id)->update(['bobot' => $scaledVal]);
-                }
+        // Hard guarantee fail-safe: Ensure total sum never exceeds 100.00% under any circumstance
+        $finalItems = ProfilCpl::where('idProfil', $idProfil)->get();
+        $finalSum = round((float)$finalItems->sum('bobot'), 2);
+        if ($finalSum > 100.00) {
+            $diff = round($finalSum - 100.00, 2);
+            $largest = $finalItems->sortByDesc('bobot')->first();
+            if ($largest) {
+                $newBobot = max(0, round((float)$largest->bobot - $diff, 2));
+                $newBobotVal = ((float)$newBobot == (int)$newBobot) ? (int)$newBobot : $newBobot;
+                ProfilCpl::where('id', $largest->id)->update(['bobot' => $newBobotVal]);
             }
         }
     }
@@ -626,6 +684,28 @@ class CPLController extends Controller
                 ->back()
                 ->withInput()
                 ->with('failed', 'Gagal menyimpan data: ' . $validator->errors()->first());
+        }
+
+        // Validate that total manual bobot input does not exceed 100%
+        $sumInputBobot = 0;
+        $hasCustomBobot = false;
+        if ($request->has('bobot') && is_array($request->bobot)) {
+            foreach ($request->cpl_ids as $cplId) {
+                $rawBobot = $request->bobot[$cplId] ?? null;
+                if ($rawBobot !== null && $rawBobot !== '') {
+                    $num = (float)$rawBobot;
+                    $bVal = ($num > 0 && $num <= 1.0) ? round($num * 100.0, 2) : $num;
+                    $sumInputBobot += $bVal;
+                    $hasCustomBobot = true;
+                }
+            }
+        }
+
+        if ($hasCustomBobot && $sumInputBobot > 100.0) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('failed', "Gagal menyimpan data: Total bobot yang Anda masukkan ({$sumInputBobot}%) melebihi batas maksimal 100%.");
         }
 
         try {
@@ -952,6 +1032,32 @@ class CPLController extends Controller
         $cpls = $queryCpl->get();
         $matrix = $request->input('matrix', []);
         $bobots = $request->input('bobot', []);
+
+        // Validate that no Profil Lulusan has total manual bobot > 100%
+        $profilManualTotals = [];
+        foreach ($cpls as $cpl) {
+            $selectedProfilIds = isset($matrix[$cpl->id]) ? array_map('intval', (array)$matrix[$cpl->id]) : [];
+            foreach ($selectedProfilIds as $profilId) {
+                $rawBobot = $bobots[$cpl->id][$profilId] ?? null;
+                if ($rawBobot !== null && $rawBobot !== '') {
+                    $num = (float)$rawBobot;
+                    $bVal = ($num > 0 && $num <= 1.0) ? round($num * 100.0, 2) : $num;
+                    $profilManualTotals[$profilId] = ($profilManualTotals[$profilId] ?? 0) + $bVal;
+                }
+            }
+        }
+
+        foreach ($profilManualTotals as $pId => $total) {
+            if ($total > 100.0) {
+                $pl = ProfilLulusan::find($pId);
+                $plName = $pl ? ($pl->namaProfil ?: $pl->kode) : "Profil ID {$pId}";
+                $errMsg = "Total bobot untuk {$plName} tidak boleh melebihi 100% (Total saat ini: {$total}%).";
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $errMsg], 422);
+                }
+                return redirect()->back()->with('failed', $errMsg);
+            }
+        }
 
         DB::transaction(function () use ($cpls, $matrix, $bobots) {
             $affectedProfilIds = [];

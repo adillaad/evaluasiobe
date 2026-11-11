@@ -73,7 +73,7 @@
                             }
                         }
                         $sumBobotFmt = round($sumBobot, 2);
-                        if ($sumBobotFmt < 100) {
+                        if ($sumBobotFmt < 99.95) {
                             $unmetPls[] = [
                                 'nama' => $plCheck->namaProfil ?: ($plCheck->kode ?: 'Profil Lulusan'),
                                 'total' => $sumBobotFmt == (int)$sumBobotFmt ? (int)$sumBobotFmt : $sumBobotFmt,
@@ -139,8 +139,8 @@
                                         }
                                         $totalBobotPL = round($totalBobotPL, 2);
                                         $formattedTotal = ($totalBobotPL == (int)$totalBobotPL) ? (int)$totalBobotPL : $totalBobotPL;
-                                        $isLessThan100 = ($totalBobotPL < 100);
-                                        $isExact100 = (abs($totalBobotPL - 100) < 0.01);
+                                        $isExact100 = (abs($totalBobotPL - 100) < 0.05);
+                                        $isLessThan100 = ($totalBobotPL < 99.95);
                                     @endphp
                                     <tr>
                                         <td class="text-center align-middle">{{ $index + 1 }}</td>
@@ -559,7 +559,7 @@
             total = Math.round(total * 100) / 100;
             let badgeEl = $(tr).find('.total-bobot-badge');
             
-            if (Math.abs(total - 100) < 0.01) {
+            if (Math.abs(total - 100) < 0.05) {
                 badgeEl.html('<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1.5 rounded-pill font-12 fw-bold d-inline-flex align-items-center gap-1"><i class="mdi mdi-check-decagram"></i> 100% (Sesuai)</span>');
             } else if (total < 100) {
                 let kurang = Math.round((100 - total) * 100) / 100;
@@ -601,8 +601,46 @@
             }
         });
 
-        // Form submit handler to collect input from all DataTables pages
+        // Form submit handler to validate and collect input from all DataTables pages
         $('#form-matrix-edit').on('submit', function (e) {
+            let hasOver100 = false;
+            let overPlName = '';
+            let overTotal = 0;
+
+            $('#cplPlTable tbody tr').each(function() {
+                let tr = $(this);
+                let total = 0;
+                tr.find('.matrix-checkbox:checked').each(function() {
+                    let cell = $(this).closest('.matrix-cell');
+                    let val = parseFloat(cell.find('.matrix-bobot-input').val());
+                    if (!isNaN(val) && val > 0) {
+                        total += val;
+                    }
+                });
+                total = Math.round(total * 100) / 100;
+                if (total > 100.0) {
+                    hasOver100 = true;
+                    overPlName = tr.find('.col-pl, td:nth-child(2)').text().trim();
+                    overTotal = total;
+                    return false;
+                }
+            });
+
+            if (hasOver100) {
+                e.preventDefault();
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Total Bobot Melebihi 100%',
+                        text: 'Total bobot untuk ' + overPlName + ' tidak boleh melebihi 100% (saat ini: ' + overTotal + '%). Mohon sesuaikan bobot terlebih dahulu.',
+                        confirmButtonColor: '#2664F5'
+                    });
+                } else {
+                    alert('Total bobot untuk ' + overPlName + ' tidak boleh melebihi 100% (saat ini: ' + overTotal + '%). Mohon sesuaikan bobot terlebih dahulu.');
+                }
+                return false;
+            }
+
             if (dataTableInst) {
                 const form = this;
                 dataTableInst.$('input.matrix-checkbox:checked').each(function () {

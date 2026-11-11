@@ -69,6 +69,11 @@
                             <div class="text-center text-muted py-3">Tidak ada CPL yang tersedia.</div>
                         @endforelse
                     </div>
+
+                    <div id="bobot-warning-bar" class="d-none alert alert-danger mt-2 py-2 px-3 small font-weight-bold d-flex align-items-center gap-2">
+                        <i class="mdi mdi-alert-circle font-18"></i>
+                        <span id="bobot-warning-text"></span>
+                    </div>
                 </div>
 
                 <div class="d-flex align-items-center gap-2 mt-4">
@@ -146,6 +151,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 cb.checked = false;
                 updateRowState(cb);
             });
+        });
+    }
+
+    function checkTotalBobot() {
+        let total = 0;
+        let hasCustom = false;
+        document.querySelectorAll('.cpl-row-card').forEach(function(row) {
+            const cb = row.querySelector('.cplId-checkbox');
+            const bInput = row.querySelector('.bobot');
+            if (cb && cb.checked && bInput && bInput.value !== '') {
+                const val = parseFloat(bInput.value);
+                if (!isNaN(val) && val > 0) {
+                    total += val;
+                    hasCustom = true;
+                }
+            }
+        });
+        total = Math.round(total * 100) / 100;
+        const warningBar = document.getElementById('bobot-warning-bar');
+        const warningText = document.getElementById('bobot-warning-text');
+        if (warningBar && warningText) {
+            if (hasCustom && total > 100.0) {
+                warningText.textContent = 'Perhatian: Total bobot yang Anda inputkan (' + total + '%) melebihi 100%. Maksimal total bobot adalah 100%.';
+                warningBar.classList.remove('d-none');
+            } else {
+                warningBar.classList.add('d-none');
+            }
+        }
+        return { total, hasCustom };
+    }
+
+    document.querySelectorAll('.bobot').forEach(function(input) {
+        input.addEventListener('input', checkTotalBobot);
+    });
+
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const res = checkTotalBobot();
+            if (res.hasCustom && res.total > 100.0) {
+                e.preventDefault();
+                alert('Total bobot yang Anda masukkan (' + res.total + '%) melebihi 100%. Mohon sesuaikan bobot hingga tidak melebihi 100%.');
+                return false;
+            }
         });
     }
 
