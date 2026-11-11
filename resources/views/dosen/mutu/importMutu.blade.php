@@ -207,6 +207,20 @@
                                                 </span>
                                             </div>
                                             <div class="p-3">
+                                                @if (!empty($skorCpmk))
+                                                    <div class="bg-light p-2 rounded mb-3 border">
+                                                        <div class="small fw-bold text-dark mb-1">
+                                                            <i class="ti ti-chart-bar text-primary me-1"></i> Skor Capaian CPMK:
+                                                        </div>
+                                                        <div class="d-flex flex-wrap gap-1">
+                                                            @foreach ($skorCpmk as $kCpmk => $valSkor)
+                                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">
+                                                                    {{ $kCpmk }}: <strong>{{ number_format((float)$valSkor, 2) }}</strong>
+                                                                </span>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endif
                                                 @foreach ($metodes as $mIdx => $metode)
                                                     @php $metodeDetailId = $detailId . '-m-' . $mIdx; @endphp
                                                     <div class="mb-3">

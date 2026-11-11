@@ -138,6 +138,13 @@ class MutuImport implements ToCollection, WithCalculatedFormulas
                 $nilai = $row[$i] ?? null;
                 if ($nilai === null || $nilai === '') continue;
 
+                // ── [Validation] Klem nilai agar selalu dalam rentang 0–100 ──
+                $nilaiFloat = (float) $nilai;
+                if ($nilaiFloat < 0 || $nilaiFloat > 100) {
+                    Log::warning("MutuImport: nilai di luar rentang 0–100 pada NPM {$npm}, kolom {$i}: '{$nilai}'. Nilai diklem ke batas [0, 100].");
+                    $nilaiFloat = max(0.0, min(100.0, $nilaiFloat));
+                }
+
                 $currentUser = auth()->user();
                 $univIdRow   = ($colUniv !== null && !empty($row[$colUniv])) 
                     ? Universitas::where('nama', $row[$colUniv])->value('id') 
@@ -163,7 +170,7 @@ class MutuImport implements ToCollection, WithCalculatedFormulas
                     'BobotSoal'      => $bobot,
                     'Cpl'            => $cpl,
                     'Cpmk'           => $cpmk,
-                    'nilaiSoal'      => $nilai,
+                    'nilaiSoal'      => $nilaiFloat,
                 ]);
             }
         }

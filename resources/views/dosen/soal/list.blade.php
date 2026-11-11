@@ -196,6 +196,7 @@
                                                 data-cpmk-judul="{{ $soal->cpmk_judul ?? '' }}"
                                                 data-minggu="{{ $soal->minggu ?? '-' }}"
                                                 data-status="{{ $badgeLabel }}"
+                                                data-status-raw="{{ $soal->status }}"
                                                 data-status-class="{{ $badgeClass }}"
                                                 data-komentar="{{ $soal->komentar ?? '' }}"
                                                 data-edit-url="{{ in_array($soal->status, ['Belum', 'Tolak']) ? url('/dosen/soal/edit-soal/' . $soal->id) : '' }}">
@@ -539,6 +540,14 @@
                 document.body.classList.remove('modal-open');
                 document.body.style.removeProperty('overflow');
                 document.body.style.removeProperty('padding-right');
+
+                // Reset tombol edit modal saat modal ditutup
+                const btnEdit = document.getElementById('viewModalBtnEdit');
+                if (btnEdit) {
+                    btnEdit.removeAttribute('href');
+                    btnEdit.classList.add('d-none');
+                    btnEdit.style.display = 'none';
+                }
             }
 
             document.addEventListener('click', function(e) {
@@ -605,13 +614,19 @@
                         pertanyaanEl.innerHTML = (content && content.trim() !== '') ? content : '<span class="text-muted fst-italic">Belum ada pertanyaan yang diisi.</span>';
                     }
 
+                    const rawStatus = (btn.getAttribute('data-status-raw') || '').trim();
+                    const isAllowedToEdit = (rawStatus === 'Belum' || rawStatus === 'Tolak') && editUrl && editUrl.trim() !== '';
+
                     const btnEdit = document.getElementById('viewModalBtnEdit');
                     if (btnEdit) {
-                        if (editUrl) {
+                        if (isAllowedToEdit) {
                             btnEdit.setAttribute('href', editUrl);
                             btnEdit.classList.remove('d-none');
+                            btnEdit.style.display = 'inline-flex';
                         } else {
+                            btnEdit.removeAttribute('href');
                             btnEdit.classList.add('d-none');
+                            btnEdit.style.display = 'none';
                         }
                     }
 

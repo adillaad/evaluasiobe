@@ -61,136 +61,154 @@
                     $prodiObj = $konversi->mk?->prodi ?? auth()->user()->prodiUserObj ?? new \App\Models\Prodi();
                 @endphp
                 <div class="table-responsive">
-                    <table class="table table-hover table-bordered align-middle">
-                        <thead class="table-primary text-center align-middle">
-                            <tr>
-                                <th style="width: 4%" class="fw-bold">No</th>
-                                <th style="width: 8%" class="fw-bold">Angkatan</th>
-                                <th style="width: 12%" class="fw-bold">NPM</th>
-                                <th class="fw-bold">Nama Mahasiswa</th>
-                                <th class="fw-bold">Metode Penilaian</th>
-                                <th class="fw-bold">CPMK / Soal</th>
-                                <th class="fw-bold">Nilai CPMK (Nilai Soal)</th>
-                                <th class="fw-bold">Nilai Akhir Metode</th>
-                                <th class="fw-bold">Nilai Akhir MK</th>
-                                <th class="fw-bold">Huruf Mutu MK</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php
-                                $mhsCounter = 0;
-                            @endphp
-                            @forelse ($mhsGrouped as $npm => $items)
-                                @php
-                                    $mhsCounter++;
-                                    $firstItem = $items->first();
-                                    $mhsModel = $firstItem->mahasiswa ?? null;
-                                    $totalMhsRows = $items->count();
+    <table class="table table-hover table-bordered align-middle">
+        <thead class="table-primary text-center align-middle">
+            <tr>
+                <th class="fw-bold">No</th>
+                <th class="fw-bold">Angkatan</th>
+                <th class="fw-bold">NPM</th>
+                <th class="fw-bold">Nama Mahasiswa</th>
+                <th class="fw-bold">Nilai Akhir MK</th>
+                <th class="fw-bold">Huruf Mutu MK</th>
+                <th class="fw-bold">Detail</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $mhsCounter = 0; @endphp
+            @forelse ($mhsGrouped as $npm => $items)
+                @php
+                    $mhsCounter++;
+                    $firstItem = $items->first();
+                    $mhsModel = $firstItem->mahasiswa ?? null;
 
-                                    // Kelompokkan item per metode penilaian
-                                    $metodeGrouped = $items->groupBy(function($it) {
-                                        return $it->konversi_metode_id ?: ($it->Jenis ?: 'default');
-                                    });
+                    // Group by metode for detail view
+                    $metodeGrouped = $items->groupBy(function($it) {
+                        return $it->konversi_metode_id ?: ($it->Jenis ?: 'default');
+                    });
 
-                                    // Hitung Nilai Akhir MK per mahasiswa (Penjumlahan terbobot dari Nilai Akhir Metode)
-                                    $totalNaMk = 0;
-                                    $hasValidScore = false;
-                                    foreach ($metodeGrouped as $kmKey => $kmItems) {
-                                        $firstKmItem = $kmItems->first();
-                                        $nMetode = $firstKmItem->Nilai !== null ? (float)$firstKmItem->Nilai : null;
-                                        $bMetode = (float)($firstKmItem->konversiMetode?->bobot ?? $firstKmItem->BobotSoal ?? 0);
-                                        if ($nMetode !== null) {
-                                            $totalNaMk += ($nMetode * ($bMetode / 100.0));
-                                            $hasValidScore = true;
-                                        }
-                                    }
-                                    $valNaMk = $hasValidScore ? round($totalNaMk, 2) : null;
-                                    $hurufNaMk = $valNaMk !== null ? ($prodiObj->convertGrade($valNaMk)[0] ?? '-') : '-';
+                    // Calculate Nilai Akhir MK (weighted sum)
+                    $totalNaMk = 0;
+                    $hasValidScore = false;
+                    foreach ($metodeGrouped as $kmItems) {
+                        $kmFirst = $kmItems->first();
+                        $nMetode = $kmFirst->Nilai !== null ? (float)$kmFirst->Nilai : null;
+                        $bMetode = (float)($kmFirst->konversiMetode?->bobot ?? $kmFirst->BobotSoal ?? 0);
+                        if ($nMetode !== null) {
+                            $totalNaMk += ($nMetode * ($bMetode / 100.0));
+                            $hasValidScore = true;
+                        }
+                    }
+                    $valNaMk = $hasValidScore ? round($totalNaMk, 2) : null;
+                    $hurufNaMk = $valNaMk !== null ? ($prodiObj->convertGrade($valNaMk)[0] ?? '-') : '-';
 
-                                    $isFirstMhsRow = true;
-                                @endphp
-
+                    // Hitung Skor CPMK per mahasiswa
+                    $mhsCpmkScores = [];
+                    $itemsByCpmk = $items->filter(fn($r) => !empty($r->cpmk?->kode) || !empty($r->Cpmk))
+                        ->groupBy(fn($r) => $r->cpmk?->kode ?: ('CPMK-' . $r->Cpmk));
+                    foreach ($itemsByCpmk as $cKode => $cRows) {
+                        $sumW = 0; $sumS = 0;
+                        foreach ($cRows as $r) {
+                            $bSoal = (float)($r->BobotSoal ?? 0);
+                            $w = $bSoal > 0 ? $bSoal : 1;
+                            $sc = $r->nilaiSoal !== null ? (float)$r->nilaiSoal : (float)($r->Nilai ?? 0);
+                            $sumS += ($sc * $w);
+                            $sumW += $w;
+                        }
+                        $mhsCpmkScores[$cKode] = $sumW > 0 ? round($sumS / $sumW, 2) : 0;
+                    }
+                    uksort($mhsCpmkScores, 'strnatcmp');
+                @endphp
+                <tr>
+                    <td class="text-center bg-white align-middle">{{ $mhsCounter }}</td>
+                    <td class="text-center bg-white align-middle">{{ $mhsModel->angkatan ?? $firstItem->angkatan ?? '-' }}</td>
+                    <td class="text-center fw-semibold text-dark bg-white align-middle">{{ $npm }}</td>
+                    <td class="fw-semibold text-dark bg-white align-middle">
+                        <div>{{ $firstItem->Nama_mhs ?? $firstItem->nama_mhs ?? $mhsModel->Nama ?? '-' }}</div>
+                        @if (!empty($mhsCpmkScores))
+                            <div class="mt-2 pt-1 border-top">
+                                <div class="text-muted" style="font-size: 0.72rem; font-weight: 600;">Skor CPMK:</div>
+                                <div class="d-flex flex-wrap gap-1 mt-1">
+                                    @foreach ($mhsCpmkScores as $cKode => $scVal)
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style="font-size: 0.7rem; font-weight: 600;">
+                                            {{ $cKode }}: {{ number_format($scVal, 2) }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </td>
+                    <td class="text-center align-middle bg-white">
+                        {{ $valNaMk !== null ? number_format($valNaMk, 2) : '-' }}
+                    </td>
+                    <td class="text-center align-middle bg-white">
+                        {{ $hurufNaMk }}
+                    </td>
+                    <td class="text-center align-middle bg-white">
+                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#detail-{{ $npm }}" aria-expanded="false" aria-controls="detail-{{ $npm }}">
+                            Lihat Detail
+                        </button>
+                    </td>
+                </tr>
+                {{-- Hidden detail rows for each metode & CPMK --}}
+                <tr class="collapse" id="detail-{{ $npm }}">
+                    <td colspan="7" class="p-0 pt-2">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Metode Penilaian</th>
+                                    <th>CPMK / Soal</th>
+                                    <th>Nilai CPMK (Nilai Soal)</th>
+                                    <th>Nilai Akhir Metode</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 @foreach ($metodeGrouped as $kmKey => $kmItems)
                                     @php
-                                        $totalKmRows = $kmItems->count();
-                                        $firstKmItem = $kmItems->first();
-                                        $metodeName = $firstKmItem->Jenis ?? $firstKmItem->konversiMetode?->metodePenilaian?->nama ?? 'Metode';
-                                        $nilaiAkhirMetode = $firstKmItem->Nilai;
+                                        $firstKm = $kmItems->first();
+                                        $metodeName = $firstKm->Jenis ?? $firstKm->konversiMetode?->metodePenilaian?->nama ?? 'Metode';
                                     @endphp
-
                                     @foreach ($kmItems as $cIndex => $item)
                                         <tr>
-                                            {{-- Informasi Mahasiswa (Span Seluruh Metode) --}}
-                                            @if ($isFirstMhsRow)
-                                                <td class="text-center bg-white align-middle" rowspan="{{ $totalMhsRows }}">{{ $mhsCounter }}</td>
-                                                <td class="text-center bg-white align-middle" rowspan="{{ $totalMhsRows }}">{{ $mhsModel->angkatan ?? $item->angkatan ?? '-' }}</td>
-                                                <td class="text-center fw-semibold text-dark bg-white align-middle" rowspan="{{ $totalMhsRows }}">{{ $npm }}</td>
-                                                <td class="fw-semibold text-dark bg-white align-middle" rowspan="{{ $totalMhsRows }}">{{ $item->Nama_mhs ?? $item->nama_mhs ?? $mhsModel->Nama ?? '-' }}</td>
-                                            @endif
-
-                                            {{-- Kolom Metode Penilaian (Span Per Metode) --}}
                                             @if ($cIndex === 0)
-                                                <td class="align-middle bg-white fw-semibold text-dark" rowspan="{{ $totalKmRows }}">
-                                                    {{ $metodeName }}
-                                                </td>
+                                                <td rowspan="{{ $kmItems->count() }}" class="align-middle bg-white fw-semibold">{{ $metodeName }}</td>
                                             @endif
-
-                                            {{-- Kolom CPMK / Soal (Tulisan Biasa) --}}
-                                            <td class="align-middle text-dark">
-                                                @php
-                                                    $cpmkLabel = $item->cpmk?->kode ?? ($item->Cpmk ? 'CPMK-' . $item->Cpmk : null);
-                                                    $soalLabel = $item->soal;
-                                                @endphp
-                                                @if ($soalLabel && $cpmkLabel)
-                                                    <span>{{ $soalLabel }} ({{ $cpmkLabel }})</span>
-                                                @elseif ($soalLabel)
-                                                    <span>{{ $soalLabel }}</span>
+                                            @php
+                                                $cpmkLabel = $item->cpmk?->kode ?? ($item->Cpmk ? 'CPMK-' . $item->Cpmk : null);
+                                                $soalLabel = $item->soal;
+                                                $isGenericSoal = empty($soalLabel) || preg_match('/^Soal\s*(#\s*\d+|\d+)?$/i', trim($soalLabel));
+                                            @endphp
+                                            <td>
+                                                @if (!$isGenericSoal && $cpmkLabel)
+                                                    <span>{{ $cpmkLabel }} ({{ $soalLabel }})</span>
                                                 @elseif ($cpmkLabel)
                                                     <span>{{ $cpmkLabel }}</span>
+                                                @elseif (!$isGenericSoal)
+                                                    <span>{{ $soalLabel }}</span>
                                                 @else
-                                                    <span class="text-muted small">&mdash;</span>
+                                                    <span class="text-muted small">—</span>
                                                 @endif
                                             </td>
-
-                                            {{-- Kolom Nilai CPMK / Nilai Soal --}}
-                                            <td class="text-center align-middle bg-white text-dark">
+                                            <td class="text-center">
                                                 {{ $item->nilaiSoal !== null ? number_format($item->nilaiSoal, 2) : ($item->Nilai !== null ? number_format($item->Nilai, 2) : '-') }}
                                             </td>
-
-                                            {{-- Kolom Nilai Akhir Metode (Span Per Metode) --}}
                                             @if ($cIndex === 0)
-                                                <td class="text-center align-middle bg-white text-dark" rowspan="{{ $totalKmRows }}">
-                                                    {{ $nilaiAkhirMetode !== null ? number_format($nilaiAkhirMetode, 2) : '-' }}
+                                                <td rowspan="{{ $kmItems->count() }}" class="text-center align-middle bg-white">
+                                                    {{ $firstKm->Nilai !== null ? number_format($firstKm->Nilai, 2) : '-' }}
                                                 </td>
-                                            @endif
-
-                                            {{-- Kolom Nilai Akhir MK & Huruf Mutu MK (Span Seluruh Metode) --}}
-                                            @if ($isFirstMhsRow)
-                                                <td class="text-center align-middle bg-white fw-bold text-dark" rowspan="{{ $totalMhsRows }}">
-                                                    {{ $valNaMk !== null ? number_format($valNaMk, 2) : '-' }}
-                                                </td>
-                                                <td class="text-center align-middle bg-white" rowspan="{{ $totalMhsRows }}">
-                                                    @if ($valNaMk !== null)
-                                                        <span class="fw-bold text-dark fs-6">{{ $hurufNaMk }}</span>
-                                                    @else
-                                                        <span class="text-muted small">&mdash;</span>
-                                                    @endif
-                                                </td>
-                                                @php $isFirstMhsRow = false; @endphp
                                             @endif
                                         </tr>
                                     @endforeach
                                 @endforeach
-                            @empty
-                                <tr>
-                                    <td colspan="10" class="text-center text-muted p-4">
-                                        <i class="mdi mdi-information-outline me-1"></i> Belum ada data nilai yang diimpor.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="7" class="text-center">Tidak ada data nilai.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
             </div>
         </div>
     </div>

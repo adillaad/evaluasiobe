@@ -784,54 +784,17 @@ select:disabled {
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-3">
-                    <p class="small text-secondary fw-semibold mb-2">Pilih format jenis file Excel yang akan di-upload:</p>
-
-                    {{-- Kategori 1 --}}
-                    <div class="category-header py-1 px-3 mb-2 small fw-bold">
-                        <i class="mdi mdi-buffer me-1 text-primary"></i> KATEGORI 1: Nilai Per Metode
-                    </div>
-                    <div class="d-flex flex-column gap-2 mb-2">
-                        <label for="up_format_standar" class="modern-option-card rounded-3" style="padding: 0.6rem 0.85rem !important;">
-                            <div class="d-flex align-items-start gap-2">
-                                <input class="form-check-input option-upload-type mt-1 flex-shrink-0" type="radio" name="format_type" id="up_format_standar" value="standar" checked>
-                                <div class="flex-grow-1">
-                                    <div class="option-title small fw-bold">Nilai Akhir Per Metode Penilaian</div>
-                                    <div class="option-desc text-muted small">Kolom Excel memuat nama metode (`UTS`, `UAS`, `Tugas`).</div>
-                                </div>
-                            </div>
-                        </label>
-
-                        <label for="up_format_cpmk" class="modern-option-card rounded-3" style="padding: 0.6rem 0.85rem !important;">
-                            <div class="d-flex align-items-start gap-2">
-                                <input class="form-check-input option-upload-type mt-1 flex-shrink-0" type="radio" name="format_type" id="up_format_cpmk" value="metode_cpmk">
-                                <div class="flex-grow-1">
-                                    <div class="option-title small fw-bold">Nilai Akhir Per Metode & CPMK</div>
-                                    <div class="option-desc text-muted small">Kolom Excel memuat kombinasi metode dan CPMK (`UAS – CPMK 1`, `UAS – CPMK 2`).</div>
-                                </div>
-                            </div>
-                        </label>
+                    <div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-3 d-flex align-items-center gap-2">
+                        <i class="mdi mdi-information-outline fs-5 text-info"></i>
+                        <div>
+                            Sistem akan secara <strong>otomatis mendeteksi dan memvalidasi</strong> kategori template Excel yang Anda unggah (Nilai Per Metode, Nilai Per Metode & CPMK, atau Nilai Per Soal).
+                        </div>
                     </div>
 
-                    {{-- Kategori 2 --}}
-                    <div class="category-header py-1 px-3 mb-2 small fw-bold">
-                        <i class="mdi mdi-format-list-bulleted me-1 text-primary"></i> KATEGORI 2: Nilai Per Soal
-                    </div>
-                    <div class="mb-2">
-                        <label for="up_format_soal" class="modern-option-card rounded-3" style="padding: 0.6rem 0.85rem !important;">
-                            <div class="d-flex align-items-start gap-2">
-                                <input class="form-check-input option-upload-type mt-1 flex-shrink-0" type="radio" name="format_type" id="up_format_soal" value="breakdown_soal">
-                                <div class="flex-grow-1">
-                                    <div class="option-title small fw-bold">Nilai Per Soal</div>
-                                    <div class="option-desc text-muted small">Kolom Excel memuat Nilai Metode serta rincian nilai butir soal per CPMK.</div>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div class="pt-2 border-top mt-2">
+                    <div>
                         <label for="excel_file" class="form-label fw-bold text-dark small mb-1">Pilih File Excel (.xlsx, .xls, .csv) <span class="text-danger">*</span></label>
                         <input type="file" class="form-control form-control-sm" id="excel_file" name="excel_file" accept=".xlsx,.xls,.csv" required>
-                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;"><i class="mdi mdi-information-outline me-1"></i> Pastikan format header kolom pada file Excel sudah sesuai dengan template yang Anda pilih.</small>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;"><i class="mdi mdi-check-circle-outline text-success me-1"></i> Pastikan file yang diunggah menggunakan salah satu dari 3 format template resmi yang diunduh dari sistem.</small>
                     </div>
                 </div>
                 <div class="modal-footer py-2 px-3 d-flex justify-content-between align-items-center">

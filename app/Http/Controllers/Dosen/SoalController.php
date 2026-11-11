@@ -1526,6 +1526,13 @@ class SoalController extends Controller
                     $nilai = $row[$i] ?? null;
                     if ($nilai === null || $nilai === '') continue;
 
+                    // -- Validasi dan klem nilaiSoal dalam rentang 0-100 --
+                    $nilaiFloat = (float) $nilai;
+                    if ($nilaiFloat < 0 || $nilaiFloat > 100) {
+                        Log::warning('mutuimport: nilai di luar rentang 0-100 pada NPM ' . $npm . ', kolom ' . $i . ': ' . $nilai . '. Diklem ke [0, 100].');
+                        $nilaiFloat = max(0.0, min(100.0, $nilaiFloat));
+                    }
+
                     $univIdRow = ($colMap['colUniv'] !== null && !empty($row[$colMap['colUniv']])) 
                         ? Universitas::where('nama', $row[$colMap['colUniv']])->value('id') 
                         : null;
@@ -1551,7 +1558,7 @@ class SoalController extends Controller
                         'BobotSoal'      => $bobot,
                         'Cpl'            => $cpl,
                         'Cpmk'           => $cpmk,
-                        'nilaiSoal'      => $nilai,
+                        'nilaiSoal'      => $nilaiFloat,
                     ]);
                 }
             }
@@ -1736,7 +1743,7 @@ class SoalController extends Controller
                         'Nilai'          => $row[10],
                         'soal'           => $substring[0] ?? '',
                         'BobotSoal'      => $substring[1] ?? null,
-                        'nilaiSoal'      => $nilai,
+                        'nilaiSoal'      => $nilaiFloat,
                     ]);
                 }
             }
@@ -1906,6 +1913,12 @@ class SoalController extends Controller
     {
         $soal = Soal::findOrFail($id);
 
+        // Guard: soal yang sudah Valid tidak dapat diedit
+        if ($soal->status === 'Valid') {
+            return redirect()->route('dosen.soal-list')
+                ->with('error', 'Soal yang sudah divalidasi tidak dapat diedit.');
+        }
+
         $rpss = RPS::with('mk')
             ->where('pengembang', auth()->user()->name)
             ->where('id_prodi', auth()->user()->id_prodiUser)
@@ -1933,6 +1946,12 @@ class SoalController extends Controller
         DB::beginTransaction();
         try {
             $soal = Soal::findOrFail($id);
+
+            // Guard: soal yang sudah Valid tidak dapat diupdate
+            if ($soal->status === 'Valid') {
+                return redirect()->route('dosen.soal-list')
+                    ->with('error', 'Soal yang sudah divalidasi tidak dapat diubah.');
+            }
 
             $soal->update([
                 'kode_mk'         => $request->kode_mk,

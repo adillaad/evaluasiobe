@@ -247,6 +247,20 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                                     </span>
                                                 </div>
                                                 <div class="p-3">
+                                                    @if (!empty($skorCpmk))
+                                                        <div class="bg-light p-2 rounded mb-3 border">
+                                                            <div class="small fw-bold text-dark mb-1">
+                                                                <i class="mdi mdi-chart-box-outline text-primary me-1"></i> Skor Capaian CPMK:
+                                                            </div>
+                                                            <div class="d-flex flex-wrap gap-1">
+                                                                @foreach ($skorCpmk as $kCpmk => $valSkor)
+                                                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">
+                                                                        {{ $kCpmk }}: <strong>{{ number_format((float)$valSkor, 2) }}</strong>
+                                                                    </span>
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+                                                    @endif
                                                     @foreach ($metodes as $mIdx => $metode)
                                                         @php
                                                             $metodeDetailId = $detailId . '-metode-' . $mIdx;
@@ -290,11 +304,19 @@ $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program
                                                                                 @forelse ($metode->soals as $soal)
                                                                                     @php
                                                                                         $cpmkLabel = $soal->cpmk_kode ?? null;
+                                                                                        $soalLabel = $soal->soal ?? '';
+                                                                                        $isGenericSoal = empty($soalLabel) || preg_match('/^Soal\s*(#\s*\d+|\d+)?$/i', trim($soalLabel));
                                                                                     @endphp
                                                                                     <tr>
                                                                                         <td class="text-center text-muted">{{ $loop->iteration }}</td>
                                                                                         <td>
-                                                                                            <span class="fw-semibold text-dark">{{ $soal->soal ?: 'Soal #1' }}</span>
+                                                                                            @if (!$isGenericSoal && $cpmkLabel)
+                                                                                                <span class="fw-semibold text-dark">{{ $cpmkLabel }} ({{ $soalLabel }})</span>
+                                                                                            @elseif ($cpmkLabel)
+                                                                                                <span class="fw-semibold text-dark">{{ $cpmkLabel }}</span>
+                                                                                            @else
+                                                                                                <span class="fw-semibold text-dark">{{ $soalLabel ?: '-' }}</span>
+                                                                                            @endif
                                                                                         </td>
                                                                                         <td class="text-center">
                                                                                             @if (!empty($cpmkLabel))
