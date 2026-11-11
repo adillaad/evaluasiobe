@@ -1129,7 +1129,7 @@
                 </h5>
             </div>
             <div class="card-body p-4">
-                <form id="hasilvisualcpmk-mahasiswa" method="POST" action="hasilvisualcpmk-mahasiswa" enctype="multipart/form-data">
+                <form id="hasilvisualcpmk-mahasiswa" method="POST" action="{{ Route::has($currentPrefix . 'visualisasi.hasilvisualcpmk-mahasiswa') ? route($currentPrefix . 'visualisasi.hasilvisualcpmk-mahasiswa') : (Route::has($currentPrefix . 'hasilvisualcpmk-mahasiswa') ? route($currentPrefix . 'hasilvisualcpmk-mahasiswa') : url('hasilvisualcpmk-mahasiswa')) }}" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="from" value="mahasiswa">
                     <input type="text" name="npm" class="visually-hidden" value="">

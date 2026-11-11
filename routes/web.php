@@ -901,6 +901,16 @@ Route::middleware(['auth'])->group(function () {
                         Route::any('/generate-pdf-visualisasi-program-studi', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualProgramStudi'])->name('generate-pdfVisualProgramStudi');
                         Route::any('/generate-pdf-visualisasi-fakultas', [PenjaminMutuVisualisasiController::class, 'generatePDFhasilVisualFakultas'])->name('generate-pdfVisualFakultas');
                     });
+
+                    // Visualisasi aliases without 'visualisasi.' prefix for route compatibility
+                    Route::get('visual-mahasiswa', [PenjaminMutuVisualisasiController::class, 'index'])->name('visual-mahasiswa');
+                    Route::post('hasilvisual-mahasiswa', [PenjaminMutuVisualisasiController::class, 'hasilVisualMahasiswa'])->name('hasilvisual-mahasiswa');
+                    Route::any('hasilvisualcpmk-mahasiswa', [PenjaminMutuVisualisasiController::class, 'hasilVisualCpmkMahasiswa'])->name('hasilvisualcpmk-mahasiswa');
+                    Route::get('visual-mahasiswaAngkatan', [PenjaminMutuVisualisasiController::class, 'indexAngkatan'])->name('visual-mahasiswaAngkatan');
+                    Route::post('hasilvisual-mahasiswaAngkatan', [PenjaminMutuVisualisasiController::class, 'hasilVisualMahasiswaAngkatan'])->name('hasilvisual-mahasiswaAngkatan');
+                    Route::any('hasilvisualcpmk-angkatan', [PenjaminMutuVisualisasiController::class, 'hasilVisualCpmkAngkatan'])->name('hasilvisualcpmk-angkatan');
+                    Route::get('visual-mahasiswaMataKuliah', [PenjaminMutuVisualisasiController::class, 'indexMataKuliah'])->name('visual-mahasiswaMataKuliah');
+                    Route::post('hasilvisual-mahasiswaMataKuliah', [PenjaminMutuVisualisasiController::class, 'hasilVisualMahasiswaMataKuliah'])->name('hasilvisual-mahasiswaMataKuliah');
                 });
             });
         }

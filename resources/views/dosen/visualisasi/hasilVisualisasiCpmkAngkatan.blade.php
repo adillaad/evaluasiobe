@@ -387,7 +387,26 @@
     {{-- Hidden data attributes for PDF export --}}
     <input type="hidden" id="title" data-course="{{ $completeCourseFormat }}">
 
-    <form id="switchCourseForm" method="POST" action="hasilvisualcpmk-angkatan" style="display: none;">
+    @php
+        $visualAngkatanRoute = Route::has($currentPrefix . 'visualisasi.visual-mahasiswaAngkatan')
+            ? route($currentPrefix . 'visualisasi.visual-mahasiswaAngkatan')
+            : (Route::has($currentPrefix . 'visual-mahasiswaAngkatan') ? route($currentPrefix . 'visual-mahasiswaAngkatan') : url('/visual-mahasiswaAngkatan'));
+        $kembaliUrl = $visualAngkatanRoute . '?angkatan=' . urlencode($angkatan) . '&prodi=' . urlencode($prodi) . '&universitasCPMK=' . urlencode($universitas) . '&universitasImg=' . urlencode($universitasImg);
+
+        $cpmkAngkatanAction = Route::has($currentPrefix . 'visualisasi.hasilvisualcpmk-angkatan')
+            ? route($currentPrefix . 'visualisasi.hasilvisualcpmk-angkatan')
+            : (Route::has($currentPrefix . 'hasilvisualcpmk-angkatan') ? route($currentPrefix . 'hasilvisualcpmk-angkatan') : url('hasilvisualcpmk-angkatan'));
+
+        $pdfCpmkAngkatanRoute = Route::has($currentPrefix . 'visualisasi.generate-pdfVisualCPMKAngkatan')
+            ? route($currentPrefix . 'visualisasi.generate-pdfVisualCPMKAngkatan')
+            : (Route::has($currentPrefix . 'generate-pdfVisualCPMKAngkatan') ? route($currentPrefix . 'generate-pdfVisualCPMKAngkatan') : url('generate-pdf-visualisasi-cpmk-angkatan'));
+
+        $getAllNpmRoute = Route::has($currentPrefix . 'visualisasi.getAllNpmByAngkatan')
+            ? route($currentPrefix . 'visualisasi.getAllNpmByAngkatan')
+            : (Route::has($currentPrefix . 'getAllNpmByAngkatan') ? route($currentPrefix . 'getAllNpmByAngkatan') : url('getAllNpmByAngkatan'));
+    @endphp
+
+    <form id="switchCourseForm" method="POST" action="{{ $cpmkAngkatanAction }}" style="display: none;">
         @csrf
         <input type="hidden" name="course" id="switchCourseValue" value="{{ $course }}">
         <input type="hidden" name="angkatan" value="{{ $angkatan }}">
@@ -432,7 +451,7 @@
 
             {{-- Action Buttons --}}
             <div class="d-flex align-items-center flex-wrap gap-2">
-                <a href="{{ route($currentPrefix . 'visual-mahasiswaAngkatan') }}?angkatan={{ urlencode($angkatan) }}&prodi={{ urlencode($prodi) }}&universitasCPMK={{ urlencode($universitas) }}&universitasImg={{ urlencode($universitasImg) }}" class="modern-btn-outline text-decoration-none d-inline-flex align-items-center gap-1" title="Kembali ke halaman visualisasi per angkatan">
+                <a href="{{ $kembaliUrl }}" class="modern-btn-outline text-decoration-none d-inline-flex align-items-center gap-1" title="Kembali ke halaman visualisasi per angkatan">
                     <i class="bi bi-arrow-left"></i> Kembali
                 </a>
                 <button id="btnPrintPdf" type="button" class="modern-btn-primary">
@@ -645,7 +664,7 @@
                     <p class="text-muted small mb-3">
                         Pilih angkatan lain untuk menampilkan evaluasi CPMK pada mata kuliah <strong>{{ $completeCourseFormat }}</strong>:
                     </p>
-                    <form id="visualCpmkAngkatan" method="POST" action="hasilvisualcpmk-angkatan" enctype="multipart/form-data">
+                    <form id="visualCpmkAngkatan" method="POST" action="{{ $cpmkAngkatanAction }}" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="course" value="{{ $course }}">
                         <input type="hidden" name="prodi" value="{{ $prodi }}">
@@ -742,7 +761,7 @@
                 var prodiVal = $('input[name=prodi]').val();
                 if (!angkatanVal) return;
                 $.ajax({
-                    url: "{{ route($currentPrefix . 'getAllNpmByAngkatan') }}",
+                    url: "{{ $getAllNpmRoute }}",
                     method: 'GET',
                     data: {
                         angkatan: angkatanVal,
@@ -1183,7 +1202,7 @@
             this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Mengunduh...';
             this.disabled = true;
 
-            fetch("{{ route($currentPrefix . 'generate-pdfVisualCPMKAngkatan') }}", {
+            fetch("{{ $pdfCpmkAngkatanRoute }}", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

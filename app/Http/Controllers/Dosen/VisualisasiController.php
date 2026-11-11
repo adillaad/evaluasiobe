@@ -1929,6 +1929,23 @@ class VisualisasiController extends Controller
             }
         }
 
+        if (empty($nama) && !empty($npm)) {
+            $nama = DB::table('mahasiswa')->where('npm', $npm)->value('nama') 
+                ?? DB::table('mutus')->where('npm', $npm)->value('nama_mhs') 
+                ?? ('Mahasiswa ' . $npm);
+        }
+        if (empty($angkatan) && !empty($npm)) {
+            $angkatan = DB::table('mahasiswa')->where('npm', $npm)->value('angkatan') 
+                ?? DB::table('mutus')->where('npm', $npm)->value('angkatan');
+        }
+        if (empty($prodi) && !empty($npm)) {
+            $pId = DB::table('mahasiswa')->where('npm', $npm)->value('id_prodi') 
+                ?? DB::table('mutus')->where('npm', $npm)->value('id_prodi');
+            if ($pId) {
+                $prodi = Prodi::where('id', $pId)->value('nama') ?? $prodi;
+            }
+        }
+
         $hasYearFilter = ($tahun && $tahun !== 'all');
         $hasSemFilter = ($semester && $semester !== 'all');
 
@@ -3449,6 +3466,11 @@ class VisualisasiController extends Controller
             $prodiId = (int)$prodi;
             $prodi = Prodi::where('id', $prodiId)->value('nama') ?? $prodi;
         }
+        if (!$prodiId && auth()->user()->id_prodiUser) {
+            $prodiId = auth()->user()->id_prodiUser;
+            $prodi = Prodi::where('id', $prodiId)->value('nama') ?? $prodi;
+        }
+
         $universitas = $request->universitasCPMK;
         $universitasId = Universitas::where('nama', $universitas)->value('id');
         if (!$universitasId && is_numeric($universitas)) {
@@ -3456,7 +3478,32 @@ class VisualisasiController extends Controller
             $universitas = Universitas::where('id', $universitasId)->value('nama') ?? $universitas;
         }
         $universitasImg = $request->universitasImg;
-        $course = $request->course;
+        if (empty($universitas) || $universitas === '-') {
+            $userUniv = auth()->user()->universitas ?? (auth()->user()->prodi ? auth()->user()->prodi->fakultas->universitas ?? null : null);
+            if ($userUniv) {
+                $universitas = $userUniv->nama;
+                $universitasId = $userUniv->id;
+                if (empty($universitasImg) && !empty($userUniv->img)) {
+                    $universitasImg = asset($userUniv->img);
+                }
+            } else {
+                $defaultUniv = Universitas::first();
+                if ($defaultUniv) {
+                    $universitas = $defaultUniv->nama;
+                    $universitasId = $defaultUniv->id;
+                    if (empty($universitasImg) && !empty($defaultUniv->img)) {
+                        $universitasImg = asset($defaultUniv->img);
+                    }
+                }
+            }
+        }
+
+        $rawCourse = $request->course;
+        $course = $rawCourse;
+        if (strpos($rawCourse, '-') !== false) {
+            $parts = explode('-', $rawCourse, 2);
+            $course = trim($parts[0]);
+        }
 
         $mk = DB::table('mks')
             ->where('kode', $course)

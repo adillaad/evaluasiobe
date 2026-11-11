@@ -1029,7 +1029,7 @@
                 </h5>
             </div>
             <div class="card-body p-4">
-                <form method="POST" id="hasilvisualcpmk-angkatan" action="hasilvisualcpmk-angkatan" enctype="multipart/form-data">
+                <form method="POST" id="hasilvisualcpmk-angkatan" action="{{ Route::has($currentPrefix . 'visualisasi.hasilvisualcpmk-angkatan') ? route($currentPrefix . 'visualisasi.hasilvisualcpmk-angkatan') : (Route::has($currentPrefix . 'hasilvisualcpmk-angkatan') ? route($currentPrefix . 'hasilvisualcpmk-angkatan') : url('hasilvisualcpmk-angkatan')) }}" enctype="multipart/form-data">
                     @csrf
                     <input type="text" name="angkatan" class="visually-hidden" value="">
                     <input type="text" name="prodi" class="visually-hidden" id="prodiHidden" value="">

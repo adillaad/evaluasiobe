@@ -460,10 +460,26 @@
 
             {{-- Toolbar Tombol Aksi --}}
             @php
+                $visualMhsRoute = Route::has($currentPrefix . 'visualisasi.visual-mahasiswa')
+                    ? route($currentPrefix . 'visualisasi.visual-mahasiswa')
+                    : (Route::has($currentPrefix . 'visual-mahasiswa') ? route($currentPrefix . 'visual-mahasiswa') : url('/visual-mahasiswa'));
+
+                $visualMkRoute = Route::has($currentPrefix . 'visualisasi.visual-mahasiswaMataKuliah')
+                    ? route($currentPrefix . 'visualisasi.visual-mahasiswaMataKuliah')
+                    : (Route::has($currentPrefix . 'visual-mahasiswaMataKuliah') ? route($currentPrefix . 'visual-mahasiswaMataKuliah') : url('/visual-mahasiswaMataKuliah'));
+
                 $isFromMatakuliah = ($from ?? '') === 'matakuliah';
                 $kembaliUrl = $isFromMatakuliah
-                    ? route($currentPrefix . 'visual-mahasiswaMataKuliah') . '?course=' . urlencode($courseKode) . '&angkatan=' . urlencode($angkatan) . '&prodi=' . urlencode($prodi) . '&universitasCPMK=' . urlencode($universitas) . '&universitasImg=' . urlencode($universitasImg)
-                    : route($currentPrefix . 'visual-mahasiswa') . '?npm=' . urlencode($npm) . '&nama=' . urlencode($nama) . '&angkatan=' . urlencode($angkatan) . '&prodi=' . urlencode($prodi) . '&universitasCPMK=' . urlencode($universitas) . '&universitasImg=' . urlencode($universitasImg);
+                    ? $visualMkRoute . '?course=' . urlencode($courseKode) . '&angkatan=' . urlencode($angkatan) . '&prodi=' . urlencode($prodi) . '&universitasCPMK=' . urlencode($universitas) . '&universitasImg=' . urlencode($universitasImg)
+                    : $visualMhsRoute . '?npm=' . urlencode($npm) . '&nama=' . urlencode($nama) . '&angkatan=' . urlencode($angkatan) . '&prodi=' . urlencode($prodi) . '&universitasCPMK=' . urlencode($universitas) . '&universitasImg=' . urlencode($universitasImg);
+
+                $cpmkMhsAction = Route::has($currentPrefix . 'visualisasi.hasilvisualcpmk-mahasiswa')
+                    ? route($currentPrefix . 'visualisasi.hasilvisualcpmk-mahasiswa')
+                    : (Route::has($currentPrefix . 'hasilvisualcpmk-mahasiswa') ? route($currentPrefix . 'hasilvisualcpmk-mahasiswa') : url('hasilvisualcpmk-mahasiswa'));
+
+                $pdfCpmkMhsRoute = Route::has($currentPrefix . 'visualisasi.generate-pdfVisualCPMKMahasiswa')
+                    ? route($currentPrefix . 'visualisasi.generate-pdfVisualCPMKMahasiswa')
+                    : (Route::has($currentPrefix . 'generate-pdfVisualCPMKMahasiswa') ? route($currentPrefix . 'generate-pdfVisualCPMKMahasiswa') : url('generate-pdf-visualisasi-cpmk-mahasiswa'));
             @endphp
             <div class="d-flex align-items-center flex-wrap gap-2">
                 <a href="{{ $kembaliUrl }}" class="modern-btn-outline text-decoration-none d-inline-flex align-items-center gap-1" title="Kembali ke halaman sebelumnya">
@@ -664,7 +680,7 @@
                 </div>
                 <div class="card-body p-4">
                     <p class="text-muted small mb-3">Pilih mahasiswa lain di angkatan <strong>{{ $angkatan }}</strong> untuk melihat evaluasi CPMK:</p>
-                    <form id="visualCpmkMahasiswa" method="POST" action="hasilvisualcpmk-mahasiswa" enctype="multipart/form-data">
+                    <form id="visualCpmkMahasiswa" method="POST" action="{{ $cpmkMhsAction }}" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="from" value="{{ $from ?? 'mahasiswa' }}">
                         <input type="hidden" name="allNpm" value="{{ json_encode($allNpm) }}">
@@ -1260,7 +1276,7 @@
                 this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Mengunduh...';
                 this.disabled = true;
 
-                fetch("{{ route($currentPrefix . 'generate-pdfVisualCPMKMahasiswa') }}", {
+                fetch("{{ $pdfCpmkMhsRoute }}", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

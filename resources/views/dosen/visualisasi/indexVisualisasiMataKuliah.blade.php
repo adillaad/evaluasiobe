@@ -774,7 +774,7 @@
                     <div class="card-body p-4 d-flex flex-column justify-content-between">
                         <div>
                             <p class="text-muted small mb-3">Pilih mahasiswa untuk menampilkan visualisasi capaian CPMK individu pada mata kuliah ini:</p>
-                            <form id="hasilvisualcpmk-mahasiswa" method="POST" action="hasilvisualcpmk-mahasiswa" enctype="multipart/form-data">
+                            <form id="hasilvisualcpmk-mahasiswa" method="POST" action="{{ Route::has($currentPrefix . 'visualisasi.hasilvisualcpmk-mahasiswa') ? route($currentPrefix . 'visualisasi.hasilvisualcpmk-mahasiswa') : (Route::has($currentPrefix . 'hasilvisualcpmk-mahasiswa') ? route($currentPrefix . 'hasilvisualcpmk-mahasiswa') : url('hasilvisualcpmk-mahasiswa')) }}" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" name="from" value="matakuliah">
                                 <input type="text" name="nama" class="visually-hidden" value="">
@@ -2018,8 +2018,26 @@
             // Validasi Individu Form
             $('#hasilvisualcpmk-mahasiswa').on('submit', function(event) {
                 var npmSelect = $('#npmSelect').val();
+                var textVal = $('#npmDisplayInput').val().trim();
+                if (!npmSelect && textVal && typeof cpmkMahasiswaOptionsData !== 'undefined' && cpmkMahasiswaOptionsData.length > 0) {
+                    var lowerText = textVal.toLowerCase();
+                    var match = cpmkMahasiswaOptionsData.find(function(s) {
+                        return s.npm.toLowerCase() === lowerText || s.text.toLowerCase() === lowerText || s.nama.toLowerCase() === lowerText;
+                    });
+                    if (!match) {
+                        match = cpmkMahasiswaOptionsData.find(function(s) {
+                            return s.npm.toLowerCase().startsWith(lowerText) || s.nama.toLowerCase().startsWith(lowerText);
+                        });
+                    }
+                    if (match) {
+                        selectNpmOption(match.value, match.text, match.nama);
+                        npmSelect = match.value;
+                    }
+                }
+
                 if (!npmSelect) {
                     alert('Mohon pilih Mahasiswa (NPM) terlebih dahulu!');
+                    $('#npmDisplayInput').focus();
                     event.preventDefault();
                     return;
                 }
