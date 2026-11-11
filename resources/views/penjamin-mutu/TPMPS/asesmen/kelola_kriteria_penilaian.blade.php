@@ -147,7 +147,7 @@
                     <div class="modal-body p-3">
                         <div class="mb-3">
                             <label for="nama_kriteria_new" class="form-label fw-semibold">Nama Kriteria Penilaian</label>
-                            <input type="text" class="form-control" id="nama_kriteria_new" name="nama_kriteria" placeholder="Contoh: Ketepatan Penjelasan" required>
+                            <input type="text" class="form-control" id="nama_kriteria_new" name="nama_kriteria" placeholder="Contoh: Ketepatan Penjelasan" value="{{ old('nama_kriteria') }}" required>
                         </div>
                     </div>
                     <div class="modal-footer py-2 px-3 bg-light">

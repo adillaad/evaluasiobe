@@ -84,24 +84,34 @@ class AsesmenController extends Controller
 
     public function storeMetodePenilaian(Request $request)
     {
+        $user = auth()->user();
+        $prodiId = $user->id_prodiUser;
+        $namaMetode = trim($request->input('nama_metode', ''));
 
-        $validate = $request->validate([
-            'nama_metode' => [
-                'required',
-                'string',
-                Rule::unique('metode_penilaian', 'nama')->where('id_prodi', auth()->user()->id_prodiUser)
-            ],
-        ]);
+        if ($namaMetode === '') {
+            return redirect()->back()->withInput()->with('failed', 'Nama metode penilaian wajib diisi.');
+        }
+
+        // Cek duplikasi data metode penilaian untuk prodi yang sama (case-insensitive)
+        $exists = MetodePenilaian::where('id_prodi', $prodiId)
+            ->whereRaw('LOWER(nama) = ?', [strtolower($namaMetode)])
+            ->exists();
+
+        if ($exists) {
+            return redirect()->back()
+                ->withInput()
+                ->with('failed', 'Metode penilaian "' . $namaMetode . '" sudah ada. Data duplikat tidak dapat ditambahkan.');
+        }
 
         try {
             MetodePenilaian::create([
-                'nama' => $validate['nama_metode'],
-                'id_prodi' => auth()->user()->id_prodiUser
+                'nama' => $namaMetode,
+                'id_prodi' => $prodiId
             ]);
 
-            return redirect()->back()->with('success', 'Data Metode Penilaian berhasil disimpan');
+            return redirect()->back()->with('success', 'Data Metode Penilaian berhasil disimpan.');
         } catch (\Exception $e) {
-            return back()->with('failed', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('failed', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -170,24 +180,34 @@ class AsesmenController extends Controller
 
     public function storeInstrumenPenilaian(Request $request)
     {
-        // $validate = $request->validate(['nama_kriteria' => 'required|string|unique:instrumen_penilaian,nama_kriteria']);
-        $validate = $request->validate([
-            'nama_kriteria' => [
-                'required',
-                'string',
-                Rule::unique('instrumen_penilaian', 'nama_kriteria')->where('id_prodi', auth()->user()->id_prodiUser)
-            ],
-        ]);
+        $user = auth()->user();
+        $prodiId = $user->id_prodiUser;
+        $namaKriteria = trim($request->input('nama_kriteria', ''));
+
+        if ($namaKriteria === '') {
+            return redirect()->back()->withInput()->with('failed', 'Nama kriteria penilaian wajib diisi.');
+        }
+
+        // Cek duplikasi data kriteria penilaian untuk prodi yang sama (case-insensitive)
+        $exists = InstrumenPenilaian::where('id_prodi', $prodiId)
+            ->whereRaw('LOWER(nama_kriteria) = ?', [strtolower($namaKriteria)])
+            ->exists();
+
+        if ($exists) {
+            return redirect()->back()
+                ->withInput()
+                ->with('failed', 'Kriteria penilaian "' . $namaKriteria . '" sudah ada. Data duplikat tidak dapat ditambahkan.');
+        }
 
         try {
-            InstrumenPenilaian::firstOrCreate([
-                'nama_kriteria' => $validate['nama_kriteria'],
-                'id_prodi' => auth()->user()->id_prodiUser
+            InstrumenPenilaian::create([
+                'nama_kriteria' => $namaKriteria,
+                'id_prodi' => $prodiId
             ]);
 
-            return redirect()->back()->with('success', 'Data Instrumen Penilaian berhasil disimpan');
+            return redirect()->back()->with('success', 'Data Kriteria Penilaian berhasil disimpan.');
         } catch (\Exception $e) {
-            return back()->with('failed', 'Terjadi kesalahan :' . $e->getMessage());
+            return redirect()->back()->withInput()->with('failed', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -631,19 +651,30 @@ class AsesmenController extends Controller
         }
 
         $metode = MetodePenilaian::where('id_prodi', $user->id_prodiUser)->findOrFail($id);
+        $nama = trim($request->input('nama', ''));
 
-        $request->validate([
-            'nama' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('metode_penilaian', 'nama')->where('id_prodi', $user->id_prodiUser)->ignore($metode->id)
-            ],
-        ]);
+        if ($nama === '') {
+            return redirect()->back()->withInput()->with('failed', 'Nama metode penilaian wajib diisi.');
+        }
 
-        $metode->update(['nama' => $request->nama]);
+        // Cek duplikasi jika nama diubah ke nama yang sudah ada di prodi ini
+        $exists = MetodePenilaian::where('id_prodi', $user->id_prodiUser)
+            ->where('id', '!=', $metode->id)
+            ->whereRaw('LOWER(nama) = ?', [strtolower($nama)])
+            ->exists();
 
-        return redirect()->back()->with('success', 'Metode Penilaian berhasil diperbarui.');
+        if ($exists) {
+            return redirect()->back()
+                ->withInput()
+                ->with('failed', 'Metode penilaian "' . $nama . '" sudah ada. Data duplikat tidak diperbolehkan.');
+        }
+
+        try {
+            $metode->update(['nama' => $nama]);
+            return redirect()->back()->with('success', 'Metode Penilaian berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('failed', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     public function destroyKelolaMetode(Request $request, $id)
@@ -697,19 +728,30 @@ class AsesmenController extends Controller
         }
 
         $kriteria = InstrumenPenilaian::where('id_prodi', $user->id_prodiUser)->findOrFail($id);
+        $namaKriteria = trim($request->input('nama_kriteria', ''));
 
-        $request->validate([
-            'nama_kriteria' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('instrumen_penilaian', 'nama_kriteria')->where('id_prodi', $user->id_prodiUser)->ignore($kriteria->id)
-            ],
-        ]);
+        if ($namaKriteria === '') {
+            return redirect()->back()->withInput()->with('failed', 'Nama kriteria penilaian wajib diisi.');
+        }
 
-        $kriteria->update(['nama_kriteria' => $request->nama_kriteria]);
+        // Cek duplikasi jika nama diubah ke nama yang sudah ada di prodi ini
+        $exists = InstrumenPenilaian::where('id_prodi', $user->id_prodiUser)
+            ->where('id', '!=', $kriteria->id)
+            ->whereRaw('LOWER(nama_kriteria) = ?', [strtolower($namaKriteria)])
+            ->exists();
 
-        return redirect()->back()->with('success', 'Kriteria Penilaian berhasil diperbarui.');
+        if ($exists) {
+            return redirect()->back()
+                ->withInput()
+                ->with('failed', 'Kriteria penilaian "' . $namaKriteria . '" sudah ada. Data duplikat tidak diperbolehkan.');
+        }
+
+        try {
+            $kriteria->update(['nama_kriteria' => $namaKriteria]);
+            return redirect()->back()->with('success', 'Kriteria Penilaian berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('failed', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     public function destroyKelolaKriteria(Request $request, $id)

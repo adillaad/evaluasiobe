@@ -188,33 +188,6 @@ class KonversiNilaiController extends Controller
     public function create()
     {
         $user = auth()->user();
-
-        // Retrieve konversi record with related data
-        $konversi = $this->getKonversiQuery($user)
-            ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->findOrFail($id);
-
-        // Validate completeness before allowing template download
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
-        // Validate completeness before allowing Excel upload
         $userOtoritas = $user->otoritas->otoritas ?? 'Dosen';
 
         $prodiId = $user->id_prodiUser ?: 1;
@@ -238,33 +211,6 @@ class KonversiNilaiController extends Controller
     public function getMksByKurikulum($kurikulumId)
     {
         $user = auth()->user();
-
-        // Retrieve konversi record with related data
-        $konversi = $this->getKonversiQuery($user)
-            ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->findOrFail($id);
-
-        // Validate completeness before allowing template download
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
-        // Validate completeness before allowing Excel upload
         $prodiId = $user->id_prodiUser ?: 1;
 
         $mks = MK::where('id_kurikulum', $kurikulumId)->get();
@@ -294,33 +240,6 @@ class KonversiNilaiController extends Controller
     {
         $user = auth()->user();
 
-        // Retrieve konversi record with related data
-        $konversi = $this->getKonversiQuery($user)
-            ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->findOrFail($id);
-
-        // Validate completeness before allowing template download
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
-        // Validate completeness before allowing Excel upload
-
         $konversi = PenilaianKonversi::create([
             'dosen_id' => $user->id,
             'mk_kode' => $request->mk_kode,
@@ -336,33 +255,6 @@ class KonversiNilaiController extends Controller
     public function updateSetup(Request $request, $id)
     {
         $user = auth()->user();
-
-        // Retrieve konversi record with related data
-        $konversi = $this->getKonversiQuery($user)
-            ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->findOrFail($id);
-
-        // Validate completeness before allowing template download
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
-        // Validate completeness before allowing Excel upload
 
         $konversi = $this->getKonversiQuery($user)->findOrFail($id);
 
@@ -392,37 +284,10 @@ class KonversiNilaiController extends Controller
     public function stepMetode($id)
     {
         $user = auth()->user();
-
-        // Retrieve konversi record with related data
-        $konversi = $this->getKonversiQuery($user)
-            ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->findOrFail($id);
-
-        // Validate completeness before allowing template download
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
-        // Validate completeness before allowing Excel upload
         $userOtoritas = $user->otoritas->otoritas ?? 'Dosen';
 
-        $konversi = PenilaianKonversi::with(['mk', 'tahunAjaran', 'kurikulum', 'konversiMetode.cpmkMetode'])
-            ->where('dosen_id', $user->id)
+        $konversi = $this->getKonversiQuery($user)
+            ->with(['mk', 'tahunAjaran', 'kurikulum', 'konversiMetode.cpmkMetode'])
             ->findOrFail($id);
 
         $prodiId = ($konversi->mk && $konversi->mk->id_prodi) ? $konversi->mk->id_prodi : ($user->id_prodiUser ?: 1);
@@ -483,33 +348,6 @@ class KonversiNilaiController extends Controller
     public function storeMetodeCpmk(Request $request, $id)
     {
         $user = auth()->user();
-
-        // Retrieve konversi record with related data
-        $konversi = $this->getKonversiQuery($user)
-            ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->findOrFail($id);
-
-        // Validate completeness before allowing template download
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
-        // Validate completeness before allowing Excel upload
 
         $konversi = $this->getKonversiQuery($user)
             ->with('mk')
@@ -662,6 +500,34 @@ class KonversiNilaiController extends Controller
         }
     }
 
+    /**
+     * Validasi apakah setup konversi sudah lengkap:
+     * total bobot metode = 100% dan seluruh CPMK telah dipetakan.
+     * Digunakan sebelum mengunduh template atau mengunggah Excel.
+     */
+    private function validateKonversiCompleteness($konversi)
+    {
+        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
+        if ($cpmks->isEmpty()) {
+            $cpmks = CPMK::whereHas('mks', function ($q) use ($konversi) {
+                $q->where('kode', $konversi->mk_kode);
+            })->with('subCpmks')->get();
+        }
+
+        $totalCpmkCount = $cpmks->count();
+        $mappedCpmkIds = [];
+        foreach ($konversi->konversiMetode as $km) {
+            foreach ($km->cpmkMetode as $cm) {
+                $mappedCpmkIds[$cm->cpmk_id] = true;
+            }
+        }
+
+        $mappedCpmkCount = count($mappedCpmkIds);
+        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
+
+        return ($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0);
+    }
+
     // Step 5: Download Template Excel
     public function downloadTemplate(Request $request, $id)
     {
@@ -673,90 +539,9 @@ class KonversiNilaiController extends Controller
             ->findOrFail($id);
 
         // Validate completeness before allowing template download
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
+        if (!$this->validateKonversiCompleteness($konversi)) {
             return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
         }
-
-        // Validate completeness before allowing Excel upload
-
-                // Retrieve konversi record with related data
-        $konversi = $this->getKonversiQuery($user)
-            ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->findOrFail($id);
-
-        // Validate completeness before allowing template download
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
-        // Validate completeness before allowing Excel upload
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengupload Excel, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
 
         if ($konversi->konversiMetode->isEmpty()) {
             return redirect()->back()->with('failed', 'Metode penilaian belum dikonfigurasi.');
@@ -857,91 +642,9 @@ class KonversiNilaiController extends Controller
             ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
             ->findOrFail($id);
 
-        // Validate completeness before allowing template download
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
+        if (!$this->validateKonversiCompleteness($konversi)) {
+            return redirect()->back()->with('error', 'Sebelum mengunggah nilai Excel, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
         }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
-        // Validate completeness before allowing Excel upload
-
-                // Retrieve konversi record with related data
-        $konversi = $this->getKonversiQuery($user)
-            ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->findOrFail($id);
-
-        // Validate completeness before allowing template download
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
-        // Validate completeness before allowing Excel upload
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengupload Excel, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
 
         $actionOption = $request->input('action_option');
         $parsedRowsData = $request->input('parsed_rows_data') ?: session('temp_parsed_rows');
@@ -1656,37 +1359,10 @@ class KonversiNilaiController extends Controller
     public function showDetail($id)
     {
         $user = auth()->user();
-
-        // Retrieve konversi record with related data
-        $konversi = $this->getKonversiQuery($user)
-            ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->findOrFail($id);
-
-        // Validate completeness before allowing template download
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
-        // Validate completeness before allowing Excel upload
         $userOtoritas = $user->otoritas->otoritas ?? 'Dosen';
 
-        $konversi = PenilaianKonversi::with(['mk', 'tahunAjaran', 'kurikulum', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->where('dosen_id', $user->id)
+        $konversi = $this->getKonversiQuery($user)
+            ->with(['mk', 'tahunAjaran', 'kurikulum', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
             ->findOrFail($id);
 
         $metodeList = [];
@@ -1853,33 +1529,6 @@ class KonversiNilaiController extends Controller
         ]);
 
         $user = auth()->user();
-
-        // Retrieve konversi record with related data
-        $konversi = $this->getKonversiQuery($user)
-            ->with(['mk', 'tahunAjaran', 'konversiMetode.metodePenilaian', 'konversiMetode.cpmkMetode.cpmk'])
-            ->findOrFail($id);
-
-        // Validate completeness before allowing template download
-        $cpmks = $konversi->mk->cpmks()->with('subCpmks')->get();
-        if ($cpmks->isEmpty()) {
-            $cpmks = CPMK::whereHas('mks', function($q) use ($konversi) {
-                $q->where('kode', $konversi->mk_kode);
-            })->with('subCpmks')->get();
-        }
-        $totalCpmkCount = $cpmks->count();
-        $mappedCpmkIds = [];
-        foreach ($konversi->konversiMetode as $km) {
-            foreach ($km->cpmkMetode as $cm) {
-                $mappedCpmkIds[$cm->cpmk_id] = true;
-            }
-        }
-        $mappedCpmkCount = count($mappedCpmkIds);
-        $totalBobotSum = $konversi->konversiMetode->sum('bobot');
-        if (!($totalBobotSum == 100 && $mappedCpmkCount >= $totalCpmkCount && $totalCpmkCount > 0)) {
-            return redirect()->back()->with('error', 'Sebelum mengunduh template, pastikan total bobot metode 100% dan semua CPMK terpetakan.');
-        }
-
-        // Validate completeness before allowing Excel upload
         $prodiId = $user->id_prodiUser ?: 1;
 
         $namaTrim = trim($request->nama);

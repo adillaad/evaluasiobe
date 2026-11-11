@@ -396,7 +396,7 @@
                     <div class="modal-body p-3">
                         <div class="mb-3">
                             <label for="nama_metode_new" class="form-label fw-semibold">Nama Metode Penilaian</label>
-                            <input type="text" class="form-control" id="nama_metode_new" name="nama_metode" placeholder="Contoh: Ujian Akhir Semester (UAS)" required>
+                            <input type="text" class="form-control" id="nama_metode_new" name="nama_metode" placeholder="Contoh: Ujian Akhir Semester (UAS)" value="{{ old('nama_metode') }}" required>
                         </div>
                     </div>
                     <div class="modal-footer py-2 px-3 bg-light">
