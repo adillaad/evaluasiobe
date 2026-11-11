@@ -230,7 +230,58 @@
 
                 <x-filter-form :showKurikulum="true" :kurikulums="$kurikulums" />
 
-                <div class="table-responsive mt-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 mt-2">
+                    {{-- Kiri: Badge status filter jika ada --}}
+                    <div>
+                        @if (request('search') || request('kurikulum_id'))
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <span class="text-muted small"><i class="ti-filter me-1"></i>Filter aktif:</span>
+                                @if (request('kurikulum_id'))
+                                    @php $selKur = $kurikulums->firstWhere('id', request('kurikulum_id')); @endphp
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1.5 rounded-2 font-12 fw-medium">
+                                        Kurikulum: {{ $selKur ? 'Kurikulum ' . $selKur->tahun : request('kurikulum_id') }}
+                                    </span>
+                                @endif
+                                @if (request('search'))
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2.5 py-1.5 rounded-2 font-12 fw-medium">
+                                        Pencarian: "{{ request('search') }}"
+                                    </span>
+                                @endif
+                                <a href="{{ Request::route() ? route(Request::route()->getName()) : url()->current() }}" class="btn btn-link btn-sm text-danger text-decoration-none p-0 ms-2 font-12">
+                                    <i class="ti-close font-10 me-1"></i>Hapus Filter
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Kanan: Kolom Search persis seperti referensi gambar --}}
+                    <div class="d-flex align-items-center gap-2 ms-auto">
+                        <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center gap-2 m-0" id="bkSearchForm">
+                            @if (request('kurikulum_id'))
+                                <input type="hidden" name="kurikulum_id" value="{{ request('kurikulum_id') }}">
+                            @endif
+                            <label for="table_search_input" class="mb-0 text-dark font-14" style="font-weight: 500;">Search:</label>
+                            <div class="position-relative">
+                                <input type="text" 
+                                       id="table_search_input" 
+                                       name="search" 
+                                       class="form-control form-control-sm rounded-2 search-input-box" 
+                                       style="width: 220px; height: 36px; border: 1px solid #b0c4de; font-size: 13.5px; padding-right: {{ request('search') ? '30px' : '10px' }};" 
+                                       placeholder="" 
+                                       value="{{ request('search') }}">
+                                @if (request('search'))
+                                    <a href="{{ route(Request::route()->getName(), request()->except('search', 'page')) }}" 
+                                       class="position-absolute end-0 top-50 translate-middle-y text-muted text-decoration-none pe-2" 
+                                       title="Hapus pencarian">
+                                        <i class="ti-close font-11"></i>
+                                    </a>
+                                @endif
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="table-responsive mt-1">
                     <table class="table table-bordered table-hover align-middle w-100 bk-table mb-0">
                         <thead class="bg-light">
                             <tr>
@@ -244,17 +295,26 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php $section = 0; @endphp
-                            @forelse ($bks as $rumpun => $items)
-                                @php $section++; @endphp
-                                <tr class="table-light">
+                            @php
+                                $runningNo = $bks->firstItem() ?? 1;
+                                $sectionCounter = 0;
+                            @endphp
+                            @forelse ($groupedBks as $rumpun => $items)
+                                @php
+                                    $sectionCounter++;
+                                    $letter = $rumpunLetters[$rumpun] ?? chr(64 + $sectionCounter);
+                                @endphp
+                                <tr class="table-light bk-rumpun-header">
                                     <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="py-2.5 px-3 fw-bold text-dark">
-                                        {{ chr(64 + $section) }}. {{ $rumpun ?: 'Unassigned / Lainnya' }}
+                                        {{ $letter }}. {{ $rumpun ?: 'Unassigned / Lainnya' }}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border font-11 ms-2 px-2 py-0.5 rounded-pill fw-normal">
+                                            {{ count($items) }} BK
+                                        </span>
                                     </td>
                                 </tr>
                                 @foreach ($items as $index => $bk)
-                                    <tr>
-                                        <td class="text-center font-weight-medium text-muted">{{ $index + 1 }}</td>
+                                    <tr class="bk-item-row">
+                                        <td class="text-center font-weight-medium text-muted">{{ $runningNo++ }}</td>
                                         <td class="text-center">
                                             <span class="badge bg-light text-dark border px-2.5 py-1.5 font-12 rounded-2 fw-bold">
                                                 {{ $bk->kode }}
@@ -296,14 +356,35 @@
                                 @endforeach
                             @empty
                                 <tr>
-                                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="text-center text-muted py-4">
-                                        <i class="mdi mdi-file-table-outline font-32 d-block mb-1"></i>
-                                        Belum ada data Bahan Kajian.
+                                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="text-center text-muted py-5">
+                                        <i class="mdi mdi-database-search-outline font-36 d-block mb-2 text-secondary"></i>
+                                        @if (request('search'))
+                                            <div class="fw-semibold text-dark font-15">Tidak ada Bahan Kajian yang cocok dengan kata kunci "{{ request('search') }}".</div>
+                                            <p class="small text-muted mb-3">Coba gunakan kata kunci lain atau hapus filter.</p>
+                                            <a href="{{ Request::route() ? route(Request::route()->getName(), request()->except('search', 'page')) : url()->current() }}" class="btn btn-sm btn-outline-primary rounded-2 px-3">
+                                                <i class="ti-reload me-1"></i> Bersihkan Kata Kunci
+                                            </a>
+                                        @else
+                                            <div class="fw-semibold text-dark font-15">Belum ada data Bahan Kajian.</div>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                {{-- Kontrol Pagination --}}
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 pt-3 border-top">
+                    <div class="text-muted small">
+                        Menampilkan <strong>{{ $bks->firstItem() ?? 0 }}</strong> – <strong>{{ $bks->lastItem() ?? 0 }}</strong> dari <strong>{{ $bks->total() }}</strong> Bahan Kajian
+                        @if (request('search') || request('kurikulum_id'))
+                            <span class="text-secondary">(difilter)</span>
+                        @endif
+                    </div>
+                    <div class="bk-pagination-wrapper">
+                        {{ $bks->links('pagination::bootstrap-5') }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -443,6 +524,46 @@
         .bk-table tbody tr:hover td {
             background-color: rgba(2, 132, 199, 0.03) !important;
         }
+
+        .bk-pagination-wrapper .pagination {
+            margin-bottom: 0 !important;
+            gap: 3px;
+        }
+
+        .bk-pagination-wrapper .page-link {
+            color: #475569;
+            border-radius: 6px !important;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid #e2e8f0;
+            background-color: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .bk-pagination-wrapper .page-link:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            border-color: #cbd5e1;
+        }
+
+        .bk-pagination-wrapper .page-item.active .page-link {
+            background: linear-gradient(135deg, #2664F5 0%, #1d52cc 100%) !important;
+            border-color: #2664F5 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(38, 100, 245, 0.25) !important;
+        }
+
+        @if ($isAptikom)
+            .bk-pagination-wrapper .page-item.active .page-link {
+                background: linear-gradient(135deg, #006199 0%, #004c78 100%) !important;
+                border-color: #006199 !important;
+                box-shadow: 0 2px 6px rgba(0, 97, 153, 0.25) !important;
+            }
+            .bk-pagination-wrapper .page-link:hover {
+                color: #004c78;
+            }
+        @endif
     </style>
 @endsection
 
@@ -504,6 +625,38 @@
             }
 
             $('#editBkModal').modal('show');
+        });
+
+        // Instant Live Filter pada tabel halaman aktif (dan tekan Enter untuk query database)
+        $('#table_search_input').on('input', function() {
+            const term = $(this).val().toLowerCase().trim();
+
+            if (term === '') {
+                $('.bk-rumpun-header, .bk-item-row').show();
+                return;
+            }
+
+            $('.bk-rumpun-header').each(function() {
+                const rumpunRow = $(this);
+                const rumpunItems = rumpunRow.nextUntil('.bk-rumpun-header');
+                let matched = 0;
+
+                rumpunItems.each(function() {
+                    const text = $(this).text().toLowerCase();
+                    if (text.indexOf(term) !== -1) {
+                        $(this).show();
+                        matched++;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                if (matched > 0) {
+                    rumpunRow.show();
+                } else {
+                    rumpunRow.hide();
+                }
+            });
         });
     });
 

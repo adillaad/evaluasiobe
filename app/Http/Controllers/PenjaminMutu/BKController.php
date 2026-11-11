@@ -14,7 +14,7 @@ class BKController extends Controller
 {
     public function index(Request $request)
     {
-        $idProdi = auth()->user()->id_prodiUser;
+        $idProdi = auth()->user()->id_prodiUser ?? (auth()->user()->prodi ? auth()->user()->prodi->id : null);
         $kurikulums = Kurikulum::where('id_prodi', $idProdi)->get();
 
         $query = BK::query()
@@ -27,16 +27,30 @@ class BKController extends Controller
             $query->where('fakultas.id_universitas', auth()->user()->id_universitasUser);
         } else if (auth()->user()->otoritas->otoritas === 'Penjamin Mutu Fakultas') {
             $query->where('fakultas.id', auth()->user()->id_fakultasUser);
-        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi'])) {
+        } else if (in_array(auth()->user()->otoritas->otoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi', 'Dosen'])) {
             $query->where('prodi.id', $idProdi);
         }
 
         if ($request->filled('kurikulum_id')) {
-            $query->where('kurikulum_id', $request->kurikulum_id);
+            $query->where('bks.kurikulum_id', $request->kurikulum_id);
         }
 
-        $allBkItems = $query->get();
-        $bks = $allBkItems->groupBy('rumpun');
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('bks.nama', 'like', "%{$search}%")
+                  ->orWhere('bks.kode', 'like', "%{$search}%")
+                  ->orWhere('bks.rumpun', 'like', "%{$search}%");
+            });
+        }
+
+        // Urutkan berdasarkan rumpun dan kode agar tampilan rapi
+        $query->orderBy('bks.rumpun', 'asc')->orderBy('bks.kode', 'asc');
+
+        // Paginate 20 per halaman sesuai permintaan
+        $bks = $query->paginate(20)->withQueryString();
+        $groupedBks = $bks->getCollection()->groupBy('rumpun');
+        $allBkItems = $bks->getCollection();
 
         $existingRumpuns = BK::where('id_prodi', $idProdi)
             ->whereNotNull('rumpun')
@@ -44,7 +58,16 @@ class BKController extends Controller
             ->distinct()
             ->pluck('rumpun');
 
-        return view('penjamin-mutu.bk.index', compact('bks', 'allBkItems', 'kurikulums', 'existingRumpuns'));
+        $rumpunLetters = [];
+        $idxLetter = 0;
+        foreach ($existingRumpuns as $r) {
+            if (!isset($rumpunLetters[$r])) {
+                $rumpunLetters[$r] = chr(65 + ($idxLetter % 26));
+                $idxLetter++;
+            }
+        }
+
+        return view('penjamin-mutu.bk.index', compact('bks', 'groupedBks', 'allBkItems', 'kurikulums', 'existingRumpuns', 'rumpunLetters'));
     }
     
     public function addBK()

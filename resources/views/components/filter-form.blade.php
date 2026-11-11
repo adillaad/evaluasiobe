@@ -11,8 +11,9 @@
     $canShowProdi = ($showProdi ?? true) && !in_array($userOtoritas, $prodiLevelRoles);
     $canShowKurikulum = ($showKurikulum ?? false);
     $canShowCpl = ($showCpl ?? false);
+    $canShowSearch = ($showSearch ?? false);
 
-    $hasVisibleFilters = $canShowUniv || $canShowFakultas || $canShowProdi || $canShowKurikulum || $canShowCpl;
+    $hasVisibleFilters = $canShowUniv || $canShowFakultas || $canShowProdi || $canShowKurikulum || $canShowCpl || $canShowSearch;
 @endphp
 
 @if ($hasVisibleFilters)
@@ -103,15 +104,28 @@
                 </div>
             </div>
         @endif
+
+        {{-- Input Search / Pencarian --}}
+        @if ($canShowSearch)
+            <div class="col-md">
+                <div class="form-group">
+                    <label for="search">Pencarian</label>
+                    <input type="text" name="search" id="search" class="form-control"
+                        placeholder="{{ $searchPlaceholder ?? 'Cari data...' }}"
+                        value="{{ request('search') }}">
+                </div>
+            </div>
+        @endif
+
         {{-- 3. Pindahkan tombol ke dalam .row yang sama --}}
-        @if (!in_array($userOtoritas, $prodiLevelRoles) || $canShowKurikulum || $canShowCpl)
+        @if (!in_array($userOtoritas, $prodiLevelRoles) || $canShowKurikulum || $canShowCpl || $canShowSearch)
             {{-- 4. Gunakan 'col-md-auto' agar lebar kolom tombol pas dengan isinya --}}
             <div class="col-md-auto">
                 <div class="form-group">
                     {{-- Tambahkan class 'd-flex' untuk membuat tombol bersebelahan --}}
                     <div class="d-flex">
                         <button type="submit" class="btn btn-primary me-2">Filter</button>
-                        <a href="{{ route(Request::route()->getName()) }}" class="btn btn-secondary">Reset</a>
+                        <a href="{{ Request::route() ? route(Request::route()->getName()) : url()->current() }}" class="btn btn-secondary">Reset</a>
                     </div>
                 </div>
             </div>
