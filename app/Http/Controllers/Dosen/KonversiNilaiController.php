@@ -218,10 +218,23 @@ class KonversiNilaiController extends Controller
             // Fallback jika id_kurikulum di mks mengacu ke string kurikulum atau prodi
             $kurikulum = Kurikulum::find($kurikulumId);
             if ($kurikulum) {
-                $mks = MK::where('id_prodi', $prodiId)
+                $mks = MK::where(function($q) use ($prodiId) {
+                        $q->where('mks.id_prodi', $prodiId)
+                          ->orWhereExists(function($sub) use ($prodiId) {
+                              $sub->select(DB::raw(1))
+                                  ->from('mk_kurikulum')
+                                  ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                                  ->where('mk_kurikulum.id_prodi', $prodiId);
+                          });
+                    })
                     ->where(function($q) use ($kurikulum) {
-                        $q->where('id_kurikulum', $kurikulum->id)
-                          ->orWhere('kurikulum', $kurikulum->tahun);
+                        $q->where('mks.id_kurikulum', $kurikulum->id)
+                          ->orWhereExists(function($sub) use ($kurikulum) {
+                              $sub->select(DB::raw(1))
+                                  ->from('mk_kurikulum')
+                                  ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                                  ->where('mk_kurikulum.id_kurikulum', $kurikulum->id);
+                          });
                     })->get();
             }
         }

@@ -221,7 +221,6 @@ class BKController extends Controller
             $queryBks->where('bks.kurikulum_id', $kurId);
             $queryMks->where(function($q) use ($kurId) {
                 $q->where('mks.id_kurikulum', $kurId)
-                  ->orWhere('mks.kurikulum', $kurId)
                   ->orWhereExists(function($sub) use ($kurId) {
                       $sub->select(DB::raw(1))
                           ->from('mk_kurikulum')
@@ -274,7 +273,6 @@ class BKController extends Controller
         if ($kurikulumId) {
             $queryMks->where(function($q) use ($kurikulumId) {
                 $q->where('mks.id_kurikulum', $kurikulumId)
-                  ->orWhere('mks.kurikulum', $kurikulumId)
                   ->orWhereExists(function($sub) use ($kurikulumId) {
                       $sub->select(DB::raw(1))
                           ->from('mk_kurikulum')

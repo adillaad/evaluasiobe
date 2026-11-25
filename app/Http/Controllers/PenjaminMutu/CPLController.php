@@ -538,7 +538,6 @@ class CPLController extends Controller
             $queryCpl->where('cpls.id_kurikulum', $kurId);
             $queryMks->where(function($q) use ($kurId) {
                 $q->where('mks.id_kurikulum', $kurId)
-                  ->orWhere('mks.kurikulum', $kurId)
                   ->orWhereExists(function($sub) use ($kurId) {
                       $sub->select(DB::raw(1))
                           ->from('mk_kurikulum')
@@ -628,7 +627,6 @@ class CPLController extends Controller
             $queryBk->where('bks.kurikulum_id', $kurId);
             $queryMk->where(function($q) use ($kurId) {
                 $q->where('mks.id_kurikulum', $kurId)
-                  ->orWhere('mks.kurikulum', $kurId)
                   ->orWhereExists(function($sub) use ($kurId) {
                       $sub->select(DB::raw(1))
                           ->from('mk_kurikulum')
@@ -835,10 +833,9 @@ class CPLController extends Controller
             $cpls = $cplQuery->select('id', 'kode', 'judul')->get();
         }
 
-        // Fetch MKs - check both id_kurikulum, kurikulum columns, and mk_kurikulum pivot
+        // Fetch MKs - check both id_kurikulum column and mk_kurikulum pivot
         $mkQuery = MK::where(function($q) use ($kurikulumId) {
             $q->where('id_kurikulum', $kurikulumId)
-              ->orWhere('kurikulum', $kurikulumId)
               ->orWhereExists(function($sub) use ($kurikulumId) {
                   $sub->select(DB::raw(1))
                       ->from('mk_kurikulum')
@@ -972,7 +969,6 @@ class CPLController extends Controller
             $kurId = $request->kurikulum_id;
             $queryMks->where(function($q) use ($kurId) {
                 $q->where('mks.id_kurikulum', $kurId)
-                  ->orWhere('mks.kurikulum', $kurId)
                   ->orWhereExists(function($sub) use ($kurId) {
                       $sub->select(DB::raw(1))
                           ->from('mk_kurikulum')
@@ -1216,7 +1212,6 @@ class CPLController extends Controller
             $queryCpl->where('cpls.id_kurikulum', $kurId);
             $queryMk->where(function($q) use ($kurId) {
                 $q->where('mks.id_kurikulum', $kurId)
-                  ->orWhere('mks.kurikulum', $kurId)
                   ->orWhereExists(function($sub) use ($kurId) {
                       $sub->select(DB::raw(1))
                           ->from('mk_kurikulum')
