@@ -107,13 +107,13 @@
 
     .lp-btn--primary {
         background: var(--lp-navy);
-        color: #fff;
+        color: #fff !important;
         box-shadow: 0 8px 20px rgba(11, 45, 92, 0.22);
     }
 
     .lp-btn--primary:hover {
         background: var(--lp-navy-deep);
-        color: #fff;
+        color: #fff !important;
     }
 
     .lp-btn--ghost {
@@ -197,7 +197,7 @@
 
             <div class="lp-nav__actions">
                 @if (Auth::check())
-                    <a class="lp-btn lp-btn--ghost d-none d-lg-inline-flex" href="{{ route('logout') }}"
+                    <a class="lp-btn lp-btn--primary d-none d-lg-inline-flex" href="{{ route('logout') }}"
                         onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
                 @else
