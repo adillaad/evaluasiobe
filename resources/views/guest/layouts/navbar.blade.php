@@ -188,6 +188,7 @@
                 <li><a class="{{ Route::is('home') ? 'active' : '' }}" href="{{ route('home') }}">Beranda</a></li>
                 <li><a class="{{ Route::is('berita.*') ? 'active' : '' }}" href="{{ route('berita.index') }}">Berita</a></li>
                 <li><a class="{{ Route::is('rps.index') ? 'active' : '' }}" href="{{ route('rps.index') }}">RPS</a></li>
+                <li><a href="https://docs.google.com/document/d/1Qz14pPTI68t1GE67pXM_oq5RrSsc3CpMWI8pFhamD1w/edit?usp=sharing" target="_blank" rel="noopener noreferrer">Panduan</a></li>
                 @if (Auth::check())
                     <li><a class="{{ Route::is('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a></li>
                 @else
@@ -214,6 +215,7 @@
         <a class="{{ Route::is('home') ? 'active' : '' }}" href="{{ route('home') }}">Beranda</a>
         <a class="{{ Route::is('berita.*') ? 'active' : '' }}" href="{{ route('berita.index') }}">Berita</a>
         <a class="{{ Route::is('rps.index') ? 'active' : '' }}" href="{{ route('rps.index') }}">RPS</a>
+        <a href="https://docs.google.com/document/d/1Qz14pPTI68t1GE67pXM_oq5RrSsc3CpMWI8pFhamD1w/edit?usp=sharing" target="_blank" rel="noopener noreferrer">Panduan</a>
         @if (Auth::check())
             <a class="{{ Route::is('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
             <a href="{{ route('logout') }}"
