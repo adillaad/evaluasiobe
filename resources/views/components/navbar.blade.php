@@ -1146,10 +1146,10 @@ button.btn-icons {
     <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center"
         style="background-color: #ffffff !important; border-right: 1px solid #e2e8f0; height: 75px;">
         <div>
-            <a class="navbar-brand brand-logo d-flex align-items-center justify-content-center px-3" href="{{ route($currentPrefix . 'home') }}">
+            <a class="navbar-brand brand-logo d-flex align-items-center justify-content-center px-3" href="{{ url('/') }}">
                 <x-app-logo :dark="false" />
             </a>
-            <span class="navbar-brand brand-logo-mini">
+            <span class="navbar-brand brand-logo-mini" onclick="window.location.href='{{ url('/') }}'" style="cursor: pointer;">
                 <x-app-logo :dark="false" style="max-height:39px;" />
             </span>
         </div>
