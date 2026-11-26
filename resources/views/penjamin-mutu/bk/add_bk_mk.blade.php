@@ -32,7 +32,10 @@
                     <select class="form-control" id="bk_id" name="bk_id" required >
                         <option value="" selected disabled>Pilih Bahan Kajian</option>
                         @foreach ($bks as $bk)
-                            <option value="{{ $bk->id }}">{{ $bk->kode }} - {{ $bk->nama }}</option>  
+                            @php
+                                $tahunKurikulum = $bk->kurikulum->tahun ?? null;
+                            @endphp
+                            <option value="{{ $bk->id }}">{{ $bk->kode }} - {{ $bk->nama }}{{ $tahunKurikulum ? ' (' . $tahunKurikulum . ')' : '' }}</option>  
                         @endforeach
                     </select>
                 </div>
@@ -59,10 +62,16 @@
         var bkId = document.getElementById("bk_id").value;
         console.log(bkId); // Pastikan menggunakan console.log, bukan console.console
         const otoritas = "{{ $userOtoritas }}";
-        if (otoritas === "Koordinator Program Studi" || otoritas === "Kepala Program Studi"){
+        let urlget = '';
+        if (otoritas === "Koordinator Program Studi") {
+            urlget = `/koordinator-program-studi/bk/get-mk-by-bk/${bkId}`;
+        } else if (otoritas === "Kepala Program Studi") {
             urlget = `/kepala-program-studi/bk/get-mk-by-bk/${bkId}`;
-        } else if (otoritas === 'Penjamin Mutu Program Studi'){
+        } else if (otoritas === 'Penjamin Mutu Program Studi') {
             urlget = `/penjamin-mutu/program-studi/bk/get-mk-by-bk/${bkId}`;
+        } else {
+            const cleanPrefix = "{{ $currentPrefix }}".replace(/\./g, '/').replace(/\/$/, '');
+            urlget = `/${cleanPrefix}/bk/get-mk-by-bk/${bkId}`;
         }
         if(bkId){
             $.ajax({
@@ -70,18 +79,19 @@
                 method: 'GET',
                 success: function(data) {
                     let mkOptions = '';
-                    if (data.mks.length > 0) {
+                    const mapped = data.mapped_mk_kodes || [];
+                    if (data.mks && data.mks.length > 0) {
                         data.mks.forEach(mk => {
-                        mkOptions += `<div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="mk_kodes[]" value="${mk.kode}" id="mk_${mk.kode}">
-                                        <label class="form-check-label" for="mk_${mk.kode}">
-                                            ${mk.kode} - ${mk.nama}
-                                        </label>
-                                    </div>`;
-                       
-                    });
+                            const isChecked = mapped.includes(mk.kode) ? 'checked' : '';
+                            mkOptions += `<div class="form-check my-2">
+                                            <input class="form-check-input" type="checkbox" name="mk_kodes[]" value="${mk.kode}" id="mk_${mk.kode}" ${isChecked}>
+                                            <label class="form-check-label ms-1" for="mk_${mk.kode}">
+                                                <strong>${mk.kode}</strong> - ${mk.nama}
+                                            </label>
+                                        </div>`;
+                        });
                     } else {
-                        mkOptions += `<label class="text-muted">Tidak ada data MK untuk BK yang dipilih.</label>`;
+                        mkOptions += `<div class="p-2 text-muted fst-italic">Tidak ada data MK pada kurikulum Bahan Kajian yang dipilih.</div>`;
                     }
                     $('#mk_id').html(mkOptions);
                 },

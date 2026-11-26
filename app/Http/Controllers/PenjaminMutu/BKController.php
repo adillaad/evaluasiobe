@@ -295,28 +295,53 @@ class BKController extends Controller
 
     public function addBKMK()
     {
-        $bks = BK::where('id_prodi', auth()->user()->id_prodiUser)
-            ->select('bks.*')->get();
+        $bks = BK::with('kurikulum')
+            ->where('id_prodi', auth()->user()->id_prodiUser)
+            ->orderBy('kurikulum_id', 'desc')
+            ->orderBy('kode', 'asc')
+            ->get();
 
         return view('penjamin-mutu.bk.add_bk_mk', compact('bks'));
     }
 
     public function getMkByBk($bkId)
     {
-        // Temukan BK yang dipilih
-        $bk = BK::where('id_prodi', auth()->user()->id_prodiUser)
-            ->with('cpl.mk')->findOrFail($bkId);
+        $userProdiId = auth()->user()->id_prodiUser;
+        $bk = BK::where('id_prodi', $userProdiId)
+            ->with(['kurikulum', 'mk'])
+            ->findOrFail($bkId);
 
-        // Ambil semua MK yang terkait melalui CPL
-        $mkKodes = $bk->cpl->flatMap(function ($cpl) {
-            return $cpl->mk->pluck('kode');
-        })->unique();
+        $kurId = $bk->kurikulum_id;
 
-        // Temukan MK berdasarkan ID yang dikumpulkan
-        $mks = MK::where('id_prodi', auth()->user()->id_prodiUser)
-            ->whereIn('kode', $mkKodes)->get();
+        $queryMks = MK::where(function ($q) use ($userProdiId) {
+            $q->where('mks.id_prodi', $userProdiId)
+              ->orWhereExists(function ($sub) use ($userProdiId) {
+                  $sub->select(DB::raw(1))
+                      ->from('mk_kurikulum')
+                      ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                      ->where('mk_kurikulum.id_prodi', $userProdiId);
+              });
+        });
 
-        return response()->json(['mks' => $mks]);
+        if ($kurId) {
+            $queryMks->where(function ($q) use ($kurId) {
+                $q->where('mks.id_kurikulum', $kurId)
+                  ->orWhereExists(function ($sub) use ($kurId) {
+                      $sub->select(DB::raw(1))
+                          ->from('mk_kurikulum')
+                          ->whereColumn('mk_kurikulum.mk_kode', 'mks.kode')
+                          ->where('mk_kurikulum.id_kurikulum', $kurId);
+                  });
+            });
+        }
+
+        $mks = $queryMks->orderBy('semester', 'asc')->orderBy('kode', 'asc')->get();
+        $mappedMkKodes = $bk->mk->pluck('kode')->toArray();
+
+        return response()->json([
+            'mks' => $mks,
+            'mapped_mk_kodes' => $mappedMkKodes,
+        ]);
     }
 
     public function storeBKMK(Request $request)
@@ -327,22 +352,10 @@ class BKController extends Controller
             'mk_kodes.*' => 'exists:mks,kode',
         ]);
 
-        $bk = BK::with('cpl.mk')->findOrFail($validated['bk_id']);
-        $mkKodes = $validated['mk_kodes'];
-
-        $validMkKodes = $bk->cpl->flatMap(function ($cpl) {
-            return $cpl->mk->pluck('kode');
-        })->unique();
-
-        foreach ($mkKodes as $mkKode) {
-            if (!$validMkKodes->contains($mkKode)) {
-                return redirect()->back()->with('failed', 'MK yang dipilih tidak valid untuk BK yang dipilih.');
-            }
-        }
-
+        $bk = BK::where('id_prodi', auth()->user()->id_prodiUser)->findOrFail($validated['bk_id']);
         $bk->mk()->syncWithoutDetaching($validated['mk_kodes']);
 
-        return redirect()->back()->with('success', 'Pemetaan berhasil disimpan.');
+        return redirect()->back()->with('success', 'Bahan Kajian berhasil dipetakan ke Mata Kuliah yang dipilih.');
     }
 
     // Download Template Excel Bahan Kajian

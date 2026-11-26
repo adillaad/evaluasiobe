@@ -12,7 +12,7 @@ class ProfilLulusan extends Model
     use HasFactory;
     protected $table = 'profil_lulusan';
     public $timestamps = false;
-    protected $fillable = ['namaProfil', 'kode', 'deskripsi', 'id_prodi', 'kurikulum_id', 'acuan', 'jenis'];
+    protected $fillable = ['namaProfil', 'kode', 'deskripsi', 'id_prodi', 'kurikulum_id', 'acuan', 'jenis', 'status'];
 
     protected $guarded = ['id'];
 

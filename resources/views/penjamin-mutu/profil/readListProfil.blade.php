@@ -137,18 +137,22 @@
         <thead class="table-light">
             <tr>
                 <th width="5%" class="text-center">No</th>
-                <th width="12%">Kode PL</th>
-                <th width="28%">Profil Karir</th>
-                <th>Graduate Profile</th>
+                <th width="10%">Kode PL</th>
+                <th width="{{ $isAptikom ? '20%' : '28%' }}">{{ $isAptikom ? 'Jenis Profil Lulusan' : 'Profil Karir' }}</th>
+                <th>{{ $isAptikom ? 'Profil Lulusan (Deskripsi)' : 'Graduate Profile' }}</th>
+                @if ($isAptikom)
+                    <th width="10%" class="text-center">Status</th>
+                    <th width="14%">Acuan</th>
+                @endif
                 @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
-                    <th width="12%" class="text-center">Action</th>
+                    <th width="10%" class="text-center">Action</th>
                 @endif
             </tr>
         </thead>
         <tbody>
             @if ($listProfil->isEmpty())
                 <tr>
-                    <td colspan="{{ in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']) ? 5 : 4 }}" class="text-center text-muted py-4">
+                    <td colspan="{{ (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']) ? 1 : 0) + ($isAptikom ? 6 : 4) }}" class="text-center text-muted py-4">
                         Tidak ada data
                     </td>
                 </tr>
@@ -161,6 +165,21 @@
                             <span class="fw-bold text-dark">{{ $profil->namaProfil ?: ($profil->jenis ?: '-') }}</span>
                         </td>
                         <td class="wrap-content">{{ ucfirst($profil->deskripsi) }}</td>
+
+                        @if ($isAptikom)
+                            <td class="text-center">
+                                @php
+                                    $st = strtolower($profil->status ?? 'wajib');
+                                    $isWajib = in_array($st, ['wajib', 'w', 'aktif']);
+                                @endphp
+                                <span class="badge {{ $isWajib ? 'bg-success' : 'bg-secondary' }}">
+                                    {{ ucfirst($profil->status ?: 'Wajib') }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-secondary small fw-medium">{{ $profil->acuan ?: '-' }}</span>
+                            </td>
+                        @endif
 
                         @if (in_array($userOtoritas, ['Penjamin Mutu Program Studi', 'Koordinator Program Studi', 'Kepala Program Studi']))
                             <td class="text-center">

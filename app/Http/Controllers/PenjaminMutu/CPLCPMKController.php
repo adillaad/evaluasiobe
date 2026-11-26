@@ -775,11 +775,16 @@ public function storeSubCpmk(Request $request)
 
         if (!empty($validated['kode'])) {
             $newKode = trim($validated['kode']);
+            // Cek unik berdasarkan id_prodi (sesuai unique constraint DB)
+            if (SubCpmk::where('id_prodi', $id_prodi)->where('kode', $newKode)->exists()) {
+                return redirect()->back()->withInput()->with('failed', "Kode Sub CPMK '{$newKode}' sudah terdaftar pada program studi ini. Silakan gunakan kode lain atau kosongkan agar dibuat otomatis.");
+            }
         } else {
             $subCpmkCount = SubCpmk::where('cpmk_id', $validated['cpmk_id'])->count() + 1;
             do {
                 $newKode = 'Sub-' . $parentCpmk->kode . $subCpmkCount;
-                $existsKode = SubCpmk::where('cpmk_id', $validated['cpmk_id'])->where('kode', $newKode)->exists();
+                // Cek unik berdasarkan id_prodi (bukan cpmk_id) agar tidak bentrok unique constraint
+                $existsKode = SubCpmk::where('id_prodi', $id_prodi)->where('kode', $newKode)->exists();
                 if ($existsKode) {
                     $subCpmkCount++;
                 }
@@ -854,7 +859,16 @@ public function updateSubCpmk(Request $request, $id)
         $subCpmk = SubCpmk::findOrFail($id);
         $data = ['uraian' => $validated['uraian']];
         if (!empty($validated['kode'])) {
-            $data['kode'] = $validated['kode'];
+            $newKode = trim($validated['kode']);
+            // Cek unik berdasarkan id_prodi, kecuali record ini sendiri
+            $exists = SubCpmk::where('id_prodi', $subCpmk->id_prodi)
+                ->where('kode', $newKode)
+                ->where('id', '!=', $subCpmk->id)
+                ->exists();
+            if ($exists) {
+                return redirect()->back()->withInput()->with('failed', "Kode Sub CPMK '{$newKode}' sudah terdaftar pada program studi ini. Silakan gunakan kode lain.");
+            }
+            $data['kode'] = $newKode;
         }
         $subCpmk->update($data);
 

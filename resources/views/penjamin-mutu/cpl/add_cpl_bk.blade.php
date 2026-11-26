@@ -32,7 +32,8 @@
                     <select class="form-control" id="cpl_id" name="cpl_id" required onchange="getSelectedValue();">
                         <option value="" selected disabled>Pilih CPL</option>
                         @foreach ($cpls as $cpl)
-                            <option value="{{ $cpl->id }}">{{ $cpl->kode }} - {{ $cpl->judul }}</option>
+                            @php $thnCpl = $cpl->kurikulum->tahun ?? null; @endphp
+                            <option value="{{ $cpl->id }}">{{ $cpl->kode }} - {{ $cpl->judul }}{{ $thnCpl ? ' (' . $thnCpl . ')' : '' }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -41,10 +42,11 @@
                     <label for="bk_ids">Pilih Bahan Kajian yang Terkait:</label>
                     <div class="border ps-5" style="max-height: 200px; overflow-y: auto;">
                         @foreach ($bks as $bk)
+                            @php $thnBk = $bk->kurikulum->tahun ?? null; @endphp
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="bk_ids[]" value="{{ $bk->id }}" id="bk_{{ $bk->id }}">
                                 <label class="form-check-label" for="bk_{{ $bk->id }}">
-                                    {{ $bk->kode }} - {{ $bk->nama }}
+                                    {{ $bk->kode }} - {{ $bk->nama }}{{ $thnBk ? ' (' . $thnBk . ')' : '' }}
                                 </label>
                             </div>
                         @endforeach

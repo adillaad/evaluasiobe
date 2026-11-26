@@ -105,28 +105,74 @@ class ProfilController extends Controller
         $sheet->setTitle('Template Import PL');
 
         // Header
-        $sheet->setCellValue('A1', 'Tahun Kurikulum');
-        $sheet->setCellValue('B1', 'Nama Profil Karir');
-        $sheet->setCellValue('C1', 'Deskripsi / Graduate Profile');
+        $headers = [
+            'A1' => 'Tahun Kurikulum',
+            'B1' => 'Kode Profil (Opsional)',
+            'C1' => 'Jenis Profil Lulusan',
+            'D1' => 'Profil Lulusan (Deskripsi)',
+            'E1' => 'Status (Wajib / Pilihan)',
+            'F1' => 'Acuan',
+        ];
+
+        foreach ($headers as $cell => $val) {
+            $sheet->setCellValue($cell, $val);
+        }
 
         // Style Header
-        $sheet->getStyle('A1:C1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:C1')->getFill()
+        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:F1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1:F1')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('A1:F1')->getFill()
             ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-            ->getStartColor()->setARGB('FFE0E0E0');
+            ->getStartColor()->setARGB('FFE2EFDA');
 
-        // Sample data
+        // Sample data 1
         $sheet->setCellValue('A2', '2025');
-        $sheet->setCellValue('B2', 'Software Engineer');
-        $sheet->setCellValue('C2', 'Lulusan yang mampu merancang, membangun, dan menguji sistem perangkat lunak secara profesional.');
+        $sheet->setCellValue('B2', 'PL01');
+        $sheet->setCellValue('C2', 'Keterampilan Khusus');
+        $sheet->setCellValue('D2', 'Lulusan memiliki kemampuan mendesain, mengimplementasi dan mengevaluasi solusi berbasis computing termasuk kecerdasan buatan yang memenuhi kebutuhan pengguna.');
+        $sheet->setCellValue('E2', 'Wajib');
+        $sheet->setCellValue('F2', 'KKNI 02, CS 2013, SN Dikti 01');
 
+        // Sample data 2
         $sheet->setCellValue('A3', '2025');
-        $sheet->setCellValue('B3', 'Data Analyst');
-        $sheet->setCellValue('C3', 'Lulusan yang mampu mengolah dan menganalisis data untuk mendukung pengambilan keputusan.');
+        $sheet->setCellValue('B3', ''); // Kosongkan agar otomatis di-generate kode oleh sistem
+        $sheet->setCellValue('C3', 'Keterampilan Umum');
+        $sheet->setCellValue('D3', 'Lulusan yang mampu menerapkan pemikiran logis, kritis, sistematis, dan inovatif dalam konteks pengembangan atau implementasi ilmu pengetahuan dan teknologi.');
+        $sheet->setCellValue('E3', 'Pilihan');
+        $sheet->setCellValue('F3', 'IABEE');
 
-        foreach (range('A', 'C') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
+        // Alignments
+        $sheet->getStyle('A2:A3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('B2:B3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E2:E3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('D2:D3')->getAlignment()->setWrapText(true);
+
+        // Data validation for Status (Wajib / Pilihan)
+        $validation = $sheet->getCell('E2')->getDataValidation();
+        $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
+        $validation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_INFORMATION);
+        $validation->setAllowBlank(false);
+        $validation->setShowInputMessage(true);
+        $validation->setShowErrorMessage(true);
+        $validation->setShowDropDown(true);
+        $validation->setErrorTitle('Pilihan Tidak Valid');
+        $validation->setError('Pilih Status dari dropdown: Wajib atau Pilihan.');
+        $validation->setPromptTitle('Status Profil Lulusan');
+        $validation->setPrompt('Pilih Wajib atau Pilihan');
+        $validation->setFormula1('"Wajib,Pilihan"');
+
+        for ($row = 3; $row <= 100; $row++) {
+            $sheet->getCell('E' . $row)->setDataValidation(clone $validation);
         }
+
+        // Set column widths
+        $sheet->getColumnDimension('A')->setWidth(18);
+        $sheet->getColumnDimension('B')->setWidth(24);
+        $sheet->getColumnDimension('C')->setWidth(26);
+        $sheet->getColumnDimension('D')->setWidth(55);
+        $sheet->getColumnDimension('E')->setWidth(24);
+        $sheet->getColumnDimension('F')->setWidth(30);
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $filename = 'Template_Import_Profil_Lulusan.xlsx';
@@ -167,9 +213,45 @@ class ProfilController extends Controller
             return redirect()->back()->with('error', 'File Excel kosong atau hanya berisi header.');
         }
 
-        // Cek struktur header (apakah ada kolom Kode Profil atau tidak)
-        $headerRow = $dataRows[0] ?? [];
-        $hasKodeColumn = isset($headerRow[1]) && str_contains(strtolower((string)$headerRow[1]), 'kode');
+        // Header mapping secara dinamis
+        $headerRow = array_map(function ($val) {
+            return strtolower(trim((string)$val));
+        }, $dataRows[0] ?? []);
+
+        $colTahun = null;
+        $colKode = null;
+        $colJenis = null;
+        $colDeskripsi = null;
+        $colStatus = null;
+        $colAcuan = null;
+
+        foreach ($headerRow as $idx => $header) {
+            if ($colTahun === null && (str_contains($header, 'tahun') || str_contains($header, 'kurikulum'))) {
+                $colTahun = $idx;
+            } elseif ($colKode === null && str_contains($header, 'kode')) {
+                $colKode = $idx;
+            } elseif ($colStatus === null && str_contains($header, 'status')) {
+                $colStatus = $idx;
+            } elseif ($colAcuan === null && (str_contains($header, 'acuan') || str_contains($header, 'referensi'))) {
+                $colAcuan = $idx;
+            } elseif ($colDeskripsi === null && (str_contains($header, 'deskripsi') || str_contains($header, 'graduate') || (str_contains($header, 'profil') && !str_contains($header, 'karir') && !str_contains($header, 'jenis') && !str_contains($header, 'kode') && !str_contains($header, 'nama')))) {
+                $colDeskripsi = $idx;
+            } elseif ($colJenis === null && (str_contains($header, 'jenis') || str_contains($header, 'karir') || str_contains($header, 'nama'))) {
+                $colJenis = $idx;
+            }
+        }
+
+        // Fallback jika header tidak terdeteksi via nama
+        if ($colTahun === null) $colTahun = 0;
+        if ($colKode === null && count($headerRow) >= 6) $colKode = 1;
+        if ($colJenis === null) $colJenis = ($colKode !== null) ? 2 : 1;
+        if ($colDeskripsi === null) $colDeskripsi = ($colKode !== null) ? 3 : 2;
+        if ($colStatus === null && count($headerRow) >= 5) {
+            $colStatus = ($colKode !== null) ? 4 : 3;
+        }
+        if ($colAcuan === null && count($headerRow) >= 6) {
+            $colAcuan = ($colKode !== null) ? 5 : 4;
+        }
 
         // Drop header
         unset($dataRows[0]);
@@ -180,21 +262,29 @@ class ProfilController extends Controller
         DB::beginTransaction();
         try {
             foreach ($dataRows as $row) {
-                if ($hasKodeColumn) {
-                    $rawTahunKurikulum = trim((string)($row[0] ?? ''));
-                    $rawKode           = str_replace('-', '', trim((string)($row[1] ?? '')));
-                    $namaProfil        = trim((string)($row[2] ?? ''));
-                    $deskripsi         = trim((string)($row[3] ?? ''));
-                } else {
-                    $rawTahunKurikulum = trim((string)($row[0] ?? ''));
-                    $rawKode           = '';
-                    $namaProfil        = trim((string)($row[1] ?? ''));
-                    $deskripsi         = trim((string)($row[2] ?? ''));
-                }
+                $rawTahunKurikulum = $colTahun !== null ? trim((string)($row[$colTahun] ?? '')) : '';
+                $rawKode           = $colKode !== null ? str_replace('-', '', trim((string)($row[$colKode] ?? ''))) : '';
+                $rawJenis          = $colJenis !== null ? trim((string)($row[$colJenis] ?? '')) : '';
+                $deskripsi         = $colDeskripsi !== null ? trim((string)($row[$colDeskripsi] ?? '')) : '';
+                $rawStatus         = $colStatus !== null ? trim((string)($row[$colStatus] ?? '')) : '';
+                $rawAcuan          = $colAcuan !== null ? trim((string)($row[$colAcuan] ?? '')) : '';
+
+                $namaProfil = $rawJenis;
 
                 if (empty($rawKode) && empty($namaProfil) && empty($deskripsi)) {
                     continue;
                 }
+
+                // Normalisasi status: wajib / pilihan
+                $statusLower = strtolower($rawStatus);
+                if (in_array($statusLower, ['pilihan', 'p', 'opsional', 'optional'])) {
+                    $status = 'pilihan';
+                } else {
+                    $status = 'wajib';
+                }
+
+                // Normalisasi acuan
+                $acuan = !empty($rawAcuan) ? $rawAcuan : '-';
 
                 // 1. Tentukan Kurikulum
                 $kurikulumObj = null;
@@ -222,24 +312,39 @@ class ProfilController extends Controller
                     continue;
                 }
 
-                // Check existing PL by prodi, kurikulum, and namaProfil / kode
+                // Check existing PL by prodi, kurikulum, and namaProfil / jenis / kode
                 $existingPl = ProfilLulusan::where('id_prodi', $id_prodi_user)
                     ->where('kurikulum_id', $kurikulumObj->id)
-                    ->where(function($q) use ($rawKode, $namaProfil) {
+                    ->where(function ($q) use ($rawKode, $namaProfil) {
+                        $hasCond = false;
                         if (!empty($rawKode)) {
                             $q->where('kode', $rawKode);
+                            $hasCond = true;
                         }
                         if (!empty($namaProfil)) {
-                            $q->orWhere('namaProfil', $namaProfil)->orWhere('jenis', $namaProfil);
+                            if ($hasCond) {
+                                $q->orWhere('namaProfil', $namaProfil)->orWhere('jenis', $namaProfil);
+                            } else {
+                                $q->where(function ($sq) use ($namaProfil) {
+                                    $sq->where('namaProfil', $namaProfil)->orWhere('jenis', $namaProfil);
+                                });
+                            }
                         }
                     })->first();
 
                 if ($existingPl) {
-                    $existingPl->update([
+                    $updateData = [
                         'namaProfil' => !empty($namaProfil) ? $namaProfil : ($existingPl->namaProfil ?: $existingPl->jenis),
                         'jenis'      => !empty($namaProfil) ? $namaProfil : ($existingPl->jenis ?: $existingPl->namaProfil),
                         'deskripsi'  => !empty($deskripsi) ? $deskripsi : $existingPl->deskripsi,
-                    ]);
+                    ];
+                    if (!empty($rawStatus)) {
+                        $updateData['status'] = $status;
+                    }
+                    if (!empty($rawAcuan)) {
+                        $updateData['acuan'] = $acuan;
+                    }
+                    $existingPl->update($updateData);
                     $updatedCount++;
                 } else {
                     $kode = !empty($rawKode)
@@ -253,6 +358,8 @@ class ProfilController extends Controller
                         'namaProfil'   => !empty($namaProfil) ? $namaProfil : $kode,
                         'jenis'        => !empty($namaProfil) ? $namaProfil : $kode,
                         'deskripsi'    => !empty($deskripsi) ? $deskripsi : ($namaProfil ?: $kode),
+                        'status'       => $status,
+                        'acuan'        => $acuan,
                     ]);
                     $importedCount++;
                 }

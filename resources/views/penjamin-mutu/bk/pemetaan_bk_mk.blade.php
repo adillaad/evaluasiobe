@@ -144,7 +144,7 @@
                                     <th class="py-3 px-3 text-center" style="width: 70px;">SKS</th>
                                     <th class="py-3 px-3 text-center" style="width: 120px;">Kurikulum</th>
                                     @foreach ($bks as $bk)
-                                        <th class="py-3 px-2 text-center" style="min-width: 85px;" title="{{ $bk->kode }}: {{ $bk->nama }}">
+                                        <th class="py-3 px-2 text-center" style="min-width: 85px;" title="{{ $bk->kode }}: {{ $bk->nama }}{{ $bk->kurikulum ? ' (' . $bk->kurikulum->tahun . ')' : '' }}">
                                             <span class="badge bg-primary-soft text-primary font-12 px-2 py-1 rounded-2">{{ $bk->kode }}</span>
                                         </th>
                                     @endforeach

@@ -756,16 +756,16 @@ class CPLController extends Controller
 
     public function addCPLBK()
     {
-        $bks = BK::query()
-            ->join('prodi', 'bks.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->where('prodi.id', auth()->user()->id_prodiUser)
-            ->select('bks.*')->get();
-        $cpls = CPL::query()
-            ->join('prodi', 'cpls.id_prodi', '=', 'prodi.id')
-            ->join('fakultas', 'prodi.id_fakultas', '=', 'fakultas.id')
-            ->where('prodi.id', auth()->user()->id_prodiUser)
-            ->select('cpls.*')->get();
+        $bks = BK::with('kurikulum')
+            ->where('id_prodi', auth()->user()->id_prodiUser)
+            ->orderBy('kurikulum_id', 'desc')
+            ->orderBy('kode', 'asc')
+            ->get();
+        $cpls = CPL::with('kurikulum')
+            ->where('id_prodi', auth()->user()->id_prodiUser)
+            ->orderBy('id_kurikulum', 'desc')
+            ->orderBy('kode', 'asc')
+            ->get();
 
         return view('penjamin-mutu.cpl.add_cpl_bk', compact('bks', 'cpls'));
     }
@@ -1310,6 +1310,34 @@ class CPLController extends Controller
             return redirect()->back()->with('error', 'File Excel kosong atau hanya berisi header.');
         }
 
+        // Header mapping secara dinamis
+        $headerRow = array_map(function ($val) {
+            return strtolower(trim((string)$val));
+        }, $dataRows[0] ?? []);
+
+        $colTahun = null;
+        $colKode = null;
+        $colAspek = null;
+        $colJudul = null;
+
+        foreach ($headerRow as $idx => $header) {
+            if ($colTahun === null && (str_contains($header, 'tahun') || str_contains($header, 'kurikulum'))) {
+                $colTahun = $idx;
+            } elseif ($colKode === null && (str_contains($header, 'nomor') || str_contains($header, 'kode') || str_contains($header, 'cpl'))) {
+                $colKode = $idx;
+            } elseif ($colAspek === null && str_contains($header, 'aspek')) {
+                $colAspek = $idx;
+            } elseif ($colJudul === null && (str_contains($header, 'deskripsi') || str_contains($header, 'judul') || str_contains($header, 'keterangan'))) {
+                $colJudul = $idx;
+            }
+        }
+
+        // Positional fallbacks
+        if ($colTahun === null) $colTahun = 0;
+        if ($colKode === null) $colKode = 1;
+        if ($colAspek === null) $colAspek = 2;
+        if ($colJudul === null) $colJudul = 3;
+
         // Drop header (baris 1)
         unset($dataRows[0]);
 
@@ -1330,10 +1358,10 @@ class CPLController extends Controller
         DB::beginTransaction();
         try {
             foreach ($dataRows as $row) {
-                $rawTahunKurikulum = trim((string)($row[0] ?? ''));
-                $rawKode = trim((string)($row[1] ?? ''));
-                $rawAspek = trim((string)($row[2] ?? ''));
-                $judul = trim((string)($row[3] ?? ''));
+                $rawTahunKurikulum = $colTahun !== null ? trim((string)($row[$colTahun] ?? '')) : '';
+                $rawKode           = $colKode !== null ? trim((string)($row[$colKode] ?? '')) : '';
+                $rawAspek          = $colAspek !== null ? trim((string)($row[$colAspek] ?? '')) : '';
+                $judul             = $colJudul !== null ? trim((string)($row[$colJudul] ?? '')) : '';
 
                 if (empty($rawKode) && empty($judul)) {
                     continue;
@@ -1366,11 +1394,16 @@ class CPLController extends Controller
                 }
 
                 // 2. Format Kode & Nomor CPL (User hanya mengisi nomor, misal '01' atau '1')
-                $trimmedNum = preg_replace('/^CPL/i', '', trim((string)$rawKode));
+                $trimmedNum = preg_replace('/^CPL[-_]?/i', '', trim((string)$rawKode));
                 $trimmedNum = trim($trimmedNum);
 
                 if (empty($trimmedNum)) {
                     continue;
+                }
+
+                // Otomatis jadikan 2 digit dengan leading zero jika input adalah angka 1 digit (misal: '2' -> '02')
+                if (is_numeric($trimmedNum) && strlen($trimmedNum) === 1) {
+                    $trimmedNum = sprintf('%02d', (int)$trimmedNum);
                 }
 
                 $nomor = $trimmedNum;
@@ -1388,8 +1421,17 @@ class CPLController extends Controller
                 // 4. Update or Create CPL record
                 $existingCpl = CPL::where('id_prodi', $id_prodi_user)
                     ->where('id_kurikulum', $kurikulumObj->id)
-                    ->where(function($q) use ($formattedKode, $nomor) {
-                        $q->where('kode', $formattedKode)->orWhere('nomor', $nomor);
+                    ->where(function ($q) use ($formattedKode, $nomor) {
+                        $numInt = is_numeric($nomor) ? (int)$nomor : null;
+                        $q->where('kode', $formattedKode)
+                          ->orWhere('kode', 'CPL-' . $nomor)
+                          ->orWhere('nomor', $nomor);
+
+                        if ($numInt !== null) {
+                            $q->orWhere('kode', 'CPL' . $numInt)
+                              ->orWhere('kode', 'CPL-' . $numInt)
+                              ->orWhere('nomor', (string)$numInt);
+                        }
                     })->first();
 
                 if ($existingCpl) {
