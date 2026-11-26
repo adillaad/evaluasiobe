@@ -1,14 +1,17 @@
-{{-- @php
+@php
     $routePrefix = [
         'Penjamin Mutu Program Studi' => ['prefix' => 'penjamin-mutu.program-studi.'],
         'Koordinator Program Studi' => ['prefix' => 'koordinator-program-studi.'],
         'Kepala Program Studi' => ['prefix' => 'kepala-program-studi.'],
         'Penjamin Mutu Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
+        'Admin Universitas' => ['prefix' => 'penjamin-mutu.universitas.'],
+        'Wakil Rektor' => ['prefix' => 'penjamin-mutu.universitas.'],
+        'Penjamin Mutu Fakultas' => ['prefix' => 'penjamin-mutu.fakultas.'],
     ];
 
     $userOtoritas = auth()->user()->otoritas->otoritas;
     $currentPrefix = $routePrefix[$userOtoritas]['prefix'] ?? 'penjamin-mutu.program-studi.';
-@endphp --}}
+@endphp
 
 @extends('penjamin-mutu.template')
 @section('content')

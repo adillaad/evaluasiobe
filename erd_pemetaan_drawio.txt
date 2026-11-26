@@ -1,0 +1,188 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#dae8fc',
+    'primaryBorderColor': '#006199',
+    'primaryTextColor': '#003366',
+    'lineColor': '#4a5568',
+    'textColor': '#1a202c',
+    'mainBkg': '#ffffff'
+  }
+}}%%
+erDiagram
+    UNIVERSITAS {
+        int id PK
+        varchar nama
+        text img
+    }
+
+    FAKULTAS {
+        int id PK
+        varchar nama
+        int id_universitas FK
+    }
+
+    PRODI {
+        int id PK
+        varchar nama
+        varchar jenjang
+        tinyint is_aptikom
+        int id_fakultas FK
+    }
+
+    USERS {
+        int id PK
+        varchar name
+        varchar email
+        varchar jabatan
+        int id_prodiUser FK
+    }
+
+    USER_OTORITAS {
+        int id PK
+        int user_id FK
+        varchar otoritas
+        tinyint active
+    }
+
+    KURIKULUMS {
+        int id PK
+        int tahun
+        int id_prodi FK
+    }
+
+    PROFIL_LULUSAN {
+        int id PK
+        varchar kode
+        varchar namaProfil
+        text deskripsi
+        int kurikulum_id FK
+        int id_prodi FK
+    }
+
+    PROFIL_CPL {
+        int id PK
+        int idProfil FK
+        int idCpl FK
+        decimal bobot
+        int id_prodi FK
+    }
+
+    CPLS {
+        int id PK
+        varchar kode
+        varchar nomor
+        varchar aspek
+        text judul
+        int id_kurikulum FK
+        int id_prodi FK
+    }
+
+    BKS {
+        bigint id PK
+        varchar kode
+        varchar nama
+        varchar rumpun
+        int kurikulum_id FK
+        int id_prodi FK
+    }
+
+    BK_CPL {
+        bigint id PK
+        bigint bk_id FK
+        int cpl_id FK
+    }
+
+    BK_MK {
+        bigint id PK
+        bigint bk_id FK
+        varchar mk_kode FK
+    }
+
+    MKS {
+        varchar kode PK
+        varchar nama
+        varchar rumpun
+        int semester
+        int bobot_teori
+        int bobot_praktikum
+        int id_kurikulum FK
+        int id_prodi FK
+    }
+
+    MK_CPL {
+        bigint id PK
+        int cpl_id FK
+        varchar mk_kode FK
+        int id_prodi FK
+    }
+
+    MK_KURIKULUM {
+        bigint id PK
+        varchar mk_kode FK
+        int id_kurikulum FK
+        varchar semester
+        int id_prodi FK
+    }
+
+    CPMKS {
+        int id PK
+        varchar kode
+        text judul
+        int cpl_id FK
+        varchar kode_mk FK
+        int id_prodi FK
+    }
+
+    CPMK_MK {
+        bigint id PK
+        int cpmk_id FK
+        varchar mk_kode FK
+        float bobot
+    }
+
+    SUB_CPMK {
+        varchar kode PK
+        text uraian
+        int cpmk_id FK
+        int id_prodi FK
+    }
+
+    MK_SUB_CPMK {
+        bigint id PK
+        varchar sub_cpmk_id FK
+        varchar mk_kode FK
+    }
+
+    UNIVERSITAS ||--|{ FAKULTAS : ""
+    FAKULTAS ||--|{ PRODI : ""
+    PRODI ||--|{ USERS : ""
+    USERS ||--|{ USER_OTORITAS : ""
+    PRODI ||--|{ KURIKULUMS : ""
+
+    KURIKULUMS ||--o{ PROFIL_LULUSAN : ""
+    PROFIL_LULUSAN ||--o{ PROFIL_CPL : ""
+    CPLS ||--o{ PROFIL_CPL : ""
+
+    KURIKULUMS ||--|{ CPLS : ""
+    CPLS ||--o{ BK_CPL : ""
+    BKS ||--o{ BK_CPL : ""
+
+    KURIKULUMS ||--o{ BKS : ""
+    BKS ||--o{ BK_MK : ""
+    MKS ||--o{ BK_MK : ""
+
+    KURIKULUMS ||--|{ MKS : ""
+    MKS ||--o{ MK_KURIKULUM : ""
+    KURIKULUMS ||--o{ MK_KURIKULUM : ""
+
+    CPLS ||--o{ MK_CPL : ""
+    MKS ||--o{ MK_CPL : ""
+
+    CPLS ||--o{ CPMKS : ""
+    MKS ||--o{ CPMK_MK : ""
+    CPMKS ||--o{ CPMK_MK : ""
+
+    CPMKS ||--o{ SUB_CPMK : ""
+    MKS ||--o{ MK_SUB_CPMK : ""
+    SUB_CPMK ||--o{ MK_SUB_CPMK : ""

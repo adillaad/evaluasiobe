@@ -1,0 +1,174 @@
+classDiagram
+    direction TB
+
+    %% ==========================================
+    %% TEMA WARNA: HANYA PUTIH DAN BIRU
+    %% ==========================================
+    classDef whiteBox fill:#ffffff,stroke:#4a5568,stroke-width:1.5px,color:#1a202c;
+    classDef blueBox fill:#dae8fc,stroke:#006199,stroke-width:2px,color:#002b4d;
+
+    %% 1. ENTITAS INDUK (WARNA PUTIH)
+    class UNIVERSITAS:::whiteBox {
+        +int id PK
+        +varchar nama
+        +text img
+    }
+    class FAKULTAS:::whiteBox {
+        +int id PK
+        +varchar nama
+        +int id_universitas FK
+    }
+    class PRODI:::whiteBox {
+        +int id PK
+        +varchar nama
+        +varchar jenjang
+        +tinyint is_aptikom
+        +int id_fakultas FK
+    }
+    class USERS:::whiteBox {
+        +int id PK
+        +varchar name
+        +varchar email
+        +varchar jabatan
+        +int id_prodiUser FK
+    }
+    class USER_OTORITAS:::whiteBox {
+        +int id PK
+        +int user_id FK
+        +varchar otoritas
+        +tinyint active
+    }
+    class KURIKULUMS:::whiteBox {
+        +int id PK
+        +int tahun
+        +int id_prodi FK
+    }
+
+    %% 2. ENTITAS MODUL PEMETAAN DIRANCANG ULANG (WARNA BIRU)
+    class PROFIL_LULUSAN:::blueBox {
+        +int id PK
+        +varchar kode
+        +varchar namaProfil
+        +text deskripsi
+        +int kurikulum_id FK
+        +int id_prodi FK
+    }
+    class PROFIL_CPL:::blueBox {
+        +int id PK
+        +int idProfil FK
+        +int idCpl FK
+        +decimal bobot
+        +int id_prodi FK
+    }
+    class CPLS:::blueBox {
+        +int id PK
+        +varchar kode
+        +varchar nomor
+        +varchar aspek
+        +text judul
+        +int id_kurikulum FK
+        +int id_prodi FK
+    }
+    class BKS:::blueBox {
+        +bigint id PK
+        +varchar kode
+        +varchar nama
+        +varchar rumpun
+        +int kurikulum_id FK
+        +int id_prodi FK
+    }
+    class BK_CPL:::blueBox {
+        +bigint id PK
+        +bigint bk_id FK
+        +int cpl_id FK
+    }
+    class BK_MK:::blueBox {
+        +bigint id PK
+        +bigint bk_id FK
+        +varchar mk_kode FK
+    }
+    class MKS:::blueBox {
+        +varchar kode PK
+        +varchar nama
+        +varchar rumpun
+        +int semester
+        +int bobot_teori
+        +int bobot_praktikum
+        +int id_kurikulum FK
+        +int id_prodi FK
+    }
+    class MK_CPL:::blueBox {
+        +bigint id PK
+        +int cpl_id FK
+        +varchar mk_kode FK
+        +int id_prodi FK
+    }
+    class MK_KURIKULUM:::blueBox {
+        +bigint id PK
+        +varchar mk_kode FK
+        +int id_kurikulum FK
+        +varchar semester
+        +int id_prodi FK
+    }
+    class CPMKS:::blueBox {
+        +int id PK
+        +varchar kode
+        text judul
+        +int cpl_id FK
+        +varchar kode_mk FK
+        +int id_prodi FK
+    }
+    class CPMK_MK:::blueBox {
+        +bigint id PK
+        +int cpmk_id FK
+        +varchar mk_kode FK
+        +float bobot
+    }
+    class SUB_CPMK:::blueBox {
+        +varchar kode PK
+        +text uraian
+        +int cpmk_id FK
+        +int id_prodi FK
+    }
+    class MK_SUB_CPMK:::blueBox {
+        +bigint id PK
+        +varchar sub_cpmk_id FK
+        +varchar mk_kode FK
+    }
+
+    %% ==========================================
+    %% RELASI GARIS POLOS (TANPA TEKS LABEL)
+    %% ==========================================
+    UNIVERSITAS --> FAKULTAS
+    FAKULTAS --> PRODI
+    PRODI --> USERS
+    USERS --> USER_OTORITAS
+    PRODI --> KURIKULUMS
+
+    KURIKULUMS --> PROFIL_LULUSAN
+    PROFIL_LULUSAN --> PROFIL_CPL
+    CPLS --> PROFIL_CPL
+
+    KURIKULUMS --> CPLS
+    CPLS --> BK_CPL
+    BKS --> BK_CPL
+
+    KURIKULUMS --> BKS
+    BKS --> BK_MK
+    MKS --> BK_MK
+
+    KURIKULUMS --> MKS
+    MKS --> MK_KURIKULUM
+    KURIKULUMS --> MK_KURIKULUM
+
+    CPLS --> MK_CPL
+    MKS --> MK_CPL
+
+    CPLS --> CPMKS
+    MKS --> CPMK_MK
+    CPMKS --> CPMK_MK
+
+    CPMKS --> SUB_CPMK
+    MKS --> MK_SUB_CPMK
+    SUB_CPMK --> MK_SUB_CPMK
+
